@@ -997,3 +997,208 @@ Processed expression/metadata resources. Review: `documentation_reviewed`; check
 https://github.com/MaayanLab/rummagene
 
 Supplementary gene-set discovery analog and application architecture. Review: `source_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S28 — Rummagene license
+
+https://raw.githubusercontent.com/MaayanLab/rummagene/main/LICENSE
+
+CC BY-NC-SA 4.0; do not assume permissive software reuse. Review: `license_text_reviewed`; checked September 26, 2026; integration not tested.
+
+### S29 — RummaGEO source repository
+
+https://github.com/MaayanLab/rummageo
+
+Expression-signature discovery analog; not a replacement for full source contrasts. Review: `source_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S30 — openpyxl tutorial
+
+https://openpyxl.readthedocs.io/en/stable/tutorial.html
+
+Workbook sheets, read-only loading and cached formula semantics. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S31 — python-calamine maintainer package documentation
+
+https://pypi.org/project/python-calamine/
+
+Supported reader, leading-empty-area behavior and MIT license expression. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S32 — pandas read_csv
+
+https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
+
+Explicit dtype and missing-token policy. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S33 — pyBigWig source/API documentation
+
+https://github.com/deeptools/pyBigWig
+
+Exact statistics, missingness, remote compilation support and interval conventions. Review: `source_api_reviewed`; checked September 26, 2026; integration not tested.
+
+### S34 — AnnData.raw
+
+https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.raw.html
+
+raw is a snapshot, not a guarantee of count semantics. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S35 — AnnData read_h5ad
+
+https://anndata.readthedocs.io/en/stable/generated/anndata.io.read_h5ad.html
+
+Backed reading and data access behavior. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S36 — Cooler API
+
+https://cooler.readthedocs.io/en/latest/api.html
+
+Explicit matrix balancing, sparse selection and resolution/group handling. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S37 — bioframe interval operations
+
+https://bioframe.readthedocs.io/en/latest/guide-intervalops.html
+
+Reuse interval operations rather than writing geometric joins. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S38 — pyreadr source/API documentation
+
+https://github.com/ofajardo/pyreadr
+
+Tabular R object support; no general R lists/S4; bundled licenses require separate review. Review: `source_api_reviewed`; checked September 26, 2026; integration not tested.
+
+### S39 — zellkonverter
+
+https://bioconductor.org/packages/release/bioc/html/zellkonverter.html
+
+SingleCellExperiment/AnnData conversion, not arbitrary Seurat losslessness. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S40 — pdfplumber source/API documentation
+
+https://github.com/jsvine/pdfplumber
+
+Conditional PDF text/table inspection and visual debugging. Review: `source_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S41 — Docling documentation
+
+https://docling-project.github.io/docling/
+
+Optional heavier document-layout processing, not the first ingestion dependency. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S42 — IGV Desktop
+
+https://igv.org/doc/desktop/
+
+Reuse locus visualization rather than build a genome browser. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S43 — Pooch
+
+https://www.fatiando.org/pooch/latest/
+
+Reference/fixture downloads and hash-aware cache utility; avoid duplicate cache ownership. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S44 — DataLad
+
+https://www.datalad.org/
+
+Alternative existing data-management/provenance workflow. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S45 — GEOmetadb
+
+https://bioconductor.org/packages/release/bioc/html/GEOmetadb.html
+
+Optional broad GEO metadata SQL snapshot. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S46 — Research Object Crate
+
+https://www.researchobject.org/ro-crate/
+
+Future exchange/export format, not mandatory internal schema. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S47 — nf-core/rnaseq
+
+https://nf-co.re/rnaseq
+
+Established raw RNA-seq workflow activated only for a suitable question. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S48 — PMC developer services policy
+
+https://pmc.ncbi.nlm.nih.gov/tools/developers/
+
+Allowed programmatic retrieval services and source licensing boundaries. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S49 — Python tarfile extraction filters
+
+https://docs.python.org/3/library/tarfile.html
+
+Safer extraction still requires resource/path constraints. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S50 — DuckDB security
+
+https://duckdb.org/docs/current/operations_manual/securing_duckdb/overview
+
+External access, allowed paths/directories and read-only versus sandbox boundaries. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S51 — gffutils
+
+https://daler.github.io/gffutils/
+
+GFF/GTF hierarchy and configurable source dialect handling. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+### S52 — DESeq2
+
+https://bioconductor.org/packages/release/bioc/html/DESeq2.html
+
+Optional established count-model recipe; does not solve experimental design. Review: `documentation_overview_reviewed`; checked September 26, 2026; integration not tested.
+
+### S53 — Python pickle security warning
+
+https://docs.python.org/3/library/pickle.html
+
+Untrusted unpickling can execute arbitrary code. Review: `documentation_reviewed`; checked September 26, 2026; integration not tested.
+
+
+### S54 — PyArrow Parquet documentation
+
+https://arrow.apache.org/docs/python/parquet.html
+
+Relevance: Typed tabular persistence and schema-aware Parquet IO. Documentation overview reviewed; integration not tested.
+
+### S55 — Typer documentation
+
+https://typer.tiangolo.com/
+
+Relevance: Small CLI interface; a design selection rather than a biological integration. Documentation overview reviewed; integration not tested.
+
+### S56 — Jinja documentation
+
+https://jinja.palletsprojects.com/en/stable/
+
+Relevance: Static HTML report rendering with explicit escaping. Documentation overview reviewed; integration not tested.
+
+### S57 — defusedxml maintained package documentation
+
+https://pypi.org/project/defusedxml/
+
+Relevance: Hardened XML parsing; bounded inputs remain necessary. Documentation overview reviewed; integration not tested.
+
+### S58 — HTTPX transports
+
+https://www.python-httpx.org/advanced/transports/
+
+Relevance: Transport injection for deterministic tests. Documentation overview reviewed; integration not tested.
+
+### S59 — RESPX documentation
+
+https://lundberg.github.io/respx/
+
+Relevance: Mocked HTTPX responses for adapter and transport tests. Documentation overview reviewed; integration not tested.
+
+### S60 — Hypothesis documentation
+
+https://hypothesis.readthedocs.io/en/latest/
+
+Relevance: Property-based tests of identity, coordinates and state transitions. Documentation overview reviewed; integration not tested.
+
+### S61 — pytest documentation
+
+https://docs.pytest.org/en/stable/
+
+Relevance: Offline acceptance tests and separately gated integration tests. Documentation overview reviewed; integration not tested.
