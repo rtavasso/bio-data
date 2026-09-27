@@ -1,0 +1,15 @@
+{
+  "origin":"Implemented from BUILD_SPEC section 8; original referenced file absent",
+  "common":{"raw_responses":"immutable snapshots with unknown fields", "page":["items","next_cursor","exhausted","reported_total","source_snapshot_id","warnings"], "downloads":"separate explicit plan", "live_status":"docs/receipts; mocks do not certify live availability"},
+  "adapters":{
+    "europepmc":{"operations":["search","resolve","JATS links and inline tables"],"tests":["repeated cursors","duplicates","changing totals"]},
+    "pmc":{"operations":["version enumeration","object listing","metadata","media"],"tests":["multiple versions","MD5 identity","truncated inventory"]},
+    "zenodo":{"operations":["published record/version","search pagination","files"],"tests":["version identity","multiple files","unknown fields"]},
+    "geo":{"operations":["SOFT snapshots","pinned GEOfetch","resolved PEP","relationship frontier"],"tests":["modifiers","sample/file identity","failure receipts"]},
+    "ena":{"operations":["read_run field handshake","file reports"],"tests":["array mismatch","multiple runs per experiment","raw acquisition gate"]},
+    "chipatlas":{"operations":["cached metadata search","genome handshake","experiment metadata","documented download templates bound to observed experiment/genome"],"tests":["threshold conflict","experiment identity"]},
+    "figshare":{"operations":["public article/version","file references"],"tests":["link-only records","computed/supplied checksums"]},
+    "biostudies":{"operations":["study/location metadata","recursive files"],"tests":["conventional and nested sections","unresolved locations"]},
+    "encode":{"operations":["public experiment/file metadata","replicate/library inventory"],"tests":["nonreleased files","lineage fields","access failure"]}
+  }
+}

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "data-archaeology-workbench"
+version = "0.1.0"
+description = "Local, provenance-first recovery of public scientific measurements"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "pydantic>=2.11,<3", "httpx>=0.28,<0.29", "defusedxml>=0.7,<0.8",
+  "typer>=0.16,<1", "pyarrow>=20,<24", "jinja2>=3.1.6,<4",
+  "openpyxl>=3.1.5,<4",
+]
+
+[project.optional-dependencies]
+genomics = ["pyBigWig>=0.3.24,<0.4", "bioframe>=0.8,<0.9"]
+matrix = ["anndata>=0.12,<0.13", "h5py>=3.13,<4", "scipy>=1.15,<2", "cooler>=0.10,<0.11"]
+geo = ["peppy>=0.40,<0.41"]
+analytics = ["duckdb>=1.3,<2"]
+
+[dependency-groups]
+dev = ["pytest>=8.4,<10", "hypothesis>=6.130,<7", "ruff>=0.12,<1"]
+
+[project.scripts]
+daw = "daw.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daw"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: explicitly enabled network integration checks"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B"]

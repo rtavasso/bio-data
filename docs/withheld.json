@@ -1,0 +1,8 @@
+{
+  "study":"10x Genomics PBMC3k, published Scanpy H5AD representation",
+  "query":"expression.feature_values for literal MS4A1, followed by a donor-pseudobulk eligibility check",
+  "development_boundary":"Generic matrix operators and synthetic numerical tests were implemented before this real dataset was read or queried. No expected real numerical answer was embedded in operator code.",
+  "context":"Human blood cells; explicitly not evidence about Schwann cells",
+  "independent_validation":"Compare the complete returned feature vector and identifiers with a direct bounded native AnnData slice. Preserve source semantics and report any unsupported prerequisite.",
+  "alternate_locus":"SOX10 using the same previously imported hg38 H3K27ac track, without reingestion"
+}

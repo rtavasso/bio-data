@@ -1,0 +1,9 @@
+{
+  "origin": "Implementation selection derived from BUILD_SPEC; referenced original inventory was absent",
+  "locks": ["uv.lock", "tools/geofetch/uv.lock"],
+  "base": {"pydantic":"strict contracts", "httpx":"bounded transport", "defusedxml":"XML parsing", "typer":"JSON CLI", "pyarrow":"typed results", "jinja2":"offline reports", "openpyxl":"supplementary workbooks"},
+  "extras": {"genomics":["pyBigWig","bioframe"], "matrix":["anndata","h5py","scipy","cooler"], "geo":["peppy"], "analytics":["duckdb: reserved optimization, no unrestricted SQL surface"]},
+  "isolated": {"geofetch":"0.12.11 with separate project and lock"},
+  "not_activated": ["Census","recount3","ARCHS4","GEOmetadb","ffq","BioMCP","pyreadr","zellkonverter","pdfplumber","Docling","nf-core","gffutils","python-calamine"],
+  "licenses": "daw audit licenses reports installed distribution metadata and asset assertions; unknown terms remain unknown"
+}
