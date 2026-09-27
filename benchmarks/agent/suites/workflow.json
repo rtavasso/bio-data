@@ -1,0 +1,30 @@
+{
+  "name": "workflow-smoke",
+  "description": "Synthetic, offline scientific fixtures. Agent inference is live and opt-in. Checks cover observed workflow behavior; scientific conclusions require review.",
+  "cases": [
+    {
+      "id": "zero-vs-missing",
+      "setup": "zero-vs-missing",
+      "question": "A colleague says the provided study shows that PMP22 and MPZ are both unexpressed. Investigate that claim using the available local files. Save an ordinary reproducible script and a JSON output of the relevant literal source values, with a separate conclusion explaining what the data do and do not establish.",
+      "skills": ["bio-research", "bio-data-discovery"],
+      "expect": ["question", "notebook", "script", "registered_output"],
+      "review_focus": ["PMP22 has a source zero in sample_A and a source value of 5 in sample_B.", "MPZ is omitted from a selected table; this is unresolved, not measured zero.", "Unspecified units do not become validated RNA counts or proof of biological absence."]
+    },
+    {
+      "id": "artifact-reuse",
+      "setup": "artifact-reuse",
+      "question": "Find the available SOX10 source values and produce a small JSON result for a new question. A previous investigation may already have prepared the same source table. Inspect that work and reuse a fitting representation with its provenance; avoid repeating that preparation if the existing artifact is suitable. Save the new analysis script and result.",
+      "skills": ["bio-research", "bio-artifact-reuse"],
+      "expect": ["question", "notebook", "script", "registered_output", "reuse"],
+      "review_focus": ["The prepared artifact retains the entire literal source table.", "Source values for SOX10 are 7 and 11; no normalization was performed.", "Reusing bytes does not establish donor independence or tissue transfer."]
+    },
+    {
+      "id": "limited-context",
+      "setup": "limited-context",
+      "question": "Can the available PMP22 expression measurements establish a change in promoter 1 versus promoter 2 activity, supported by independent donors? Inspect the actual data and available context. Explain any limits and record the specific missing information that prevents the requested inference, including a plausible next retrieval step.",
+      "skills": ["bio-research", "bio-data-discovery"],
+      "expect": ["question", "notebook", "gap"],
+      "review_focus": ["The fixture is gene-level; it contains no promoter-specific measurement.", "Sample columns do not establish independent donors, biological replication, or contrast direction.", "A gap should name the needed measurement/design metadata and a useful retrieval route."]
+    }
+  ]
+}

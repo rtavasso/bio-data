@@ -1,0 +1,27 @@
+{
+  "name": "public-research",
+  "description": "Exploratory public-data questions. Network is enabled explicitly for each case. No fixed biological answer or claim of exhaustive discovery is supplied.",
+  "cases": [
+    {
+      "id": "egr2-as-response",
+      "data_access": "public",
+      "question": "Which public processed measurements could distinguish an Egr2-AS-related Pmp22/Sox10 response from a broad Schwann-cell state change? Find specific files and a useful analysis, inspect a bounded processed representation if feasible, and preserve source receipts and unresolved design assumptions.",
+      "skills": ["bio-research", "bio-data-discovery"],
+      "review_focus": ["Strong runtime search as well as any local data; file-plus-analysis opportunities, not paper counts.", "Gene-level values are not promoter output; replication and contrast require evidence."]
+    },
+    {
+      "id": "human-chromatin",
+      "data_access": "public",
+      "question": "Find processed human Schwann-lineage chromatin measurements that could test a PRC2-related PMP22 accessibility hypothesis. Identify exact files, native coordinate context, and a concrete analysis. Distinguish engineered or tumor models from healthy adult Schwann cells and record retrieval gaps.",
+      "skills": ["bio-research", "bio-data-discovery"],
+      "review_focus": ["Native assembly and appropriate reference rather than guessed coordinates.", "Alternate encodings and assemblies of one experiment are not independent evidence."]
+    },
+    {
+      "id": "human-cell-states",
+      "data_access": "public",
+      "question": "Can public human peripheral-nerve single-cell measurements distinguish PMP22 expression changes from changes in Schwann-cell composition? Find a specific processed dataset and analysis route, inspect available annotations, and explain what must still be verified before numerical inference.",
+      "skills": ["bio-research", "bio-data-discovery"],
+      "review_focus": ["A feature match in unrelated tissue is not a useful Schwann-cell opportunity.", "Cell identities, matrix semantics, sample mappings, and donor independence remain separate questions."]
+    }
+  ]
+}

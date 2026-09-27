@@ -231,11 +231,12 @@ def object_show(ctx: typer.Context, blob: str):
 
 @app.command("register")
 def register(ctx: typer.Context, path: Path, manifest: Path | None = None, question: str | None = None,
-             title: str = "", summary: str = "", input: Annotated[list[str] | None, typer.Option("--input")] = None,
-             code: Annotated[list[Path] | None, typer.Option()] = None, parameters: str = "{}",
+             title: str = "", summary: str = "",
+             input: Annotated[list[str] | None, typer.Option("--input", help="Asset ID, artifact ID, or stored blob SHA256. Preserve local files with bio object add first.")] = None,
+             code: Annotated[list[Path] | None, typer.Option(help="Local analysis script path; repeat for multiple scripts.")] = None, parameters: str = "{}",
              reference: Annotated[list[str] | None, typer.Option()] = None, environment: Path | None = None,
              output_role: str = "result"):
-    """Register an ordinary script's output and derivation, shared across questions."""
+    """Register a computed output. Flags require --input and --code; prose can stay in LABBOOK.md."""
     with session(ctx) as ws:
         if manifest:
             if input or code or reference or environment or title or summary or parameters != "{}" or output_role != "result":
@@ -249,6 +250,13 @@ def register(ctx: typer.Context, path: Path, manifest: Path | None = None, quest
                 elif value.startswith("artifact_"):
                     inputs.append(ObjectInput(blob=artifact_info(ws, value)["output_blob"], source_identity=value))
                 else:
+                    try:
+                        ws.blob_path(value)
+                    except DawError as e:
+                        if e.reason != "invalid_blob_hash":
+                            raise
+                        raise DawError(e.reason, f"--input {value!r} must be an asset ID, artifact ID, or stored blob SHA256. "
+                                       "For a local file, run bio object add PATH, then use its returned blob hash as --input.") from e
                     inputs.append(ObjectInput(blob=value))
             registration = ArtifactRegistration(title=title or path.name, summary=summary, output_role=output_role,
                 derivation=Derivation(inputs=inputs, code=[ws.put_file(p, "code") for p in code or []],

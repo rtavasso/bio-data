@@ -30,6 +30,31 @@ def test_fresh_session_uses_help_and_question_tools_without_specs(tmp_path):
     assert json.loads(report.output)["groups"][0]["distinct_questions"] == 1
 
 
+def test_registration_path_error_explains_recovery_without_losing_dependency(ws, tmp_path):
+    runner = CliRunner()
+    prefix = ["-w", str(ws.root)]
+    source = tmp_path / "context.json"
+    source.write_text('{"synthetic": true}\n')
+    output = tmp_path / "result.json"
+    output.write_bytes(source.read_bytes())
+    code = tmp_path / "copy_context.py"
+    code.write_text("import shutil, sys\nshutil.copyfile(sys.argv[1], sys.argv[2])\n")
+    args = prefix + ["register", str(output), "--code", str(code), "--input"]
+    invalid = runner.invoke(app, args + [str(source)])
+    assert invalid.exit_code != 0 and isinstance(invalid.exception, DawError)
+    assert invalid.exception.reason == "invalid_blob_hash"
+    assert str(source) in invalid.exception.detail and "bio object add" in invalid.exception.detail
+    assert not ws.rows("SELECT * FROM artifact")
+    preserved = runner.invoke(app, prefix + ["object", "add", str(source)])
+    assert preserved.exit_code == 0, preserved.output
+    blob = json.loads(preserved.output)["blob"]
+    registered = runner.invoke(app, args + [blob])
+    assert registered.exit_code == 0, registered.output
+    shown = runner.invoke(app, prefix + ["artifact", "show", json.loads(registered.output)["artifact"]])
+    assert shown.exit_code == 0, shown.output
+    assert json.loads(shown.output)["manifest"]["derivation"]["inputs"][0]["blob"] == blob
+
+
 @pytest.mark.parametrize("legacy_state", ["pending", "deferred", "blocked", "running"])
 def test_v2_semantic_tasks_cannot_block_or_be_retried_by_v3(ws, tmp_path, legacy_state):
     path = tmp_path / "table.tsv"
