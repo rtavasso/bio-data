@@ -349,10 +349,12 @@ class Sources:
                 "minimum_qvalue": int(code), "higher_code_is_stricter": True,
                 "validation_required": "confirm score schema and threshold nesting on exact files"}
 
-    def discover(self, request: Discovery):
-        run, _ = self.ws.start_run("discover", {"request": request.model_dump(), "adapter_version": VERSION})
+    def discover(self, request: Discovery, *, cursor=None, prior_resources=()):
+        run, _ = self.ws.start_run("discover", {"request": request.model_dump(), "adapter_version": VERSION,
+            "start_cursor": cursor, "prior_resources": list(prior_resources)})
         scope = self.ws.resource("scope", request.provider, run, request.model_dump())
-        pages, ids, seen, cursor = [], [], set(), "*" if request.provider == "europepmc" else "1"
+        pages, ids, seen = [], list(prior_resources), set()
+        cursor = cursor or ("*" if request.provider == "europepmc" else "1")
         totals, complete, warnings = [], False, []
         try:
             for _ in range(request.max_pages):
@@ -383,18 +385,23 @@ class Sources:
                     warnings.append("missing_continuation_without_exhaustion")
                     break
                 cursor = page.next_cursor
+                if cursor in seen:
+                    warnings.append("repeated_cursor")
+                    cursor = None
+                    break
             if not complete and not warnings:
                 warnings.append("page_budget_exhausted")
             if len(set(t for t in totals if t is not None)) > 1:
                 warnings.append("reported_total_changed_during_enumeration")
             output = {"run": run, "scope": scope, "request": request.model_dump(), "pages": pages,
                       "resources": ids, "exhausted": complete, "warnings": warnings,
-                      "retrieved_utc": now(), "adapter_version": VERSION}
+                      "retrieved_utc": now(), "adapter_version": VERSION,
+                      "next_cursor": None if complete or not pages or not pages[-1].get("next_cursor") else cursor}
             self.ws.finish_run(run, output)
             return output
         except DawError as e:
             output = {"run": run, "scope": scope, "request": request.model_dump(), "pages": pages,
-                      "resources": ids, "exhausted": False, "warnings": warnings + [str(e)]}
+                      "resources": ids, "exhausted": False, "warnings": warnings + [str(e)], "next_cursor": cursor}
             self.ws.finish_run(run, output, str(e))
             return output
 

@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "data-archaeology-workbench"
-version = "0.1.0"
-description = "Local, provenance-first recovery of public scientific measurements"
+version = "0.2.0"
+description = "A deeply indexed local substrate of scientific data and reusable research work"
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "pydantic>=2.11,<3", "httpx>=0.28,<0.29", "defusedxml>=0.7,<0.8",
@@ -24,6 +24,7 @@ dev = ["pytest>=8.4,<10", "hypothesis>=6.130,<7", "ruff>=0.12,<1"]
 
 [project.scripts]
 daw = "daw.cli:main"
+bio = "daw.bio_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/daw"]

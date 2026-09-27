@@ -85,10 +85,16 @@ class Workspace:
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.execute("PRAGMA busy_timeout=30000")
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
-        if version == 1:
-            self.db.executescript("BEGIN IMMEDIATE;\n" + MIGRATION_2 + "\nCOMMIT;")
-        elif version != 2:
+        from daw.substrate_schema import MIGRATION, VERSION
+        if version in {1, 2}:
+            with self.writer():
+                version = self.db.execute("PRAGMA user_version").fetchone()[0]
+                migration = (MIGRATION_2 if version == 1 else "") + (MIGRATION if version < VERSION else "")
+                self.db.executescript("BEGIN IMMEDIATE;\n" + migration + "\nCOMMIT;")
+        elif version != VERSION:
             raise DawError("unsupported_catalog_version")
+        for part in ("questions", "profiles"):
+            (self.root / part).mkdir(exist_ok=True)
         config = tomllib.loads((self.root / "config.toml").read_text())
         self.budgets = Budgets.model_validate(config.get("budgets", {}))
 
@@ -224,8 +230,13 @@ class Workspace:
         if old and blob is None and asset.access == "listed" and (asset.checksum or provider == "archive"):
             prior = self.asset(old["revision"])
             # Only strong file identity permits reusing acquired bytes after metadata refresh.
-            unchanged = all(body.get(k) == prior["body"].get(k) for k in
-                            ("native_id", "name", "version", "size", "checksum", "checksum_scope", "selector", "license"))
+            identity_fields = ("native_id", "name", "version", "size", "checksum", "checksum_scope", "selector", "license")
+            # A bounded gzip inventory can omit expanded size. The exact parent
+            # bytes and member selector already identify this representation;
+            # losing a size estimate must not hide previously extracted bytes.
+            if provider == "archive" and body["size"] is None and body["selector"].get("chain"):
+                identity_fields = tuple(k for k in identity_fields if k != "size")
+            unchanged = all(body.get(k) == prior["body"].get(k) for k in identity_fields)
             old_metadata = {k: v for k, v in prior["body"]["metadata"].items()
                             if k not in {"acquisition_reason", "source_metadata_snapshot", "listed_revision"}}
             if unchanged and old_metadata == body["metadata"] and prior["access"] == "available_full":
@@ -339,9 +350,26 @@ class Workspace:
             if file_hash(target) != sha:
                 raise DawError("backup_integrity_failed", sha)
             manifest.append({"sha256": sha, "path": relative, "size": size})
+        work_files = []
+        questions = self.root / "questions"
+        if questions.is_symlink():
+            raise DawError("unsafe_question_path")
+        for source in sorted(questions.rglob("*")):
+            if source.is_symlink():
+                raise DawError("unsafe_backup_symlink", str(source.relative_to(self.root)))
+            if not source.is_file():
+                continue
+            relative = source.relative_to(self.root)
+            target = dest / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            expected = file_hash(source)
+            shutil.copyfile(source, target)
+            if file_hash(target) != expected:
+                raise DawError("backup_source_changed", str(relative))
+            work_files.append({"path": str(relative), "sha256": expected, "size": target.stat().st_size})
         write_json(dest / "backup.json", {"created": now(), "catalog_sha256": file_hash(dest / "catalog.sqlite"),
-                                         "blobs": manifest})
-        return {"path": str(dest), "blobs": len(manifest)}
+                                         "blobs": manifest, "work_files": work_files})
+        return {"path": str(dest), "blobs": len(manifest), "work_files": len(work_files)}
 
 
 def restore_check(backup):
@@ -372,7 +400,12 @@ def restore_check(backup):
             if catalog_hashes != {b["sha256"] for b in manifest["blobs"]}:
                 failures.append("manifest/catalog mismatch")
             inventory = len(ws.assets())
+            for item in manifest.get("work_files", []):
+                path = ws.root / item["path"]
+                if not path.resolve().is_relative_to(ws.root) or not path.is_file() or file_hash(path) != item["sha256"]:
+                    failures.append(item["path"])
         finally:
             ws.close()
     return {"ok": not failures, "failures": failures, "verified_blobs": len(manifest["blobs"]),
-            "restored_assets": inventory, "test": "copied backup into independent temporary workspace"}
+            "restored_assets": inventory, "verified_work_files": len(manifest.get("work_files", [])),
+            "test": "copied backup into independent temporary workspace"}

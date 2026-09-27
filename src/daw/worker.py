@@ -39,6 +39,16 @@ def main():
             result = {"rows": rows, "state": state, "reason": reason}
         except Exception as e:
             result = {"error": e.reason if isinstance(e, DawError) else type(e).__name__, "detail": str(e)[:1000]}
+    elif job.get("action") == "profile":
+        from pathlib import Path
+        from daw.profiles import content_terms
+        from daw.util import DawError, file_hash
+        try:
+            if file_hash(Path(job["path"])) != job["blob"]:
+                raise DawError("integrity_failed")
+            result = content_terms(job["path"], job["name"], budgets)
+        except Exception as e:
+            result = {"error": e.reason if isinstance(e, DawError) else type(e).__name__, "detail": str(e)[:1000]}
     else:
         from daw.inspectors import inspect_file
         result = inspect_file(job["path"], job["name"], budgets)

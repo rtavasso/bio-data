@@ -1,3 +1,7 @@
+# V2 framing notice
+
+This original specification is retained as an implementation and scientific-safety reference. On `v2/research-substrate`, [v2_SPEC.md](v2_SPEC.md) supersedes its primary product framing: the universal capability validator/state machine, typed scientific query planner, canonical result package, proposal/acceptance pipeline, globally accepted interpretation, mandatory request/plan documents, fixed analytical operator registry, formal transfer/evidence graph, and static HTML as the main UI are deferred. Existing implementations remain available through `daw`; new research uses `bio`, searchable profiles, ordinary scripts, question notebooks, and reusable artifacts. Source integrity, provenance, format safety, and scientific acceptance outcomes remain binding. See [the migration guide](docs/V2.md).
+
 # Data Archaeology Workbench
 ## Build specification for an advanced coding agent
 

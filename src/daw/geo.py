@@ -106,6 +106,10 @@ def resolve_geo(source, native, bundle):
                         else:
                             other = ws.resource("reference", "accession", accession)
                         ws.link(rid, other, "source_relationship", sid, f"{key}: {value}")
+    if getattr(source, "native_metadata_only", False):
+        return assets, snapshots[0], {"soft_blobs": original_blobs, "relations": relations,
+            "metadata_mode": "native SOFT only; external tools disabled for bounded index transport",
+            "sample_file_rows_are_not_replicates": True}
     tool_root = Path(__file__).resolve().parents[2] / "tools/geofetch"
     executable = tool_root / ".venv/bin/geofetch"
     command = [str(executable), "-i", native, "--processed", "--data-source", "all", "--just-metadata",

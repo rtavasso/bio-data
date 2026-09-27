@@ -1,6 +1,8 @@
-# Workbench invariants
+# Research substrate invariants
 
-- Read `BUILD_SPEC.md` and `AGENT_START.md` before changing scientific behavior.
+- Read `BUILD_SPEC.md`, `v2_SPEC.md`, and all of `AGENT_START.md` before changing scientific behavior. The v2 framing supersedes the v1 primary analysis workflow.
+- Keep `bio` focused on source facts, search, provenance, reusable artifacts, and question notebooks. Scientific applicability and analysis belong in ordinary question-local code and reasoning; no universal acceptance gate.
+- Preserve the working v1 `daw` interface and history during additive migrations. Do not extend its typed planner or capability registry without a concrete need.
 - Keep discovery, transport, inspection, interpretation, eligibility, and numerical extraction separate.
 - No model, credentials, hosted service, or network is required for offline use or tests.
 - Preserve source bytes, receipt history, and interpretation revisions. Machine results are JSON.

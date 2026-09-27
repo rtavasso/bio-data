@@ -1,44 +1,42 @@
-# Data Archaeology Workbench
+# BIO research substrate
 
-Recover public biological experiments and their measurements—including supplementary tables and auxiliary assays—with exact provenance and a ledger of what remains unexamined. A local Python CLI, one SQLite catalog, immutable files, and offline reports. No server or model required.
+A local store of public scientific data and prior research for coding agents. Search what files contain, inspect the exact source, write ordinary Python/R/SQL, and reuse earlier processing when its derivation fits the new question. No server, credentials, model, or network is required for local use.
 
 ```sh
 uv sync --locked
-uv run daw init workspace
-uv run daw demo
+uv run bio init workspace
+uv run bio demo
+uv run bio data search --feature PMP22
+uv run bio artifact search reusable
+uv run bio work search PMP22
 ```
 
-The demo returns an offline report path. It recovers a hidden workbook sheet, traces values to source cells, preserves an uncached formula as unresolved, and demonstrates why a selected-only table cannot establish a null effect. Its data are explicitly synthetic.
+The offline demo indexes a synthetic table whose title does not mention PMP22, creates a question notebook and a normal script, then reuses the resulting artifact in a second question. Zero, missingness, and source labels stay distinct. Every command returns JSON.
 
-The completed real-data pilot is available at [workspaces/pilot/reports/index.html](workspaces/pilot/reports/index.html) in this checkout. It includes source-linked Schwann-cell tables, human H3K27ac and rat ATAC locus queries, a version-pinned tumor expression table, and independent validation of all 2,700 values in a held-out human matrix query. See [the pilot handoff](docs/PILOT.md) for receipts and limitations. Downloaded workspaces are intentionally excluded from Git.
-
-For the complete tested scientific environment:
+For real scientific files and the complete test suite:
 
 ```sh
 uv sync --locked --all-extras
-uv sync --project tools/geofetch --locked
-uv run pytest -q
-uv run daw doctor
+uv run ruff check src tests scripts
+uv run pytest
+uv run bio doctor
 ```
 
-Use `daw -w /path/to/workspace …` or `DAW_WORKSPACE` to separate data from code. All command results are JSON. See [worked workflows](examples/README.md), [runtime contracts](contracts/README.md), [scope and limitations](docs/LIMITATIONS.md), and [backup/restore](docs/BACKUP.md).
+Use `bio -w /path/to/workspace …` or `BIO_WORKSPACE`. Data stays in ignored workspaces; the repository contains code, documentation, and compact validation receipts.
 
 ```sh
-uv run daw discover --request examples/discovery.json
-uv run daw bundle add --reference GSE139321
-uv run daw bundle inventory BUNDLE_ID
-uv run daw run --plan acquisition.json
-uv run daw bundle inspect BUNDLE_ID
-uv run daw curate packet BUNDLE_ID --output workspace/proposals/study
-uv run daw curate validate --proposal curation.json
-uv run daw curate accept --proposal curation.json
-uv run daw query --request examples/literal-query.json
-uv run daw audit coverage
-uv run daw export-igv --request locus-query.json --destination workspace/reports/native-tracks
+uv run bio resolve GSE201623
+uv run bio data list --scope BUNDLE_ID
+uv run bio fetch ASSET_ID
+uv run bio inspect ACQUIRED_ASSET_ID
+uv run bio data search --feature Pmp22
+uv run bio work new "What does this experiment measure about Pmp22?"
 ```
 
-Numerical operators cover tables, published contrasts, interval overlaps, exact bigWig summaries, annotated expression values, documented pseudobulk counts, and Cooler region extraction. Scientific eligibility is separate from successful parsing. Gene-level expression does not authorize promoter claims; unknown references, donors, layers, and feature presence remain unknown.
+The returned question folder contains `QUESTION.md`, `LABBOOK.md`, `scripts/`, `outputs/`, and `events.jsonl`. Read data through `bio data show`, run your own scientific code, register useful outputs with `bio register`, and index the notebook with `bio work sync`. No curation acceptance step is required.
 
-Adapters preserve raw responses, identities and pagination. The [pilot handoff](docs/PILOT.md) and `docs/receipts/` distinguish real provider behavior from offline contracts. Workspaces and downloaded datasets are intentionally excluded from Git.
+The global indexer supports research-graph JSONL imports, repository manifests, bounded processed-file acquisition, structural inspection, literal feature lookup, and attributed semantic profiles. It persists unfinished tasks and can run periodically under your existing scheduler. Full-text search is local SQLite FTS5; externally computed semantic vectors are optional.
 
-The original [specification](BUILD_SPEC.md) and [execution brief](AGENT_START.md) remain unchanged. The implementation adds their previously absent contracts and adversarial fixtures without treating synthetic examples as biological evidence.
+Start with [the v2 architecture and indexing guide](docs/V2.md), [question workflows](examples/V2.md), [real-data validation](docs/V2_PILOT.md), and [backup/restore](docs/BACKUP.md). The [updated specification](v2_SPEC.md) governs this branch; [AGENT_START.md](AGENT_START.md) is the short research kickoff.
+
+This is an additive migration. Original objects, receipts, interpretations, and scientific tests remain intact. `daw` retains the v1 analytical interface and [historical pilot](docs/PILOT.md). Its fixed operators and approval pipeline are optional legacy functionality; `bio` uses source facts, searchable profiles, question-local reasoning, and reusable artifacts.

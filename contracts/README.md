@@ -1,5 +1,9 @@
 # Runtime contracts
 
+The v2 primary interface uses small provenance/storage models in `src/daw/substrate_models.py`: `Profile`, `Derivation`, `ArtifactRegistration`, `IndexPlan`, `GraphRecord`, and `Embedding`. Exported schemas are beside this file. Profiles are attributed descriptive notes, artifacts carry exact derivation inputs, and index plans bound acquisition work. There is no required scientific acceptance workflow. See [V2.md](../docs/V2.md) and [ordinary question workflows](../examples/V2.md).
+
+The remaining sections describe the retained v1 `daw` interface and its scientific safety checks.
+
 The original handoff referenced JSON contracts that were absent from the repository. These implementation contracts are derived from `BUILD_SPEC.md`, not recovered copies of the missing originals.
 
 `src/daw/models.py` defines strict public contracts. `scripts/export_contracts.py` exports JSON Schemas here. Unknown request fields are rejected; unknown **provider** fields survive in raw snapshots.

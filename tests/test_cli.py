@@ -10,7 +10,7 @@ def test_offline_cli_workflow_and_backup(tmp_path):
     ws = tmp_path / "cli"
     initialized = runner.invoke(app, ["init", str(ws)])
     assert initialized.exit_code == 0
-    assert json.loads(initialized.stdout)["catalog_version"] == 2
+    assert json.loads(initialized.stdout)["catalog_version"] == 3
     demo = runner.invoke(app, ["-w", str(ws), "demo"])
     assert demo.exit_code == 0, demo.output
     result = json.loads(demo.stdout)

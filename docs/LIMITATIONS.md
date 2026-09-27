@@ -1,5 +1,7 @@
 # Supported scope and explicit limitations
 
+This page describes the retained v1 `daw` numerical interface. The primary v2 product is the research substrate documented in [V2.md](V2.md), including its search/index coverage, notebook, artifact, and scaling limitations. These legacy capability gates are not requirements for ordinary question-local scripts.
+
 Implemented: table lookup, published contrast lookup, interval overlap, exact bigWig covered-base summaries, annotated matrix values, documented per-feature pseudobulk counts, and Cooler region extraction. Results are measurements with qualified outcomes, not mechanistic conclusions.
 
 - Promoter summaries require an independently reviewed dedicated recipe and remain blocked. Total-gene expression is never a P1/P2 proxy.
