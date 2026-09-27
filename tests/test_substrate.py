@@ -220,14 +220,16 @@ def test_resumable_index_jobs_and_interrupted_task(ws, tmp_path):
     assert first["attempt"] != second["attempt"]
 
 
-def test_index_missing_semantic_profile_is_precise_deferred_state(ws, tmp_path):
+def test_index_missing_semantic_profile_is_optional_enrichment(ws, tmp_path):
     imported = source(ws, tmp_path)
     job = create_job(ws, IndexPlan(scope=[imported["asset_revision"]], level=3))
     result = run_job(ws, job["id"])
-    assert result["state"] == "partial" and result["counts"]["deferred"] == 1
+    # V3 explicitly removes the old semantic completion gate; scientific parse
+    # and acquisition failure expectations are unchanged.
+    assert result["state"] == "complete"
+    assert result["enrichment"]["without_semantic_profile"] == 1
     state = index_status(ws, job["id"])
-    task = next(t for t in state["frontier"] if t["stage"] == "semantic")
-    assert "agent-authored" in read_json(ws.blob_path(task["result_blob"]))["reason"]
+    assert state["frontier"] == [] and state["enrichment"]["optional"]
 
 
 def test_metadata_index_never_downloads_assets_and_budgeted_processed_fetch(ws):

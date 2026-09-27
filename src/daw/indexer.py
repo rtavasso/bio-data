@@ -49,8 +49,6 @@ def enqueue_asset(ws, job, aid, plan):
                 enqueue(ws, job, "extract", aid, chain[-1])
         else:
             enqueue(ws, job, "fetch", aid)
-    if plan.level == 3:
-        enqueue(ws, job, "semantic", aid)
 
 
 def create_job(ws, plan: IndexPlan):
@@ -134,8 +132,6 @@ def _perform(ws, task, plan, source):
             child = extract_members(ws, payload["parent"], [payload["member"]])[0]
             result, aid = child, child["asset_revision"]
         enqueue(ws, job, "profile", aid)
-        if plan.level == 3:
-            enqueue(ws, job, "semantic", aid)
         return "done", result
     if stage == "profile":
         asset = ws.asset(target)
@@ -183,14 +179,14 @@ def run_job(ws, jid, *, max_tasks=None, seconds=None, transport=None, retry=Fals
     started, outcomes = time.monotonic(), []
     try:
         with ws.db:
-            ws.db.execute("UPDATE index_task SET state='pending' WHERE job_id=? AND state='running'", (jid,))
+            ws.db.execute("UPDATE index_task SET state='pending' WHERE job_id=? AND state='running' AND stage!='semantic'", (jid,))
             if retry:
-                ws.db.execute("UPDATE index_task SET state='pending' WHERE job_id=? AND state IN ('blocked','deferred','partial')", (jid,))
+                ws.db.execute("UPDATE index_task SET state='pending' WHERE job_id=? AND stage!='semantic' AND state IN ('blocked','deferred','partial')", (jid,))
             ws.db.execute("UPDATE index_job SET state='running',updated=? WHERE id=?", (now(), jid))
         while len(outcomes) < tasks_limit and time.monotonic() - started < time_limit:
             if http.requests >= ws.budgets.requests or http.transferred >= ws.budgets.bundle_bytes:
                 break
-            task = ws.one("SELECT * FROM index_task WHERE job_id=? AND state='pending' ORDER BY CASE stage "
+            task = ws.one("SELECT * FROM index_task WHERE job_id=? AND state='pending' AND stage!='semantic' ORDER BY CASE stage "
                 "WHEN 'discover' THEN 0 WHEN 'resolve' THEN 1 WHEN 'manifest' THEN 2 WHEN 'fetch' THEN 3 "
                 "WHEN 'extract' THEN 4 WHEN 'profile' THEN 5 ELSE 6 END,id LIMIT 1", (jid,))
             if not task:
@@ -206,10 +202,12 @@ def run_job(ws, jid, *, max_tasks=None, seconds=None, transport=None, retry=Fals
                 ws.db.execute("UPDATE index_task SET state=?,result_blob=?,updated=? WHERE id=?", (state, result_blob, now(), task["id"]))
             outcomes.append({"task": task["id"], "stage": task["stage"], "target": task["target"], "state": state, "result_blob": result_blob})
         counts = Counter(r["state"] for r in ws.rows("SELECT state FROM index_task WHERE job_id=?", (jid,)))
-        state = "pending" if counts["pending"] else "partial" if any(counts[s] for s in ("partial", "blocked", "deferred")) else "complete"
+        required = Counter(r["state"] for r in ws.rows("SELECT state FROM index_task WHERE job_id=? AND stage!='semantic'", (jid,)))
+        state = completion_state(required)
         with ws.db:
             ws.db.execute("UPDATE index_job SET state=?,updated=? WHERE id=?", (state, now(), jid))
         output = {"job": jid, "attempt": attempt, "state": state, "tasks": outcomes, "counts": dict(counts),
+                  "required_counts": dict(required), "enrichment": enrichment_status(ws, jid),
                   "requests": http.requests, "transferred_bytes": http.transferred,
                   "wall_seconds": round(time.monotonic() - started, 4),
                   "budget_scope": "this resumable invocation; active task also has worker/transport limits"}
@@ -224,16 +222,42 @@ def run_job(ws, jid, *, max_tasks=None, seconds=None, transport=None, retry=Fals
             http.close()
 
 
+def completion_state(counts):
+    if counts.get("pending", 0) or counts.get("running", 0):
+        return "pending"
+    return "partial" if any(counts.get(s, 0) for s in ("partial", "blocked", "deferred")) else "complete"
+
+
+def enrichment_status(ws, jid):
+    subjects = ws.rows("SELECT DISTINCT target FROM index_task WHERE job_id=? AND stage='profile'", (jid,))
+    enriched = ws.one("SELECT count(DISTINCT p.subject) AS n FROM dataset_profile p JOIN profile_head h ON p.id=h.profile_id "
+        "WHERE p.level=3 AND p.subject IN (SELECT target FROM index_task WHERE job_id=? AND stage='profile')", (jid,))["n"]
+    return {"optional": True, "candidate_subjects": len(subjects), "with_semantic_profile": enriched,
+            "without_semantic_profile": len(subjects) - enriched,
+            "legacy_tasks": ws.rows("SELECT state,count(*) AS count FROM index_task WHERE job_id=? AND stage='semantic' GROUP BY state", (jid,)),
+            "note": "Agent-authored descriptions are opportunistic; levels 0–2 determine completion"}
+
+
 def index_status(ws, jid=None, *, limit=30):
     if jid:
         row = ws.one("SELECT * FROM index_job WHERE id=?", (jid,))
         if not row:
             raise DawError("unknown_index_job")
         counts = ws.rows("SELECT stage,state,count(*) AS count FROM index_task WHERE job_id=? GROUP BY stage,state ORDER BY stage,state", (jid,))
-        frontier = ws.rows("SELECT id,stage,target,state,attempts,result_blob FROM index_task WHERE job_id=? AND state!='done' ORDER BY stage,id LIMIT ?", (jid, limit))
-        return {**row, "plan": read_json(ws.blob_path(row["plan_blob"])), "counts": counts, "frontier": frontier,
+        frontier = ws.rows("SELECT id,stage,target,state,attempts,result_blob FROM index_task WHERE job_id=? AND stage!='semantic' AND state!='done' ORDER BY stage,id LIMIT ?", (jid, limit))
+        required = Counter()
+        for count in counts:
+            if count["stage"] != "semantic":
+                required[count["state"]] += count["count"]
+        return {**row, "recorded_state": row["state"], "state": completion_state(required),
+                "plan": read_json(ws.blob_path(row["plan_blob"])), "counts": counts, "frontier": frontier,
+                "enrichment": enrichment_status(ws, jid),
                 "frontier_display_limit": limit, "exhausts_public_data": False}
-    return {"jobs": ws.rows("SELECT * FROM index_job ORDER BY created DESC LIMIT ?", (limit,)),
+    jobs = ws.rows("SELECT * FROM index_job ORDER BY created DESC LIMIT ?", (limit,))
+    for job in jobs:
+        required = Counter(r["state"] for r in ws.rows("SELECT state FROM index_task WHERE job_id=? AND stage!='semantic'", (job["id"],)))
+        job["recorded_state"], job["state"] = job["state"], completion_state(required)
+    return {"jobs": jobs,
         "profiles": ws.rows("SELECT p.level,p.origin,count(*) AS count FROM dataset_profile p JOIN profile_head h ON h.profile_id=p.id GROUP BY p.level,p.origin"),
         "documents": ws.rows("SELECT family,count(*) AS count FROM search_document GROUP BY family"),
         "assets": ws.rows("SELECT a.access,count(*) AS count FROM asset_revision a JOIN current_asset c ON a.id=c.revision GROUP BY a.access"),

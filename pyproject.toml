@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "data-archaeology-workbench"
-version = "0.2.0"
+version = "0.3.0"
 description = "A deeply indexed local substrate of scientific data and reusable research work"
 requires-python = ">=3.12,<3.14"
 dependencies = [
@@ -31,6 +31,7 @@ packages = ["src/daw"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = ["live: explicitly enabled network integration checks"]
 
 [tool.ruff]

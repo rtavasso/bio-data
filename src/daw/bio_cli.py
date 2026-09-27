@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from daw.adapters import Sources
 from daw.artifacts import artifact_info, attach_artifact, find_derivation, provenance, register_artifact
 from daw.catalog import Workspace, restore_check
+from daw.gaps import report_gaps
 from daw.indexer import create_job, import_graph, index_status, run_job, schedule_feed, tick
 from daw.inspectors import extract_members, inspect_asset
 from daw.models import Discovery
@@ -299,6 +300,27 @@ def work_event(ctx: typer.Context, question: str, kind: Annotated[str, typer.Opt
         emit(record_event(ws, question, kind, read_json(payload)))
 
 
+@work_app.command("gap")
+def work_gap(ctx: typer.Context, question: str, desired_information: Annotated[str, typer.Option("--need")],
+             why_current_tools_failed: Annotated[str, typer.Option("--failed")], source_or_format: str = "unspecified",
+             likely_value: str | None = None, possible_indexing_solution: str | None = None, gap_key: str | None = None):
+    """Record an actual information-access failure; freeform details remain question-local."""
+    payload = {"desired_information": desired_information, "why_current_tools_failed": why_current_tools_failed,
+               "source_or_format": source_or_format}
+    payload.update({k: v for k, v in {"likely_value": likely_value, "possible_indexing_solution": possible_indexing_solution,
+                                    "gap_key": gap_key}.items() if v is not None})
+    with session(ctx) as ws:
+        emit(record_event(ws, question, "retrieval_gap", payload))
+
+
+@work_app.command("gaps")
+def work_gaps(ctx: typer.Context, question: str | None = None, since: str | None = None,
+              source_or_format: str | None = None, limit: int = 20, max_events: int = 10000):
+    """Aggregate recurring retrieval failures across questions, with source events and coverage."""
+    with session(ctx, False) as ws:
+        emit(report_gaps(ws, question=question, since=since, source=source_or_format, limit=limit, max_events=max_events))
+
+
 @app.command("provenance")
 def provenance_command(ctx: typer.Context, identity: str, depth: int = 3):
     with session(ctx, False) as ws:
@@ -378,7 +400,7 @@ def recover(ctx: typer.Context):
         from daw.work import rebuild_event_log
         result = ws.recover()
         with ws.db:
-            tasks = ws.db.execute("UPDATE index_task SET state='pending' WHERE state='running'").rowcount
+            tasks = ws.db.execute("UPDATE index_task SET state='pending' WHERE state='running' AND stage!='semantic'").rowcount
             ws.db.execute("UPDATE index_job SET state='pending' WHERE state='running'")
         journals = [rebuild_event_log(ws, q["id"]) for q in ws.rows("SELECT id FROM question")]
         emit({**result, "index_tasks_requeued": tasks, "question_journals": journals})

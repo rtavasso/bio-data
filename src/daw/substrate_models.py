@@ -54,7 +54,7 @@ class IndexPlan(Contract):
     searches: list[Discovery] = Field(default_factory=list)
     scope: list[str] = Field(default_factory=list)
     include_existing: bool = True
-    level: int = Field(default=2, ge=0, le=3)
+    level: int = Field(default=2, ge=0, le=3, description="Levels 0–2 drive completion; 3 retains v2 compatibility with optional enrichment")
     fetch_processed: bool = False
     extract_archives: bool = False
     max_tasks: int = Field(default=100, ge=1, le=100000)

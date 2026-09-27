@@ -22,6 +22,9 @@ def record_event(ws, qid, kind, payload):
     _, path = question_record(ws, qid)
     if not kind or len(kind) > 100:
         raise DawError("invalid_event_kind")
+    if kind == "retrieval_gap":
+        from daw.gaps import validate_gap
+        payload = validate_gap(payload, qid)
     body = ws.put_json(payload)
     event = {"id": "event_" + uuid.uuid4().hex, "question": qid, "kind": kind, "body_blob": body, "created": now()}
     with ws.db:

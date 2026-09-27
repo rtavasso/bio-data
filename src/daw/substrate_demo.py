@@ -53,6 +53,6 @@ def demo(ws):
         sync_work(ws, question["question"], summary=f"Synthetic {feature} content retrieval and reusable source table", status="completed")
     result = {"synthetic": True, "index": indexed["job"], "content_search": search(ws, feature="PMP22"),
         "artifact": registered, "reuse_state": reused["state"], "questions": [first, second],
-        "next": "bio work show QUESTION_ID --notebook; bio artifact search reusable; bio provenance ARTIFACT_ID"}
+        "next": "bio work show QUESTION_ID --notebook; bio artifact search --text reusable; bio provenance ARTIFACT_ID"}
     write_json(fixtures / "receipt.json", result)
     return result
