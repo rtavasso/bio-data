@@ -132,8 +132,8 @@ def review_run(root, *, agent=False, executable="codex", model=None, timeout=DEF
     elif agent:
         if os.environ.get("DAW_LIVE") != "1":
             raise ValueError("agent review is live: set DAW_LIVE=1 or omit --agent for an offline review prompt")
-        if not 5 <= timeout <= 3600:
-            raise ValueError("review timeout must be 5–3600 seconds")
+        if timeout < 0:
+            raise ValueError("review timeout must be nonnegative; zero means unlimited")
         resolved = shutil.which(executable)
         if not resolved:
             raise ValueError("Codex executable not found")

@@ -198,7 +198,7 @@ def inspect_file(path, name, budgets=None):
         elif suffix in {"json", "xml"}:
             # Metadata is inventoried but not transformed into scientific observations.
             with Path(path).open("rb") as f:
-                raw = f.read(min(budgets.asset_bytes, 16 * 2**20) + 1)
+                raw = f.read(min(budgets.asset_bytes or 16 * 2**20, 16 * 2**20) + 1)
             if len(raw) > 16 * 2**20:
                 raise DawError("over_budget", "metadata parser byte limit")
             parsed = json.loads(raw) if suffix == "json" else ET.fromstring(raw)
@@ -294,7 +294,7 @@ def extract_members(ws, aid, selected):
                 for data in iter(lambda: inp.read(2**20), b""):
                     size += len(data)
                     expanded += len(data)
-                    if expanded > ws.budgets.expanded_bytes or size > ws.budgets.asset_bytes:
+                    if expanded > ws.budgets.expanded_bytes or (ws.budgets.asset_bytes and size > ws.budgets.asset_bytes):
                         raise DawError("over_budget", "decompressed bytes")
                     ws.check_disk(len(data))
                     out.write(data)

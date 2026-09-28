@@ -7,6 +7,7 @@ from pathlib import Path
 
 from daw.artifacts import register_artifact
 from daw.catalog import Workspace
+from daw.models import Budgets
 from daw.profiles import profile_asset, profile_manifest
 from daw.substrate_models import ArtifactRegistration, Derivation, ObjectInput
 from daw.util import environment_identity, write_json
@@ -66,8 +67,6 @@ def seed(root, kind, source_workspace=None, budget=None):
     if source_workspace:
         source = Workspace(source_workspace)
         try:
-            if sum(r["size"] for r in source.rows("SELECT size FROM blob")) > 2 * 2**30:
-                raise ValueError("seed workspace exceeds the 2 GiB evaluation copy budget")
             with source.writer():
                 source.backup(root)
         finally:
@@ -91,6 +90,7 @@ def seed(root, kind, source_workspace=None, budget=None):
                     child.mkdir(parents=True, exist_ok=True)
             settings = tomllib.loads((root / "config.toml").read_text())["budgets"]
             settings.update(asset_bytes=budget.asset_bytes, bundle_bytes=budget.total_bytes, requests=budget.requests)
+            ws.budgets = Budgets.model_validate(settings)
             (root / "config.toml").write_text("[budgets]\n" + "\n".join(f"{k} = {str(v).lower()}" for k, v in settings.items()) + "\n")
             if kind == "mechanism-blindspots":
                 seed_mechanism_fixture(ws, root.parent / "inputs")

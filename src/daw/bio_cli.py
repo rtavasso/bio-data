@@ -216,7 +216,7 @@ def profile_history(ctx: typer.Context, subject: str):
 @object_app.command("add")
 def object_add(ctx: typer.Context, path: Path, classification: str = "source"):
     with session(ctx) as ws:
-        if path.is_symlink() or not path.is_file() or path.stat().st_size > ws.budgets.asset_bytes:
+        if path.is_symlink() or not path.is_file() or (ws.budgets.asset_bytes and path.stat().st_size > ws.budgets.asset_bytes):
             raise DawError("invalid_or_over_budget_object")
         sha = ws.put_file(path, classification)
         emit({"blob": sha, "bytes": path.stat().st_size, "path": str(ws.blob_path(sha))})

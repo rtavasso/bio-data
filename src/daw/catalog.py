@@ -118,7 +118,8 @@ class Workspace:
                                "BEGIN SELECT RAISE(ABORT,'immutable history'); END")
         (root / "config.toml").write_text(
             '# Data stays local. Raw processing and downloaded code execution are disabled.\n'
-            '[budgets]\nasset_bytes = 536870912\nbundle_bytes = 2147483648\n'
+            '# Zero means unlimited for asset_bytes, bundle_bytes and requests.\n'
+            '[budgets]\nasset_bytes = 0\nbundle_bytes = 0\nrequests = 0\n'
             'reserve_bytes = 5368709120\nreserve_fraction = 0.1\n')
         return cls(root)
 
@@ -290,7 +291,7 @@ class Workspace:
 
     def local_asset(self, path, bundle_name="local"):
         path = Path(path).resolve()
-        if path.stat().st_size > self.budgets.asset_bytes:
+        if self.budgets.asset_bytes and path.stat().st_size > self.budgets.asset_bytes:
             raise DawError("over_budget", "local file exceeds per-asset budget")
         bundle = self.resource("bundle", "local", bundle_name)
         sha = self.put_file(path)

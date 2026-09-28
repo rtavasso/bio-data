@@ -11,6 +11,7 @@ def test_offline_cli_workflow_and_backup(tmp_path):
     initialized = runner.invoke(app, ["init", str(ws)])
     assert initialized.exit_code == 0
     assert json.loads(initialized.stdout)["catalog_version"] == 3
+    (ws / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0.0\n")
     demo = runner.invoke(app, ["-w", str(ws), "demo"])
     assert demo.exit_code == 0, demo.output
     result = json.loads(demo.stdout)

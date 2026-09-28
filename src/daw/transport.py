@@ -1,4 +1,4 @@
-"""Bounded byte-preserving HTTP acquisition. No implicit remote execution or resume."""
+"""Byte-preserving HTTP acquisition with optional caps. No implicit remote execution or resume."""
 import email.utils
 import hashlib
 import ipaddress
@@ -68,7 +68,9 @@ class Transport:
         self.client.close()
 
     def fetch(self, url, *, expected=None, checksum=None, checksum_scope="file", limit=None, resource=None):
-        limit = min(limit or self.ws.budgets.asset_bytes, self.ws.budgets.asset_bytes)
+        if limit is not None and limit < 0:
+            raise ValueError("file limit must be nonnegative; zero means unlimited")
+        limit = min((cap for cap in (limit, self.ws.budgets.asset_bytes) if cap), default=0)
         original_url = url
         histories = []
         for retry in range(self.ws.budgets.retries):
@@ -79,7 +81,7 @@ class Transport:
             try:
                 for redirect in range(6):
                     validate_url(url, resolve=not self.mock)
-                    if self.requests >= self.ws.budgets.requests:
+                    if self.ws.budgets.requests and self.requests >= self.ws.budgets.requests:
                         raise DawError("over_budget", "request budget exhausted")
                     self.ws.check_disk()
                     origin = urlsplit(url).netloc
@@ -104,9 +106,9 @@ class Transport:
                         if status in {429, 500, 502, 503, 504}:
                             retry_delay = self._retry_delay(headers.get("retry-after"), retry)
                         # Small failure payloads are evidence too, but never a full successful asset.
-                        response_limit = min(limit, 2**20) if status != 200 else limit
+                        response_limit = min(limit or 2**20, 2**20) if status != 200 else limit
                         length = headers.get("content-length")
-                        if length and int(length) > response_limit:
+                        if length and response_limit and int(length) > response_limit:
                             raise DawError("over_budget", "declared response size exceeds budget")
                         with path.open("wb") as f:
                             # MockTransport may already have consumed its synthetic response.
@@ -114,7 +116,8 @@ class Transport:
                             for chunk in chunks:
                                 count += len(chunk)
                                 self.transferred += len(chunk)
-                                if count > response_limit or self.transferred > self.ws.budgets.bundle_bytes:
+                                if ((response_limit and count > response_limit)
+                                        or (self.ws.budgets.bundle_bytes and self.transferred > self.ws.budgets.bundle_bytes)):
                                     raise DawError("over_budget", "actual transferred bytes exceed budget")
                                 self.ws.check_disk(len(chunk))
                                 f.write(chunk)
@@ -195,11 +198,15 @@ class Transport:
         try:
             with path.open("rb") as src, decoded.open("wb") as dst:
                 for chunk in iter(lambda: src.read(2**16), b""):
-                    result = dec.decompress(chunk, limit - count + 1)
-                    count += len(result)
-                    if count > limit or dec.unconsumed_tail:
-                        raise DawError("over_budget", "decoded transport representation")
-                    dst.write(result)
+                    # Bound memory per decoding step even when the file size is unlimited.
+                    while chunk:
+                        result = dec.decompress(chunk, min(2**20, limit - count + 1) if limit else 2**20)
+                        chunk = dec.unconsumed_tail
+                        count += len(result)
+                        if limit and count > limit:
+                            raise DawError("over_budget", "decoded transport representation")
+                        self.ws.check_disk(len(result))
+                        dst.write(result)
                 if not dec.eof:
                     raise DawError("integrity_failed", "truncated encoded response")
                 dst.flush()
@@ -220,7 +227,7 @@ class Transport:
             blocked = "no downloadable public locator"
         if blocked:
             result = {"outcome": "unsupported_route", "reason": blocked, "snapshot": current["snapshot_id"], "blob": None}
-        elif asset.size is not None and asset.size > self.ws.budgets.asset_bytes:
+        elif self.ws.budgets.asset_bytes and asset.size is not None and asset.size > self.ws.budgets.asset_bytes:
             result = {"outcome": "over_budget", "reason": "source-declared size exceeds per-asset budget",
                       "snapshot": current["snapshot_id"], "blob": None}
         else:

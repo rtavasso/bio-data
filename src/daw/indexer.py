@@ -169,9 +169,9 @@ def run_job(ws, jid, *, max_tasks=None, seconds=None, transport=None, retry=Fals
     if tasks_limit < 1 or time_limit < 1:
         raise DawError("invalid_index_run_bounds")
     original = ws.budgets
-    ws.budgets = original.model_copy(update={"requests": min(original.requests, plan.max_requests),
-        "bundle_bytes": min(original.bundle_bytes, plan.max_download_bytes),
-        "asset_bytes": min(original.asset_bytes, plan.max_asset_bytes)})
+    ws.budgets = original.model_copy(update={"requests": min(original.requests or plan.max_requests, plan.max_requests),
+        "bundle_bytes": min(original.bundle_bytes or plan.max_download_bytes, plan.max_download_bytes),
+        "asset_bytes": min(original.asset_bytes or plan.max_asset_bytes, plan.max_asset_bytes)})
     http = transport or Transport(ws)
     source = Sources(ws, http)
     source.native_metadata_only = True  # No subprocess can bypass transport accounting.

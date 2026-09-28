@@ -10,14 +10,15 @@ class Contract(BaseModel):
 
 
 class Budgets(Contract):
-    asset_bytes: int = Field(default=512 * 2**20, gt=0)
-    bundle_bytes: int = Field(default=2 * 2**30, gt=0)
+    # Zero disables research acquisition caps. Operational safeguards remain separate.
+    asset_bytes: int = Field(default=0, ge=0)
+    bundle_bytes: int = Field(default=0, ge=0)
     expanded_bytes: int = Field(default=4 * 2**30, gt=0)
     archive_members: int = Field(default=10000, gt=0)
     archive_depth: int = Field(default=3, ge=0)
     reserve_bytes: int = Field(default=5 * 2**30, ge=0)
     reserve_fraction: float = Field(default=0.1, ge=0, lt=1)
-    requests: int = Field(default=100, gt=0)
+    requests: int = Field(default=0, ge=0)
     retries: int = Field(default=3, ge=1, le=6)
     timeout_seconds: float = Field(default=30.0, gt=0, le=120)
     worker_seconds: int = Field(default=120, gt=0)

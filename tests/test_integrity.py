@@ -5,7 +5,7 @@ import pytest
 from hypothesis import given, strategies as st
 
 from daw.catalog import Workspace, restore_check
-from daw.models import Asset
+from daw.models import Asset, Budgets
 from daw.util import DawError, canonical, digest, file_hash
 
 
@@ -91,3 +91,31 @@ def test_writer_serialization(ws):
             pass
     finally:
         other.close()
+
+
+def test_unlimited_acquisition_keeps_production_disk_reserve(ws, monkeypatch):
+    from types import SimpleNamespace
+
+    ws.budgets = Budgets()
+    disk = SimpleNamespace(total=100 * 2**30, free=9 * 2**30)
+    monkeypatch.setattr("daw.catalog.shutil.disk_usage", lambda _: disk)
+    with pytest.raises(DawError, match="minimum free-disk reserve"):
+        ws.put_bytes(b"source")
+    disk.free = 11 * 2**30
+    blob = ws.put_bytes(b"source")
+    assert ws.blob_path(blob).read_bytes() == b"source"
+
+
+def test_existing_workspace_finite_limits_survive_reopening(tmp_path):
+    root = tmp_path / "legacy"
+    Workspace.create(root).close()
+    (root / "config.toml").write_text("[budgets]\nasset_bytes=50\nbundle_bytes=100\nrequests=3\nreserve_bytes=0\nreserve_fraction=0.0\n")
+    ws = Workspace.create(root)
+    try:
+        assert (ws.budgets.asset_bytes, ws.budgets.bundle_bytes, ws.budgets.requests) == (50, 100, 3)
+        source = tmp_path / "larger.tsv"
+        source.write_bytes(b"x" * 51)
+        with pytest.raises(DawError, match="over_budget"):
+            ws.local_asset(source)
+    finally:
+        ws.close()

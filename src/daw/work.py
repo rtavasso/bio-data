@@ -83,7 +83,7 @@ def sync_work(ws, qid, *, summary=None, status=None):
         raise DawError("invalid_question_status")
     files = {}
     for item in safe_work_files(path):
-        if item.stat().st_size > ws.budgets.asset_bytes:
+        if ws.budgets.asset_bytes and item.stat().st_size > ws.budgets.asset_bytes:
             raise DawError("over_budget", "research notebook/script snapshot")
         files[str(item.relative_to(path))] = ws.put_file(item, "work")
     notebook = (path / "LABBOOK.md").read_text()

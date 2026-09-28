@@ -18,7 +18,8 @@ def pytest_collection_modifyitems(items):
 def ws(tmp_path):
     workspace = Workspace.create(tmp_path / "workspace")
     workspace.budgets = workspace.budgets.model_copy(update={"reserve_bytes": 0, "reserve_fraction": 0.0})
-    # The worker receives this fixture's explicit budgets too.
+    # Reopened and copied fixtures need the same test-only disk settings as workers.
+    (workspace.root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0.0\n")
     yield workspace
     workspace.close()
 

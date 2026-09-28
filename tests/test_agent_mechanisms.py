@@ -68,8 +68,8 @@ def test_coverage_does_not_promote_unlocated_or_uncited_data_to_analysis(tmp_pat
 
 
 @pytest.fixture
-def mechanism_run(tmp_path):
-    root = prepare("mechanisms", output=tmp_path)
+def mechanism_run(tmp_path, ws):
+    root = prepare("mechanisms", output=tmp_path, seed_workspace=ws.root)
     folder = root / "cases/pmp22-regulatory-system"
     ws = Workspace(folder / "trial/workspace")
     with ws.writer():
@@ -130,8 +130,8 @@ def test_reviewer_must_cover_all_dimensions_with_real_citations(mechanism_run, t
     assert next(c for c in report["cases"][0]["checks"] if c["id"] == "scientific_review")["status"] == "unknown"
 
 
-def test_synthetic_challenge_preserves_actual_measurements_and_keeps_oracle_private(tmp_path):
-    root = prepare("mechanism-challenges", output=tmp_path)
+def test_synthetic_challenge_preserves_actual_measurements_and_keeps_oracle_private(tmp_path, ws):
+    root = prepare("mechanism-challenges", output=tmp_path, seed_workspace=ws.root)
     folder = root / "cases/upstream-and-rna-fate"
     trial = folder / "trial"
     context = read_json(trial / "inputs/source-context.json")

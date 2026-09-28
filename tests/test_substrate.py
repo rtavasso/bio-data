@@ -367,6 +367,7 @@ def test_bio_cli_without_v1_proposals(tmp_path):
     runner = CliRunner()
     root = tmp_path / "workspace"
     assert runner.invoke(app, ["init", str(root)]).exit_code == 0
+    (root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0.0\n")
     path = tmp_path / "hidden.tsv"
     path.write_text("gene\tvalue\nPMP22\t0\n")
     prefix = ["-w", str(root)]

@@ -17,6 +17,7 @@ def test_fresh_session_uses_help_and_question_tools_without_specs(tmp_path):
     assert "work" in runner.invoke(app, ["--help"]).output
     root = tmp_path / "research"
     assert runner.invoke(app, ["init", str(root)]).exit_code == 0
+    (root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0.0\n")
     prefix = ["-w", str(root)]
     q = runner.invoke(app, prefix + ["work", "new", "What can distinguish two mechanisms?"])
     qid = json.loads(q.output)["question"]

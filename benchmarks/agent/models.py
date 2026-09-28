@@ -5,13 +5,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class ResearchBudget(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    requests: int = Field(default=20, ge=1, le=10000)
-    asset_bytes: int = Field(default=64 * 2**20, ge=1, le=8 * 2**30)
-    total_bytes: int = Field(default=128 * 2**20, ge=1, le=16 * 2**30)
+    # Zero denotes an unlimited allowance, including in manifests and TOML.
+    requests: int = Field(default=0, ge=0)
+    asset_bytes: int = Field(default=0, ge=0)
+    total_bytes: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def fits_total(self):
-        if self.asset_bytes > self.total_bytes:
+        if self.asset_bytes and self.total_bytes and self.asset_bytes > self.total_bytes:
             raise ValueError("per-file budget must fit the total budget")
         return self
 

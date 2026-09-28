@@ -104,6 +104,7 @@ def test_transport_encoding_separate_identities(ws):
 
 
 def test_source_declared_budget_checked_without_request(ws):
+    ws.budgets = ws.budgets.model_copy(update={"asset_bytes": 50})
     bundle = ws.resource("bundle", "test", "large")
     aid = ws.register_asset(bundle, "test", Asset(native_id="large", name="matrix.mtx.gz", url="https://example.org/large",
         size=ws.budgets.asset_bytes + 1), None)
@@ -111,6 +112,45 @@ def test_source_declared_budget_checked_without_request(ws):
     result = http.acquire(aid)
     assert result["outcome"] == "over_budget"
     assert ws.asset(result["asset_revision"])["access"] == "over_budget"
+
+
+def test_unlimited_acquisition_keeps_counters_and_accepts_large_declared_size(ws):
+    bundle = ws.resource("bundle", "test", "large")
+    aid = ws.register_asset(bundle, "test", Asset(native_id="large", name="matrix.tsv", url="https://example.org/large",
+        size=32 * 2**30), None)
+    http = transport(ws, lambda r: httpx.Response(200, content=b"measured data"))
+    # Exercise the former request and transfer cutoffs without large test downloads.
+    http.requests, http.transferred = 151, 3 * 2**30
+    result = http.acquire(aid)
+    assert result["outcome"] == "available_full"
+    assert ws.blob_path(result["blob"]).read_bytes() == b"measured data"
+    assert http.requests == 152 and http.transferred == 3 * 2**30 + len(b"measured data")
+
+
+@pytest.mark.parametrize("limits,limit", [({"asset_bytes": 50}, None), ({"asset_bytes": 50}, 0),
+    ({"asset_bytes": 50}, 100), ({"bundle_bytes": 50}, None), ({"requests": 1}, None)])
+def test_optional_acquisition_caps_still_apply(ws, limits, limit):
+    ws.budgets = ws.budgets.model_copy(update=limits)
+    http = transport(ws, lambda r: httpx.Response(200, stream=RawBytes(b"x" * 60)))
+    if limits.get("requests"):
+        http.requests = 1
+    result = http.fetch("https://example.org/a", limit=limit)
+    assert result["outcome"] == "over_budget"
+    assert result["blob"] is None
+
+
+@pytest.mark.parametrize("limit", [0, 4000])
+def test_transport_decoding_streams_unlimited_output_and_obeys_explicit_cap(ws, limit):
+    decoded = b"x" * (3 * 2**20)
+    encoded = gzip.compress(decoded)
+    http = transport(ws, lambda r: httpx.Response(200, headers={"content-encoding": "gzip"}, stream=RawBytes(encoded)))
+    result = http.fetch("https://example.org/a", limit=limit)
+    if limit:
+        assert result["outcome"] == "over_budget" and result["blob"] is None
+    else:
+        assert result["outcome"] == "available_full"
+        assert ws.blob_path(result["blob"]).read_bytes() == decoded
+    assert not list((ws.root / "staging").iterdir())
 
 
 def test_retry_after_larger_than_wait_budget_defers(ws):

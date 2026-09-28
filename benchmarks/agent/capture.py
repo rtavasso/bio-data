@@ -1,4 +1,4 @@
-"""Bounded stock CLI execution and lossless raw transcript capture."""
+"""Stock CLI execution with optional limits and lossless raw transcript capture."""
 import json
 import os
 import signal
@@ -19,7 +19,9 @@ def stop_process(process):
             process.wait(timeout=5)
 
 
-def execute(argv, prompt, folder, cwd, env, timeout, max_log_bytes=32 * 2**20):
+def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0):
+    if timeout < 0 or max_log_bytes < 0:
+        raise ValueError("execution limits must be nonnegative; zero means unlimited")
     folder = Path(folder)
     start = time.monotonic()
     wall_start = time.time()
@@ -35,11 +37,11 @@ def execute(argv, prompt, folder, cwd, env, timeout, max_log_bytes=32 * 2**20):
                     result["first_output_seconds"] = round(time.monotonic() - start, 4)
                 # Some platforms suspend monotonic time during host sleep. Bound
                 # both clocks so a resumed process cannot outlive the wall budget.
-                if max(time.monotonic() - start, time.time() - wall_start) > timeout:
+                if timeout and max(time.monotonic() - start, time.time() - wall_start) > timeout:
                     result["state"] = "timed_out"
                     stop_process(process)
                     break
-                if sum((folder / name).stat().st_size for name in ("events.jsonl", "stderr.log")) > max_log_bytes:
+                if max_log_bytes and sum((folder / name).stat().st_size for name in ("events.jsonl", "stderr.log")) > max_log_bytes:
                     result["state"] = "log_budget_exceeded"
                     stop_process(process)
                     break

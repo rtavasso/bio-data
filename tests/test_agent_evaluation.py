@@ -10,12 +10,17 @@ from benchmarks.agent.models import Case
 from benchmarks.agent.report import build_report, compare
 from benchmarks.agent.review import review_run, validate_review
 from benchmarks.agent.runner import codex_command, prepare, run, safe_path
+from daw.catalog import Workspace
 from daw.util import file_hash, read_json, write_json
 
 
 @pytest.fixture(scope="module")
 def prepared_template(tmp_path_factory):
-    return prepare(output=tmp_path_factory.mktemp("agent-evals"), cases=["zero-vs-missing"], timeout=30)
+    root = tmp_path_factory.mktemp("agent-evals")
+    source = root / "seed"
+    Workspace.create(source).close()
+    (source / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0.0\n")
+    return prepare(output=root / "runs", cases=["zero-vs-missing"], timeout=30, seed_workspace=source)
 
 
 @pytest.fixture
@@ -142,6 +147,21 @@ def test_log_budget_terminates_and_preserves_output(tmp_path):
                      prompt, tmp_path, tmp_path, dict(os.environ), timeout=5, max_log_bytes=100)
     assert result["state"] == "log_budget_exceeded"
     assert (tmp_path / "events.jsonl").stat().st_size > 100
+
+
+def test_unlimited_execution_survives_clock_jump_and_retains_large_transcript(tmp_path, monkeypatch):
+    prompt = tmp_path / "prompt.txt"
+    prompt.write_text("fixture")
+    ticks = iter([100.0, 10000.0])
+    monkeypatch.setattr("benchmarks.agent.capture.time.time", lambda: next(ticks, 10000.0))
+    size = 33 * 2**20
+    result = execute([sys.executable, "-c",
+        f"import sys,time; sys.stdout.write('x'*{size}); sys.stdout.flush(); time.sleep(0.2)"],
+        prompt, tmp_path, tmp_path, dict(os.environ))
+    assert result["state"] == "exited" and result["returncode"] == 0
+    assert result["timeout_seconds"] == result["log_budget_bytes"] == 0
+    assert (tmp_path / "events.jsonl").stat().st_size == size
+    assert result["wall_seconds"] == 9900
 
 
 def test_input_and_code_mutation_are_detected(prepared):

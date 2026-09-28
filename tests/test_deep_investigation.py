@@ -27,9 +27,9 @@ def queue():
 
 def test_deep_budgets_match_prompt_manifest_and_workspace(tmp_path):
     limits = ResearchBudget(requests=87, asset_bytes=128 * 2**20, total_bytes=900 * 2**20)
-    root = prepare("mechanisms-deep", output=tmp_path, profile="deep", budget=limits)
+    root = prepare("mechanisms-deep", output=tmp_path, profile="deep", budget=limits, timeout=7200)
     m = read_json(root / "manifest.json")
-    assert m["timeout_seconds"] == 3600 and m["research_budget"] == limits.model_dump()
+    assert m["timeout_seconds"] == 7200 and m["research_budget"] == limits.model_dump()
     folder = root / "cases/pmp22-regulatory-system"
     config = tomllib.loads((folder / "trial/workspace/config.toml").read_text())["budgets"]
     assert config["requests"] == 87 and config["asset_bytes"] == limits.asset_bytes and config["bundle_bytes"] == limits.total_bytes
@@ -39,7 +39,42 @@ def test_deep_budgets_match_prompt_manifest_and_workspace(tmp_path):
     with pytest.raises(ValueError, match="per-file"):
         ResearchBudget(asset_bytes=10, total_bytes=9)
     with pytest.raises(ValueError):
-        ResearchBudget(requests=0)
+        ResearchBudget(requests=-1)
+
+
+@pytest.mark.parametrize("profile", ["pilot", "deep"])
+def test_default_research_limits_are_unlimited_in_manifest_and_reopened_workspace(tmp_path, profile, ws):
+    config = ws.root / "config.toml"
+    inherited = "[budgets]\nasset_bytes=128\nbundle_bytes=256\nrequests=2\nreserve_bytes=0\nreserve_fraction=0.0\n"
+    config.write_text(inherited)
+    root = prepare("mechanisms", output=tmp_path, profile=profile, seed_workspace=ws.root)
+    manifest = read_json(root / "manifest.json")
+    assert manifest["timeout_seconds"] == 0
+    assert manifest["research_budget"] == {"requests": 0, "asset_bytes": 0, "total_bytes": 0}
+    ws = Workspace(root / "cases/pmp22-regulatory-system/trial/workspace")
+    try:
+        assert ws.budgets.requests == ws.budgets.asset_bytes == ws.budgets.bundle_bytes == 0
+    finally:
+        ws.close()
+    assert config.read_text() == inherited
+
+
+def test_research_caps_can_be_set_independently_without_old_ceiling():
+    assert ResearchBudget(asset_bytes=32 * 2**30).total_bytes == 0
+    assert ResearchBudget(total_bytes=64 * 2**30).asset_bytes == 0
+    assert ResearchBudget(requests=10001).requests == 10001
+
+
+@pytest.mark.parametrize("flags,expected", [([], (0, 0, 0, 0)),
+    (["--timeout", "7200", "--requests", "10001", "--asset-mib", "0", "--total-mib", "32768"],
+     (7200, 10001, 0, 32 * 2**30))])
+def test_cli_deep_profile_keeps_unlimited_defaults_and_independent_overrides(tmp_path, flags, expected):
+    result = subprocess.run([os.sys.executable, "-m", "benchmarks.agent", "prepare", "--suite", "mechanisms",
+        "--profile", "deep", "--output", str(tmp_path), *flags], capture_output=True, text=True, check=True)
+    from pathlib import Path
+    manifest = read_json(Path(json.loads(result.stdout)["run"]) / "manifest.json")
+    budget = manifest["research_budget"]
+    assert (manifest["timeout_seconds"], budget["requests"], budget["asset_bytes"], budget["total_bytes"]) == expected
 
 
 def test_wrapped_python_survives_login_shell_and_keeps_tls_verification(tmp_path):

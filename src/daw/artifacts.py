@@ -33,7 +33,7 @@ def register_artifact(ws, path, registration: ArtifactRegistration, *, question=
     path = Path(path)
     if path.is_symlink() or not path.is_file():
         raise DawError("artifact_requires_regular_file")
-    if path.stat().st_size > ws.budgets.asset_bytes:
+    if ws.budgets.asset_bytes and path.stat().st_size > ws.budgets.asset_bytes:
         raise DawError("over_budget", "artifact registration")
     key = derivation_key(ws, registration.derivation)
     output = ws.put_file(path, "derived")
