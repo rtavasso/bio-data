@@ -22,6 +22,7 @@ def stop_process(process):
 def execute(argv, prompt, folder, cwd, env, timeout, max_log_bytes=32 * 2**20):
     folder = Path(folder)
     start = time.monotonic()
+    wall_start = time.time()
     result = {"started": now(), "argv": argv, "state": "running", "returncode": None,
               "timeout_seconds": timeout, "log_budget_bytes": max_log_bytes}
     write_json(folder / "execution.json", result)
@@ -32,7 +33,9 @@ def execute(argv, prompt, folder, cwd, env, timeout, max_log_bytes=32 * 2**20):
             while process.poll() is None:
                 if "first_output_seconds" not in result and (folder / "events.jsonl").stat().st_size:
                     result["first_output_seconds"] = round(time.monotonic() - start, 4)
-                if time.monotonic() - start > timeout:
+                # Some platforms suspend monotonic time during host sleep. Bound
+                # both clocks so a resumed process cannot outlive the wall budget.
+                if max(time.monotonic() - start, time.time() - wall_start) > timeout:
                     result["state"] = "timed_out"
                     stop_process(process)
                     break
@@ -52,7 +55,8 @@ def execute(argv, prompt, folder, cwd, env, timeout, max_log_bytes=32 * 2**20):
     except OSError as e:
         result.update(state="launch_failed", error=str(e))
     finally:
-        result.update(finished=now(), wall_seconds=round(time.monotonic() - start, 4))
+        result.update(finished=now(), wall_seconds=round(max(0, time.time() - wall_start), 4),
+                      monotonic_seconds=round(time.monotonic() - start, 4))
         write_json(folder / "execution.json", result)
     return result
 

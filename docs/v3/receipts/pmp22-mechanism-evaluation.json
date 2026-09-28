@@ -1,0 +1,563 @@
+{
+  "audit": "docs/PMP22_MECHANISM_AUDIT.md",
+  "created": "2026-09-28T00:41:41.184453+00:00",
+  "limitations": [
+    "One completed public trial and one environment-interrupted attempt, no skills-off control or causal improvement estimate.",
+    "Default model unpinned; USD cost unavailable.",
+    "Source support remains incomplete; the external spot-check does not repair missing evidence in the recorded subject trial.",
+    "The synthetic mechanism fixture was tested offline but not executed by a model in this audit.",
+    "Raw evidence and seed files remain in ignored local workspaces."
+  ],
+  "parent_audit": {
+    "all_three_ratios_match": true,
+    "final_extraction_strict_json": true,
+    "independent_ratios": {
+      "Egr2": 1.2583141898776016,
+      "Jun": 0.8200465989882196,
+      "Pmp22": 0.8850031374002221
+    },
+    "measurement_check_path": "workspaces/mechanism-source-audit/measurement-check.json",
+    "measurement_check_sha256": "86ecf241ed119f0a5f8ee24e9705a00d81ef9d12fcd287855b2c8d3797b5012d",
+    "primary_source_scope": "Results 3.1 Figure 1C-D and Results 3.3 Figure S1B; one source spot-check only; outside subject/reviewer evidence",
+    "primary_source_spotcheck": {
+      "bytes": 149039,
+      "content_type": "application/xml",
+      "retrieved": "2026-09-28T00:25:29.846098+00:00",
+      "sha256": "febf649b6685ed045eea6758490f75fd8c5bdd37841a1500481b9888116c29bb",
+      "status": 200,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11592338/fullTextXML"
+    },
+    "reported_tss_contrasts_match_source": true
+  },
+  "post_preparation_changes": {
+    "files": {
+      ".agents/skills/bio-artifact-reuse/SKILL.md": "eb6fdce05b351b6c365d04c3dde41ada8dd87e1bcfe103c2423dd8119d276118",
+      ".agents/skills/bio-mechanism-exploration/SKILL.md": "a706ceb00afa056aba72e293f3d16e94d39250192eb9b54e3d0dcc109ffeace5",
+      ".agents/skills/bio-mechanism-exploration/references/artifacts.md": "b5e51fd17a3141182b10f1b591fe9adf5c33d2c7cef4a7fb26992bcfcc74a749",
+      ".agents/skills/bio-research/SKILL.md": "e3c74ecf2cee29edb4f307c7d4fc3048b0c1d78cfa613cb7e9402c1414079f2f",
+      "benchmarks/agent/fixtures.py": "804304cdae111d52a7a86829f8899131bbabf125479645dc381e54314415b09b"
+    },
+    "live_tested_in_recorded_subject": false,
+    "notes": [
+      "Seed initialization regression-tested offline; the subject had to repair missing disposable directories.",
+      "Source-evidence, snapshot-timing, edge-coverage, JSON and output-role instructions refined after observing the trace."
+    ]
+  },
+  "question": "What is the full regulatory system for PMP22?",
+  "runs": [
+    {
+      "case_files": {
+        "artifacts.json": "323ecb5dc6c35cbaa052a6a6a51bd68e4fa298f1e50058f6fe36b848feaf45f3",
+        "baseline.json": "8c7a09ec1cd3c4b0b145a067d007793cf80e41f10abc7798b1457fea8c55d9ad",
+        "events.jsonl": "6d1a1ce27e3168b00bd02a480e3399f478f0cbe95efa104ec29d94ee189ca3f4",
+        "execution.json": "55c3de71ea0c17d2eeadbb9cb4ea64d5129f8c9dc271efac2f53e6db5b1ebc25",
+        "project-files.json": "a872cf9ae749d76ce0a7a0bbd283d8c0392b27a891ec9b39bd28b7f444ad12a3",
+        "prompt.txt": "2e559503cb90e961cf19a66771464d65b92a186fd03e18c23455dfbb9450a75c",
+        "report.json": "032594d153b4b78994808cf1988b388087a3b02f86bd569c637009ebf0a7d393",
+        "stderr.log": "23e15858737d3500d5bd62e47c89113a76bbcac2454132e6af026e814b9a1cd2",
+        "transcript.md": "0f8a8fc2dfe3208487564aa9ead5c30bcc50a612fe0e0a583f82b751376e7d2c"
+      },
+      "checks": {
+        "agent_completed": "fail",
+        "catalog_integrity": "pass",
+        "evidence_coverage": "fail",
+        "final_answer": "fail",
+        "mechanism_map": "fail",
+        "mechanism_revision": "fail",
+        "notebook": "fail",
+        "preserved_inputs": "pass",
+        "project_unchanged": "pass",
+        "question": "pass",
+        "scientific_review": "unknown",
+        "transcript_parseable": "pass"
+      },
+      "civil_elapsed_seconds": 23572.974912,
+      "cli_version": "codex-cli 0.157.1",
+      "driver_files": {
+        "evaluator-source/__init__.py": "05bd0420afd6e05e53ac8d76b5b374a8f7efb1e371c537d49cf61218bc4a79c6",
+        "evaluator-source/__main__.py": "692f109d9015c9927371f0239d0b9ce3241116111074f3b7089d2eab0f453eb7",
+        "evaluator-source/capture.py": "8a8bc68223be220882641de0c5a14b46d02f559301769deea0747ece7d2d7164",
+        "evaluator-source/fixtures.py": "ff169fa3e0a577e42bed720ef654d2e2c720cc24cb843a60a9c598b80b86b53a",
+        "evaluator-source/mechanisms.py": "5382d0b0b7ab95f353c44271af0214457f179315ea27f31089cad35153c65704",
+        "evaluator-source/models.py": "be62afacc9aecba14a462a388deaf9a122412adbcc71b3770238bd5bf4e988cc",
+        "evaluator-source/report.py": "06f4a8acdc865ce1f4163d4ec45eecbf7d9051f7c77763e11f3a70c0db17ad56",
+        "evaluator-source/review.py": "c34532cc2227e38f9026ba18eb4521869f8fa191421ef82b239d823ed220d29d",
+        "evaluator-source/runner.py": "5df22de63dcaa01c75e49b4a793bccbbd629f1e37cd13e4047b0b8a61017c6bb"
+      },
+      "execution": {
+        "finished": "2026-09-28T00:21:02.108326+00:00",
+        "first_output_seconds": 1.3362,
+        "log_budget_bytes": 33554432,
+        "returncode": null,
+        "started": "2026-09-27T17:48:09.133414+00:00",
+        "state": "interrupted",
+        "timeout_seconds": 900,
+        "wall_seconds": 780.042
+      },
+      "interpretation": "Environment-interrupted attempt. Old wall_seconds actually measured monotonic time and omitted the host-time gap; no completed answer or review.",
+      "manifest_sha256": "9932eea8946c745cc94c9b040049c887a3d386252e1c5f79e398c494d57e44f2",
+      "path": "workspaces/agent-evals/20260927T134619-143f8f8c",
+      "requested_model": null,
+      "source_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
+      "source_revision": "09845658fef633d19199d086bcd5a88450b9f0d0",
+      "timeout_seconds": 900,
+      "usage": null,
+      "usd": null
+    },
+    {
+      "case_files": {
+        "artifacts.json": "332b61804b6055671965526a770c03d29233a8a587f964462e079a9a49d405cc",
+        "baseline.json": "8c7a09ec1cd3c4b0b145a067d007793cf80e41f10abc7798b1457fea8c55d9ad",
+        "events.jsonl": "c98af1e5786a528540f9e2b2256edfe87a2387ebcc6791d6d8be006668d888f1",
+        "execution.json": "8655734e64317687ac5bee440dc67f3994d18b1f15e5ea4486adbe4259a6b2e2",
+        "final.md": "3583407aee3b5f1e424392007e17c0c8d77f286f63aa47418440a454180c56f1",
+        "project-files.json": "d722584e8460b075786136123b29ba6e536ac6466b1e7ee8e09ae2070b9ef51e",
+        "prompt.txt": "2e559503cb90e961cf19a66771464d65b92a186fd03e18c23455dfbb9450a75c",
+        "report.json": "8ecc0e44b0aad580c506a49df0acccf91be9f14855f4a59c58c916972a05e8d7",
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "transcript.md": "a001c8d0d5ea64c24264d7af6c07850833e76d4996fa5d935791788bcf26127b"
+      },
+      "checks": {
+        "agent_completed": "pass",
+        "catalog_integrity": "pass",
+        "evidence_coverage": "pass",
+        "final_answer": "pass",
+        "mechanism_map": "pass",
+        "mechanism_revision": "pass",
+        "notebook": "pass",
+        "preserved_inputs": "pass",
+        "project_unchanged": "pass",
+        "question": "pass",
+        "scientific_review": "unknown",
+        "transcript_parseable": "pass"
+      },
+      "civil_elapsed_seconds": 780.090786,
+      "cli_version": "codex-cli 0.157.1",
+      "driver_files": {
+        "evaluator-source/__init__.py": "05bd0420afd6e05e53ac8d76b5b374a8f7efb1e371c537d49cf61218bc4a79c6",
+        "evaluator-source/__main__.py": "692f109d9015c9927371f0239d0b9ce3241116111074f3b7089d2eab0f453eb7",
+        "evaluator-source/capture.py": "4ba27745139862af3a702e9c269127ff5e2d7e688475819745b421e09a474d80",
+        "evaluator-source/fixtures.py": "e7683fafeff7188afee01c63f507995144df4eb5055bbf8cb917a82224a0a961",
+        "evaluator-source/mechanisms.py": "5382d0b0b7ab95f353c44271af0214457f179315ea27f31089cad35153c65704",
+        "evaluator-source/models.py": "2346309f9d7a050da37a03dfcace36bf7e4b99013102cf9fd44e27d5bfc4bd33",
+        "evaluator-source/report.py": "06f4a8acdc865ce1f4163d4ec45eecbf7d9051f7c77763e11f3a70c0db17ad56",
+        "evaluator-source/review.py": "c34532cc2227e38f9026ba18eb4521869f8fa191421ef82b239d823ed220d29d",
+        "evaluator-source/runner.py": "5df22de63dcaa01c75e49b4a793bccbbd629f1e37cd13e4047b0b8a61017c6bb"
+      },
+      "evidence_milestones": {
+        "atac_analysis_line": 64,
+        "both_later_maps_written_line": 69,
+        "contradiction_line": 56,
+        "final_line": 79,
+        "first_web_search_line": 22,
+        "initial_map_line": 17,
+        "new_atac_fetch_line": 60,
+        "rna_analysis_line": 55,
+        "strict_json_correction_line": 78
+      },
+      "execution": {
+        "finished": "2026-09-28T00:35:05.744737+00:00",
+        "first_output_seconds": 1.0218,
+        "log_budget_bytes": 33554432,
+        "monotonic_seconds": 780.0988,
+        "returncode": 0,
+        "started": "2026-09-28T00:22:05.653951+00:00",
+        "state": "exited",
+        "timeout_seconds": 900,
+        "wall_seconds": 780.091
+      },
+      "failed_command_exits": [
+        {
+          "events_jsonl_line": 9,
+          "exit_code": 1
+        },
+        {
+          "events_jsonl_line": 24,
+          "exit_code": 1
+        },
+        {
+          "events_jsonl_line": 30,
+          "exit_code": 1
+        }
+      ],
+      "manifest_sha256": "2a7dc5bbd1023c89278a38c36800aafb49ca11c74de54b041b5ecfe55f63cf63",
+      "path": "workspaces/agent-evals/20260927T172147-ad8067db",
+      "question": "q_277f20df4b6b47cc",
+      "question_files": {
+        "LABBOOK.md": "ed6137bb1f20965896439b61e0327dc32757088f78801ad68c50dfb546295756",
+        "inputs/public-receipts.json": "93f2de1bf2380589d6190e788b9460e38fe4b8dbf6db74bc2c7237f473c97d0d",
+        "outputs/PMC7430845-paragraphs.txt": "7130ff9dfbb3b2d4043c2bc3b04f3eced502efc2bc19a8736d35247d4f8f77f2",
+        "outputs/REPORT.md": "afce7b9fcf3acef8410cb9cb08815054cfcb914d0754d1a7baa116ab255467e6",
+        "outputs/atac-method.json": "823b5c8bcfa7913969d74333d371e7b0fb7169fc33de0115ffc50417c2ec35b2",
+        "outputs/atac-promoter-overlaps.tsv": "f14538a89ecec0a7d8ade5a5bfccc201d821de6b0a57533fb5ef0643cca0ab5a",
+        "outputs/atac-promoter-summary.tsv": "1b64a2cf5bae2774a2b117fd5b26113eb6ea86343c6417f73c7d1e8a298182d4",
+        "outputs/egr2-as-regulatory-panel.tsv": "205a93dc19aa1432d06a0dde4e01479686c5bc40291d73870f17fb72eefc0e22",
+        "outputs/evidence-coverage.tsv": "74eeb15371ce1a446c994c36922e1f004f01a0e5eb176a6e6fe1d68e1da8ed51",
+        "outputs/inspection-log.txt": "b5392cd5f3db4e279858f811ccf6c7f74abc0ffeb17a948c243d0caf45103465",
+        "outputs/inspection-stderr.txt": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+        "outputs/local-source-extraction.json": "2b594ff8d96397c428588cef096a3f743f98a8589996f3819d3a71b7ecdaac98",
+        "outputs/mechanisms.initial.json": "b5c28da96149b0051eceface1a150c38e587a0541160459d3bbb0e489800c8ea",
+        "outputs/mechanisms.json": "34c034ded05087051823be546f52546c5a731c751d986da783de9c1517d53f3f",
+        "outputs/mechanisms.r002.json": "da109a466779d1a55c1f71074f240cf68b05150b003b37040e0c62644825a809",
+        "outputs/pmp22-source-values.json": "8d4eb340bd94fac8f4fe80a3ae37ec28ce622e24ed0a34e16c34be8782ee8ba8",
+        "outputs/prepared.parquet": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+        "outputs/preservation.json": "b4c0693b079bbc49ccf801e12898f32eddb26a8edebb69a39c863f2530187af6",
+        "outputs/reuse-validation-stderr.txt": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+        "outputs/reuse-validation.json": "17f6e87de91961ca832bb94a58b8bbf7bc32504d79aa6b01d097c103a2a1a3ec",
+        "outputs/rna-normalization.json": "37c40ebbefc1f73f6967b13c6f5c2b2dd1a55317e7961ffa1e1fcb9960430eb7",
+        "outputs/rna-stderr.txt": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+        "outputs/tss-regulatory-panel.tsv": "a6dfdabbe22f0e3d66fe0da3b0a3863496c7ae1078eabb88ce41156f90e5fed2",
+        "scripts/analyze_atac.py": "736e98f4d7cfcf0c63e4a223e6961cee5e5033ff953566dabc925745a143cec1",
+        "scripts/analyze_rna.py": "1ce1348b983123ded4b4293138ae2e6647d54ec35ce6e440af201bee60d617e2",
+        "scripts/inspect_local.py": "08e31300eda31c217dc935abfebbf3bdc304d66ce7ba540392a28c112a09f670",
+        "scripts/preserve_results.py": "667b5faa89e96a57bfabcd8acb41acc5768acd78ded2eb2369825cb67c2e727c",
+        "scripts/retrieve_sources.py": "d93920d4178dfbb971dcc006f799fb63ef797cbf9e97326cfb95aa9c30c4a00a",
+        "scripts/validate_reuse.py": "c46f80b763f1cfeec34cf6af2dcf5ca3a16faf0e4c9b6b9d1e3c85eca98cae3e"
+      },
+      "registration_ambiguity_warnings": 5,
+      "registration_receipts": 10,
+      "requested_model": null,
+      "review": {
+        "assessments": [
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "recursive_exploration",
+            "evidence": [
+              {
+                "locator": "line:26",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:39",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:60",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:64",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              }
+            ],
+            "justification": "The agent followed Egr2 regulation into antisense RNA and chromatin, searched specifically for that mechanism, opened the primary article, and acquired and analyzed additional ATAC files. This is observable investigation beyond drawing a path. Preserved GEO metadata supports the antisense/chromatin branch, but the article body needed to verify the more upstream NRG\u2013YY1 claims is absent from the web receipt.",
+            "verdict": "partial"
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "breadth",
+            "evidence": [
+              {
+                "locator": "line:26",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:15",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/scripts/analyze_rna.py"
+              },
+              {
+                "locator": "line:13",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              },
+              {
+                "locator": "line:15",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              }
+            ],
+            "justification": "Searches and analysis considered promoter regulation, cell state, RNA repression, protein handling and lipid consequences. The agent distinguished human fibroblasts from Schwann cells, mutation-specific retention from dosage effects, and downstream lipid effects from feedback. Depth varied, but breadth was substantive rather than a node count.",
+            "verdict": "demonstrated"
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "discovery_value",
+            "evidence": [
+              {
+                "locator": "line:56",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:60",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:12",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/scripts/analyze_atac.py"
+              },
+              {
+                "locator": "line:6",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/atac-promoter-summary.tsv"
+              }
+            ],
+            "justification": "The RNA discrepancy motivated a concrete use of four identified ATAC files: strand-aware promoter overlap in rn6, with source row locators. The analysis was executed and exposed the selected Pmp22 promoter's lack of called peaks. This is useful discovery of a data opportunity and its limits, not a new causal biological discovery.",
+            "verdict": "demonstrated"
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "discrimination",
+            "evidence": [
+              {
+                "locator": "line:2",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/egr2-as-regulatory-panel.tsv"
+              },
+              {
+                "locator": "line:42",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              },
+              {
+                "locator": "line:48",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              }
+            ],
+            "justification": "The agent retained measurements inconsistent with a simple Egr2-down/Jun-up explanation and declined to attribute reduced Pmp22 specifically to EGR2 repression. It distinguished steady-state RNA, promoter proxies, protein activity and accessibility, and proposed matched nascent RNA/protein measurements and EGR2 rescue with enhancer perturbation. The ATAC analysis did not resolve mediation, which the agent explicitly acknowledged.",
+            "verdict": "demonstrated"
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "revision",
+            "evidence": [
+              {
+                "locator": "line:17",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:56",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:64",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:69",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              }
+            ],
+            "justification": "An initial hypothesis map preceded substantial literature collection and measurement analysis. The RNA contradiction was explicitly recognized before ATAC acquisition and became the highest-priority unresolved question. However, revisions 2 and 3 were generated together after ATAC analysis, so the intermediate snapshot does not independently document the claimed first-pass decision state.",
+            "verdict": "partial"
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "criterion": "calibration",
+            "evidence": [
+              {
+                "locator": "line:26",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              },
+              {
+                "locator": "line:57",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/REPORT.md"
+              },
+              {
+                "locator": "line:4",
+                "path": "cases/pmp22-regulatory-system/final.md"
+              },
+              {
+                "locator": "line:39",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              }
+            ],
+            "justification": "Measurement claims are carefully bounded by species, assay, replication, assembly and selected feature universe. Missing peaks are not treated as zeros, and no significance or exhaustive-system claim is made. Calibration is weaker for literature edges: detailed TEAD and upstream signaling claims are presented as supported despite insufficient retained source text to verify them.",
+            "verdict": "partial"
+          }
+        ],
+        "execution": {
+          "finished": "2026-09-28T00:39:20.644047+00:00",
+          "first_output_seconds": 1.438,
+          "log_budget_bytes": 33554432,
+          "monotonic_seconds": 188.7214,
+          "returncode": 0,
+          "started": "2026-09-28T00:36:11.925107+00:00",
+          "state": "exited",
+          "timeout_seconds": 900,
+          "wall_seconds": 188.7194
+        },
+        "files": {
+          "events.jsonl": "664a413444efc87c095912b361435039b27d32d5b3cf9f201647122a2cf32267",
+          "execution.json": "38230357080b3979d5fe707a2b17535c8bedc10db2fed6b7f2e354ec24c783d6",
+          "input-report.json": "53e1af9f2048943febc8db47c6065cf119824d5a34836697c32df5a3b8b9bd9e",
+          "prompt.txt": "943f825a1e395e431b78ce766af3fc5048e82c09af0264b1b0dcf9de4e092b0c",
+          "provenance.json": "bee1654f93bc4ef635e20f1f25957507903fb16b40b6b5f8e5072a328f38f10e",
+          "review.json": "5c92c6fe05f01340ca887383f1475c8a9e560090cdb1cb07d40d66e6e3ed8ade",
+          "schema.json": "c40c69fda28a0268f30e50b8c053e96ef4d9e8654245c75164146b6f05d6b772"
+        },
+        "findings": [
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "evaluation",
+            "evidence": [
+              {
+                "locator": "line:39",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "/4/error",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/inputs/public-receipts.json"
+              }
+            ],
+            "observation": "The successful-looking PMC11592338 web-open receipt retains only 'Total lines: 526', not the article text. The XML attempt failed. Consequently, the reviewer cannot verify the consequential NRG\u2013YY1 mechanism or the claimed paper/GEO alignment discrepancy from that receipt. This is missing evaluation evidence, not proof that the agent never read the article.",
+            "severity": "high",
+            "suggested_change": "Preserve the actual web response text, or exact quoted passages with stable locators, alongside retrieval metadata.",
+            "validation_test": "Replay a captured successful article open and verify that an offline reviewer can resolve each cited passage without external access."
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "scientific_reasoning",
+            "evidence": [
+              {
+                "locator": "/edges/13",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/mechanisms.json"
+              },
+              {
+                "locator": "/edges/14",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/mechanisms.json"
+              },
+              {
+                "locator": "line:22",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:4",
+                "path": "cases/pmp22-regulatory-system/final.md"
+              }
+            ],
+            "observation": "The graph marks both direct TEAD\u2192PMP22 and TEAD\u2192EGR2 routes supported, citing binding, loss-of-function and motif mutation. The retained primary-paper snippet does not establish these experiments, and the same evidence description does not specifically establish the EGR2 edge. The final answer omits the report's retrieval qualification. Source support remains unverified; the claims are not shown to be scientifically false.",
+            "severity": "medium",
+            "suggested_change": "Require claim-specific evidence for each supported edge and carry source-verification limitations into the final answer.",
+            "validation_test": "Given only the preserved snippets, confirm that detailed causal edges remain provisional until an exact supporting passage is available."
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "agent",
+            "evidence": [
+              {
+                "locator": "line:64",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:69",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:45",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/LABBOOK.md"
+              }
+            ],
+            "observation": "The agent created the purported first-pass revision and post-ATAC revision in one command after ATAC results were available. Actual adaptive behavior is visible in earlier commentary, but the numbered snapshots overstate the contemporaneous record of the revision process.",
+            "severity": "medium",
+            "suggested_change": "Save the first-pass map and collection rationale before issuing follow-up acquisitions, or label reconstructed intermediate maps as retrospective.",
+            "validation_test": "Check event ordering: the first-pass snapshot hash and decision note must precede the follow-up fetch and analysis events."
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "scientific_reasoning",
+            "evidence": [
+              {
+                "locator": "line:5",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/evidence-coverage.tsv"
+              },
+              {
+                "locator": "line:10",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/outputs/evidence-coverage.tsv"
+              }
+            ],
+            "observation": "Coverage rows combine analyzed measurements with causal edges those measurements cannot test. Promoter peak overlaps are attached to NRG/YY1 and EZH2/WDR5 recruitment edges; Abca1 expression is attached to PMP22\u2192lipid and reverse-feedback edges. The prose caveats are sound, but the shared 'analyzed' status obscures edge-specific evidential coverage.",
+            "severity": "medium",
+            "suggested_change": "Separate measurement-analysis status from causal-edge support and label these rows as contextual or non-discriminating for the listed edges.",
+            "validation_test": "Verify that promoter overlap alone cannot mark recruitment or signaling edges experimentally tested, and that Abca1 expression cannot mark feedback tested."
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "environment",
+            "evidence": [
+              {
+                "locator": "line:9",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:20",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              },
+              {
+                "locator": "line:28",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              }
+            ],
+            "observation": "The prepared environment lacked staging and runs directories, causing question creation and discovery failures. The login shell also resolved python to a pyenv shim rather than the supplied interpreter. The agent recovered, but these setup failures consumed the bounded investigation and left an extra question in the mechanical report.",
+            "severity": "medium",
+            "suggested_change": "Initialize required workspace directories and verify interpreter resolution under the same shell invocation used by the subject.",
+            "validation_test": "In a fresh fixture, run question creation, a mocked discovery request and a pandas import through the advertised python command; require success without manual repair."
+          },
+          {
+            "case_id": "pmp22-regulatory-system",
+            "category": "environment",
+            "evidence": [
+              {
+                "locator": "/0/error",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/inputs/public-receipts.json"
+              },
+              {
+                "locator": "/6/error",
+                "path": "cases/pmp22-regulatory-system/trial/workspace/questions/q_277f20df4b6b47cc/inputs/public-receipts.json"
+              },
+              {
+                "locator": "line:39",
+                "path": "cases/pmp22-regulatory-system/events.jsonl"
+              }
+            ],
+            "observation": "All seven XML requests failed certificate verification, while three browser opens returned reCAPTCHA. These transport/access failures materially limited primary-source inspection and are separate from the quality of biological reasoning.",
+            "severity": "medium",
+            "suggested_change": "Configure the supplied interpreter's certificate trust correctly and stop repeated same-host attempts after a shared TLS failure is established.",
+            "validation_test": "Use a controlled HTTPS fixture to verify certificate validation succeeds; inject a trust failure and confirm bounded retries plus an actionable retrieval-gap record."
+          }
+        ],
+        "state": "recorded",
+        "summary": "This was a useful, adaptive partial investigation with real RNA, TSS and ATAC analyses. Breadth, discovery value and discrimination are demonstrated. Recursive exploration, revision and calibration are partial because source support is incompletely preserved, intermediate maps were reconstructed after collection, and some coverage labels imply more edge-specific testing than the measurements provide. Mechanical passes do not establish biological validity.",
+        "usage": {
+          "cached_input_tokens": 290048,
+          "input_tokens": 365542,
+          "output_tokens": 5353,
+          "reasoning_output_tokens": 59
+        },
+        "usd": null
+      },
+      "source_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
+      "source_revision": "09845658fef633d19199d086bcd5a88450b9f0d0",
+      "timeout_seconds": 900,
+      "tool_counts": {
+        "agent_message": 7,
+        "command_execution": 32,
+        "web_search": 3
+      },
+      "usage": {
+        "cached_input_tokens": 2285184,
+        "input_tokens": 2402209,
+        "output_tokens": 19609,
+        "reasoning_output_tokens": 1454
+      },
+      "usd": null
+    }
+  ],
+  "validation": {
+    "build": "uv build: passed",
+    "initial_test_failure_receipt": {
+      "explanation": "Existing 0.3-second child-startup race; timeout fixture increased to 2 seconds with expected timeout/partial-output/termination outcomes unchanged.",
+      "path": "workspaces/mechanism-offline-tests.xml",
+      "sha256": "f1a7e007afea98d542b5ca4ced0b6d1958fdeba0ea246e894e85d43dca353901"
+    },
+    "offline_test_receipt": {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "Rileys-MacBook-Pro.local",
+      "name": "pytest",
+      "path": "workspaces/mechanism-offline-tests-final.xml",
+      "sha256": "da7e6d5523f918d65fd7c6a9f00ce399fc467c4fd780a982874eb11ea39b878b",
+      "skipped": "3",
+      "tests": "155",
+      "time": "56.122",
+      "timestamp": "2026-09-27T17:22:57.323722-07:00"
+    },
+    "passed": 152,
+    "ruff": "uv run ruff check src tests scripts benchmarks: passed",
+    "skill_validation": "all five project skills passed quick_validate"
+  }
+}

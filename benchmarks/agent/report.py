@@ -9,6 +9,7 @@ from daw.util import file_hash, read_json, write_json
 
 from .capture import parse_events, transcript_text
 from .fixtures import catalog_snapshot
+from .mechanisms import inspect_mechanisms
 from .runner import safe_path
 
 STYLE = """:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101820;color:#e5eef4}
@@ -128,6 +129,15 @@ def checks_for(folder, case, execution, parsed, artifacts):
         "registered_output": (any(a["relationship"] == "produced" for a in links), "Output registered as produced for a new question"),
         "reuse": (any(a["relationship"] == "reused" and a["artifact_id"] in {r["id"] for r in baseline["artifact"]} for a in links), "Existing artifact attached as reused to a new question"),
         "gap": (any(e["kind"] == "retrieval_gap" for e in events), "Retrieval-gap event recorded for a new question; quality requires review")}
+    mechanism_keys = {"mechanism_map", "mechanism_revision", "evidence_coverage"}
+    mechanism_records = inspect_mechanisms(trial, new_questions) if mechanism_keys & set(case["expect"]) else []
+    details = {
+        "mechanism_map": "Structurally valid network with resolved IDs and attributed claims; does not validate biology",
+        "mechanism_revision": "Initial and later numbered maps plus a change rationale; actual timing and substantive revision require transcript review",
+        "evidence_coverage": "Coverage rows reference real edge IDs and distinguish planned, located, inspected and analyzed work; claims still require source review"}
+    for key in mechanism_keys:
+        if key in case["expect"]:
+            observations[key] = (any(r[key] for r in mechanism_records), details[key] + "; " + str(mechanism_records))
     for key in case["expect"]:
         ok, detail = observations[key]
         add(key, ok if started and state else None, detail, ["trial/workspace/catalog.sqlite", "artifacts.json"])
@@ -151,7 +161,7 @@ def case_report(folder, case):
         status = "incomplete"
     commands = [i for i in parsed["items"] if i.get("type") == "command_execution"]
     result = {"case_id": case["id"], "question": case["question"], "status": status, "checks": checks,
-        "review_focus": case["review_focus"], "execution": execution, "thread_ids": parsed["thread_ids"],
+        "review_focus": case["review_focus"], "review_rubric": case.get("review_rubric", "standard"), "execution": execution, "thread_ids": parsed["thread_ids"],
         "usage": parsed["usage"], "usd": None, "tool_counts": dict(Counter(i.get("type", "unknown") for i in parsed["items"])),
         "failed_commands": [{"line": i["line"], "command": i.get("command"), "exit_code": i.get("exit_code")} for i in commands if i.get("exit_code") not in (None, 0)],
         "artifacts": artifacts, "malformed_lines": parsed["malformed_lines"], "errors": parsed["errors"],
@@ -207,6 +217,12 @@ def build_report(root):
     if result["review"]:
         review = result["review"]
         body += f"<p>{escape(review['summary'])}</p>"
+        if review.get("assessments"):
+            body += "<h3>Mechanism exploration audit</h3><p>Attributed reviewer judgments; artifact checks alone do not establish these outcomes.</p><table><tr><th>Case / criterion</th><th>Verdict</th><th>Evidence and reasoning</th></tr>"
+            for assessment in review["assessments"]:
+                evidence = " · ".join(f"<a href='{quote(c['path'], safe='/')}'>{escape(c['path'])}</a> {escape(c['locator'])}" for c in assessment["evidence"])
+                body += f"<tr><td>{escape(assessment['case_id'])}<br>{escape(assessment['criterion'])}</td><td>{escape(assessment['verdict'])}</td><td>{escape(assessment['justification'])}<p class=muted>{evidence}</p></td></tr>"
+            body += "</table>"
         for finding in review["findings"]:
             evidence = " · ".join(f"<a href='{quote(c['path'], safe='/')}'>{escape(c['path'])}</a> {escape(c['locator'])}" for c in finding["evidence"])
             body += (f"<article class=card><span class=tag>{escape(finding['severity'])} · {escape(finding['category'])}</span>"

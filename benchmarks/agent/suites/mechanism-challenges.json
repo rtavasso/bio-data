@@ -1,0 +1,20 @@
+{
+  "name": "synthetic-mechanism-challenges",
+  "description": "Offline fictional mechanisms with an upstream activity effect, an RNA-fate alternative and a context decoy. This is a source-auditable challenge, not a biological truth set or a scored gene list.",
+  "cases": [{
+    "id": "upstream-and-rna-fate",
+    "question": "What could explain regulation of fictional gene T in cell state C1? Investigate the supplied measurements, explore controls on its regulators, and identify overlooked explanations and useful analyses of the data already available.",
+    "setup": "mechanism-blindspots",
+    "data_access": "offline",
+    "skills": ["bio-research", "bio-mechanism-exploration", "bio-data-discovery"],
+    "review_rubric": "mechanism-exploration",
+    "expect": ["question", "notebook", "mechanism_map", "mechanism_revision", "evidence_coverage", "script", "registered_output"],
+    "review_focus": [
+      "U inhibition leaves R abundance unchanged while R activity and T nascent RNA fall. Investigate upstream activity control without asserting specific causal mediation.",
+      "D inhibition changes T RNA half-life and mature RNA without changing R activity or nascent RNA; transcription-only explanations are insufficient for the supplied observations.",
+      "The strong X association belongs to C2 and cannot silently establish a C1 mechanism.",
+      "Inspect and analyze actual table bytes, revisit the initial R-centered hypothesis, preserve competing interpretations and missing intervention specificity/replication.",
+      "Naming U and D or drawing a multi-hop graph alone earns no exploration or discovery credit. Follow the same six-dimensional rubric used for the public question."
+    ]
+  }]
+}

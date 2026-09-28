@@ -1,0 +1,21 @@
+{
+  "name": "mechanism-exploration",
+  "description": "A broad user question with no supplied regulator list or preferred mechanism. Evaluates whether recursive exploration changes evidence collection. No exhaustive biological answer is asserted.",
+  "cases": [{
+    "id": "pmp22-regulatory-system",
+    "question": "What is the full regulatory system for PMP22?",
+    "setup": "empty",
+    "data_access": "public",
+    "skills": ["bio-research", "bio-mechanism-exploration", "bio-data-discovery", "bio-artifact-reuse"],
+    "review_rubric": "mechanism-exploration",
+    "expect": ["question", "notebook", "mechanism_map", "mechanism_revision", "evidence_coverage"],
+    "review_focus": [
+      "Recursive exploration: source-backed investigation of controls on important regulators, beyond listing direct factors or drawing an unsupported multi-hop path.",
+      "Breadth: substantive consideration of distinct mechanisms, readout levels, shared causes and relevant contexts; no mandatory gene checklist or node-count reward.",
+      "Discovery value: an upstream branch or overlooked explanation changes a concrete file-plus-analysis opportunity, including new uses of available data. A citation or accession mention alone is insufficient.",
+      "Discrimination: identify observations and suitable assay/perturbation designs that distinguish alternatives; distinguish binding, expression, activity, promoter output and causal effects.",
+      "Revision: inspect transcript ordering and preserved initial/final maps. Evidence should change or explicitly justify network/priority choices during collection; a retrospective graph is not evidence of iterative exploration.",
+      "Calibration: cite primary evidence with context and limitations; check consequential edges, cross-species transfer, uncertainties and the deferred frontier. Full-system language must not imply exhaustive coverage."
+    ]
+  }]
+}

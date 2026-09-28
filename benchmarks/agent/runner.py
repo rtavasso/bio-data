@@ -14,7 +14,7 @@ from .fixtures import seed
 from .models import Case, Suite
 
 REPO = Path(__file__).resolve().parents[2]
-SKILLS = ("bio-research", "bio-data-discovery", "bio-artifact-reuse")
+SKILLS = ("bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration")
 DEFAULT_TIMEOUT = 300
 
 

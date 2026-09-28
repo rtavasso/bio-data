@@ -33,6 +33,31 @@ def catalog_snapshot(root):
     return result
 
 
+def seed_mechanism_fixture(ws, inputs):
+    """Fictional perturbations expose activity, RNA stability and a context decoy."""
+    inputs.mkdir(exist_ok=True)
+    tables = {
+        "process-screen.tsv": (
+            "condition\tR_abundance\tR_activity\tT_nascent_RNA\tT_RNA_half_life\tT_mature_RNA\n"
+            "control\t1\t1\t1\t1\t1\nU_inhibited\t1\t0.4\t0.4\t1\t0.4\n"
+            "D_inhibited\t1\t1\t1\t2\t2\n"),
+        "other-context-screen.tsv": "condition\tR_activity\tT_mature_RNA\ncontrol\t1\t1\nX_inhibited\t0.1\t0.1\n"}
+    identities = {}
+    for name, content in tables.items():
+        path = inputs / name
+        path.write_text(content)
+        imported = ws.local_asset(path, "synthetic-mechanism-exploration")
+        profile_manifest(ws, imported["asset_revision"])
+        profile_asset(ws, imported["asset_revision"])
+        identities[name] = imported["asset_revision"]
+    write_json(inputs / "source-context.json", {"synthetic": True, "target": "fictional gene T",
+        "question_context": "fictional cell state C1", "prior_hypothesis": "R activity promotes T transcription; mechanism and upstream controls need investigation",
+        "sources": identities, "assay_notes": {
+            "process-screen.tsv": "State C1. Each column is a distinct synthetic assay, relative to its own control: R protein abundance, R activity reporter, T nascent RNA, T RNA half-life, T mature RNA. Values are not counts. U and D interventions have no selectivity or replication evidence supplied.",
+            "other-context-screen.tsv": "State C2 only. Synthetic R activity and T mature RNA after X inhibition; no C1 evidence supplied."},
+        "design_limits": "Illustrative summaries; no independent-donor count, uncertainty estimate or causal mediation test. Do not infer intervention specificity."})
+
+
 def seed(root, kind, source_workspace=None):
     root = Path(root)
     if source_workspace:
@@ -44,7 +69,9 @@ def seed(root, kind, source_workspace=None):
                 source.backup(root)
         finally:
             source.close()
-        ws = Workspace(root)
+        # Backups intentionally omit disposable directories; recreate them before
+        # handing the restored workspace to a researcher that will write objects.
+        ws = Workspace.create(root)
     else:
         ws = Workspace.create(root)
     try:
@@ -53,7 +80,9 @@ def seed(root, kind, source_workspace=None):
             settings.update(asset_bytes=min(ws.budgets.asset_bytes, 64 * 2**20),
                             bundle_bytes=min(ws.budgets.bundle_bytes, 128 * 2**20), requests=min(ws.budgets.requests, 20))
             (root / "config.toml").write_text("[budgets]\n" + "\n".join(f"{k} = {str(v).lower()}" for k, v in settings.items()) + "\n")
-            if kind != "empty":
+            if kind == "mechanism-blindspots":
+                seed_mechanism_fixture(ws, root.parent / "inputs")
+            elif kind != "empty":
                 inputs = root.parent / "inputs"
                 inputs.mkdir()
                 path = inputs / "unrelated-selected-table.tsv"

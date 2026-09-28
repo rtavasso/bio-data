@@ -12,7 +12,7 @@ uv run bio artifact search --text "useful prior processing"
 uv run bio work search --text "related question"
 ```
 
-Use your biological knowledge to propose mechanisms and competing explanations. Audit important gaps with external structured sources, web/repository search, and primary papers. Search for contradictions and observations that distinguish alternatives. No local mechanism or transfer graph is needed.
+Use biological knowledge to propose competing explanations. For broad regulatory-system questions, use `bio-mechanism-exploration` to preserve an initial hypothesis network, investigate upstream controls, connect branches to data analyses, and revise priorities during collection. Audit gaps using structured resources and primary papers. Question-local hypothesis networks do not require a platform mechanism or transfer engine.
 
 Read detailed source/profile information with `bio data show ID`. Use ordinary Python/R/SQL and scientific tools in the returned question folder. Keep `LABBOOK.md` current with findings, failed routes, assumptions, limitations, and open questions.
 

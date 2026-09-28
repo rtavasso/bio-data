@@ -1,10 +1,11 @@
 # Research workflow skills
 
-The repository ships four focused skills in `.agents/skills/`. Codex discovers repository skills from that directory; each skill also supports explicit invocation. See the [official skill documentation](https://learn.chatgpt.com/docs/build-skills).
+The repository ships five focused skills in `.agents/skills/`. Codex discovers repository skills from that directory; each skill also supports explicit invocation. See the [official skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
 | Skill | Use it for |
 | --- | --- |
 | [`bio-research`](../.agents/skills/bio-research/SKILL.md) | A biological question, source-backed analysis, a notebook and reusable outputs |
+| [`bio-mechanism-exploration`](../.agents/skills/bio-mechanism-exploration/SKILL.md) | Recursive upstream investigation, competing explanations, evolving networks and data blind spots |
 | [`bio-data-discovery`](../.agents/skills/bio-data-discovery/SKILL.md) | Selecting useful measurements, inspecting exact files and recording access gaps |
 | [`bio-artifact-reuse`](../.agents/skills/bio-artifact-reuse/SKILL.md) | Assessing an existing derivation or registering and reusing a new representation |
 | [`bio-evaluation-review`](../.agents/skills/bio-evaluation-review/SKILL.md) | Reviewing an agent's transcript and outputs to propose concrete improvements |

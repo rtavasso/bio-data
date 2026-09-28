@@ -5,7 +5,9 @@ description: "Find and inspect scientific datasets or files that can test a biol
 
 # Bio Data Discovery
 
-Look for an exact file plus a plausible analysis, not just a paper mentioning the gene. Search source context and literal content separately with `bio data search --text "..."` and `bio data search --feature IDENTIFIER`. Use `bio data show ID` to inspect source context, structural coverage, limitations and immutable paths. Multiple profiles and alternate encodings can describe one experiment; do not count them as independent evidence.
+Look for an exact file plus a plausible analysis, not just a paper mentioning the gene. Search source context and literal content separately with `bio data search --text "..."` and `bio data search --feature IDENTIFIER`. Use `bio data show SUBJECT` with the result's `subject`, not its index-document `id`, to inspect context, structural coverage, limitations and immutable paths. Multiple profiles and encodings can describe one experiment; do not count them as independent evidence.
+
+For broad mechanism questions, use the evolving network from `bio-mechanism-exploration` to diversify collection across upstream regulators, perturbations, assays and biological states. A useful dataset need not mention the target gene. Connect important branches to discriminating analyses; distinguish located, inspected and analyzed files. Revisit existing data when new mechanisms suggest another use. After a collection pass, identify explanations current data cannot distinguish and investigate a consequential neglected branch; keep inaccessible branches visible.
 
 Feature search is case-sensitive and performs no gene/ortholog inference. Text queries use literal AND matching. Format filters use stored labels such as `bw` or `h5ad`; if a narrow filter returns nothing, inspect an unfiltered result's `format` before concluding the data is absent. Levels 0–2 support retrieval; a missing semantic profile is not a processing failure.
 

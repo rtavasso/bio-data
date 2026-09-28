@@ -15,7 +15,7 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("prepare", "run"):
         sub = commands.add_parser(name, help="Create isolated inputs offline" if name == "prepare" else "Launch stock Codex; requires DAW_LIVE=1")
-        sub.add_argument("--suite", default="workflow", help="workflow, research, or a suite JSON path")
+        sub.add_argument("--suite", default="workflow", help="workflow, research, mechanisms, mechanism-challenges, or a suite JSON path")
         sub.add_argument("--case", action="append", default=[], dest="cases")
         sub.add_argument("--output", type=Path, default=Path("workspaces/agent-evals"))
         sub.add_argument("--skills", choices=("on", "off"), default="on")

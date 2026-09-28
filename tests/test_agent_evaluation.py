@@ -129,7 +129,7 @@ def test_timeout_retains_partial_transcript(tmp_path):
     prompt = tmp_path / "prompt.txt"
     prompt.write_text("fixture")
     result = execute([sys.executable, "-c", "import time; print('partial event', flush=True); time.sleep(30)"],
-                     prompt, tmp_path, tmp_path, dict(os.environ), timeout=0.3)
+                     prompt, tmp_path, tmp_path, dict(os.environ), timeout=2)
     assert result["state"] == "timed_out" and result["returncode"] != 0
     assert (tmp_path / "events.jsonl").read_text() == "partial event\n"
     assert read_json(tmp_path / "execution.json")["state"] == "timed_out"

@@ -7,11 +7,12 @@ class Case(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")
     question: str = Field(min_length=1, max_length=20000)
-    setup: Literal["zero-vs-missing", "artifact-reuse", "limited-context", "empty"] = "empty"
+    setup: Literal["zero-vs-missing", "artifact-reuse", "limited-context", "mechanism-blindspots", "empty"] = "empty"
     data_access: Literal["offline", "public"] = "offline"
-    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse"]] = Field(default_factory=lambda: ["bio-research"])
+    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration"]] = Field(default_factory=lambda: ["bio-research"])
+    review_rubric: Literal["standard", "mechanism-exploration"] = "standard"
     review_focus: list[str] = Field(default_factory=list)
-    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap"]] = Field(default_factory=lambda: ["question", "notebook"])
+    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap", "mechanism_map", "mechanism_revision", "evidence_coverage"]] = Field(default_factory=lambda: ["question", "notebook"])
 
 
 class Suite(BaseModel):
@@ -51,3 +52,19 @@ class Review(BaseModel):
     findings: list[Finding]
     unresolved: list[str]
     next_experiments: list[str]
+
+
+MECHANISM_CRITERIA = ("recursive_exploration", "breadth", "discovery_value", "discrimination", "revision", "calibration")
+
+
+class MechanismAssessment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    case_id: str
+    criterion: Literal["recursive_exploration", "breadth", "discovery_value", "discrimination", "revision", "calibration"]
+    verdict: Literal["demonstrated", "partial", "not_demonstrated", "unresolved"]
+    justification: str
+    evidence: list[Citation] = Field(min_length=1)
+
+
+class MechanismReview(Review):
+    assessments: list[MechanismAssessment]

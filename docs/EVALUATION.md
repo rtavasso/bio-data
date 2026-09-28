@@ -4,6 +4,8 @@ Run the stock Codex CLI on a few questions, preserve what it did, inspect the re
 
 See the [initial pilot](AGENT_EVALUATION_PILOT.md) for actual three-question results, reviewer findings and a tested registration improvement.
 
+The [PMP22 mechanism audit](PMP22_MECHANISM_AUDIT.md) follows a broad regulatory-system question through upstream exploration, reused measurements, new acquisition, contradictions and an independent review.
+
 ## Quick start
 
 ```sh
@@ -34,6 +36,17 @@ Open the returned `report.html` in a browser. Case pages show checks, final answ
 ```sh
 DAW_LIVE=1 uv run python -m benchmarks.agent run --suite research --case egr2-as-response --timeout 300
 ```
+
+`mechanisms` asks exactly **“What is the full regulatory system for PMP22?”** without supplying a regulator list or preferred mechanism. It invokes recursive exploration and public retrieval, checks question-local network/coverage artifacts, and requires the reviewer to assess six dimensions: recursive exploration, breadth, discovery value, discrimination, revision, and calibration. Verdicts are `demonstrated`, `partial`, `not_demonstrated`, or `unresolved`, each with validated evidence locations. There is no combined scientific score. A valid graph, a longer path, or more citations cannot demonstrate investigation on their own.
+
+```sh
+DAW_LIVE=1 uv run python -m benchmarks.agent run --suite mechanisms --timeout 900 --review
+# To test new uses of existing data, add --seed-workspace PATH.
+```
+
+`mechanism-challenges` supplies fictional offline perturbations, an activity-versus-abundance distinction, an RNA-fate alternative, and a context decoy. The subject sees raw measurements and assay notes; specific expected observations remain outside the trial. Prepare it offline with `prepare --suite mechanism-challenges`. Executing its agent still requires `DAW_LIVE=1`. It is a bounded challenge for the exploration behavior, not evidence of real biological performance.
+
+The mechanism skill describes the minimal `mechanisms.initial.json`, `mechanisms.json`, and `evidence-coverage.tsv` conventions. Structural inspection checks identifiers, evidence attribution, snapshots and table references; transcript/source review must establish actual exploration and revision. All-unavailable coverage can be structurally valid while discovery value remains unproven. Preserve an early snapshot when written rather than retrospectively reconstructing an initial hypothesis. Authored output files need explicit object preservation because notebook sync does not snapshot all question outputs.
 
 Use `--seed-workspace PATH` to copy a preserved workspace into each trial. The original workspace is never passed to the subject as its writable catalog. Copying is capped at 2 GiB of stored blobs per workspace; allow disk/time for a separate copy per case. Existing questions/artifacts are recorded as a baseline so merely inheriting them cannot satisfy the new-work checks. Default workflow runs need no downloaded data or seed workspace.
 
@@ -71,7 +84,7 @@ RUN/
 
 Run folders are private and ignored under `workspaces/agent-evals/`. Snapshots copy current source bytes, including intentional uncommitted changes, and use the installed Python environment through `bio`/`python` wrappers. The subject's Git root and workspace-write sandbox are the trial directory. Original source files, historical workspaces, full historical specs, evaluation oracle and prior transcripts are not supplied as task material. This isolates ordinary writes; it is not a container or a claim that a hostile process cannot read any other host file. The installed environment and CLI authentication remain host dependencies.
 
-Execution is sequential, with a default five-minute wall limit per case (configurable from 5–3600 seconds) and a 32 MiB raw log budget checked during execution. A timeout terminates the process group and retains partial evidence. There is no automatic retry or silent permission escalation. Public cases request bounded processed data; ordinary `bio` acquisition also applies its workspace budgets. Agent-written arbitrary network code remains the agent's responsibility and is visible in the transcript.
+Execution is sequential, with a default five-minute wall limit per case (configurable from 5–3600 seconds) and a 32 MiB raw log budget checked during execution. The runner bounds both monotonic and wall clocks, including host-sleep gaps; it records both durations. A timeout terminates the process group and retains partial evidence. There is no automatic retry or silent permission escalation. Public cases request bounded processed data; ordinary `bio` acquisition also applies its workspace budgets. Agent-written arbitrary network code remains the agent's responsibility and is visible in the transcript.
 
 ## Diagnose changes from evidence
 
