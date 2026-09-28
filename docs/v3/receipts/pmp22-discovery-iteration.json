@@ -1,0 +1,228 @@
+{
+  "created": "2026-09-28T16:18:35.219402+00:00",
+  "case": "pmp22-discovery-iteration",
+  "question_id": "q_277f20df4b6b47cc",
+  "audit": "workspaces/discovery-loop/AUDIT.md",
+  "model_policy": "Stock Codex default, unpinned. Separate stock-agent reviewer; not independent expert consensus.",
+  "comparison_limit": "Guided sequential continuations with inherited work and changed prompts/skills; no controlled attribution of improvement.",
+  "profile": {
+    "seconds_per_subject": 3600,
+    "requests": 150,
+    "asset_bytes": 536870912,
+    "download_bytes": 1073741824
+  },
+  "runs": [
+    {
+      "iteration": 1,
+      "run": "workspaces/agent-evals/20260927T221733-775736d3",
+      "base_revision": "b81e60a208179c9ce1d9b2a5b6c80a27afff6e66",
+      "snapshot_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
+      "project_fingerprint": "aeeca8b00f9fe91031ef19b847d21f8b8d40d3ed89a826aa974316cbe9b99150",
+      "cli_version": "codex-cli 0.157.1",
+      "subject_seconds": 2902.7447,
+      "review_seconds": 315.1716,
+      "usage": {
+        "cached_input_tokens": 14649344,
+        "input_tokens": 14999978,
+        "output_tokens": 70979,
+        "reasoning_output_tokens": 18047
+      },
+      "review_usage": {
+        "input_tokens": 1153654,
+        "cached_input_tokens": 1032704,
+        "output_tokens": 8558,
+        "reasoning_output_tokens": 694
+      },
+      "usd": null,
+      "checks": {
+        "agent_completed": "pass",
+        "final_answer": "pass",
+        "transcript_parseable": "pass",
+        "project_unchanged": "pass",
+        "preserved_inputs": "pass",
+        "catalog_integrity": "pass",
+        "question": "pass",
+        "notebook": "pass",
+        "script": "pass",
+        "registered_output": "pass",
+        "executed_analysis": "pass",
+        "investigation_queue": "pass",
+        "discovery_ledger": "fail",
+        "mechanism_map": "pass",
+        "mechanism_revision": "pass",
+        "evidence_coverage": "pass",
+        "scientific_review": "unknown"
+      },
+      "new_registered_results": 49,
+      "unique_output_blobs": 45,
+      "catalog_asset_bytes": 0,
+      "review_verdicts": {
+        "baseline_and_selection": "demonstrated",
+        "prediction_timing": "demonstrated",
+        "independent_validation": "partial",
+        "confounder_discrimination": "partial",
+        "novelty_audit": "demonstrated",
+        "claim_calibration": "demonstrated"
+      },
+      "review_summary": "This iteration produced useful new analyses and a defensible restriction on cross-context interpretation, but no independently confirmed novel biological relationship. The strongest surviving inference is that a uniform suppressive Pmp22 response does not summarize the inspected stress datasets; the underlying directions were already published. The main subject weakness was late control-provenance screening. Separate evaluator defects obscure an inherited ledger mismatch and overcredit one failed script invocation.",
+      "hashes": {
+        "manifest.json": "0086d910b753906e78ee0b4102d7abce4ff85e96c567db768bb94b073b9fe1c8",
+        "cases/pmp22-discovery-iteration/project-files.json": "fc3c5f58a6f842a852ff04ec609038b6004c2d85de05a766ce80553aa8b93545",
+        "cases/pmp22-discovery-iteration/prompt.txt": "81f0ff1c00b96231374f8555af75451e1f7bfd3cf35d56db30eaaaf4afdaff33",
+        "cases/pmp22-discovery-iteration/events.jsonl": "e8ded028a0ee53cae68049f3cac8cca949024266cd29d2b67cc9484108921727",
+        "cases/pmp22-discovery-iteration/report.json": "d74c3c334dd17c4754a98ffa572cbc257281b21dcdb92dfe5b680f67779d9464",
+        "review/input-report.json": "30fba1d878a1ece64b8de1b17c273a790d1a89ac176e2725bf33cf8a8daf388e",
+        "review/events.jsonl": "4a9cca1ef938f7331d02e8c06dfe8be34fd25479c45b8153256a7614b742e144",
+        "review/review.json": "9c507d05c667f54e98a0a4b9f1ed1829c2b961465608cc45cd58acfee7979020",
+        "review/provenance.json": "ee74a5843880f6b82f3601d926429f6f202f0ac140eb489d981052371c9626f9"
+      },
+      "scientific_report_sha256": "f67574f8b6138201c9ada8a2cdc04275d53075daff1d6ccc43f871c7859880d4",
+      "registrations_sha256": "7bdae325b375069a76404febcbf7608c817223611b5bf182bb720d0f8a3aa008",
+      "outer_run_error": "[Errno 32] Broken pipe"
+    },
+    {
+      "iteration": 2,
+      "run": "workspaces/agent-evals/20260928T083001-102ffb1d",
+      "base_revision": "b81e60a208179c9ce1d9b2a5b6c80a27afff6e66",
+      "snapshot_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
+      "project_fingerprint": "06a0cd689f5953da6aa70e5a3a4b3ba5fa7b12b29944e91bc3d27e3aeefcdde5",
+      "cli_version": "codex-cli 0.157.1",
+      "subject_seconds": 2085.0563,
+      "review_seconds": 242.467,
+      "usage": {
+        "cached_input_tokens": 10595200,
+        "input_tokens": 10832621,
+        "output_tokens": 50689,
+        "reasoning_output_tokens": 10608
+      },
+      "review_usage": {
+        "input_tokens": 854736,
+        "cached_input_tokens": 742400,
+        "output_tokens": 6889,
+        "reasoning_output_tokens": 344
+      },
+      "usd": null,
+      "checks": {
+        "agent_completed": "pass",
+        "final_answer": "pass",
+        "transcript_parseable": "pass",
+        "project_unchanged": "pass",
+        "preserved_inputs": "pass",
+        "catalog_integrity": "pass",
+        "question": "pass",
+        "notebook": "pass",
+        "script": "pass",
+        "registered_output": "pass",
+        "executed_analysis": "pass",
+        "investigation_queue": "pass",
+        "discovery_ledger": "pass",
+        "mechanism_map": "pass",
+        "mechanism_revision": "pass",
+        "evidence_coverage": "pass",
+        "scientific_review": "unknown"
+      },
+      "new_registered_results": 26,
+      "unique_output_blobs": 26,
+      "catalog_asset_bytes": 166337,
+      "review_verdicts": {
+        "baseline_and_selection": "demonstrated",
+        "prediction_timing": "not_demonstrated",
+        "independent_validation": "not_demonstrated",
+        "confounder_discrimination": "partial",
+        "novelty_audit": "demonstrated",
+        "claim_calibration": "demonstrated"
+      },
+      "review_summary": "This continuation produced useful retrospective analytical insight, with substantial anomaly follow-through and calibrated claims. Its strongest new inference is PMP22's large abundance-matched footprint departure across two fibroblast contexts, qualified by the published late-induction program. Gonen 2019 is the closest prior report. No claim combines independent confirmation of that new inference with evidence for novelty within the recorded search boundary. The identified workflow defects were minor or recovered; mechanical passes alone do not establish biological discovery.",
+      "hashes": {
+        "manifest.json": "83ae20684d66a64b0eb5b6f5b8c1bae4813250dace1678e34710f609ee3938f6",
+        "cases/pmp22-discovery-iteration/project-files.json": "20e8d8d50d85c8d808d0578f7c9da4fe70e91c387967b46f91ebbbb1e3cd45f1",
+        "cases/pmp22-discovery-iteration/prompt.txt": "8cf53743f68318cebcfbc48f46fcac3c9b3ec56a665c3db0b24dfabf375c9796",
+        "cases/pmp22-discovery-iteration/events.jsonl": "19037cfde1896c1a610f55c1c46070a22a62d843da6dec971b477cad7f375256",
+        "cases/pmp22-discovery-iteration/report.json": "ae6079a475e458e5f56045c1a15c05a8c8a8d397bfcd16adc99dff61fd53fe41",
+        "review/input-report.json": "4d6f5b0c9566c83b10f4040ed74e3581dc0e4c73ecfa258ea95fb133adba552b",
+        "review/events.jsonl": "24c9ce4b3a92b7c02b18586421913a8a25d5fc97e76f4e43f7b76f93d2894dde",
+        "review/review.json": "25ccd5ca02147884a8415c177b111465276a4986c7956f0a793e3dc5d03b4f20",
+        "review/provenance.json": "53e35c5b91540aa80ca5d7be8657742c7de4c291aacfbef3558fb8dfa7f8a231"
+      },
+      "scientific_report_sha256": "b88070a2b92240d26a8a7691bf44a82c0c734f2e508daa2a213b5b13142ecbdb",
+      "registrations_sha256": "5a11ff56da88c8732b3836cb584d1855ab37d41fbff9805144f537f059c82a9e",
+      "outer_run_error": null
+    }
+  ],
+  "scientific_boundary": {
+    "new_analytical_insight": "PMP22 has an unusually large shared-time footprint context difference relative to baseline-matched genes; count-based analysis retains the departure, while published program matching substantially qualifies specificity.",
+    "field_novel_mechanism_established": false,
+    "independent_biological_replication": false,
+    "novelty_limit": "Exact analysis not found in inspected prior work; published measurements and known IRE1-mediated RNA destabilization are not new biology.",
+    "initial_reference_genes": 1276,
+    "baseline_only_reference_genes": 1279,
+    "tpm_context_log2_difference": 1.961992628734587,
+    "initial_tpm_reference_percentile": 0.9984326018808778,
+    "baseline_only_floor4_percentile": 0.9960906958561376,
+    "count_reference_percentile": 0.9976489028213166,
+    "count_median_relative_difference": 1.7783217963214721,
+    "late_program_reference_genes": 42,
+    "late_program_context_percentile": 0.9047619047619048,
+    "remaining_limits": [
+      "One footprint library per condition",
+      "Cell model and dose confounded",
+      "No matched RNA or calibrated absolute synthesis",
+      "Known RIDD evidence does not identify the cause of this discrepancy"
+    ]
+  },
+  "parent_validation": {
+    "scope": "Independent native-source arithmetic, record preservation and output hashes; not biological replication. Not supplied to subject/reviewer.",
+    "hashes": {
+      "workspaces/discovery-loop/round1-array-quality-check.json": "7974f10f7bcc01310da0565d056de950e6cf24e591b0596c794a6cb00d35370a",
+      "workspaces/discovery-loop/round1-followup-check.json": "7fa4e67ecfff22ec0094a73a64d7c8cd33711d66d4f47cd09f32e6b5d47a0967",
+      "workspaces/discovery-loop/round1-genetic-check.json": "88c2e03cff3f4cb070169457e1ad5502d366a4e5db8bf9d57e00fedbec67b1c4",
+      "workspaces/discovery-loop/round1-isr-check.json": "393a295aa34883c85c1a12d3560229bf5d655cadec332cdc127cdaf1e42c8739",
+      "workspaces/discovery-loop/round1-prediction-check.json": "4bc8859f0cedb91bb9821d8bf0ff94c6d8f6eb02984b4ff365ceaab0baf535e6",
+      "workspaces/discovery-loop/round1-pten-check.json": "d3e794231967eec97010d534013b5df92183dc96f04f385d3cb5d3f5bcd6bac6",
+      "workspaces/discovery-loop/round2-background-parent-check.json": "bf854f94efd3d8cea3cd28e6a7511768a6e7fa5c1694fa474f74bdd988945a30",
+      "workspaces/discovery-loop/round2-counts-parent-check.json": "453cbf920b509ba558734033625f33c3d14fdf2e5b72585afded8b75f878e16f",
+      "workspaces/discovery-loop/round2-followup-parent-check.json": "3cb26a084caaea65da6b9bb54f8d5a47fe083eea8b7e712c683fa442e8bfc4d0",
+      "workspaces/discovery-loop/round2-registration-parent-check.json": "b1ff07c4ea864cd889a5c1802ca4d4d6b0f7925276c922281fecb4ab8c9b1123",
+      "workspaces/discovery-loop/round2-ridd-parent-check.json": "95a4f9ee7baa8b6d859d1aced6c1f258a31b2de1eeaf4ef3288f562afe5a86ee",
+      "workspaces/discovery-loop/round1-revised-diagnostics.json": "b918b62c3851214efeba160e3eabedf3b279dc52a0a2ff1515a910bbc9e6388c"
+    },
+    "audit_sha256": "aad63c9e26ce46bbf810725aa9d8dba994dcc0764aa72359b37e65fa7f20507f"
+  },
+  "offline_validation": {
+    "command": "uv run pytest --junitxml=workspaces/discovery-loop/round2-offline-tests.xml",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "3",
+      "tests": "174",
+      "time": "65.347",
+      "timestamp": "2026-09-28T08:24:21.652451-07:00",
+      "hostname": "Rileys-MacBook-Pro.local"
+    },
+    "xml_sha256": "f7fba9caa43d2d3401d56756b797cca8bb84654a9bf0794d592b654fc801c50d",
+    "ruff": "passed",
+    "skills": "passed"
+  },
+  "changes": [
+    "Investigation choices based on competing explanations and source/control compatibility",
+    "Measured backgrounds, program alternatives and anomaly-driven follow-up",
+    "Prediction-link intake/handoff helper preserving historical bytes and negative results",
+    "Candidate-level integrity diagnostics retain valid new evidence without passing invalid records",
+    "Masked analysis failures excluded from automatic execution credit",
+    "Separate scientific support, new computation and scoped novelty"
+  ],
+  "post_review_guidance": {
+    "live_tested": false,
+    "changes": [
+      "Prefer untreated-only primary reference membership; treated abundance restrictions are sensitivity analyses",
+      "Validate artifact receipt shape before batch registration",
+      "State actual checkpoint stage and prior acquisition explicitly"
+    ],
+    "files": {
+      ".agents/skills/bio-research/SKILL.md": "36b12ebfecddeffa994b6838f29566eca9e2647879bfa73dc9f435f984dd24af",
+      ".agents/skills/bio-hypothesis-discovery/references/investigation-design.md": "be399464275f092576e44559a4e6f9c4c9bbf0c983fb47fe557c3e11ecb857dd"
+    }
+  },
+  "data_policy": "Full transcripts, reports, downloaded measurements and audit scripts remain ignored; no datasets or credentials committed."
+}

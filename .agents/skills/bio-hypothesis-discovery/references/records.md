@@ -71,6 +71,15 @@ Each candidate has all these fields:
 
 An optional ledger `prediction_id` explicitly references a sealed panel's `candidate_id`; otherwise the evaluator expects the ledger `id`. For a panel reference, the ledger `id` must also appear in the sealed `candidate_ids`. Every member records the same exact file/hash and panel ID, with its own outcome. This checks identity and predeclared membership, not scientific correspondence between prose claims. An unrelated claim cannot borrow a panel's seal. Verify these relationships before handoff. Preserve an older lock lacking membership; report the limitation or use one ledger record for the original panel rather than retroactively changing or resealing its bytes.
 
+Check all current entries at continuation intake, including inherited ones, and again before handoff:
+
+```sh
+./bin/python .agents/skills/bio-hypothesis-discovery/scripts/check_prediction_links.py \
+  workspace/questions/QUESTION
+```
+
+This read-only helper reports identity/path/hash errors as JSON and exits nonzero on failure. It does not check the full ledger schema, artifact registrations, biological eligibility or prediction timing. When representing an older panel as one current record, retain the original panel ID and exact sealed bytes, preserve every member's outcome in that record, and archive the earlier ledger and its failure. This is a record correction, not a new validation or a repaired historical seal. Do not omit negative findings to obtain a passing check.
+
 Novelty `status` is `known`, `not_found_in_scoped_search`, or `unresolved`. `closest_prior_work` entries have `source` (citation/URL), `locator` (precise passage/table), and `relationship` (what was already known and the exact proposed difference). `searches` entries have `query`, `date` (ISO date), and `evidence` (question-relative saved receipt/results path). `limitation` always describes the search boundary. `known` needs closest prior work; `not_found_in_scoped_search` needs saved searches and closest prior work. No matches alone cannot establish global novelty. Evidence status and novelty status must be reported independently.
 
 The evaluator checks file references, registered artifact links, hashes and records of sealing. It leaves prediction timing, sample independence, analysis validity, claim support and novelty to evidence-cited review. It does not reward a populated ledger or positive outcome as scientific success.

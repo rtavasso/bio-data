@@ -16,6 +16,7 @@ from daw.util import file_hash, read_json, write_json
 
 
 HELPER = Path(__file__).resolve().parents[1] / ".agents/skills/bio-hypothesis-discovery/scripts/seal_prediction.py"
+LINK_HELPER = HELPER.with_name("check_prediction_links.py")
 
 
 def prediction():
@@ -189,6 +190,105 @@ def test_panel_seal_requires_explicit_binding_and_predeclared_membership(tmp_pat
     write_json(path, value)
     with pytest.raises(ValueError, match="not an explicit member"):
         inspect_discoveries(tmp_path, question, ids, parsed)
+
+
+def test_continuation_link_check_preserves_legacy_panel_bytes_and_negative_results(tmp_path):
+    question = {"id": "q_test", "path": "questions/q_test"}
+    folder = tmp_path / "workspace" / question["path"]
+    (folder / "outputs").mkdir(parents=True)
+    lock = folder / "outputs/panel.json"
+    write_json(lock, prediction() | {"candidate_id": "original-panel"})
+    original_lock = lock.read_bytes()
+    value = ledger()
+    first = value["candidates"][0]
+    first.update(prediction_lock="outputs/panel.json", prediction_sha256=file_hash(lock),
+                 validation_mode="prospective", validation_artifacts=["artifact_validation"],
+                 status="contradicted", validation_result="Opposite direction in this synthetic test")
+    value["candidates"] = [first | {"id": name} for name in ("first-lead", "second-lead", "third-lead")]
+    path = folder / "outputs/discoveries.json"
+    write_json(path, value)
+    original_ledger = path.read_bytes()
+    result = subprocess.run([sys.executable, str(LINK_HELPER), str(folder)], capture_output=True, text=True)
+    assert result.returncode == 1
+    check = json.loads(result.stdout)
+    assert len(check["errors"]) == 3 and not check["valid"]
+    assert path.read_bytes() == original_ledger and lock.read_bytes() == original_lock
+    ids = {"artifact_discovery", "artifact_validation"}
+    with pytest.raises(ValueError, match="another candidate"):
+        inspect_discoveries(tmp_path, question, ids, {"items": []})
+
+    # Correct the current representation at the original panel level, without
+    # retroactively declaring members in its seal or discarding negative results.
+    archived = folder / "outputs/discoveries.r001.json"
+    archived.write_bytes(original_ledger)
+    outcomes = [{"id": c["id"], "status": c["status"], "result": c["validation_result"]}
+                for c in value["candidates"]]
+    value.update(revision=2, candidates=[first | {"id": "original-panel", "member_outcomes": outcomes}])
+    write_json(path, value)
+    assert runpy.run_path(str(LINK_HELPER))["check_links"](folder)["valid"]
+    record = inspect_discoveries(tmp_path, question, ids, {"items": []})
+    assert record["candidates"][0]["status"] == "contradicted"
+    assert record["candidates"][0]["seal_receipt_lines"] == []  # No timing credit invented.
+    assert archived.read_bytes() == original_ledger and lock.read_bytes() == original_lock
+    assert len(read_json(path)["candidates"][0]["member_outcomes"]) == 3
+
+
+def test_partial_inspection_exposes_new_claim_without_forgiving_inherited_error(tmp_path):
+    question = {"id": "q_test", "path": "questions/q_test"}
+    folder = tmp_path / "workspace" / question["path"]
+    (folder / "outputs").mkdir(parents=True)
+    old_lock, new_lock = folder / "outputs/old.json", folder / "outputs/new.json"
+    write_json(old_lock, prediction() | {"candidate_id": "old-panel"})
+    write_json(new_lock, prediction())
+    value = ledger()
+    c = value["candidates"][0]
+    c.update(prediction_lock="outputs/new.json", prediction_sha256=file_hash(new_lock),
+             validation_mode="prospective", validation_artifacts=["artifact_validation"])
+    broken = c | {"id": "old-member", "prediction_lock": "outputs/old.json", "prediction_sha256": file_hash(old_lock)}
+    baseline = value | {"candidates": [broken]}
+    value["candidates"] = [broken, c]
+    write_json(folder / "outputs/discoveries.json", value)
+    parsed = {"items": [{"type": "command_execution", "exit_code": 0, "line": 9,
+                        "command": "python seal_prediction.py draft.json new.json",
+                        "aggregated_output": json.dumps({"event": "prediction_sealed", "candidate_id": "test-lead",
+                                                        "sha256": file_hash(new_lock)})}]}
+    ids = {"artifact_discovery", "artifact_validation"}
+    result = inspect_discoveries(tmp_path, question, ids, parsed, collect_errors=True, baseline_value=baseline)
+    assert result["error"] and len(result["candidate_errors"]) == 1
+    assert result["candidate_errors"][0]["prediction_reference_unchanged_from_baseline"]
+    assert result["candidates"][0]["id"] == "test-lead"
+    assert result["candidates"][0]["prediction_sha256"] == file_hash(new_lock)
+    assert result["candidates"][0]["seal_receipt_lines"] == [9]
+    with pytest.raises(ValueError, match="another candidate"):
+        inspect_discoveries(tmp_path, question, ids, parsed)  # Strict acceptance is unchanged.
+
+
+@pytest.mark.parametrize("problem", ["changed_bytes", "escape", "undeclared_member", "missing_lock"])
+def test_link_check_rejects_invalid_prediction_references(tmp_path, problem):
+    folder = tmp_path / "question"
+    (folder / "outputs").mkdir(parents=True)
+    lock = folder / "outputs/prediction.json"
+    write_json(lock, prediction())
+    value = ledger()
+    c = value["candidates"][0]
+    c.update(prediction_lock="outputs/prediction.json", prediction_sha256=file_hash(lock),
+             validation_mode="prospective")
+    if problem == "changed_bytes":
+        lock.write_bytes(lock.read_bytes() + b"\n")
+    elif problem == "escape":
+        outside = tmp_path / "outside.json"
+        outside.write_bytes(lock.read_bytes())
+        link = folder / "outside-link.json"
+        link.symlink_to(outside)
+        c["prediction_lock"] = link.name
+    elif problem == "undeclared_member":
+        write_json(lock, prediction() | {"candidate_id": "panel", "candidate_ids": ["another-lead"]})
+        c.update(prediction_id="panel", prediction_sha256=file_hash(lock))
+    else:
+        c.update(prediction_lock=None, prediction_sha256=None)
+    write_json(folder / "outputs/discoveries.json", value)
+    result = runpy.run_path(str(LINK_HELPER))["check_links"](folder)
+    assert not result["valid"] and len(result["errors"]) == 1
 
 
 def test_discovery_suite_and_mixed_review_keep_scientific_claims_unresolved(tmp_path):

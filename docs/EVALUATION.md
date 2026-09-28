@@ -109,6 +109,24 @@ The reviewer assesses six dimensions independently: `baseline_and_selection`, `p
 
 The existing mechanism rubric's `discovery_value` includes analytical insights and design problems. It does not establish new-to-field biology. A discovery continuation is guided public-data research, not a blinded benchmark or a controlled estimate of skill improvement. No automated field-novelty score is produced.
 
+## Iterating from an audit
+
+`discovery-iteration` keeps the broader PMP22 regulatory-system question visible while asking the agent to choose informative experiments, pursue consequential anomalies and distinguish new computation from new inference and biological novelty. The [investigation-design guide](../.agents/skills/bio-hypothesis-discovery/references/investigation-design.md) addresses control compatibility, endpoint selection, measured backgrounds and cross-context comparisons.
+
+```sh
+uv run python -m benchmarks.agent prepare --suite discovery-iteration --profile deep \
+  --seed-workspace PRIOR_WORKSPACE --continue-question QUESTION_ID
+DAW_LIVE=1 uv run python -m benchmarks.agent run --prepared RETURNED_RUN --review
+```
+
+Inspect the transcript, native outputs, failed checks and independent review. Choose a small change supported by the observed behavior, then prepare a fresh continuation with revised skills and a focused investigation brief. Keep previous runs and rejected hypotheses intact. Use ordinary stock-agent runs for this loop; no platform research orchestrator or automatic novelty score is involved. More time, inherited measurements and changed prompts make these guided continuations, not controlled estimates of a skill's effect.
+
+The prediction-link helper checks inherited and new ledger entries without changing sealed bytes. Reports retain candidate reference errors and still expose valid candidates; any such error keeps the ledger check failed. Baseline comparison identifies unchanged prediction references, not scientific validity. Whole-ledger schema failures remain fatal to inspection.
+
+Execution leads require a literal invocation covered by the successful shell status. A failed analysis followed by a successful display command receives no automatic credit. Complex shell control flow, pipelines, dynamic execution and exact executed code versions need manual review. Separate analysis commands make the evidence easier to assess.
+
+The [two-iteration validation receipt](v3/receipts/pmp22-discovery-iteration.json) pins the research and review records. It distinguishes a new retrospective analytical finding from independently confirmed biological novelty. Full reports, data and the parent audit remain in the ignored run directories identified by that receipt. Final guidance refinements made after review are identified separately from the live-tested snapshots.
+
 ## What a run preserves
 
 ```text

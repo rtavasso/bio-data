@@ -12,11 +12,13 @@ from .mechanisms import ResearchRecord
 from .runner import safe_path
 
 
-def invoked_scripts(command):
+def invoked_scripts(command, *, successful_only=False):
     """Conservative literal invocations, excluding quoted documentation and here-doc bodies.
 
     Dynamic eval, shell variables, Python -c/-m and inline imports need manual review.
-    This is an invocation lead, not execution attestation or a general shell parser.
+    With successful_only, retain only simple invocations whose status determines
+    the shell status, including a terminal && chain. This is not a shell parser
+    or proof of the exact code version executed.
     """
     try:
         outer = shlex.split(command)
@@ -38,6 +40,7 @@ def invoked_scripts(command):
                 if not matches or "<<<" in line:
                     return set()
                 pending.extend((m[3], bool(m[1])) for m in matches)
+                lines.append("__heredoc_command__")  # Its exit status must not disappear.
                 continue
             lines.append(line)
         if pending:
@@ -49,14 +52,27 @@ def invoked_scripts(command):
             tokens.whitespace_split = True
             current = []
             for token in tokens:
-                if token in {";", "&&", "||", "|", "&"}:
-                    segments.append(current)
+                if token in {";", "&&", "||", "|", "|&", "&"}:
+                    if current:
+                        segments.append((current, token))
                     current = []
                 else:
                     current.append(token)
-            segments.append(current)
+            if current:
+                segments.append((current, "\n"))
+        if successful_only:
+            # Complex control flow/pipelines can mask failure or skip an invocation.
+            controls = {"if", "then", "else", "elif", "fi", "for", "while", "until", "case", "esac",
+                        "do", "done", "function", "!", "(", ")", "{", "}"}
+            if any(separator in {"||", "|", "|&", "&"} or any(t in controls or "$" in t or "`" in t for t in tokens)
+                   for tokens, separator in segments):
+                return set()
+            start = len(segments) - 1
+            while start > 0 and segments[start - 1][1] == "&&":
+                start -= 1
+            segments = segments[max(0, start):]
         found = set()
-        for tokens in segments:
+        for tokens, _ in segments:
             if not tokens:
                 continue
             executable = Path(tokens[0]).name
@@ -144,7 +160,8 @@ def analysis_activity(trial, baseline, state, questions, parsed, files):
     scripts = [f for f in files if "/scripts/" in f["path"] and f.get("sha256")
                and any(q in f["path"].split("/") for q in qids)]
     commands = [i for i in parsed["items"] if i.get("type") == "command_execution" and i.get("exit_code") == 0]
-    invocations = {c["line"]: {(trial / p).resolve() for p in invoked_scripts(c.get("command", ""))} for c in commands}
+    invocations = {c["line"]: {(trial / p).resolve() for p in invoked_scripts(c.get("command", ""), successful_only=True)}
+                   for c in commands}
     results = []
     for artifact in state.get("artifact", []):
         if artifact["id"] in old_artifacts or artifact["id"] not in linked:
@@ -165,7 +182,7 @@ def analysis_activity(trial, baseline, state, questions, parsed, files):
                 "output_blob": output, "input_blobs": [i["blob"] for i in inputs],
                 "code_files": [s["path"] for s in matching], "command_lines": command_lines, "mention_lines": mentioned_lines,
                 "execution_evidence": bool(valid and matching and command_lines),
-                "note": "A successful command contains a literal invocation of matching saved code; mentions alone are excluded. Dynamic execution needs manual review; scientific validity is not established."})
+                "note": "Shell exit status covers a literal saved-script invocation; masked failures and complex control flow need manual review. Matching saved code does not establish the exact executed version or scientific validity."})
         except (ValueError, OSError, KeyError) as e:
             results.append({"artifact": artifact["id"], "execution_evidence": False, "error": str(e)})
     old_assets = {a["id"] for a in baseline.get("asset_revision", [])}

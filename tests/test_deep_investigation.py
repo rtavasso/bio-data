@@ -7,7 +7,7 @@ import tomllib
 
 import pytest
 
-from benchmarks.agent.investigations import InvestigationQueue, analysis_activity, inspect_queue
+from benchmarks.agent.investigations import InvestigationQueue, analysis_activity, inspect_queue, invoked_scripts
 from benchmarks.agent.models import ResearchBudget
 from benchmarks.agent.report import build_report
 from benchmarks.agent.runner import prepare, subject_environment
@@ -189,12 +189,26 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
         assert next(c for c in report["checks"] if c["id"] == "executed_analysis")["status"] == "fail"
         assert report["activity"]["new_registered_results"][0]["mention_lines"] == [1]
         assert report["activity"]["new_registered_results"][0]["command_lines"] == []
-        events = [{"type": "item.completed", "item": {"type": "command_execution", "id": "execution", "exit_code": 0,
+        # A trailing display succeeds despite the actual analysis failing. Existing
+        # output bytes and a matching script must not hide that process failure.
+        failing = command[:2] + [str(local / "missing-input"), str(output)]
+        masked = shlex.join(failing) + "\ncat " + shlex.quote(str(output))
+        masked_result = subprocess.run(["/bin/sh", "-c", masked], capture_output=True, text=True)
+        assert masked_result.returncode == 0 and "FileNotFoundError" in masked_result.stderr
+        failed_event = {"type": "item.completed", "item": {"type": "command_execution", "id": "masked-failure",
+            "exit_code": 0, "command": "/bin/sh -c " + shlex.quote(masked),
+            "aggregated_output": masked_result.stdout + masked_result.stderr}}
+        (folder / "events.jsonl").write_text(json.dumps(failed_event) + '\n{"type":"turn.completed","usage":{}}\n')
+        report = build_report(root)["cases"][0]
+        assert next(c for c in report["checks"] if c["id"] == "executed_analysis")["status"] == "fail"
+        assert report["activity"]["new_registered_results"][0]["mention_lines"] == [1]
+        events = [failed_event, {"type": "item.completed", "item": {"type": "command_execution", "id": "execution", "exit_code": 0,
             "command": shlex.join(command), "aggregated_output": ""}}, {"type": "turn.completed", "usage": {}}]
         (folder / "events.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
         report = build_report(root)["cases"][0]
         checks = {c["id"]: c["status"] for c in report["checks"]}
         assert checks["executed_analysis"] == checks["notebook"] == checks["investigation_queue"] == "pass"
+        assert report["activity"]["new_registered_results"][0]["command_lines"] == [2]
         assert checks["scientific_review"] == "unknown"
         assert (original / "LABBOOK.md").read_text() == "Prior work, retained"
         assert output.read_text() == "5"
@@ -207,3 +221,13 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
     finally:
         copied.close()
     assert os.path.exists(original / "LABBOOK.md")
+
+
+def test_successful_script_leads_exclude_masked_shell_status():
+    assert invoked_scripts("python good.py && cat result", successful_only=True) == {"good.py"}
+    assert invoked_scripts("python one.py; python two.py", successful_only=True) == {"two.py"}
+    assert invoked_scripts("python one.py\npython two.py", successful_only=True) == {"two.py"}
+    for command in ("python bad.py; cat result", "python bad.py || true", "python bad.py | cat",
+                    "python bad.py |& cat", "python bad.py &", "if false; then\npython bad.py\nfi",
+                    "python bad.py\ncat <<'DOC'\npython fake.py\nDOC"):
+        assert invoked_scripts(command, successful_only=True) == set()

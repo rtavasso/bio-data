@@ -47,6 +47,8 @@ For deeper investigation, `--suite mechanisms-deep --profile deep` supplies a on
 
 For a discovery attempt, use `--suite discovery --profile deep`. The agent selects hypotheses from measurements, preserves predictions before validation, tests independent data where available, and audits novelty against primary literature. The reviewer separates biological support, novelty, and useful analytical findings; informative negative results count as progress. See [discovery evaluation](docs/EVALUATION.md#discovery-attempts).
 
+For an audit-driven continuation, use `--suite discovery-iteration` with a preserved workspace. The [iteration workflow](docs/EVALUATION.md#iterating-from-an-audit) connects source-design checks, competing explanations and anomaly follow-up to new analysis, while preserving failed predictions and separating analytical insight from biological novelty.
+
 The [deep PMP22 audit](docs/PMP22_DEEP_AUDIT.md) records actual RNA, chromatin, protein and human-expression analyses, independently checked calculations, and the remaining scientific and workflow failures.
 
 This is an additive migration. Original objects, receipts, interpretations, and scientific tests remain intact. `daw` retains the v1 analytical interface and [historical pilot](docs/PILOT.md). Its fixed operators and approval pipeline are optional legacy functionality; `bio` uses source facts, searchable profiles, question-local reasoning, and reusable artifacts.

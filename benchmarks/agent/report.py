@@ -156,8 +156,20 @@ def checks_for(folder, case, execution, parsed, artifacts):
         for q in new_questions:
             try:
                 linked_ids = {a["artifact_id"] for a in links if a["question_id"] == q["id"]}
-                record = inspect_discoveries(trial, q, linked_ids, parsed)
                 path = q["path"] + "/outputs/discoveries.json"
+                before = None
+                baseline_error = None
+                if sha := baseline.get("question_files", {}).get(path):
+                    try:
+                        before = read_json(safe_path(trial / "workspace", f"blobs/sha256/{sha[:2]}/{sha}"))
+                        if not isinstance(before, dict) or not isinstance(before.get("candidates"), list):
+                            before = None
+                            raise ValueError("baseline discovery ledger has no candidate list")
+                    except (OSError, ValueError) as error:
+                        baseline_error = str(error)
+                record = inspect_discoveries(trial, q, linked_ids, parsed, collect_errors=True, baseline_value=before)
+                if baseline_error:
+                    record["baseline_comparison_error"] = baseline_error
                 record["changed"] = baseline.get("question_files", {}).get(path) != file_hash(safe_path(trial / "workspace", path))
                 discovery_records.append(record)
             except (ValueError, OSError) as e:
@@ -172,7 +184,7 @@ def checks_for(folder, case, execution, parsed, artifacts):
         "investigation_queue": (any(r.get("changed") and not r.get("error") for r in queue_records),
                                 "Changed queue with registered results or preserved blockers; closure and evidence quality need review: " + str(queue_records)),
         "executed_analysis": (any(r["execution_evidence"] for r in activity["new_registered_results"]),
-                              "New result with intact input/output bytes, matching saved code and a successful literal invocation; dynamic execution and scientific validity require manual review"),
+                              "New result with intact input/output bytes, matching saved code and an invocation covered by shell exit status; exact executed version and scientific validity require review"),
         "discovery_ledger": (any(r.get("changed") and not r.get("error") for r in discovery_records),
                              "Changed discovery record with artifact links and intact prediction hashes; no automatic novelty or prospective credit")}
     mechanism_keys = {"mechanism_map", "mechanism_revision", "evidence_coverage"}

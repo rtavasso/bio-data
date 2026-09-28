@@ -95,7 +95,48 @@ class DiscoveryLedger(Record):
         return self
 
 
-def inspect_discoveries(trial, question, artifact_ids, parsed):
+def inspect_candidate(folder, candidate, artifact_ids, parsed):
+    if not set(candidate.discovery_artifacts + candidate.validation_artifacts) <= artifact_ids:
+        raise ValueError("candidate refers to an unregistered or unlinked artifact")
+    for search in candidate.novelty.searches:
+        if not safe_path(folder, search.evidence).is_file():
+            raise ValueError("novelty search evidence is absent")
+    seal_lines = []
+    if candidate.prediction_lock:
+        prediction = safe_path(folder, candidate.prediction_lock)
+        if prediction.stat().st_size > 2**20 or file_hash(prediction) != candidate.prediction_sha256:
+            raise ValueError("prediction bytes do not match their recorded hash")
+        prediction_value = read_json(prediction)
+        prediction_id = candidate.prediction_id or candidate.id
+        if not isinstance(prediction_value, dict) or prediction_value.get("candidate_id") != prediction_id:
+            raise ValueError("prediction belongs to another candidate")
+        if prediction_id != candidate.id:
+            members = prediction_value.get("candidate_ids")
+            if (not isinstance(members, list) or not members
+                    or any(not isinstance(m, str) or not m.strip() for m in members)
+                    or len(set(members)) != len(members) or candidate.id not in members):
+                raise ValueError("candidate is not an explicit member of the sealed prediction family")
+        # These are review leads, not proof of prior execution or a blinded test.
+        for item in parsed["items"]:
+            if (item.get("type") == "command_execution" and item.get("exit_code") == 0
+                    and "seal_prediction.py" in item.get("command", "")):
+                for line in item.get("aggregated_output", "").splitlines():
+                    try:
+                        receipt = json.loads(line)
+                    except ValueError:
+                        continue
+                    if (isinstance(receipt, dict) and receipt.get("event") == "prediction_sealed"
+                            and receipt.get("candidate_id") == prediction_id
+                            and receipt.get("sha256") == candidate.prediction_sha256):
+                        seal_lines.append(item["line"])
+    return {"id": candidate.id, "kind": candidate.kind, "status": candidate.status,
+            "novelty": candidate.novelty.status, "validation_mode": candidate.validation_mode,
+            "prediction_id": (candidate.prediction_id or candidate.id) if candidate.prediction_lock else None,
+            "prediction_lock": candidate.prediction_lock, "prediction_sha256": candidate.prediction_sha256,
+            "seal_receipt_lines": sorted(set(seal_lines))}
+
+
+def inspect_discoveries(trial, question, artifact_ids, parsed, *, collect_errors=False, baseline_value=None):
     folder = safe_path(trial / "workspace", question["path"])
     path = safe_path(folder, "outputs/discoveries.json")
     if path.stat().st_size > 4 * 2**20:
@@ -103,44 +144,23 @@ def inspect_discoveries(trial, question, artifact_ids, parsed):
     value = read_json(path)
     json.dumps(value, allow_nan=False)
     ledger = DiscoveryLedger.model_validate(value)
-    records = []
+    records, errors = [], []
+    prior_candidates = baseline_value.get("candidates", []) if isinstance(baseline_value, dict) else []
+    prior = {c["id"]: c for c in prior_candidates if isinstance(c, dict) and isinstance(c.get("id"), str)}
     for candidate in ledger.candidates:
-        if not set(candidate.discovery_artifacts + candidate.validation_artifacts) <= artifact_ids:
-            raise ValueError("candidate refers to an unregistered or unlinked artifact")
-        for search in candidate.novelty.searches:
-            if not safe_path(folder, search.evidence).is_file():
-                raise ValueError("novelty search evidence is absent")
-        seal_lines = []
-        if candidate.prediction_lock:
-            prediction = safe_path(folder, candidate.prediction_lock)
-            if prediction.stat().st_size > 2**20 or file_hash(prediction) != candidate.prediction_sha256:
-                raise ValueError("prediction bytes do not match their recorded hash")
-            prediction_value = read_json(prediction)
-            prediction_id = candidate.prediction_id or candidate.id
-            if not isinstance(prediction_value, dict) or prediction_value.get("candidate_id") != prediction_id:
-                raise ValueError("prediction belongs to another candidate")
-            if prediction_id != candidate.id:
-                members = prediction_value.get("candidate_ids")
-                if (not isinstance(members, list) or not members
-                        or any(not isinstance(m, str) or not m.strip() for m in members)
-                        or len(set(members)) != len(members) or candidate.id not in members):
-                    raise ValueError("candidate is not an explicit member of the sealed prediction family")
-            # These are review leads, not proof of prior execution or a blinded test.
-            for item in parsed["items"]:
-                if (item.get("type") == "command_execution" and item.get("exit_code") == 0
-                        and "seal_prediction.py" in item.get("command", "")):
-                    for line in item.get("aggregated_output", "").splitlines():
-                        try:
-                            receipt = json.loads(line)
-                        except ValueError:
-                            continue
-                        if (isinstance(receipt, dict) and receipt.get("event") == "prediction_sealed"
-                                and receipt.get("candidate_id") == prediction_id
-                                and receipt.get("sha256") == candidate.prediction_sha256):
-                            seal_lines.append(item["line"])
-        records.append({"id": candidate.id, "kind": candidate.kind, "status": candidate.status,
-                        "novelty": candidate.novelty.status, "validation_mode": candidate.validation_mode,
-                        "prediction_id": (candidate.prediction_id or candidate.id) if candidate.prediction_lock else None,
-                        "seal_receipt_lines": sorted(set(seal_lines))})
-    return {"question": question["id"], "revision": ledger.revision, "candidates": records,
-            "note": "Record integrity only. Receipt lines are review leads; assess outcome exposure, independence, claim support and novelty from source/transcript evidence."}
+        try:
+            records.append(inspect_candidate(folder, candidate, artifact_ids, parsed))
+        except (ValueError, OSError) as error:
+            if not collect_errors:
+                raise
+            previous = prior.get(candidate.id)
+            fields = ("id", "prediction_id", "prediction_lock", "prediction_sha256")
+            errors.append({"id": candidate.id, "error": str(error),
+                           "prediction_reference_unchanged_from_baseline": bool(previous is not None and
+                               all(previous.get(k) == getattr(candidate, k) for k in fields))})
+    result = {"question": question["id"], "revision": ledger.revision, "candidates": records,
+              "candidate_errors": errors,
+              "note": "Record integrity only. Receipt lines are review leads; assess outcome exposure, independence, claim support and novelty from source/transcript evidence."}
+    if errors:
+        result["error"] = f"{len(errors)} candidate reference error(s); valid candidates are retained for review"
+    return result
