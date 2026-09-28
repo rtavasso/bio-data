@@ -8,6 +8,8 @@ The [PMP22 mechanism audit](PMP22_MECHANISM_AUDIT.md) follows a broad regulatory
 
 The [sustained PMP22 audit](PMP22_DEEP_AUDIT.md) records a 48-minute continuation with deeper measurement analysis, independent numerical checks, remaining scientific gaps, and the structural failures that prompted handoff-checking improvements.
 
+The [PMP22 discovery audit](PMP22_DISCOVERY_AUDIT.md) records a 43-minute hypothesis-testing attempt: three data-derived predictors, a frozen independent test, three rejections, source-quality corrections and a separate novelty audit. No novel mechanism was established.
+
 ## Quick start
 
 ```sh
@@ -26,6 +28,8 @@ uv run python -m benchmarks.agent review RUN
 ```
 
 Open the returned `report.html` in a browser. Case pages show checks, final answers, searchable notebook/output previews, failed commands, measured usage and transcript links. Raw JSONL is authoritative; readable transcripts retain raw line references. The review command without `--agent` creates a review prompt offline. `review RUN --agent` launches a separate reviewer; `review RUN --from-json review.json` imports an authored review with validated evidence locations. A recorded review is preserved rather than silently overwritten.
+
+Report previews are capped separately from file metadata: after 300 previews, hashes and native paths remain available for up to 10,000 files. This keeps later scripts visible to provenance checks in sustained work. Omitted files/previews are reported explicitly; any file-metadata limit still requires manual review of omitted evidence.
 
 `--model MODEL` pins an explicit model; otherwise the stock CLI chooses its default, and the manifest says it is unpinned. `--codex PATH` selects the executable. The current runner uses `--ignore-user-config`, retains normal CLI authentication and execution rules, disables session persistence with `--ephemeral`, and never records credential files. It does not install Codex, choose a paid model, or invent unavailable cost telemetry. Prepare/report/compare and offline tests require no Codex login. Live subject or reviewer execution is explicitly gated by `DAW_LIVE=1`.
 
@@ -87,6 +91,23 @@ The activity report separately shows newly acquired asset identities/unique byte
 Acquisition metrics count catalog assets. Agent-written downloads preserved as object inputs are outside that metric and require separate receipt inspection; zero catalog acquisition bytes does not mean no downloading occurred. The mechanism skill includes a read-only status/coverage-header checker to catch map/queue label confusion and missing coverage columns before handoff. It does not replace complete structural, provenance or scientific review.
 
 Use the supplied `./bin/python` and `./bin/bio` explicitly inside a trial. Login shells can reset PATH. The wrappers use the project interpreter and certifi trust bundle unless an explicit `SSL_CERT_FILE` is already set; they validate the selected bundle and retain hostname/certificate verification. An offline preflight records the interpreter, trust store and available scientific modules in `environment.json`. It verifies configuration, not live source availability. Invalid explicit CA configuration fails early.
+
+## Discovery attempts
+
+The `discovery` suite asks which candidate regulators predict PMP22 changes beyond a general Schwann-cell myelination response and whether predictions hold in an independent perturbation dataset. Use the deep profile and, when useful, continue a preserved question:
+
+```sh
+DAW_LIVE=1 uv run python -m benchmarks.agent run --suite discovery --profile deep \
+  --seed-workspace PRIOR_WORKSPACE --continue-question QUESTION_ID --review
+```
+
+The [discovery skill](../.agents/skills/bio-hypothesis-discovery/SKILL.md) separates known baselines, exploratory candidates, locked predictions, validation results and novelty claims. Its helper preserves prediction bytes without overwriting prior files. The question-local `outputs/discoveries.json` links source-derived artifacts, validation outputs, exact prediction hashes and dated literature searches. Mechanical checks validate record integrity and expose sealing-receipt lines for review; they do not certify when outcomes were first inspected, biological independence or novelty. The agent can report no eligible candidate with an explanation instead of manufacturing a finding.
+
+A single claim's ledger ID must match the sealed `candidate_id`. Individual claims sharing a panel use an explicit `prediction_id` and must appear in that panel's sealed `candidate_ids`; an existing lock cannot gain members after outcome inspection. See the skill's [record conventions](../.agents/skills/bio-hypothesis-discovery/references/records.md) for the complete contract.
+
+The reviewer assesses six dimensions independently: `baseline_and_selection`, `prediction_timing`, `independent_validation`, `confounder_discrimination`, `novelty_audit`, and `claim_calibration`. It checks exposure in inherited outputs and source papers, sample overlap, actual executed analysis, generic-state and technical alternatives, and comparison with closest prior work. An informative rejection earns scientific credit; a positive result is not required. An observational association is not automatically a causal mechanism. A literature search with no match is bounded evidence, never proof that no one has reported the finding.
+
+The existing mechanism rubric's `discovery_value` includes analytical insights and design problems. It does not establish new-to-field biology. A discovery continuation is guided public-data research, not a blinded benchmark or a controlled estimate of skill improvement. No automated field-novelty score is produced.
 
 ## What a run preserves
 

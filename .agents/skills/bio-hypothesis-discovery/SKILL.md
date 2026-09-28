@@ -1,0 +1,24 @@
+---
+name: bio-hypothesis-discovery
+description: "Seek overlooked biological findings in existing measurements, formulate falsifiable predictions, test independent evidence, and audit novelty. Use with bio-research when the goal is discovery beyond established results; ordinary summaries and data-quality audits do not require this workflow."
+---
+
+# Bio Hypothesis Discovery
+
+Optimize for informative tests of consequential hypotheses. A supported prediction, a credible rejection, or an evidenced limit can advance the investigation. Never impose a quota of novel findings or reward candidate counts, small p-values, downloads or novelty language.
+
+Establish a source-backed baseline: what existing mechanisms predict, what the source studies already reported, and which observations remain unexplained. Separate biological hypotheses, analytical anomalies and known results. Use the mechanism network to follow upstream controls, shared causes and context-specific alternatives; use broad measurements and datasets collected for other purposes to challenge it. The network guides inquiry rather than certifying causality.
+
+During exploration, inspect the measured feature universe and sample design beyond familiar candidates. Look for reproducible departures from the baseline, effect heterogeneity, or discrepancies across relevant endpoints. Technical artifacts, selection, cell composition and generic state changes are competing explanations. Adjusting for a correlated program does not itself isolate a causal effect. Rank leads by relevance, discriminatory value and feasibility; preserve the selection rule and rejected leads.
+
+For a promising lead, identify a suitable validation experiment using metadata before inspecting its outcomes where possible. Record a quantitative or directional prediction, competing baseline, analysis plan, success/failure criteria, controls and treatment of multiple testing. Read [the discovery record conventions](references/records.md), then use [the prediction sealing helper](scripts/seal_prediction.py) before the first validation outcome inspection. Preserve the printed hash in the notebook and the sealed bytes with `bio object add`. Changes require a new file and explicit reason; the original remains. Files and timestamps alone do not prove a prospective test: the transcript and exposure history matter.
+
+Reserve a substantial share of the remaining budget for testing, robustness checks and source comparison; record that allocation early. Seek independent studies or biological samples, not another representation of the same experiment or another cell from the same donor. Record accession relationships, sample overlap, material, assay and known outcome exposure. Published results or inherited analyses already seen by the agent make the affected test retrospective. Public-data tests are not automatically blinded; acknowledge model prior knowledge. A locked test with no eligible validation data remains untested, not confirmed. Continue a feasible alternative or preserve a specific blocker.
+
+Execute the planned analysis on preserved measurements with ordinary scripts and registered outputs. Report effect size, uncertainty and design-appropriate controls; retain null and contradictory results. Distinguish robustness within the discovery data from independent validation. If a failed prediction suggests a new hypothesis, label that revision exploratory and seek fresh validation. Never reuse an inspected validation set as untouched evidence.
+
+Establish source-status eligibility before arithmetic. Failed quantification with a numeric zero is not a measured zero; missing or ineligible required features make the locked test untestable. Preserve corrections and superseded results. Dropping a required feature changes the test and cannot rescue the original prediction.
+
+Audit novelty separately from evidential strength. Search the exact mechanism, synonyms, context and endpoint; inspect the source-data paper and closest primary prior work. Preserve dated queries, inspected passages and the specific difference claimed. Record `not_found_in_scoped_search` only with an explicit search boundary; it does not mean nobody has reported the result. Agreement across observational datasets does not establish causality, and computational support can still require a new perturbation experiment.
+
+Maintain `outputs/discoveries.json` and link it to the investigation queue. Report each claim's evidence status and novelty status separately. An empty candidate list with documented search/analysis limitations is preferable to manufacturing a discovery. End with the strongest supported statement, the test that could overturn it, and the unresolved frontier. Preserve the original evidence and clearly distinguish inherited work from new computations.

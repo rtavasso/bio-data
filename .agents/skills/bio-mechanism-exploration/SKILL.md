@@ -5,6 +5,8 @@ description: "Explore broad biological mechanisms and regulatory systems by recu
 
 # Bio Mechanism Exploration
 
+For an explicit discovery objective, use `bio-hypothesis-discovery` alongside this map. It adds candidate selection, preserved predictions, independent validation and scoped novelty review. Mechanism exploration alone does not establish a finding new to the field.
+
 Success means finding consequential blind spots and measurements that distinguish explanations. More genes, graph nodes, citations or downloads do not demonstrate better exploration.
 
 Define the endpoint and biological scope: RNA abundance, promoter output, protein abundance and activity can require different explanations. State provisional assumptions when species, cell state or context is unspecified; preserve alternatives. A request for the “full” system calls for an explicit frontier of unresolved questions, not a claim of completeness.

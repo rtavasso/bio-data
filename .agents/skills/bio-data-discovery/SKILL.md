@@ -21,6 +21,8 @@ Use per-attempt receipts or serialize shared-ledger updates during concurrent re
 
 Check whether a matching cell is a measurement, selected-list membership, annotation, or other text. H5AD feature presence does not establish cell type or matrix semantics. Track coordinates need a sourced assembly/reference; gene expression is not promoter output. Distinguish metadata inventory, acquisition, structural inspection, interpretation and numerical extraction.
 
+Inspect source quality/status fields and their documented meanings before normalization or model construction. A numeric token can accompany failed or unreliable quantification; retain the raw value and status separately and establish eligibility before using it as abundance. A valid measured zero differs from a zero with a failure flag. If a required feature is ineligible, leave the original test untestable; a reduced feature panel is a revised exploratory analysis with its own provenance.
+
 For an actual access failure, record the needed information, failed route and plausible value with `bio work gap`. Include an actionable candidate solution, not an automatic demand for a new reader. Keep a returned partial/blocked receipt; absence from a selected table or incomplete index remains unresolved.
 
 Use `bio` from the supplied environment, or `uv run bio` in a development checkout. Read the relevant content-search/source section of `docs/V2.md` when needed. Do not preload historical specs.

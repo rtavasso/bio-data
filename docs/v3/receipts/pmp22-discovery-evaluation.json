@@ -1,0 +1,320 @@
+{
+  "audit": "docs/PMP22_DISCOVERY_AUDIT.md",
+  "case": "pmp22-specific-regulation",
+  "case_files": {
+    "artifacts.json": "8b49ae76504900af9e6d8c8393db7e419b0f69f1a1bce99b99514356e9f916e1",
+    "baseline.json": "74d713dcf5465d95153456427946cc6e89d3683d3bde201e18b1a4dee0581651",
+    "continuation.json": "378b76569ee26dc380fe8affe025f8d797ea09cc3283ee8f24b07d2e59384956",
+    "environment.json": "e812b4ed231d2e9801aac056250966612da51f6a68ad57e69441de3991a6c7b3",
+    "events.jsonl": "0204f1ceae33fa2a25a7bdd306281def0e55709ed98d45614ac5c57019c263f7",
+    "execution.json": "3ed5b595d781e62309fbfe0d680490b5fdb753dabd9ecedd15563ccea1b06a63",
+    "final.md": "4b50c211b7405d3860e2e5db28cdba659af1496b5476d9b43af9baf90470d48e",
+    "project-files.json": "1c2ecf3d66e6a255cc079d829386a816acc25217f1df1e97ac6ebe6dbb4e5833",
+    "prompt.txt": "d4d06b0f1306e6df745589ab100e0c3d97812d0deef41dcd8cc8ae2b15f6151c",
+    "report.json": "45ee8ce11f5290d1ec8f15a465bdd9edb132033e82ba28156a98c606d09217b3",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "transcript.md": "3d9e6e06c28c466bab55dcf944666bbfec693a21a259533f663cd1ef11c6fea9"
+  },
+  "catalog_acquisition": {
+    "assets": 9,
+    "limitation": "Script downloads preserved as objects are outside catalog asset metrics.",
+    "unique_bytes": 14613295
+  },
+  "checks": {
+    "agent_completed": "pass",
+    "catalog_integrity": "pass",
+    "discovery_ledger": "fail",
+    "executed_analysis": "pass",
+    "final_answer": "pass",
+    "investigation_queue": "pass",
+    "notebook": "pass",
+    "preserved_inputs": "pass",
+    "project_unchanged": "pass",
+    "question": "pass",
+    "registered_output": "pass",
+    "scientific_review": "unknown",
+    "script": "pass",
+    "transcript_parseable": "pass"
+  },
+  "cli_version": "codex-cli 0.157.1",
+  "created": "2026-09-28T05:07:47.525128+00:00",
+  "discovery_record_error": "prediction belongs to another candidate",
+  "driver_files": {
+    "evaluator-source/__init__.py": "05bd0420afd6e05e53ac8d76b5b374a8f7efb1e371c537d49cf61218bc4a79c6",
+    "evaluator-source/__main__.py": "d4be1be357d64332ea46c686edbd1f65d20c58d3192bc9ed2fa1d1f814bd6abc",
+    "evaluator-source/capture.py": "4ba27745139862af3a702e9c269127ff5e2d7e688475819745b421e09a474d80",
+    "evaluator-source/discoveries.py": "716898952481f91c84e6178c46d70b0cf41819b6065a0635eed1d9b6b28050b8",
+    "evaluator-source/fixtures.py": "2d6b5f6c8643274aa6346559ca80e57d1751553a71f60760aca3d793ba90e5a0",
+    "evaluator-source/investigations.py": "cfc87910b113b0f8b686bd7e886bb5b361ab29f49da927d60b2ed3a3d9675d46",
+    "evaluator-source/mechanisms.py": "5382d0b0b7ab95f353c44271af0214457f179315ea27f31089cad35153c65704",
+    "evaluator-source/models.py": "2ebb61b52c03b8b1fb99e33ca19c50205407ca77cc589b2a52eeb3b766f67278",
+    "evaluator-source/report.py": "be009ac860d1d23a345d15273358bcbb0e1a9cac792eb6566a73643fab3c095a",
+    "evaluator-source/review.py": "c8904376681219d3bb4d668692ebfcbf60dcd7bdc9e3cab9bceb292ddffa8547",
+    "evaluator-source/runner.py": "9258c00fab0a2afbbffd584e522823e7d8ceaebbff59107072537faeea8a265a"
+  },
+  "execution": {
+    "finished": "2026-09-28T04:22:54.029616+00:00",
+    "first_output_seconds": 1.1334,
+    "log_budget_bytes": 33554432,
+    "monotonic_seconds": 2590.7091,
+    "returncode": 0,
+    "started": "2026-09-28T03:39:43.246659+00:00",
+    "state": "exited",
+    "timeout_seconds": 3600,
+    "wall_seconds": 2590.7833
+  },
+  "limitations": [
+    "Guided continuation with prior work; default model unpinned; no controlled skill comparison.",
+    "No independent predictive support and no established novel mechanism; context transfer differs from direct candidate perturbation.",
+    "General published validation effects had been exposed; complete blinding is not established.",
+    "One mechanical check failed; original evidence and failure remain unchanged.",
+    "Post-run guidance has offline validation but awaits a fresh live evaluation.",
+    "Source data, full logs and parent audit scripts remain in ignored local workspaces."
+  ],
+  "manifest_sha256": "beb0100cd57fd235f5ac31d9290a925be563fe35d671e05dc2964c585e2c6e03",
+  "new_registered_results": 53,
+  "parent_audit": {
+    "files": {
+      "workspaces/discovery-audit/check_discovery.py": "6829808ea627929dbed89484417a9a475b9da60fb4671ff30d04c48d042a5e6b",
+      "workspaces/discovery-audit/check_eed_source.py": "0d8a5204b5f6015776059286a311fe7cccb7a69d3540b6f56748a2efe6d976cc",
+      "workspaces/discovery-audit/check_hdac3_status.py": "ea553cef26f367ecfc51cc655b90b764498d1c2de9bdac1db5e4a54d4070751e",
+      "workspaces/discovery-audit/check_ledger_binding.py": "5d75becbe3ad45af7d37bc843dd36b44b0f19ac6abec883195aaf78614c59b42",
+      "workspaces/discovery-audit/check_prediction_locks.py": "06c2ed75c9a411aeed23debac2de6d56066a62845d6a63bac636cef0dddd2c71",
+      "workspaces/discovery-audit/check_zeb2_validation.py": "d884693166b61051c07f13080ca660598dba14e49c023940ad5d9ce642029239",
+      "workspaces/discovery-audit/discovery-check.json": "95f8b935bdc77df989de62d006ce0ee97d88a613b73b8dc3067b4109605af1c2",
+      "workspaces/discovery-audit/eed-source-check.json": "0a1e576d4c75e7315cf41e4badfed8afc6a446d3ecc367f31d2dec55da09e1ba",
+      "workspaces/discovery-audit/hdac3-status-check.json": "a6f22564af1ff840006682d92999e5675f1521e35beb2b5801dd7b02ea6a8854",
+      "workspaces/discovery-audit/ledger-binding-check.json": "254190f1d3c691c57b18a2a24ef649a817a943873f9bde5e7c6320a558c43148",
+      "workspaces/discovery-audit/prediction-lock-check.json": "68352e66bcee05da3b432d147be58d810181bc6b0206f128f380e8ade5fc6178",
+      "workspaces/discovery-audit/zeb2-validation-check.json": "165153c9ea8547f4b6acbbd04f9947b299f0d50f9a82676a5f4e061f25e80210"
+    },
+    "ledger_binding": {
+      "changed_original_question_files": [],
+      "new_contract_regression": "test_panel_seal_requires_explicit_binding_and_predeclared_membership",
+      "note": "No original evidence changed and no passing historical result synthesized. New panel membership must be sealed before validation.",
+      "original_error_under_postrun_inspector": "prediction belongs to another candidate",
+      "original_ledger_sha256": "9d7803c85b5dc05015cf2317cc65f97fdc30d0201281cc5ca50ea1c3fabeccf5",
+      "original_question_files_checked": 478,
+      "temporary_binding_only_error": "candidate is not an explicit member of the sealed prediction family"
+    },
+    "not_supplied_to_subject_or_reviewer": true,
+    "original_trial_unchanged": true,
+    "prediction_locks": {
+      "baseline_coefficients_unchanged": true,
+      "candidate_models_unchanged_across_replacement": true,
+      "limitation": "Hashes verify surviving bytes and receipts, not a globally blinded test. Web search response bodies and model prior knowledge are not fully captured.",
+      "locks": [
+        {
+          "candidate_id": "pmp22-residual-three-gene-panel-r001",
+          "file": "cases/pmp22-specific-regulation/trial/workspace/questions/q_277f20df4b6b47cc/outputs/specific/prediction-r001.json",
+          "immutable_object_matches": true,
+          "sha256": "8a1f87bdfed16a43d6c8fda0f1d90219cd0efbd48087ed3aae0aae138e09ee95",
+          "successful_receipt_event_lines": [
+            57
+          ]
+        },
+        {
+          "candidate_id": "pmp22-residual-three-gene-panel-r002-zeb2-hdac3",
+          "file": "cases/pmp22-specific-regulation/trial/workspace/questions/q_277f20df4b6b47cc/outputs/specific/prediction-r002.json",
+          "immutable_object_matches": true,
+          "sha256": "59fd5240b9e676b0d0eed97a0c42d41eca7d2645e9e3a368328ab2b8980f1c18",
+          "successful_receipt_event_lines": [
+            93
+          ]
+        }
+      ],
+      "timing_audit": "Manual transcript inspection: r001 seal event57 precedes fetch in the same shell command and first numeric inspection event60. r002 seal event93 precedes replacement downloads event95 and first reported inspections event99. Prior general Zeb2/HDAC3 myelination effects were exposed in web excerpts and disclosed in r002."
+    },
+    "scope": "Independent source extraction, arithmetic, exact seal receipts and record diagnostics; not complete scientific validation.",
+    "selected_fits_all_match": true,
+    "validation_all_match": true
+  },
+  "post_run_changes": {
+    "changes": [
+      "Explicit prediction_id plus predeclared candidate_ids binds claims to a sealed family; missing/wrong bindings and unrelated members fail.",
+      "Source quality/status eligibility before normalization and modeling; failed required features leave the sealed test untestable."
+    ],
+    "files": {
+      ".agents/skills/bio-data-discovery/SKILL.md": "cd43f773e7ec9a6838495200d3715d713af57bdc0954bb7efaea5df0510b7232",
+      ".agents/skills/bio-hypothesis-discovery/SKILL.md": "36e790e6679d66b51ba35c440a72dd0ad0c7d37646aaa7f7e1fd4f532a0fcd8e",
+      ".agents/skills/bio-hypothesis-discovery/agents/openai.yaml": "073af954b135224127e06cf1098b997895e3b1bcb746516e9a087c60f85be57b",
+      ".agents/skills/bio-hypothesis-discovery/references/records.md": "c151dca8cf7f19fb024533681384105bc86867fb1e1f59de3189316f5cdc1f97",
+      ".agents/skills/bio-hypothesis-discovery/scripts/seal_prediction.py": "dd5905ca855d8329e887a1ba5a53ca7d50cbc72edf87321d5f1b2348985015aa",
+      "benchmarks/agent/discoveries.py": "0f695ae8399cc14ac9738058724b7610fad6abea0faa53babc057f246d34fcd2"
+    },
+    "live_tested_in_this_run": false
+  },
+  "prior_run": "workspaces/agent-evals/20260927T180459-576a3e1e",
+  "profile": "deep",
+  "question": "Which candidate regulators predict PMP22 changes beyond the general Schwann-cell myelination response, and do those predictions hold in an independent perturbation dataset?",
+  "question_files": {
+    "LABBOOK.md": "bbb7d56a078c3aea7e6ae6fa9e547fed2bd6a8a6b11553b410437d518144d7c2",
+    "inputs/specific/transport.json": "1e028ca91da936c7f59667e8d706cdb3b0695924a26f2d241d4d4e2e1c811c24",
+    "outputs/discoveries.json": "9d7803c85b5dc05015cf2317cc65f97fdc30d0201281cc5ca50ea1c3fabeccf5",
+    "outputs/evidence-coverage.tsv": "c3a10416be98cc338193ef683730e653365a124435f2b3689d6ef1b1c4d29ced",
+    "outputs/investigations.json": "5105e136f6dcc81567bf44efa7a234eb2360c4a34b48e2fbbfeea98d8c8d0834",
+    "outputs/mechanisms.json": "e7ed2565b3fca90f7729ebdb54ae6dfee446bc4c11a221330653dfec36a45360",
+    "outputs/specific/PMP22-specificity.png": "366b7ef210a6b5a0e2c797f80d738d7892d364967aa8f8a597999ec5f780c834",
+    "outputs/specific/REPORT.md": "6fecd31ff9ebdd0ff801213da734a84659e5586073ba5e97a22945d709621622",
+    "outputs/specific/REPRODUCE.md": "3ef24a667e1613ca4f565ba8780aabdafe4271752f7907c438324e6e9346b88a",
+    "outputs/specific/RESULTS.json": "f7bdca2adad11625840ad1db533db86735f71538d417ce14b13188e1a05348b5",
+    "outputs/specific/correction-r003.json": "66b4de31eae18fa0b14a440234341138e77a597d4525d73a0b367fae12e23892",
+    "outputs/specific/literature-novelty-audit.json": "905004edc2e8248647a02ee620a54787863866ff06723301b149e7f9fac1743e",
+    "outputs/specific/prediction-r001.json": "8a1f87bdfed16a43d6c8fda0f1d90219cd0efbd48087ed3aae0aae138e09ee95",
+    "outputs/specific/prediction-r002.json": "59fd5240b9e676b0d0eed97a0c42d41eca7d2645e9e3a368328ab2b8980f1c18",
+    "outputs/specific/preservation.json": "cf7ee0b15ca636e35c2cc413b9408fab8462c2f27214e7b7db6e6fd29731e5e0",
+    "outputs/specific/primary-literature-passages.json": "bad717376545d1b7eebc3899c80f1f11a721f635e3e0bb9b26dc5e6249281ff4",
+    "outputs/specific/registrations.json": "76241698579374adcc7c019a3d57cdcfbd46b267dd453bb312761bd27588b509",
+    "outputs/specific/validation-summary-r003.json": "7252c1e13755abf5d1acad88010fb36102612cdb0eae65184c71c2822beafea2"
+  },
+  "question_id": "q_277f20df4b6b47cc",
+  "queue": {
+    "revision": 10,
+    "status": "in_progress",
+    "stopping_reason": "Scoped PMP22-specific prediction work covered: all five new high-priority branches have executed registered analyses, including diagnostic follow-ups. Original full-system question remains open; inherited hormonal coverage remains deferred. Remaining causal and cross-assay questions require fresh data or corrected source exports, not more reuse of inspected outcomes."
+  },
+  "queue_counts": {
+    "analyzed": 12,
+    "blocked": 4,
+    "deferred": 1
+  },
+  "requested_model": null,
+  "research_budget": {
+    "asset_bytes": 536870912,
+    "requests": 150,
+    "total_bytes": 1073741824
+  },
+  "review": {
+    "assessments": {
+      "baseline_and_selection": "demonstrated",
+      "claim_calibration": "demonstrated",
+      "confounder_discrimination": "partial",
+      "independent_validation": "demonstrated",
+      "novelty_audit": "demonstrated",
+      "prediction_timing": "demonstrated"
+    },
+    "execution": {
+      "finished": "2026-09-28T04:28:56.286660+00:00",
+      "first_output_seconds": 1.6017,
+      "log_budget_bytes": 33554432,
+      "monotonic_seconds": 242.6948,
+      "returncode": 0,
+      "started": "2026-09-28T04:24:53.591404+00:00",
+      "state": "exited",
+      "timeout_seconds": 900,
+      "wall_seconds": 242.6957
+    },
+    "findings": [
+      {
+        "category": "scientific_reasoning",
+        "observation": "Initial HDAC3 calculations accepted numeric FPKM tokens without checking quantification status. Three Mpz zero tokens carry HIDATA, so the resulting seven-marker comparisons were invalid; an intermediate summary additionally called their status OK. The agent subsequently detected, corrected and explicitly superseded these results. Primary Zeb2 conclusions are unaffected.",
+        "severity": "medium"
+      },
+      {
+        "category": "tooling",
+        "observation": "Three individual ledger candidates reference one sealed panel whose candidate_id differs from every ledger ID. The frozen evaluator therefore reports 'prediction belongs to another candidate'. Hash integrity is real, but the subject's final verification checks JSON syntax and hashes without checking this relationship. The supplied record instructions do not explicitly explain the required ID equality or how to represent a multi-candidate lock.",
+        "severity": "medium"
+      }
+    ],
+    "limitation": "Independent model session, not independent expert consensus. Citation locations validated; judgments require review.",
+    "state": "recorded",
+    "summary": "This is a useful, substantially evidenced negative discovery attempt. Ppp6r1, Gtf2f1 and Hck failed a locked candidate-specific transfer test in biologically independent Zeb2 samples. No claim has both independent positive support and evidence for novelty within the recorded search boundary. The main improvements are earlier source-status gating and a clear, validated contract between panel prediction locks and individual discovery records.",
+    "usage": {
+      "cached_input_tokens": 664320,
+      "input_tokens": 780361,
+      "output_tokens": 6852,
+      "reasoning_output_tokens": 427
+    },
+    "usd": null
+  },
+  "review_files": {
+    "events.jsonl": "e19d20baafeda593be027fe17fe8e3763a01a4dad247d79c63121cbd3babbf76",
+    "execution.json": "98e70caa4876081f6e2ec8be446eadd0acddb289881a99689f837f2c0d06bf6b",
+    "input-report.json": "4a3db1c750a4eed7a786c754fb15c0425e74078bd248be9326d059175a4c71a8",
+    "prompt.txt": "8f0b4521ddb53546601152a2fe8d46fb11b5f56ea4ee049ec277f8315577b972",
+    "provenance.json": "afe32b6944503a47aeb8fae4eb2e650074822ce178fc2716f156c3ff91fc7101",
+    "raw-review.json": "5b32c31a0cb332587c7c4de8edf4fcb22ec8f09b1972f5ec36f3ee8f3f1387b0",
+    "review.json": "80ab538071140912b0e95a682779861b2cf7d739ed9484e39d153ae757de267d",
+    "schema.json": "384bab62f0f26fd119e62f30eee732964b1b88c84cffc353f76a33cf947c142d",
+    "transcript.md": "3f195359c1eb92b013093a52f763f8dfdbd95ba83e1fab38ff426c89dbe9519c"
+  },
+  "run": "workspaces/agent-evals/20260927T203815-97e5dd48",
+  "scientific_result": {
+    "baseline_R2": 0.9812484448993707,
+    "candidate_selection": "Top 3 regulatory-description genes by leave-one-timepoint-out SSE; CPM>=1 in all8; SD>=0.25; consistent slope sign in all4 folds; SSE<0.8*baseline. This CV is used for selection and is NOT unbiased validation. Whole feature screen preserved.",
+    "conclusion": "No selected candidate validated as a transferable PMP22-specific RNA predictor.",
+    "discovery_features": 31038,
+    "discovery_sample_units": "two pooled nerve preparations per state; minimum 10 nerves/sample per GEO; individual nerves not replicates",
+    "discovery_source": "GSE177037",
+    "field_novel_mechanism_established": false,
+    "primary_validation": [
+      {
+        "SSE_ratio": 1.2407876139320515,
+        "candidate": "Ppp6r1",
+        "status_under_lock": "contradicted",
+        "validation_conditional_slope": 0.8375420496870892
+      },
+      {
+        "SSE_ratio": 0.8499296027803817,
+        "candidate": "Gtf2f1",
+        "status_under_lock": "contradicted",
+        "validation_conditional_slope": 0.5104767449044691
+      },
+      {
+        "SSE_ratio": 0.9813984398300869,
+        "candidate": "Hck",
+        "status_under_lock": "contradicted",
+        "validation_conditional_slope": 0.22119154329074306
+      }
+    ],
+    "primary_validation_source": "GSE76027",
+    "secondary_test": "GSE93159 seven-marker test untestable after correcting HIDATA zeros; original calculations preserved.",
+    "test_scope": "Sealed candidate-specific prediction before measurement acquisition; published general Zeb2 phenotype exposed. Not direct candidate perturbation."
+  },
+  "source_revision": "74556b891cef86e3998e25454de5dc8b93999db8",
+  "tested_skills": {
+    ".agents/skills/bio-artifact-reuse/SKILL.md": "eb6fdce05b351b6c365d04c3dde41ada8dd87e1bcfe103c2423dd8119d276118",
+    ".agents/skills/bio-artifact-reuse/agents/openai.yaml": "236697657f2ae179b044e5e52eedd6a4cef6c8f2afb0f6f6ca28cb3420e31c30",
+    ".agents/skills/bio-data-discovery/SKILL.md": "0eeec3a132f7634c01c9c10f2f5417169423947be662baa90f3ed4d7b2b27694",
+    ".agents/skills/bio-data-discovery/agents/openai.yaml": "1d458134f124e81fc1abebba8b124adb58e26672f19a25fc73a4355ea35395e9",
+    ".agents/skills/bio-hypothesis-discovery/SKILL.md": "86bd05e0fb114e13a074bff8d74e4ef03b98ad8222d39148db6fae1444a74db6",
+    ".agents/skills/bio-hypothesis-discovery/references/records.md": "8d4f002dce1d41cd78b6135bbe663b27393abbfc9b7339deb9708a74c38688e7",
+    ".agents/skills/bio-hypothesis-discovery/scripts/seal_prediction.py": "b6b47ac852fa64e2cd9066333e9b07c3bed7a51eeadcc020c188d1da1706175b",
+    ".agents/skills/bio-mechanism-exploration/SKILL.md": "1b487a4349af2dbc28b8633d0d0962bbdbacd45e1ab4be4e66c21ac4c87d174b",
+    ".agents/skills/bio-mechanism-exploration/agents/openai.yaml": "46a7d9e38720adad6431278ae1bb700a829a05c18fbe7b7b0d4802b26649a6a5",
+    ".agents/skills/bio-mechanism-exploration/references/artifacts.md": "5c400f3162a80398a6b678389e71b8bdcd31c0d78aedf3eedd3312c1ab951467",
+    ".agents/skills/bio-mechanism-exploration/references/investigations.md": "dea8952ef10af1719081605f04df8c2459e24722aee4e5184c303e88b97bcfab",
+    ".agents/skills/bio-mechanism-exploration/scripts/check_statuses.py": "8609137a425d5c6b3cdd326f5aeacf48bf261a0f15885f3e4ef2df3a42564a8e",
+    ".agents/skills/bio-research/SKILL.md": "067c47c3bc284b2d659583e2b4e1fc5ca3262b53a3dd081ae6432c23cd6d1485",
+    ".agents/skills/bio-research/agents/openai.yaml": "ac7027eba7e58946b00d225faa5fb1218735f2f3b8820914c430caafa2b1adef"
+  },
+  "transport_accounting": {
+    "entry_bytes": 14790965,
+    "external_tool_bytes": 36006511,
+    "external_tool_requests": 45,
+    "limitation": "Recorded accounting includes reconciled receipts and browser estimates; not authoritative network traffic.",
+    "recorded_entries": 32
+  },
+  "usage": {
+    "cached_input_tokens": 12701312,
+    "input_tokens": 12986461,
+    "output_tokens": 67168,
+    "reasoning_output_tokens": 15622
+  },
+  "usd": null,
+  "validation": {
+    "command": "uv run pytest --junitxml=workspaces/discovery-offline-tests-post-review.xml",
+    "ruff": "passed",
+    "skill_validation": "passed",
+    "suite": {
+      "errors": "0",
+      "failures": "0",
+      "name": "pytest",
+      "skipped": "3",
+      "tests": "167",
+      "time": "71.138",
+      "timestamp": "2026-09-27T22:04:58.664037-07:00"
+    },
+    "xml_sha256": "a59227e290698a89c8f2376d9f7f2c1f385aed0861c46c71eb171e9df3db0212"
+  }
+}

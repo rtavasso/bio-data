@@ -10,6 +10,7 @@ from daw.util import file_hash, read_json, write_json
 from .capture import parse_events, transcript_text
 from .fixtures import catalog_snapshot
 from .mechanisms import inspect_mechanisms
+from .discoveries import inspect_discoveries
 from .investigations import analysis_activity, inspect_queue
 from .runner import safe_path
 
@@ -44,24 +45,27 @@ def preview(path, limit=16000):
     return data[:limit].decode("utf-8", errors="replace") + ("\n[Preview truncated; full bytes preserved]" if len(data) > limit else "")
 
 
-def inventory(trial, limit=300):
-    files, omitted = [], 0
+def inventory(trial, limit=300, file_limit=10000):
+    files, omitted, omitted_previews = [], 0, 0
     questions = safe_path(trial, "workspace/questions")
     for path in sorted(questions.rglob("*")):
         if path.is_dir() and not path.is_symlink():
             continue
         rel = str(path.relative_to(trial))
-        if len(files) >= limit:
+        if len(files) >= file_limit:
             omitted += 1
             continue
         try:
             path = safe_path(trial, rel)
             if not path.is_file():
                 continue
-            files.append({"path": rel, "bytes": path.stat().st_size, "sha256": file_hash(path), "preview": preview(path)})
+            show_preview = len(files) < limit
+            omitted_previews += not show_preview
+            files.append({"path": rel, "bytes": path.stat().st_size, "sha256": file_hash(path),
+                          "preview": preview(path) if show_preview else "[Display budget reached; inspect the native file.]"})
         except (ValueError, OSError) as e:
             files.append({"path": rel, "error": str(e)})
-    return {"files": files, "omitted_files": omitted, "complete": omitted == 0}
+    return {"files": files, "omitted_files": omitted, "omitted_previews": omitted_previews, "complete": omitted == 0}
 
 
 def checks_for(folder, case, execution, parsed, artifacts):
@@ -147,6 +151,17 @@ def checks_for(folder, case, execution, parsed, artifacts):
             queue_records.append(record)
         except (ValueError, OSError) as e:
             queue_records.append({"question": q["id"], "error": str(e)})
+    discovery_records = []
+    if "discovery_ledger" in case["expect"]:
+        for q in new_questions:
+            try:
+                linked_ids = {a["artifact_id"] for a in links if a["question_id"] == q["id"]}
+                record = inspect_discoveries(trial, q, linked_ids, parsed)
+                path = q["path"] + "/outputs/discoveries.json"
+                record["changed"] = baseline.get("question_files", {}).get(path) != file_hash(safe_path(trial / "workspace", path))
+                discovery_records.append(record)
+            except (ValueError, OSError) as e:
+                discovery_records.append({"question": q["id"], "error": str(e)})
     observations = {
         "question": (bool(qids), f"New or explicitly continued question IDs: {sorted(qids)}"),
         "notebook": (bool(synced), f"New question notebooks edited and synced: {synced}"),
@@ -157,7 +172,9 @@ def checks_for(folder, case, execution, parsed, artifacts):
         "investigation_queue": (any(r.get("changed") and not r.get("error") for r in queue_records),
                                 "Changed queue with registered results or preserved blockers; closure and evidence quality need review: " + str(queue_records)),
         "executed_analysis": (any(r["execution_evidence"] for r in activity["new_registered_results"]),
-                              "New result with intact input/output bytes, matching saved code and a successful literal invocation; dynamic execution and scientific validity require manual review")}
+                              "New result with intact input/output bytes, matching saved code and a successful literal invocation; dynamic execution and scientific validity require manual review"),
+        "discovery_ledger": (any(r.get("changed") and not r.get("error") for r in discovery_records),
+                             "Changed discovery record with artifact links and intact prediction hashes; no automatic novelty or prospective credit")}
     mechanism_keys = {"mechanism_map", "mechanism_revision", "evidence_coverage"}
     mechanism_records = inspect_mechanisms(trial, new_questions) if mechanism_keys & set(case["expect"]) else []
     for record in mechanism_records:
@@ -181,7 +198,7 @@ def checks_for(folder, case, execution, parsed, artifacts):
         ok, detail = observations[key]
         add(key, ok if started and state else None, detail, ["trial/workspace/catalog.sqlite", "artifacts.json"])
     add("scientific_review", None, "Biological validity, appropriateness of reuse and quality of reasoning require attributed review", ["final.md", "transcript.md", "artifacts.json"])
-    return checks, activity, queue_records
+    return checks, activity, queue_records, discovery_records
 
 
 def case_report(folder, case):
@@ -193,7 +210,7 @@ def case_report(folder, case):
     except (ValueError, OSError) as e:
         artifacts = {"files": [], "complete": False, "error": str(e)}
     write_json(folder / "artifacts.json", artifacts)
-    checks, activity, investigations = checks_for(folder, case, execution, parsed, artifacts)
+    checks, activity, investigations, discoveries = checks_for(folder, case, execution, parsed, artifacts)
     complete = next(c for c in checks if c["id"] == "agent_completed")["status"] == "pass"
     status = "complete" if complete else execution.get("state", "not_run")
     if status == "exited":
@@ -204,7 +221,7 @@ def case_report(folder, case):
         "usage": parsed["usage"], "usd": None, "tool_counts": dict(Counter(i.get("type", "unknown") for i in parsed["items"])),
         "failed_commands": [{"line": i["line"], "command": i.get("command"), "exit_code": i.get("exit_code")} for i in commands if i.get("exit_code") not in (None, 0)],
         "artifacts": artifacts, "malformed_lines": parsed["malformed_lines"], "errors": parsed["errors"],
-        "activity": activity, "investigations": investigations,
+        "activity": activity, "investigations": investigations, "discoveries": discoveries,
         "assessment": "mechanical checks only; unknown is not pass; no global scientific score"}
     write_json(folder / "report.json", result)
     final = preview(folder / "final.md", 50000) if (folder / "final.md").exists() and not (folder / "final.md").is_symlink() else "No final answer captured."
@@ -221,6 +238,7 @@ def case_report(folder, case):
         f"<h2>Checks</h2><p>Observable workflow checks are separate from scientific review.</p><table><tr><th>Check</th><th>Status</th><th>Evidence</th></tr>{rows}</table>"
         f"<h2>New research activity</h2><p>Inherited work is excluded. Acquisition volume is descriptive, not a quality score.</p><pre>{escape(activity)}</pre>"
         f"<h2>Investigation queue</h2><pre>{escape(investigations)}</pre>"
+        f"<h2>Discovery records</h2><pre>{escape(discoveries)}</pre>"
         f"<h2>Final answer</h2><pre>{escape(final)}</pre><h2>Outputs and notebook</h2><input id=filter aria-label='Filter outputs' placeholder='Filter files by name or content…'>{outputs}"
         f"<h2>Transcript</h2><p>{transcript_links}</p>"
         f"<h3>Failed commands</h3>{failures or '<p>No failed command exits recorded.</p>'}"
@@ -260,7 +278,7 @@ def build_report(root):
         review = result["review"]
         body += f"<p>{escape(review['summary'])}</p>"
         if review.get("assessments"):
-            body += "<h3>Mechanism exploration audit</h3><p>Attributed reviewer judgments; artifact checks alone do not establish these outcomes.</p><table><tr><th>Case / criterion</th><th>Verdict</th><th>Evidence and reasoning</th></tr>"
+            body += "<h3>Scientific investigation audit</h3><p>Attributed reviewer judgments; artifact checks alone do not establish these outcomes.</p><table><tr><th>Case / criterion</th><th>Verdict</th><th>Evidence and reasoning</th></tr>"
             for assessment in review["assessments"]:
                 evidence = " · ".join(f"<a href='{quote(c['path'], safe='/')}'>{escape(c['path'])}</a> {escape(c['locator'])}" for c in assessment["evidence"])
                 body += f"<tr><td>{escape(assessment['case_id'])}<br>{escape(assessment['criterion'])}</td><td>{escape(assessment['verdict'])}</td><td>{escape(assessment['justification'])}<p class=muted>{evidence}</p></td></tr>"

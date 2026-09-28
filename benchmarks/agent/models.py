@@ -22,11 +22,11 @@ class Case(BaseModel):
     question: str = Field(min_length=1, max_length=20000)
     setup: Literal["zero-vs-missing", "artifact-reuse", "limited-context", "mechanism-blindspots", "empty"] = "empty"
     data_access: Literal["offline", "public"] = "offline"
-    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration"]] = Field(default_factory=lambda: ["bio-research"])
-    review_rubric: Literal["standard", "mechanism-exploration"] = "standard"
+    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration", "bio-hypothesis-discovery"]] = Field(default_factory=lambda: ["bio-research"])
+    review_rubric: Literal["standard", "mechanism-exploration", "hypothesis-discovery"] = "standard"
     review_focus: list[str] = Field(default_factory=list)
     investigation_brief: str = Field(default="", max_length=10000)
-    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap", "mechanism_map", "mechanism_revision", "evidence_coverage", "investigation_queue", "executed_analysis"]] = Field(default_factory=lambda: ["question", "notebook"])
+    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap", "mechanism_map", "mechanism_revision", "evidence_coverage", "investigation_queue", "executed_analysis", "discovery_ledger"]] = Field(default_factory=lambda: ["question", "notebook"])
 
 
 class Suite(BaseModel):
@@ -69,12 +69,16 @@ class Review(BaseModel):
 
 
 MECHANISM_CRITERIA = ("recursive_exploration", "breadth", "discovery_value", "discrimination", "revision", "calibration")
+DISCOVERY_CRITERIA = ("baseline_and_selection", "prediction_timing", "independent_validation",
+                      "confounder_discrimination", "novelty_audit", "claim_calibration")
 
 
 class MechanismAssessment(BaseModel):
     model_config = ConfigDict(extra="forbid")
     case_id: str
-    criterion: Literal["recursive_exploration", "breadth", "discovery_value", "discrimination", "revision", "calibration"]
+    criterion: Literal["recursive_exploration", "breadth", "discovery_value", "discrimination", "revision", "calibration",
+                       "baseline_and_selection", "prediction_timing", "independent_validation",
+                       "confounder_discrimination", "novelty_audit", "claim_calibration"]
     verdict: Literal["demonstrated", "partial", "not_demonstrated", "unresolved"]
     justification: str
     evidence: list[Citation] = Field(min_length=1)

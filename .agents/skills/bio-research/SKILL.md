@@ -5,6 +5,8 @@ description: "Investigate a biological question using the bio-data workbench, pu
 
 # Bio Research
 
+When the goal is a finding beyond established results, use `bio-hypothesis-discovery` to distinguish known baselines, exploratory candidates, predictions and independent tests. Audit novelty separately from evidence strength; a useful analytical surprise does not itself establish new biology.
+
 Start from the biological uncertainty: what competing explanations would different observations distinguish? Use existing biological knowledge as hypotheses and audit important missing mechanisms with structured resources and primary papers when network access is available. Respect an offline or bounded-data task; an unavailable source is a limitation to record.
 
 For broad mechanism or regulatory-system questions, use `bio-mechanism-exploration`. Save and revise a question-local hypothesis network, recursively investigate upstream controls, and connect competing explanations to data analyses. Audit blind spots during collection. A familiar first-order factor list alone does not complete a broad systems question. Simple extractions do not need a network.

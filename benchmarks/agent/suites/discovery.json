@@ -1,0 +1,22 @@
+{
+  "name": "pmp22-hypothesis-discovery",
+  "description": "A public-data discovery attempt: distinguish PMP22-specific candidate regulation from general Schwann-cell state, preserve predictions before validation, and audit novelty separately from evidence. No novel result is required or presumed.",
+  "cases": [{
+    "id": "pmp22-specific-regulation",
+    "question": "Which candidate regulators predict PMP22 changes beyond the general Schwann-cell myelination response, and do those predictions hold in an independent perturbation dataset?",
+    "investigation_brief": "Use the available PMP22 work as an explicitly inherited discovery starting point. Establish what the source studies already reported, explore measured patterns beyond familiar regulators, and pursue a consequential testable departure from that baseline. Record candidate selection and biological/technical alternatives. Identify suitable independent validation data from metadata where possible, seal the exact prediction and analysis criteria before inspecting its outcomes, and execute the test. Disclose earlier paper/result exposure and source/sample overlap; reusing already inspected outcomes is retrospective. Reserve substantial time for validation, confounder checks and a primary-literature novelty audit. Preserve a discovery ledger with evidence status separate from novelty status. An informative rejection, no eligible candidate or an evidenced validation limit is a valid outcome; do not manufacture a novel mechanism. Continue feasible work within the configured budget and report the strongest statement the measurements support.",
+    "setup": "empty",
+    "data_access": "public",
+    "skills": ["bio-research", "bio-hypothesis-discovery", "bio-mechanism-exploration", "bio-data-discovery", "bio-artifact-reuse"],
+    "review_rubric": "hypothesis-discovery",
+    "expect": ["question", "notebook", "script", "registered_output", "executed_analysis", "investigation_queue", "discovery_ledger"],
+    "review_focus": [
+      "Assess the six discovery criteria separately, with physical transcript or artifact citations. Do not award novel biology credit for analytical anomalies, metadata repairs or reproduction of the source paper.",
+      "Verify prediction sealing against earliest outcome inspection, including inherited reports and source literature. Outcome exposure before sealing makes the affected test retrospective even if numerical analysis follows the seal.",
+      "Inspect measured feature universe, sample identity, independent biological units, context transfer, and generic-state/composition alternatives. Residual associations do not establish causal specificity.",
+      "Trace each candidate to actual newly executed analyses, registered outputs, source bytes and prior-work passages. Audit candidate selection and multiple testing without demanding invalid significance estimates.",
+      "Judge whether an independent validation attempt was eligible and informative, including negative results, and whether remaining resources could have addressed an unresolved consequential alternative.",
+      "Identify the exact novelty claim, closest prior reports, dated search coverage and limits. Independence and novelty are distinct; no matches do not prove global novelty."
+    ]
+  }]
+}

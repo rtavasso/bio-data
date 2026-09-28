@@ -8,19 +8,23 @@ from pathlib import Path
 from daw.util import file_hash, now, read_json, write_json
 
 from .capture import execute, parse_events, transcript_text
-from .models import MECHANISM_CRITERIA, MechanismReview, Review
+from .models import DISCOVERY_CRITERIA, MECHANISM_CRITERIA, MechanismReview, Review
 from .report import build_report
 from .runner import DEFAULT_TIMEOUT, REPO, codex_command, safe_path
 
 
-def mechanism_cases(root):
+def rubric_cases(root, rubric):
     manifest = read_json(root / "manifest.json")
     return {c["id"] for c in manifest["suite"]["cases"] if c["id"] in manifest["selected_cases"]
-            and c.get("review_rubric") == "mechanism-exploration"}
+            and c.get("review_rubric") == rubric}
+
+
+def mechanism_cases(root):
+    return rubric_cases(root, "mechanism-exploration")
 
 
 def review_model(root):
-    return MechanismReview if mechanism_cases(root) else Review
+    return MechanismReview if mechanism_cases(root) or rubric_cases(root, "hypothesis-discovery") else Review
 
 
 def validate_review(root, value):
@@ -28,9 +32,10 @@ def validate_review(root, value):
     cases = set(read_json(root / "manifest.json")["selected_cases"])
     assessments = getattr(review, "assessments", [])
     expected = {(case, criterion) for case in mechanism_cases(root) for criterion in MECHANISM_CRITERIA}
+    expected |= {(case, criterion) for case in rubric_cases(root, "hypothesis-discovery") for criterion in DISCOVERY_CRITERIA}
     actual = [(a.case_id, a.criterion) for a in assessments]
     if len(actual) != len(set(actual)) or set(actual) != expected:
-        raise ValueError("mechanism review must assess each requested case and criterion exactly once")
+        raise ValueError("scientific review must assess each requested case and criterion exactly once")
     for finding in [*review.findings, *assessments]:
         if finding.case_id not in cases:
             raise ValueError("review cites an unknown case")
@@ -67,6 +72,19 @@ def review_prompt(root):
         "Separate source retrieval/metadata inspection from reading measurements. Check consequential edge claims against preserved evidence; "
         "if the necessary source text was not retained, say source support remains unverified. Do not infer scientific validity from citations alone.\n"
         if mechanism_cases(root) else "")
+    if rubric_cases(root, "hypothesis-discovery"):
+        rubric += ("For hypothesis-discovery cases, provide exactly one evidence-cited assessment per case for each of: "
+            + ", ".join(DISCOVERY_CRITERIA) + ". Use demonstrated, partial, not_demonstrated or unresolved. "
+            "Inspect discoveries.json, exact prediction files and hashes, helper execution receipts, earliest outcome exposure, "
+            "source measurements, executed code and registered outputs. A seal timestamp or later analysis command alone does not prove prospective testing. "
+            "Judge the known baseline and candidate selection, locked falsifiable predictions before validation inspection, genuine biological independence "
+            "versus another representation of the same samples, technical/composition/state alternatives, selection/multiple testing, "
+            "and a scoped literature audit of the exact claim. Identify overlap and inherited or published outcome exposure. "
+            "Distinguish a rejected prediction from an invalid experiment and retrospective robustness from independent confirmation. "
+            "Credit informative negative results; no discovery quota. Assess biological evidence separately from novelty. "
+            "A data-quality anomaly or reproduced known result may be useful without establishing field novelty. "
+            "State explicitly whether any claim has independent support AND evidence for novelty within the recorded search boundary; "
+            "never convert no literature matches into proof of global novelty.\n")
     return ("Use $bio-evaluation-review to diagnose this recorded evaluation. You are a reviewer, not the subject researcher.\n"
         f"Run root: {root}\nValid case IDs: {', '.join(manifest['selected_cases'])}\n"
         "Read review/input-report.json (the frozen pre-review report), then each case's prompt.txt, transcript.md/events.jsonl, final.md and relevant artifacts.json previews and native outputs. "
