@@ -10,7 +10,7 @@ from daw.util import file_hash, now, read_json, write_json
 from .capture import execute, parse_events, transcript_text
 from .models import DISCOVERY_CRITERIA, MECHANISM_CRITERIA, MechanismReview, Review
 from .report import build_report
-from .runner import DEFAULT_TIMEOUT, REPO, codex_command, safe_path
+from .runner import DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_TIMEOUT, REPO, codex_command, safe_path
 
 
 def rubric_cases(root, rubric):
@@ -114,7 +114,9 @@ def review_prompt(root):
         "or classify an unrun scientific task as scientifically wrong.\n")
 
 
-def review_run(root, *, agent=False, executable="codex", model=None, timeout=DEFAULT_TIMEOUT, authored=None):
+def review_run(root, *, agent=False, executable="codex", model=None, reasoning_effort=None, timeout=DEFAULT_TIMEOUT, authored=None):
+    model = DEFAULT_MODEL if model is None else model
+    reasoning_effort = DEFAULT_REASONING_EFFORT if reasoning_effort is None else reasoning_effort
     root = Path(root).resolve()
     build_report(root)
     folder = root / "review"
@@ -145,11 +147,12 @@ def review_run(root, *, agent=False, executable="codex", model=None, timeout=DEF
         schema = folder / "schema.json"
         write_json(schema, review_model(root).model_json_schema())
         output = folder / "raw-review.json"
-        argv = codex_command(resolved, folder, output, model=model, schema=schema, readonly=True)
+        argv = codex_command(resolved, folder, output, model=model, reasoning_effort=reasoning_effort, schema=schema, readonly=True)
         execution = execute(argv, prompt, folder, folder, dict(os.environ), timeout)
         parsed = parse_events(folder / "events.jsonl")
         (folder / "transcript.md").write_text(transcript_text(parsed))
-        provenance = {"kind": "agent", "created": now(), "requested_model": model, "execution": execution,
+        provenance = {"kind": "agent", "created": now(), "requested_model": model,
+            "requested_reasoning_effort": reasoning_effort, "execution": execution,
             "usage": parsed["usage"], "usd": None, "state": "incomplete", "prompt_sha256": file_hash(prompt),
             "input_report_sha256": file_hash(folder / "input-report.json"),
             "note": "Independent session; not independent expert consensus. Citations are validated, scientific judgments require review."}

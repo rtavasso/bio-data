@@ -58,6 +58,9 @@ Path(sys.argv[sys.argv.index("--output-last-message")+1]).write_text("<script>al
 
 
 def test_prepare_is_offline_and_does_not_award_seeded_work(prepared):
+    manifest = read_json(prepared / "manifest.json")
+    assert manifest["requested_model"] == "gpt-6-astra"
+    assert manifest["requested_reasoning_effort"] == "xhigh"
     report = build_report(prepared)
     case = report["cases"][0]
     checks = {c["id"]: c["status"] for c in case["checks"]}
@@ -82,6 +85,9 @@ def test_stock_cli_capture_records_failure_evidence_without_conflating_completio
     assert checks["question"] == "pass" and checks["notebook"] == "fail"
     assert checks["scientific_review"] == "unknown"
     folder = prepared / "cases/zero-vs-missing"
+    argv = read_json(folder / "execution.json")["argv"]
+    assert argv[argv.index("--model") + 1] == "gpt-6-astra"
+    assert 'model_reasoning_effort="xhigh"' in argv
     assert '"type": "future.event"' in (folder / "events.jsonl").read_text()
     assert "fixture stderr" in (folder / "stderr.log").read_text()
     rendered = (folder / "report.html").read_text()
@@ -229,8 +235,43 @@ def test_comparison_retains_missing_cases_and_unknown_timings(prepared, tmp_path
 
 
 def test_cli_argv_keeps_permissions_bounded_and_model_literal(tmp_path):
-    argv = codex_command("/path with spaces/codex", tmp_path, tmp_path / "final.md", model="literal;model", public=False)
+    argv = codex_command("/path with spaces/codex", tmp_path, tmp_path / "final.md", model="literal;model", reasoning_effort="high", public=False)
     assert argv[0] == "/path with spaces/codex" and argv[argv.index("--model") + 1] == "literal;model"
     assert argv[argv.index("--sandbox") + 1] == "workspace-write"
     assert 'web_search="disabled"' in argv and "sandbox_workspace_write.network_access=false" in argv
+    assert 'model_reasoning_effort="high"' in argv
     assert not any("dangerously" in arg for arg in argv)
+
+
+def test_model_defaults_do_not_relabel_historical_runs(prepared, tmp_path):
+    manifest = read_json(prepared / "manifest.json")
+    manifest["requested_model"] = None
+    manifest.pop("requested_reasoning_effort")
+    write_json(prepared / "manifest.json", manifest)
+    report = build_report(prepared)
+    assert report["manifest"]["requested_model"] is None
+    assert "requested_reasoning_effort" not in report["manifest"]
+    argv = codex_command("codex", tmp_path, tmp_path / "final.md", model=None, reasoning_effort=None)
+    assert "--model" not in argv and not any(arg.startswith("model_reasoning_effort=") for arg in argv)
+
+
+@pytest.mark.parametrize("overrides,expected", [({}, ("gpt-6-astra", "xhigh")),
+    ({"model": "fixture-model", "reasoning_effort": "high"}, ("fixture-model", "high"))])
+def test_reviewer_launch_and_provenance_pin_model_and_effort(prepared, tmp_path, monkeypatch, overrides, expected):
+    monkeypatch.setenv("DAW_LIVE", "1")  # Executable is an offline test double, not a model client.
+    executable = tmp_path / "fake-reviewer"
+    executable.write_text(f"#!{sys.executable}\n" + '''import json, sys
+from pathlib import Path
+review = {"summary":"Synthetic review", "strengths":[], "findings":[], "unresolved":[], "next_experiments":[]}
+Path(sys.argv[sys.argv.index("--output-last-message") + 1]).write_text(json.dumps(review))
+print(json.dumps({"type":"turn.completed", "usage":{}}))
+''')
+    executable.chmod(0o755)
+    result = review_run(prepared, agent=True, executable=str(executable), **overrides)
+    assert result["state"] == "recorded"
+    provenance = read_json(prepared / "review/provenance.json")
+    assert (provenance["requested_model"], provenance["requested_reasoning_effort"]) == expected
+    argv = provenance["execution"]["argv"]
+    assert argv[argv.index("--model") + 1] == expected[0]
+    assert f'model_reasoning_effort="{expected[1]}"' in argv
+    assert argv[argv.index("--sandbox") + 1] == "read-only"

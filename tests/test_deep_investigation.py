@@ -65,16 +65,18 @@ def test_research_caps_can_be_set_independently_without_old_ceiling():
     assert ResearchBudget(requests=10001).requests == 10001
 
 
-@pytest.mark.parametrize("flags,expected", [([], (0, 0, 0, 0)),
-    (["--timeout", "7200", "--requests", "10001", "--asset-mib", "0", "--total-mib", "32768"],
-     (7200, 10001, 0, 32 * 2**30))])
-def test_cli_deep_profile_keeps_unlimited_defaults_and_independent_overrides(tmp_path, flags, expected):
+@pytest.mark.parametrize("flags,expected,model,effort", [([], (0, 0, 0, 0), "gpt-6-astra", "xhigh"),
+    (["--timeout", "7200", "--requests", "10001", "--asset-mib", "0", "--total-mib", "32768",
+      "--model", "fixture-model", "--reasoning-effort", "high"],
+     (7200, 10001, 0, 32 * 2**30), "fixture-model", "high")])
+def test_cli_deep_profile_keeps_unlimited_defaults_and_independent_overrides(tmp_path, flags, expected, model, effort):
     result = subprocess.run([os.sys.executable, "-m", "benchmarks.agent", "prepare", "--suite", "mechanisms",
         "--profile", "deep", "--output", str(tmp_path), *flags], capture_output=True, text=True, check=True)
     from pathlib import Path
     manifest = read_json(Path(json.loads(result.stdout)["run"]) / "manifest.json")
     budget = manifest["research_budget"]
     assert (manifest["timeout_seconds"], budget["requests"], budget["asset_bytes"], budget["total_bytes"]) == expected
+    assert (manifest["requested_model"], manifest["requested_reasoning_effort"]) == (model, effort)
 
 
 def test_wrapped_python_survives_login_shell_and_keeps_tls_verification(tmp_path):

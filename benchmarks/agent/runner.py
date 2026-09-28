@@ -17,6 +17,8 @@ from .models import Case, ResearchBudget, Suite
 REPO = Path(__file__).resolve().parents[2]
 SKILLS = ("bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration", "bio-hypothesis-discovery")
 DEFAULT_TIMEOUT = 0
+DEFAULT_MODEL = "gpt-6-astra"
+DEFAULT_REASONING_EFFORT = "xhigh"
 
 
 def suite_path(value):
@@ -102,10 +104,12 @@ def subject_prompt(case, skills, timeout, budget=None, continuation=None, profil
 
 
 def prepare(suite="workflow", output=Path("workspaces/agent-evals"), cases=(), skills=True, timeout=None, model=None,
-            seed_workspace=None, *, profile="pilot", budget=None, continue_question=None):
+            seed_workspace=None, *, profile="pilot", budget=None, continue_question=None, reasoning_effort=None):
     if profile not in {"pilot", "deep"}:
         raise ValueError("unknown research profile")
     timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
+    model = DEFAULT_MODEL if model is None else model
+    reasoning_effort = DEFAULT_REASONING_EFFORT if reasoning_effort is None else reasoning_effort
     budget = budget or ResearchBudget()
     if timeout < 0:
         raise ValueError("timeout must be nonnegative; zero means unlimited")
@@ -125,7 +129,8 @@ def prepare(suite="workflow", output=Path("workspaces/agent-evals"), cases=(), s
         revision = None
     manifest = {"format_version": 1, "created": now(), "state": "preparing", "suite": definition.model_dump(),
         "selected_cases": [c.id for c in selected], "skills_enabled": skills, "timeout_seconds": timeout,
-        "requested_model": model, "model_policy": "explicit model or stock CLI default; user config omitted",
+        "requested_model": model, "requested_reasoning_effort": reasoning_effort,
+        "model_policy": "explicit model and reasoning effort; user config omitted; requested settings, not independent service attestation",
         "source_revision": revision, "snapshot_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
         "python": sys.executable, "project_environment": str(Path(sys.executable).parent.parent),
         "seed_workspace": str(Path(seed_workspace).resolve()) if seed_workspace else None,
@@ -183,7 +188,8 @@ def prepare(suite="workflow", output=Path("workspaces/agent-evals"), cases=(), s
     return root
 
 
-def codex_command(executable, cwd, output, *, model=None, public=False, schema=None, readonly=False):
+def codex_command(executable, cwd, output, *, model=DEFAULT_MODEL, reasoning_effort=DEFAULT_REASONING_EFFORT,
+                  public=False, schema=None, readonly=False):
     argv = [executable, "--no-daemon", "--ask-for-approval", "never", "exec", "--json", "--ephemeral", "--ignore-user-config",
             "--sandbox", "read-only" if readonly else "workspace-write", "--skip-git-repo-check", "--color", "never",
             "--cd", str(cwd), "--output-last-message", str(output),
@@ -191,6 +197,8 @@ def codex_command(executable, cwd, output, *, model=None, public=False, schema=N
             "-c", "sandbox_workspace_write.network_access=" + ("true" if public else "false")]
     if model:
         argv += ["--model", model]
+    if reasoning_effort:
+        argv += ["-c", "model_reasoning_effort=" + json.dumps(reasoning_effort)]
     if schema:
         argv += ["--output-schema", str(schema)]
     return argv + ["-"]
@@ -233,7 +241,8 @@ def run(root, executable="codex"):
             for name, expected in read_json(folder / "project-files.json").items():
                 if file_hash(safe_path(trial, name)) != expected:
                     raise ValueError("prepared source changed; create a fresh run to test it")
-            command = codex_command(resolved, trial, folder / "final.md", model=manifest["requested_model"], public=case.data_access == "public")
+            command = codex_command(resolved, trial, folder / "final.md", model=manifest["requested_model"],
+                reasoning_effort=manifest.get("requested_reasoning_effort"), public=case.data_access == "public")
             execute(command, folder / "prompt.txt", folder, trial, subject_environment(trial, manifest), manifest["timeout_seconds"])
             build_report(root)
             print(canonical({"case": case.id, "execution": read_json(folder / "execution.json")["state"], "run": str(root)}).decode(), flush=True)

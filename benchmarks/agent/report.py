@@ -283,7 +283,9 @@ def build_report(root):
             f"<p>{counts['pass']} checks passed · {counts['fail']} failed · {counts['unknown']} unresolved</p>"
             f"<p class=muted>{escape(r['execution'].get('wall_seconds','—'))} seconds · {len(r['failed_commands'])} failed commands</p></article>")
     body = (f"<p class=muted>BIO · Agent evaluation</p><h1>{escape(manifest['suite']['name'])}</h1><p>{escape(manifest['suite']['description'])}</p>"
-        f"<p>Skills: {'enabled' if manifest['skills_enabled'] else 'disabled'} · Model: {escape(manifest['requested_model'] or 'CLI default (not pinned)')} · Runner: {escape(manifest.get('runner_version','not launched'))}</p>"
+        f"<p>Skills: {'enabled' if manifest['skills_enabled'] else 'disabled'} · Requested model: {escape(manifest['requested_model'] or 'CLI default (not pinned)')} "
+        f"· Requested reasoning effort: {escape(manifest.get('requested_reasoning_effort') or 'CLI default (not pinned)')} "
+        f"· Runner: {escape(manifest.get('runner_version','not launched'))}</p>"
         f"<p class=muted>Source revision {escape(manifest['source_revision'])}; actual source and prompt hashes are pinned in the manifest. Output and transcript text is displayed as untrusted evidence.</p>"
         f"<div class=cards>{cards}</div><h2>Diagnosis</h2>")
     if result["review"]:

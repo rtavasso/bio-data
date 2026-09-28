@@ -8,7 +8,7 @@ from daw.util import canonical, read_json, write_json
 from .report import build_report, compare
 from .review import review_run
 from .models import ResearchBudget
-from .runner import DEFAULT_TIMEOUT, prepare, run
+from .runner import DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_TIMEOUT, prepare, run
 
 
 def main():
@@ -25,7 +25,8 @@ def main():
         sub.add_argument("--requests", type=int, help="Total research request allowance; default 0 means unlimited")
         sub.add_argument("--asset-mib", type=int, help="Per-file MiB allowance; default 0 means unlimited")
         sub.add_argument("--total-mib", type=int, help="Total newly downloaded MiB allowance; default 0 means unlimited")
-        sub.add_argument("--model", help="Optional explicit model; otherwise stock CLI default")
+        sub.add_argument("--model", help=f"Model override; default {DEFAULT_MODEL}")
+        sub.add_argument("--reasoning-effort", help=f"Reasoning effort override; default {DEFAULT_REASONING_EFFORT}")
         sub.add_argument("--seed-workspace", type=Path, help="Copy a preserved workspace; never give the subject the original")
         sub.add_argument("--continue-question", help="Continue this question in a copied seed workspace; one selected case required")
         if name == "run":
@@ -40,7 +41,8 @@ def main():
     mode.add_argument("--agent", action="store_true")
     mode.add_argument("--from-json", type=Path, dest="authored")
     review.add_argument("--codex", default="codex")
-    review.add_argument("--model")
+    review.add_argument("--model", help=f"Model override; default {DEFAULT_MODEL}")
+    review.add_argument("--reasoning-effort", help=f"Reasoning effort override; default {DEFAULT_REASONING_EFFORT}")
     review.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="Wall seconds; default 0 means unlimited")
     comparison = commands.add_parser("compare", help="Compare observed check outcomes and measured run times")
     comparison.add_argument("before", type=Path)
@@ -52,7 +54,7 @@ def main():
             if args.command == "run" and os.environ.get("DAW_LIVE") != "1":
                 raise ValueError("agent execution requires DAW_LIVE=1; use prepare/report offline")
             root = getattr(args, "prepared", None)
-            if root and any((args.cases, args.seed_workspace, args.model, args.skills != "on", args.timeout is not None,
+            if root and any((args.cases, args.seed_workspace, args.model, args.reasoning_effort, args.skills != "on", args.timeout is not None,
                              args.suite != "workflow", args.profile != "pilot", args.continue_question,
                              args.requests is not None, args.asset_mib is not None, args.total_mib is not None)):
                 raise ValueError("--prepared uses its recorded configuration; prepare a new run to change settings")
@@ -60,12 +62,14 @@ def main():
                 "asset_bytes": args.asset_mib * 2**20 if args.asset_mib is not None else None,
                 "total_bytes": args.total_mib * 2**20 if args.total_mib is not None else None}.items() if v is not None}
             root = root or prepare(args.suite, args.output, args.cases, args.skills == "on", args.timeout, args.model,
-                args.seed_workspace, profile=args.profile, budget=ResearchBudget(**limits), continue_question=args.continue_question)
+                args.seed_workspace, profile=args.profile, budget=ResearchBudget(**limits), continue_question=args.continue_question,
+                reasoning_effort=args.reasoning_effort)
             if args.command == "run":
                 root = run(root, args.codex)
                 if args.review:
                     recorded = read_json(root / "manifest.json")
-                    review_run(root, agent=True, executable=args.codex, model=recorded["requested_model"], timeout=recorded["timeout_seconds"])
+                    review_run(root, agent=True, executable=args.codex, model=recorded["requested_model"],
+                        reasoning_effort=recorded.get("requested_reasoning_effort"), timeout=recorded["timeout_seconds"])
             report = build_report(root)
             result = {"run": str(root), "report": str(root / "report.html"), "cases": [{"id": c["case_id"], "state": c["status"]} for c in report["cases"]]}
         elif args.command == "report":
@@ -73,7 +77,8 @@ def main():
             result = {"report": str(args.run / "report.html"), "review_state": report["review_state"],
                       "cases": [{"id": c["case_id"], "state": c["status"]} for c in report["cases"]]}
         elif args.command == "review":
-            result = review_run(args.run, agent=args.agent, executable=args.codex, model=args.model, timeout=args.timeout, authored=args.authored)
+            result = review_run(args.run, agent=args.agent, executable=args.codex, model=args.model,
+                reasoning_effort=args.reasoning_effort, timeout=args.timeout, authored=args.authored)
         else:
             result = compare(args.before, args.after)
             if args.output:
