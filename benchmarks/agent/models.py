@@ -3,6 +3,19 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+class ResearchBudget(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    requests: int = Field(default=20, ge=1, le=10000)
+    asset_bytes: int = Field(default=64 * 2**20, ge=1, le=8 * 2**30)
+    total_bytes: int = Field(default=128 * 2**20, ge=1, le=16 * 2**30)
+
+    @model_validator(mode="after")
+    def fits_total(self):
+        if self.asset_bytes > self.total_bytes:
+            raise ValueError("per-file budget must fit the total budget")
+        return self
+
+
 class Case(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")
@@ -12,7 +25,8 @@ class Case(BaseModel):
     skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration"]] = Field(default_factory=lambda: ["bio-research"])
     review_rubric: Literal["standard", "mechanism-exploration"] = "standard"
     review_focus: list[str] = Field(default_factory=list)
-    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap", "mechanism_map", "mechanism_revision", "evidence_coverage"]] = Field(default_factory=lambda: ["question", "notebook"])
+    investigation_brief: str = Field(default="", max_length=10000)
+    expect: list[Literal["question", "notebook", "script", "registered_output", "reuse", "gap", "mechanism_map", "mechanism_revision", "evidence_coverage", "investigation_queue", "executed_analysis"]] = Field(default_factory=lambda: ["question", "notebook"])
 
 
 class Suite(BaseModel):

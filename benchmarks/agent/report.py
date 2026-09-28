@@ -10,6 +10,7 @@ from daw.util import file_hash, read_json, write_json
 from .capture import parse_events, transcript_text
 from .fixtures import catalog_snapshot
 from .mechanisms import inspect_mechanisms
+from .investigations import analysis_activity, inspect_queue
 from .runner import safe_path
 
 STYLE = """:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101820;color:#e5eef4}
@@ -103,11 +104,18 @@ def checks_for(folder, case, execution, parsed, artifacts):
     except (ValueError, OSError, sqlite3.DatabaseError) as e:
         add("catalog_integrity", False, str(e), ["trial/workspace/catalog.sqlite"])
     new_questions = [q for q in state.get("question", []) if q["id"] not in {r["id"] for r in baseline["question"]}]
+    continuation_file = folder / "continuation.json"
+    continuation = read_json(continuation_file).get("question") if continuation_file.exists() else None
+    new_questions += [q for q in state.get("question", []) if q["id"] == continuation]
     qids = {q["id"] for q in new_questions}
     links = [r for r in state.get("question_artifact", []) if r["question_id"] in qids]
-    events = [r for r in state.get("work_event", []) if r["question_id"] in qids]
+    events = [r for r in state.get("work_event", []) if r["question_id"] in qids
+              and r["id"] not in {e["id"] for e in baseline["work_event"]}]
     synced = []
     for q in new_questions:
+        before = next((b for b in baseline["question"] if b["id"] == q["id"]), None)
+        if before and before["current_work"] == q["current_work"]:
+            continue
         snapshots = [s for s in state.get("work_snapshot", []) if s["question_id"] == q["id"]]
         if len(snapshots) < 2:
             continue
@@ -116,21 +124,52 @@ def checks_for(folder, case, execution, parsed, artifacts):
             try:
                 body = read_json(safe_path(trial / "workspace", f"blobs/sha256/{current['body_blob'][:2]}/{current['body_blob']}"))
                 notebook = safe_path(trial / "workspace", q["path"] + "/LABBOOK.md")
-                if body["files"].get("LABBOOK.md") == file_hash(notebook):
+                if (body["files"].get("LABBOOK.md") == file_hash(notebook)
+                        and baseline.get("question_files", {}).get(q["path"] + "/LABBOOK.md") != file_hash(notebook)):
                     synced.append(q["id"])
             except (OSError, ValueError, KeyError):
                 pass
     script_files = [f["path"] for f in artifacts["files"] if any(q in f["path"].split("/") for q in qids)
-                    and "/scripts/" in f["path"] and not f.get("error")]
+                    and "/scripts/" in f["path"] and not f.get("error")
+                    and baseline.get("question_files", {}).get(f["path"].removeprefix("workspace/")) != f.get("sha256")]
+    activity = analysis_activity(trial, baseline, state, new_questions, parsed, artifacts["files"])
+    script_files = sorted(set(script_files) | {p for r in activity["new_registered_results"]
+                           if r["execution_evidence"] for p in r["code_files"]})
+    queue_records = []
+    for q in new_questions:
+        if "investigation_queue" not in case["expect"]:
+            continue
+        try:
+            linked_ids = {a["artifact_id"] for a in links if a["question_id"] == q["id"]}
+            record = inspect_queue(trial, q, linked_ids)
+            queue_path = q["path"] + "/outputs/investigations.json"
+            record["changed"] = baseline.get("question_files", {}).get(queue_path) != file_hash(safe_path(trial / "workspace", queue_path))
+            queue_records.append(record)
+        except (ValueError, OSError) as e:
+            queue_records.append({"question": q["id"], "error": str(e)})
     observations = {
-        "question": (bool(qids), f"New question IDs: {sorted(qids)}"),
+        "question": (bool(qids), f"New or explicitly continued question IDs: {sorted(qids)}"),
         "notebook": (bool(synced), f"New question notebooks edited and synced: {synced}"),
         "script": (bool(script_files), f"Saved analysis scripts: {script_files}"),
-        "registered_output": (any(a["relationship"] == "produced" for a in links), "Output registered as produced for a new question"),
+        "registered_output": (any(a["relationship"] == "produced" and a["artifact_id"] not in {r["id"] for r in baseline["artifact"]} for a in links), "New output registered as produced for this investigation"),
         "reuse": (any(a["relationship"] == "reused" and a["artifact_id"] in {r["id"] for r in baseline["artifact"]} for a in links), "Existing artifact attached as reused to a new question"),
-        "gap": (any(e["kind"] == "retrieval_gap" for e in events), "Retrieval-gap event recorded for a new question; quality requires review")}
+        "gap": (any(e["kind"] == "retrieval_gap" for e in events), "New retrieval-gap event; quality requires review"),
+        "investigation_queue": (any(r.get("changed") and not r.get("error") for r in queue_records),
+                                "Changed queue with registered results or preserved blockers; closure and evidence quality need review: " + str(queue_records)),
+        "executed_analysis": (any(r["execution_evidence"] for r in activity["new_registered_results"]),
+                              "New result with intact input/output bytes, matching saved code and a successful literal invocation; dynamic execution and scientific validity require manual review")}
     mechanism_keys = {"mechanism_map", "mechanism_revision", "evidence_coverage"}
     mechanism_records = inspect_mechanisms(trial, new_questions) if mechanism_keys & set(case["expect"]) else []
+    for record in mechanism_records:
+        if record["question"] == continuation:
+            q = next(q for q in new_questions if q["id"] == continuation)
+            for key, name in (("mechanism_map", "mechanisms.json"), ("evidence_coverage", "evidence-coverage.tsv")):
+                path = q["path"] + "/outputs/" + name
+                try:
+                    record[key] &= baseline.get("question_files", {}).get(path) != file_hash(safe_path(trial / "workspace", path))
+                except (OSError, ValueError):
+                    record[key] = False
+            record["mechanism_revision"] &= record.get("revision", 0) > (baseline.get("mechanism_revision") or 0)
     details = {
         "mechanism_map": "Structurally valid network with resolved IDs and attributed claims; does not validate biology",
         "mechanism_revision": "Initial and later numbered maps plus a change rationale; actual timing and substantive revision require transcript review",
@@ -142,7 +181,7 @@ def checks_for(folder, case, execution, parsed, artifacts):
         ok, detail = observations[key]
         add(key, ok if started and state else None, detail, ["trial/workspace/catalog.sqlite", "artifacts.json"])
     add("scientific_review", None, "Biological validity, appropriateness of reuse and quality of reasoning require attributed review", ["final.md", "transcript.md", "artifacts.json"])
-    return checks
+    return checks, activity, queue_records
 
 
 def case_report(folder, case):
@@ -154,7 +193,7 @@ def case_report(folder, case):
     except (ValueError, OSError) as e:
         artifacts = {"files": [], "complete": False, "error": str(e)}
     write_json(folder / "artifacts.json", artifacts)
-    checks = checks_for(folder, case, execution, parsed, artifacts)
+    checks, activity, investigations = checks_for(folder, case, execution, parsed, artifacts)
     complete = next(c for c in checks if c["id"] == "agent_completed")["status"] == "pass"
     status = "complete" if complete else execution.get("state", "not_run")
     if status == "exited":
@@ -165,6 +204,7 @@ def case_report(folder, case):
         "usage": parsed["usage"], "usd": None, "tool_counts": dict(Counter(i.get("type", "unknown") for i in parsed["items"])),
         "failed_commands": [{"line": i["line"], "command": i.get("command"), "exit_code": i.get("exit_code")} for i in commands if i.get("exit_code") not in (None, 0)],
         "artifacts": artifacts, "malformed_lines": parsed["malformed_lines"], "errors": parsed["errors"],
+        "activity": activity, "investigations": investigations,
         "assessment": "mechanical checks only; unknown is not pass; no global scientific score"}
     write_json(folder / "report.json", result)
     final = preview(folder / "final.md", 50000) if (folder / "final.md").exists() and not (folder / "final.md").is_symlink() else "No final answer captured."
@@ -179,6 +219,8 @@ def case_report(folder, case):
     body = (f"<p><a href=../../report.html>← Evaluation run</a></p><h1>{escape(case['id'])}</h1><span class='tag {escape(status)}'>{escape(status)}</span>"
         f"<p>{escape(case['question'])}</p><p class=muted>Wall seconds: {escape(execution.get('wall_seconds','unmeasured'))} · Tokens: {escape(parsed['usage'])} · USD: unmeasured</p>"
         f"<h2>Checks</h2><p>Observable workflow checks are separate from scientific review.</p><table><tr><th>Check</th><th>Status</th><th>Evidence</th></tr>{rows}</table>"
+        f"<h2>New research activity</h2><p>Inherited work is excluded. Acquisition volume is descriptive, not a quality score.</p><pre>{escape(activity)}</pre>"
+        f"<h2>Investigation queue</h2><pre>{escape(investigations)}</pre>"
         f"<h2>Final answer</h2><pre>{escape(final)}</pre><h2>Outputs and notebook</h2><input id=filter aria-label='Filter outputs' placeholder='Filter files by name or content…'>{outputs}"
         f"<h2>Transcript</h2><p>{transcript_links}</p>"
         f"<h3>Failed commands</h3>{failures or '<p>No failed command exits recorded.</p>'}"

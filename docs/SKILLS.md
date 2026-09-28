@@ -14,4 +14,6 @@ For example: “Use $bio-research to investigate whether this PMP22 result could
 
 The skills support ordinary research decisions; they do not impose a scientific acceptance state machine. They use the current CLI, preserve source/derivation semantics, and point to detailed documentation only when needed. Use `bio` when it is already on PATH, or `uv run bio` in a development checkout. Honor the supplied `BIO_WORKSPACE`.
 
+Sustained investigations use the mechanism skill's [investigation queue](../.agents/skills/bio-mechanism-exploration/references/investigations.md) to carry unresolved questions between sessions. The research and discovery skills connect those priorities to actual measurement processing, broader exploratory analysis, preserved primary sources and reproducible outputs. Evaluation review checks what was newly executed and whether consequential feasible work remained at stopping.
+
 See [the workflow guide](WORKFLOW.md) to start research and [agent evaluation](EVALUATION.md) to test skill changes on repeatable questions. Evaluation manifests pin the actual skill bytes so later edits can be compared to the tested version.

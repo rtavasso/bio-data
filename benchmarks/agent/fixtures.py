@@ -12,6 +12,8 @@ from daw.substrate_models import ArtifactRegistration, Derivation, ObjectInput
 from daw.util import environment_identity, write_json
 from daw.work import create_question, sync_work
 
+from .models import ResearchBudget
+
 PREPARE = '''import csv, json, sys
 with open(sys.argv[1], newline="") as f:
     rows = list(csv.DictReader(f, delimiter="\\t"))
@@ -28,7 +30,7 @@ def catalog_snapshot(root):
     with sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True) as db:
         db.row_factory = sqlite3.Row
         result = {table: [dict(r) for r in db.execute("SELECT * FROM " + table)] for table in
-                  ("question", "work_snapshot", "work_event", "artifact", "question_artifact", "blob")}
+                  ("question", "work_snapshot", "work_event", "artifact", "question_artifact", "blob", "asset_revision")}
         result["integrity"] = db.execute("PRAGMA integrity_check").fetchone()[0]
     return result
 
@@ -58,8 +60,9 @@ def seed_mechanism_fixture(ws, inputs):
         "design_limits": "Illustrative summaries; no independent-donor count, uncertainty estimate or causal mediation test. Do not infer intervention specificity."})
 
 
-def seed(root, kind, source_workspace=None):
+def seed(root, kind, source_workspace=None, budget=None):
     root = Path(root)
+    budget = budget or ResearchBudget()
     if source_workspace:
         source = Workspace(source_workspace)
         try:
@@ -76,9 +79,18 @@ def seed(root, kind, source_workspace=None):
         ws = Workspace.create(root)
     try:
         with ws.writer():
+            # Empty question directories are not represented by backup files.
+            for q in ws.rows("SELECT path FROM question"):
+                folder = root / q["path"]
+                if not folder.resolve().is_relative_to(root.resolve()) or folder.is_symlink():
+                    raise ValueError("unsafe restored question path")
+                for name in ("scripts", "outputs"):
+                    child = folder / name
+                    if child.is_symlink():
+                        raise ValueError("unsafe restored question directory")
+                    child.mkdir(parents=True, exist_ok=True)
             settings = tomllib.loads((root / "config.toml").read_text())["budgets"]
-            settings.update(asset_bytes=min(ws.budgets.asset_bytes, 64 * 2**20),
-                            bundle_bytes=min(ws.budgets.bundle_bytes, 128 * 2**20), requests=min(ws.budgets.requests, 20))
+            settings.update(asset_bytes=budget.asset_bytes, bundle_bytes=budget.total_bytes, requests=budget.requests)
             (root / "config.toml").write_text("[budgets]\n" + "\n".join(f"{k} = {str(v).lower()}" for k, v in settings.items()) + "\n")
             if kind == "mechanism-blindspots":
                 seed_mechanism_fixture(ws, root.parent / "inputs")

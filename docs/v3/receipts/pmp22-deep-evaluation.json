@@ -1,0 +1,324 @@
+{
+  "audit": "docs/PMP22_DEEP_AUDIT.md",
+  "case_files": {
+    "artifacts.json": "68c89e18f2e8bd83c0b368cd5d3ba43784e4124994af6746fb1d3fd04ab55628",
+    "baseline.json": "a4854d29ea6d9170969d995736dc3aa38a0943f1c52cff5e98542ed9d336a778",
+    "continuation.json": "378b76569ee26dc380fe8affe025f8d797ea09cc3283ee8f24b07d2e59384956",
+    "environment.json": "e812b4ed231d2e9801aac056250966612da51f6a68ad57e69441de3991a6c7b3",
+    "events.jsonl": "f708bf3cb1e996b1f0e8e742fe71b4564d0882dd426a04110dd85d0d823d7f9f",
+    "execution.json": "fa9e3488f3a0880679bc1deeaaad61d3df2d1bbf80c50c42d4ba5c2ee4535100",
+    "final.md": "03bd55f9047d331e20e220c9cd616330a8182a3a4f9f14a3ddc6e7855dab177c",
+    "project-files.json": "bf9dbfe03acc57d5a9661f8d9f87e5903545cf8f25e58efcfaead9af2c4f261c",
+    "prompt.txt": "3db449c29c9a5769bd74567c04232c01b270e9b969b9f002bab5a2e21600b41c",
+    "report.json": "17ece828c1e463b0b5c9b97754e3c514b3bc15bb339dc36db4d3622ff2360a08",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "transcript.md": "73e97b9bd0ae8544c57b76f3c7ba160e3328b2f9e57adbfc62b1216fb5084ba6"
+  },
+  "catalog_acquisition": {
+    "assets": 0,
+    "limitation": "Script downloads preserved as object inputs are outside the catalog asset metric.",
+    "unique_bytes": 0
+  },
+  "checks": {
+    "agent_completed": "pass",
+    "catalog_integrity": "pass",
+    "evidence_coverage": "fail",
+    "executed_analysis": "pass",
+    "final_answer": "pass",
+    "investigation_queue": "pass",
+    "mechanism_map": "fail",
+    "mechanism_revision": "fail",
+    "notebook": "pass",
+    "preserved_inputs": "pass",
+    "project_unchanged": "pass",
+    "question": "pass",
+    "registered_output": "pass",
+    "scientific_review": "unknown",
+    "script": "pass",
+    "transcript_parseable": "pass"
+  },
+  "cli_version": "codex-cli 0.157.1",
+  "comparison": "Guided continuation with larger budget and prior results; no controlled causal estimate of skill improvement.",
+  "created": "2026-09-28T02:28:51.464568+00:00",
+  "driver_files": {
+    "evaluator-source/__init__.py": "05bd0420afd6e05e53ac8d76b5b374a8f7efb1e371c537d49cf61218bc4a79c6",
+    "evaluator-source/__main__.py": "465e86dd5d60e3702ddf833baaee807e091de7696faff3d499fc128658bf2282",
+    "evaluator-source/capture.py": "4ba27745139862af3a702e9c269127ff5e2d7e688475819745b421e09a474d80",
+    "evaluator-source/fixtures.py": "2d6b5f6c8643274aa6346559ca80e57d1751553a71f60760aca3d793ba90e5a0",
+    "evaluator-source/investigations.py": "e9438e73a76b73c8320e5fb4a619c11bf7e69e7d6a343ab3d37fdae1c9845d5f",
+    "evaluator-source/mechanisms.py": "5382d0b0b7ab95f353c44271af0214457f179315ea27f31089cad35153c65704",
+    "evaluator-source/models.py": "684f62177dc7e3790020c032e02798fb68d5bfa9b4b42cb8c780a80fd2ce52d6",
+    "evaluator-source/report.py": "030b1f7c02d44f9120e743f960774888078a20f3e672deefbe8299c3d4331a04",
+    "evaluator-source/review.py": "22da39403334c7cb7cddb6604605894cec0a53c6e09d85bba6a5cfbbf69eceae",
+    "evaluator-source/runner.py": "de5f709de3ce07faa70e4b9fc7e53ce27e7e992c84f9513640e2661e40f34e86"
+  },
+  "execution": {
+    "finished": "2026-09-28T01:54:15.127847+00:00",
+    "first_output_seconds": 1.2313,
+    "log_budget_bytes": 33554432,
+    "monotonic_seconds": 2870.8164,
+    "returncode": 0,
+    "started": "2026-09-28T01:06:24.220065+00:00",
+    "state": "exited",
+    "timeout_seconds": 3600,
+    "wall_seconds": 2870.908
+  },
+  "failed_command_events": [
+    {
+      "exit_code": 1,
+      "line": 7
+    },
+    {
+      "exit_code": 1,
+      "line": 101
+    },
+    {
+      "exit_code": 1,
+      "line": 113
+    },
+    {
+      "exit_code": 2,
+      "line": 124
+    },
+    {
+      "exit_code": 1,
+      "line": 183
+    }
+  ],
+  "limitations": [
+    "One guided continuation; default model unpinned; no skills-off control.",
+    "Three structural checks failed; original artifacts and judgments preserved.",
+    "Upstream perturbation analysis remains partial; unresolved biological causes and deferred hormonal coverage remain.",
+    "Stopping with remaining resources does not establish exhaustion of feasible work.",
+    "Independent TDF decoding shares the same specification; no established-reader comparison.",
+    "Data, complete logs and parent audit scripts remain in ignored local workspaces."
+  ],
+  "manifest_sha256": "d144cafddab581b9eabfd2934334632417f16522278dcd7817f72e8d3f3d9d75",
+  "new_registered_results": 44,
+  "parent_audit": {
+    "files": {
+      "workspaces/deep-investigation-source-audit/check_human.py": "f04bbcb25d5b624cada45bebdab02a3285fd3ebb4e08f070f96b5b6e38ffb89b",
+      "workspaces/deep-investigation-source-audit/check_protein.py": "60b6fe5f2687d279c5380cc159f72e53a8235764777eef19f150a514a4dd6627",
+      "workspaces/deep-investigation-source-audit/check_rna.py": "018aacf4394762d7eb35c20a3a471be3d9dde92214614f1b531cc0c31bf58d12",
+      "workspaces/deep-investigation-source-audit/check_runx_rna.py": "671c7fda0c885df1810ec0934914c90c664abb7ea3c51fce83a5dcbd8d71f6c3",
+      "workspaces/deep-investigation-source-audit/check_tdf.py": "0b9b1b359897f9da3f839f64112cd3197347a6e9a4ca42ecddfe24c5673a922b",
+      "workspaces/deep-investigation-source-audit/execution-attribution-check.json": "18084e1f6cb6f81fbd72655221371c4da4919d2f2cabf8978589e1fa4cd9907e",
+      "workspaces/deep-investigation-source-audit/human-check.json": "a1e4e7d7df10253f6ffcb0d72ac8b485fe1fe689ecdc34df3fe3ed7698cb8a17",
+      "workspaces/deep-investigation-source-audit/map-contract-check.json": "c8fd8a2e32f51485a1d41637f3e65edee7fe853c733301997d5f1949c64e844b",
+      "workspaces/deep-investigation-source-audit/protein-check.json": "9e7ebc6f48f62c1c987041f0f377c2bca629fec9af75e3e23f56aa3d7a81e443",
+      "workspaces/deep-investigation-source-audit/rna-check.json": "5baa4c449aaf0d048d46cf07642d2c2086399d6f5417611fe6c5986addb692ff",
+      "workspaces/deep-investigation-source-audit/runx-rna-check.json": "0e42b290c139e90cf9cf65567991a829291f7c3be276fc1db91d34e37912076c",
+      "workspaces/deep-investigation-source-audit/status-check.json": "2f62c16ea4d72903bb524ffe85898d6fc7647d74d13115bef246fccf19f5da8b",
+      "workspaces/deep-investigation-source-audit/tdf-check.json": "56e39abc28704b9226757b969b548e74e0066bd5afee46e5b61367876ad9e5f0",
+      "workspaces/deep-investigation-source-audit/tdf-check.log": "56e39abc28704b9226757b969b548e74e0066bd5afee46e5b61367876ad9e5f0"
+    },
+    "literal_invocations_for_all_results": 44,
+    "not_supplied_to_subject_or_reviewer": true,
+    "numerical_checks": {
+      "human-check.json": {
+        "24979": true,
+        "33317": true,
+        "donors": true,
+        "rows": true
+      },
+      "protein-check.json": {
+        "candidate_contrasts": true,
+        "counts": true,
+        "intersection": true,
+        "no_formula_cells": true,
+        "shared_pairs": true,
+        "union": true
+      },
+      "rna-check.json": {
+        "PCA_variance": true,
+        "library_sums": true,
+        "qc_features": true,
+        "ratios": true,
+        "rows": true,
+        "size_factors": true,
+        "zero_all_samples": true
+      },
+      "runx-rna-check.json": {
+        "all_positive_rows": true,
+        "all_zero": true,
+        "features": true,
+        "ratios": true,
+        "size_factors": true
+      },
+      "tdf-check.json": {
+        "all_match": true
+      }
+    },
+    "original_trial_unchanged": true,
+    "scope": "Independent extraction/arithmetic and contract diagnostics, not full biological validation.",
+    "status_errors": 15
+  },
+  "post_preparation_changes": {
+    "changes": [
+      "Read-only status/coverage-header helper and explicit format guidance.",
+      "Receipt concurrency/partial-transfer and stopping-checkpoint guidance.",
+      "Literal invocation matching separates documentation mentions; all 44 original results retain direct invocation evidence.",
+      "Catalog-only acquisition metric wording clarified."
+    ],
+    "files": {
+      ".agents/skills/bio-data-discovery/SKILL.md": "0eeec3a132f7634c01c9c10f2f5417169423947be662baa90f3ed4d7b2b27694",
+      ".agents/skills/bio-mechanism-exploration/SKILL.md": "d224631a76a1f7dbb3c7dedf056ff1fa3a22b6306a4a304ab0649e4a61d33546",
+      ".agents/skills/bio-mechanism-exploration/references/artifacts.md": "5c400f3162a80398a6b678389e71b8bdcd31c0d78aedf3eedd3312c1ab951467",
+      ".agents/skills/bio-mechanism-exploration/references/investigations.md": "dea8952ef10af1719081605f04df8c2459e24722aee4e5184c303e88b97bcfab",
+      ".agents/skills/bio-mechanism-exploration/scripts/check_statuses.py": "8609137a425d5c6b3cdd326f5aeacf48bf261a0f15885f3e4ef2df3a42564a8e",
+      "benchmarks/agent/investigations.py": "cfc87910b113b0f8b686bd7e886bb5b361ab29f49da927d60b2ed3a3d9675d46",
+      "benchmarks/agent/report.py": "4cef4ad6fe582053ab10c84a8fd5c0e551726aa00244567e7d0424274f78beec"
+    },
+    "live_tested_in_this_run": false
+  },
+  "prior_run": "workspaces/agent-evals/20260927T172147-ad8067db",
+  "profile": "deep",
+  "question": "What is the full regulatory system for PMP22?",
+  "question_files": {
+    "LABBOOK.md": "cef5c28269a48fdc7630cf465eb8b3c5d38c5f6d6f633a31ea0638971d8e6e46",
+    "inputs/continuation/transport.json": "c47d8bf39b110f99b084e2f6935cdf5be03a85a3377fb715c83b51515605125a",
+    "outputs/REPORT.md": "d9a7eec37983a141cfed0efcb581846de5faf0dfa625af26d55c1315c5f98d4d",
+    "outputs/REPRODUCE.md": "0f810ecd89041dcb25f2aa14c32efafbe2b934fa1ccb904fe7a328714d6dd9b9",
+    "outputs/continuation-preservation.json": "aa0fcb0e5d71da870daecd254eac84f160206b276efbe2da3579d3c6e05e771d",
+    "outputs/continuation-registration.json": "b01b07cac00bf16bf31381030fba6bf1bc420fcf4c4f8e8260ab111d39be5540",
+    "outputs/evidence-coverage.tsv": "41c28c9be0d53b906549582e907e03679f1ce90cd5cee0637edf29dc32458c9b",
+    "outputs/g3bp-endpoint-summary.json": "861b12389120f45798cf8780f5a9124e933aaedaf6895dee35d36b621ea118a4",
+    "outputs/human-dosage-summary.json": "4e4bbb9ead330bfe7f13da8a5e4d99549fde22bb0f14f63a5414666f5950a9a2",
+    "outputs/investigations.json": "6acffdc8f8f09edc2800358ccaab46f1235683f1eade91cb76714d1d21390dea",
+    "outputs/lipid-summary-analysis.json": "f6c6bf35deab9780016760580e133a704b55f034050b842fffd43a5f384f61d9",
+    "outputs/mechanisms.json": "04a0a373fc918697d9aad1de188babc4a4ba7c6ae1d2d382c878703ab2058fcb",
+    "outputs/protein-analysis-summary.json": "8ef28b86490838f621934d88364d0966a463d58c28677bd503ee3a664c023908",
+    "outputs/rna-audit-summary.json": "7bdb6fbd77bdf42cc11793536b73ec8e02d13a653dfb85ffecd8c940da86236a",
+    "outputs/rna-hemoglobin-summary.json": "06e6f2368b2ba6882efd77b444da1ce89e32116bf75f799ef817f7d05bd77f1d",
+    "outputs/runx-atac-summary.json": "5632090770570a77221e7c7be504709e79966a2fceaa1e7f0d100b390b62df70",
+    "outputs/runx-locus-summary.json": "4ed18763fab653fea8e6e759acef05584e07bbc8579dda5d70e0c5e5df905ad0",
+    "outputs/runx-rna-summary.json": "4995d98594f7708995e31caccad7172eead9a0d3058313a3b2c4bfe75bb81149"
+  },
+  "question_id": "q_277f20df4b6b47cc",
+  "queue": {
+    "counts": {
+      "analyzed": 7,
+      "blocked": 4,
+      "deferred": 1
+    },
+    "revision": 6,
+    "status": "in_progress",
+    "stopping_reason": "Time-bounded continuation checkpoint: main requested measurements analyzed and consequential follow-ups executed. Causal Egr2-AS reconciliation and a full regulatory system remain unresolved; explicit processed-data blockers and broader unfinished frontier retained."
+  },
+  "requested_model": null,
+  "research_budget": {
+    "asset_bytes": 536870912,
+    "requests": 150,
+    "total_bytes": 1073741824
+  },
+  "review": {
+    "assessments": {
+      "breadth": "demonstrated",
+      "calibration": "demonstrated",
+      "discovery_value": "demonstrated",
+      "discrimination": "demonstrated",
+      "recursive_exploration": "partial",
+      "revision": "demonstrated"
+    },
+    "execution": {
+      "finished": "2026-09-28T02:00:11.371678+00:00",
+      "first_output_seconds": 1.5652,
+      "log_budget_bytes": 33554432,
+      "monotonic_seconds": 207.2719,
+      "returncode": 0,
+      "started": "2026-09-28T01:56:44.100227+00:00",
+      "state": "exited",
+      "timeout_seconds": 900,
+      "wall_seconds": 207.2718
+    },
+    "files": {
+      "AGENTS.md": "999915dcd50539942d4288dfaf99869f28566d566573d27f1b011c980d915c12",
+      "events.jsonl": "9164761dd3511de06f9df1e38f3e043e68623b7e5ed59726e62a677f3e7b42d0",
+      "execution.json": "64249117efa786e80e43699a1c225f1cbef113d7b0faac170ef3c4f603fafc35",
+      "input-report.json": "412fbe58ea4c05b8d525488ae3f951befa12a1d167c77de202ef849befe38085",
+      "prompt.txt": "fc516c6b8ebe1dcecb19c9ad4a37cdbca61464484fc8e3638e68d9956f6a23e4",
+      "provenance.json": "0af0c1fda5939ffccf38b4d5650811ef54b3df3baddd52a7a4862d08d03799ee",
+      "raw-review.json": "5de4357d3c50ffeae2e6fd8b46722533c1acf3ccd3440de06bfc1ecb70d162ac",
+      "review.json": "c1fdf2516d0f4ac2bf6e6bf2a1fe826df2acde2e0186b8416ee0c444b5e7fa23",
+      "schema.json": "c40c69fda28a0268f30e50b8c053e96ef4d9e8654245c75164146b6f05d6b772",
+      "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcript.md": "8fe84aa8c01adef4b67742e9c4ecd64b4f89ace3b676bbd026098e589f040eeb"
+    },
+    "findings": [
+      {
+        "category": "agent",
+        "observation": "The final network uses unsupported frontier statuses such as analyzed_but_unresolved. The supplied contract permits open, investigated or deferred. The subject's validator checks frontier node references but omits status validation, allowing its handoff checks to pass while the evaluator rejects the map and dependent structural checks.",
+        "severity": "medium"
+      },
+      {
+        "category": "tooling",
+        "observation": "The subject-authored downloader reads and rewrites a shared ledger without locking. The notebook records an actual concurrent-write collision and three reconstructed receipts. This weakens exact acquisition accounting, although no budget overrun is established.",
+        "severity": "medium"
+      },
+      {
+        "category": "evaluation",
+        "observation": "Execution matching includes event 280, which writes a reproduction guide containing script names rather than invoking those analyses. Genuine RNA execution is separately present at event 55, so this does not invalidate that result, but the matching heuristic can inflate execution evidence. The frozen report appropriately warns that manual inspection is required.",
+        "severity": "low"
+      }
+    ],
+    "state": "recorded",
+    "summary": "This continuation demonstrates substantial new analysis, broader exploration and evidence-driven revision. Its strongest contribution is narrowing interpretations while preserving unresolved causal questions. Concrete weaknesses concern schema validation, acquisition accounting and evaluator execution attribution. The full regulatory system and exhaustion of feasible follow-up work remain unestablished.",
+    "usage": {
+      "cached_input_tokens": 466944,
+      "input_tokens": 564934,
+      "output_tokens": 6011,
+      "reasoning_output_tokens": 289
+    },
+    "usd": null
+  },
+  "run": "workspaces/agent-evals/20260927T180459-576a3e1e",
+  "snapshot_policy": "current source bytes including uncommitted changes; hashes pin the actual tested version",
+  "source_revision_at_preparation": "ab5ed02c78e26f6ffd4eb2347908b05938b02d37",
+  "tls_preflight_outside_subject": {
+    "credited_as_research": false,
+    "path": "workspaces/deep-investigation-tls-preflight.json",
+    "sha256": "d88e504f372fdc4b48eb4bf434d40f462fb8087f82a1710a8a59af292e3660f6"
+  },
+  "transport_ledger": {
+    "entries": 59,
+    "estimated_external_tool_bytes": 112000,
+    "external_tool_requests": 7,
+    "limitation": "Three receipts reconstructed after concurrent writes; browser byte estimates and partial transfers included. Not an authoritative traffic measure.",
+    "recorded_download_bytes": 200774434
+  },
+  "trial_fingerprints": [
+    {
+      "baseline_sha256": "a4854d29ea6d9170969d995736dc3aa38a0943f1c52cff5e98542ed9d336a778",
+      "case_id": "pmp22-regulatory-system",
+      "path": "cases/pmp22-regulatory-system",
+      "project_fingerprint": "1837def86fce5b822ac0fd09c7af24627b91aadc6ff8ef74eec1c54c672f2990",
+      "prompt_sha256": "3db449c29c9a5769bd74567c04232c01b270e9b969b9f002bab5a2e21600b41c"
+    }
+  ],
+  "usage": {
+    "cached_input_tokens": 10354304,
+    "input_tokens": 10716430,
+    "output_tokens": 72202,
+    "reasoning_output_tokens": 13255
+  },
+  "usd": null,
+  "validation": {
+    "build": "uv build passed",
+    "passed": 158,
+    "ruff": "passed: src tests scripts benchmarks and the new skill helper",
+    "skills": "all four modified skills passed quick_validate",
+    "skipped": 3,
+    "test_receipt": {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "Rileys-MacBook-Pro.local",
+      "name": "pytest",
+      "path": "workspaces/deep-investigation-offline-tests-complete.xml",
+      "sha256": "67a1c3f7e05f3ddd30719d33de9274c5599aa21623fcbae292718c04eea175ef",
+      "skipped": "3",
+      "tests": "161",
+      "time": "66.051",
+      "timestamp": "2026-09-27T19:24:45.614413-07:00"
+    }
+  }
+}

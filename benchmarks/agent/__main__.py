@@ -7,6 +7,7 @@ from daw.util import canonical, read_json, write_json
 
 from .report import build_report, compare
 from .review import review_run
+from .models import ResearchBudget
 from .runner import DEFAULT_TIMEOUT, prepare, run
 
 
@@ -15,13 +16,18 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("prepare", "run"):
         sub = commands.add_parser(name, help="Create isolated inputs offline" if name == "prepare" else "Launch stock Codex; requires DAW_LIVE=1")
-        sub.add_argument("--suite", default="workflow", help="workflow, research, mechanisms, mechanism-challenges, or a suite JSON path")
+        sub.add_argument("--suite", default="workflow", help="workflow, research, mechanisms, mechanisms-deep, mechanism-challenges, or a suite JSON path")
         sub.add_argument("--case", action="append", default=[], dest="cases")
         sub.add_argument("--output", type=Path, default=Path("workspaces/agent-evals"))
         sub.add_argument("--skills", choices=("on", "off"), default="on")
-        sub.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="Wall seconds per case (default: 300)")
+        sub.add_argument("--profile", choices=("pilot", "deep"), default="pilot", help="pilot: 300s/20 requests; deep: 3600s/150 requests/1 GiB total")
+        sub.add_argument("--timeout", type=int, help="Override profile wall seconds per case")
+        sub.add_argument("--requests", type=int, help="Override total research request allowance")
+        sub.add_argument("--asset-mib", type=int, help="Override per-file MiB allowance")
+        sub.add_argument("--total-mib", type=int, help="Override total newly downloaded MiB allowance")
         sub.add_argument("--model", help="Optional explicit model; otherwise stock CLI default")
         sub.add_argument("--seed-workspace", type=Path, help="Copy a preserved workspace; never give the subject the original")
+        sub.add_argument("--continue-question", help="Continue this question in a copied seed workspace; one selected case required")
         if name == "run":
             sub.add_argument("--prepared", type=Path, help="Launch a prepared run without overwriting any earlier execution")
             sub.add_argument("--codex", default="codex")
@@ -46,14 +52,21 @@ def main():
             if args.command == "run" and os.environ.get("DAW_LIVE") != "1":
                 raise ValueError("agent execution requires DAW_LIVE=1; use prepare/report offline")
             root = getattr(args, "prepared", None)
-            if root and any((args.cases, args.seed_workspace, args.model, args.skills != "on", args.timeout != DEFAULT_TIMEOUT, args.suite != "workflow")):
+            if root and any((args.cases, args.seed_workspace, args.model, args.skills != "on", args.timeout is not None,
+                             args.suite != "workflow", args.profile != "pilot", args.continue_question,
+                             args.requests is not None, args.asset_mib is not None, args.total_mib is not None)):
                 raise ValueError("--prepared uses its recorded configuration; prepare a new run to change settings")
-            root = root or prepare(args.suite, args.output, args.cases, args.skills == "on", args.timeout, args.model, args.seed_workspace)
+            limits = ({"requests": 150, "asset_bytes": 512 * 2**20, "total_bytes": 2**30} if args.profile == "deep" else {})
+            limits.update({k: v for k, v in {"requests": args.requests,
+                "asset_bytes": args.asset_mib * 2**20 if args.asset_mib is not None else None,
+                "total_bytes": args.total_mib * 2**20 if args.total_mib is not None else None}.items() if v is not None})
+            root = root or prepare(args.suite, args.output, args.cases, args.skills == "on", args.timeout, args.model,
+                args.seed_workspace, profile=args.profile, budget=ResearchBudget(**limits), continue_question=args.continue_question)
             if args.command == "run":
                 root = run(root, args.codex)
                 if args.review:
                     recorded = read_json(root / "manifest.json")
-                    review_run(root, agent=True, executable=args.codex, model=recorded["requested_model"], timeout=recorded["timeout_seconds"])
+                    review_run(root, agent=True, executable=args.codex, model=recorded["requested_model"], timeout=min(recorded["timeout_seconds"], 900))
             report = build_report(root)
             result = {"run": str(root), "report": str(root / "report.html"), "cases": [{"id": c["case_id"], "state": c["status"]} for c in report["cases"]]}
         elif args.command == "report":

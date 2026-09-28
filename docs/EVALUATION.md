@@ -6,6 +6,8 @@ See the [initial pilot](AGENT_EVALUATION_PILOT.md) for actual three-question res
 
 The [PMP22 mechanism audit](PMP22_MECHANISM_AUDIT.md) follows a broad regulatory-system question through upstream exploration, reused measurements, new acquisition, contradictions and an independent review.
 
+The [sustained PMP22 audit](PMP22_DEEP_AUDIT.md) records a 48-minute continuation with deeper measurement analysis, independent numerical checks, remaining scientific gaps, and the structural failures that prompted handoff-checking improvements.
+
 ## Quick start
 
 ```sh
@@ -61,6 +63,30 @@ uv run python -m benchmarks.agent compare BEFORE_RUN AFTER_RUN --output workspac
 The disabled condition omits the project workflow skills and explicit skill invocation; normal project instructions remain. The manifest records current source/skill/prompt hashes, source revision, setup time, model request, CLI version and limits. Run several repetitions and alternate order before attributing a difference to a skill. Model defaults, system/user-level skills, provider behavior, environment state and caches can affect results; this is not a hermetic or blinded model benchmark. Comparison reports descriptive changes and missing cases, not statistical significance or global scientific scores.
 
 For a custom suite, copy a JSON file from `benchmarks/agent/suites/`. Each case has a stable slug, question, `setup`, `data_access`, selected skills, observable `expect` checks and `review_focus`. Setup is one of the small built-in fixtures or `empty`; suite text cannot inject an arbitrary setup shell command. Select cases with repeated `--case`. `prepare` writes a concrete run; `run --prepared RUN` executes that recorded configuration once, rejecting altered prompts, subject sources or evaluation driver code. Prepare another run for a retry so transcripts survive.
+
+## Sustained research and continuation
+
+The `deep` profile allows one hour, 150 research requests, 512 MiB per file and 1 GiB of newly downloaded data. The default `pilot` profile retains five minutes, 20 requests, 64 MiB per file and 128 MiB total. Override these explicitly with `--timeout`, `--requests`, `--asset-mib` and `--total-mib`. The manifest, subject prompt and copied workspace configuration record the same allowances. Workspace transport limits apply per command; the agent must account for cumulative use across commands, browser tools and its own scripts. This is not a network-wide traffic limiter.
+
+`mechanisms-deep` asks the PMP22 question with the requested follow-up priorities: resolve the Egr2-AS RNA discrepancy, seek quantitative accessibility measurements, and investigate an underexplored RNA/protein branch. It requires an investigation queue, new registered outputs, and execution evidence. A larger budget or more acquired bytes does not establish better science. Reviewer execution after `run --review` is separately capped at 15 minutes.
+
+```sh
+DAW_LIVE=1 uv run python -m benchmarks.agent run --suite mechanisms-deep --profile deep --review
+
+# Continue the existing question in an isolated copy; the original stays intact.
+DAW_LIVE=1 uv run python -m benchmarks.agent run --suite mechanisms-deep --profile deep \
+  --seed-workspace PRIOR_WORKSPACE --continue-question QUESTION_ID --review
+```
+
+Continuation accepts one selected case and an existing question in the supplied seed. It prepares a fresh run with its own transcript and a new baseline; this also works after a timeout. It does not overwrite or replay the earlier execution. The agent continues the notebook and queue, preserving prior numbered checkpoints. Checks require a newly edited/synced notebook, new computations and changed network/coverage artifacts; inherited work does not satisfy new-work checks. A continuation with extra time and prior results is not a controlled before/after skills comparison.
+
+The queue's `analyzed` state requires registered artifact IDs and a finding; `blocked` requires a limitation and preserved evidence files. Deferred high-priority work cannot be labeled `bounded_complete`. These checks validate the record, not whether a causal question is resolved. The reviewer checks actual source support, statistical appropriateness, and whether feasible consequential work remained at stopping.
+
+The activity report separately shows newly acquired asset identities/unique bytes and new registered results, matching saved code and successful literal invocations. Script-name mentions are listed separately; quoted documentation and heredoc bodies do not earn execution credit. Dynamic execution, imports, shell variables and complex shell syntax may need manual review. Even a literal invocation is not proof of scientific validity. Acquisition bytes exclude inherited blobs, metadata-only browser traffic and duplicate bytes; historical runs without an acquisition baseline mark that limitation.
+
+Acquisition metrics count catalog assets. Agent-written downloads preserved as object inputs are outside that metric and require separate receipt inspection; zero catalog acquisition bytes does not mean no downloading occurred. The mechanism skill includes a read-only status/coverage-header checker to catch map/queue label confusion and missing coverage columns before handoff. It does not replace complete structural, provenance or scientific review.
+
+Use the supplied `./bin/python` and `./bin/bio` explicitly inside a trial. Login shells can reset PATH. The wrappers use the project interpreter and certifi trust bundle unless an explicit `SSL_CERT_FILE` is already set; they validate the selected bundle and retain hostname/certificate verification. An offline preflight records the interpreter, trust store and available scientific modules in `environment.json`. It verifies configuration, not live source availability. Invalid explicit CA configuration fails early.
 
 ## What a run preserves
 

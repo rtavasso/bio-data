@@ -9,11 +9,13 @@ Start from the biological uncertainty: what competing explanations would differe
 
 For broad mechanism or regulatory-system questions, use `bio-mechanism-exploration`. Save and revise a question-local hypothesis network, recursively investigate upstream controls, and connect competing explanations to data analyses. Audit blind spots during collection. A familiar first-order factor list alone does not complete a broad systems question. Simple extractions do not need a network.
 
-Use `bio --help`; in a development checkout without `bio` on PATH, use `uv run bio`. Honor `BIO_WORKSPACE` or the workspace explicitly supplied by the user. Create a question with `bio work new "..."` and work in its returned directory. The CLI creates `QUESTION.md`, `LABBOOK.md`, `scripts/`, and `outputs/`.
+Use `bio --help`; in a development checkout without `bio` on PATH, use `uv run bio`. Honor `BIO_WORKSPACE` or the workspace explicitly supplied by the user. For a new investigation, create a question with `bio work new "..."` and work in its returned directory. When continuing a supplied question, read its existing notebook and outputs and work in that question without replacing it. The CLI creates `QUESTION.md`, `LABBOOK.md`, `scripts/`, and `outputs/`.
 
 Search data, artifacts, and previous work before new processing. `search` text is an option: `bio data search --text "Schwann RNA"`, `bio artifact search --text "prepared table"`, `bio work search --text "related question"`. Literal feature lookup uses `bio data search --feature PMP22`; case and source identifiers matter. Read `bio data show SUBJECT` using the result's `subject`, not its search-document `id`, before interpreting a match. Use the discovery or artifact-reuse skill when needed.
 
 Analyze immutable source paths with ordinary Python/R/SQL and save the script alongside its outputs. Separate observed source values from biological conclusions: a gene-level zero is not a promoter measurement; omission, missing metadata, and unindexed content are unresolved. Establish sample identity, assay, units, contrast direction, assembly and feature universe only from evidence. Do not execute downloaded scripts, macros, formulas, or pickle/R serializations.
+
+Use the explicitly supplied interpreter/wrappers when present; a login shell may reset PATH. Begin data analysis with design/quality checks and inspect broad patterns where appropriate, as well as the hypothesized features. Report unexpected observations and let them guide further acquisition. If prerequisites block an inference, preserve the evidence, perform still-valid analyses, and continue other feasible branches.
 
 Validate machine-readable outputs before registration. JSON must reject non-finite numbers (`allow_nan=False` in Python); represent missing values as `null` with their source token and meaning retained separately, never as zero or a silently discarded observation.
 

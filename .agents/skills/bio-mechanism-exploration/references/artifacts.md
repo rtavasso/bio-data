@@ -13,6 +13,10 @@ Each JSON document has:
 - `frontier`: objects with `node` ID, `question`, `priority`, `reason`, and `status` (`open`, `investigated`, or `deferred`). Priority is reasoned text, not a calibrated probability. Explain an empty frontier's scope/stopping boundary.
 - `changes`: objects with `reason` and `evidence` in the same evidence format. Initial maps can have none; later entries explain retention, rejection, changed context or revised collection priorities.
 
+The map frontier and investigation queue have different status vocabularies. A blocked frontier stays `open`, with the blocker in `reason`; work performed without resolving the question can be `investigated`, with that limitation in `reason`. Keep richer dispositions in an additional field. Do not put queue statuses such as `blocked` or invented labels such as `analyzed_but_unresolved` in `frontier.status`.
+
+Before handoff, run `python .agents/skills/bio-mechanism-exploration/scripts/check_statuses.py QUESTION_DIRECTORY` (use `./bin/python` inside an evaluation trial). This read-only helper checks current-file JSON syntax, status vocabulary and coverage columns; it does not certify reference integrity, evidence support or scientific correctness. Correct the current record with a preserved revision and rationale; never rewrite historical snapshots to hide a failure.
+
 Save UTF-8 `evidence-coverage.tsv`, one row per proposed or attempted discriminating analysis, with these columns:
 
 | Column | Meaning |
@@ -30,3 +34,5 @@ Save UTF-8 `evidence-coverage.tsv`, one row per proposed or attempted discrimina
 `located` requires an actual source identity. `inspected` and `analyzed` also require a locator for evidence actually read/produced. A proposed filename is not a located file. Alternate encodings of an experiment are not independent evidence. An all-unavailable table is an honest limitation, not successful data reuse or analysis.
 
 `inspection_status` describes work on a file, not support for its associated edges. In `result_or_limitation`, state which alternatives the measurement can actually distinguish. Label contextual or non-discriminating analyses explicitly; promoter peak overlap cannot establish recruitment or signaling, and a downstream expression change cannot establish feedback. Split rows when different edges have different evidential coverage.
+
+Retain all required coverage columns and their names. A branch-level summary can be an additional file; it does not replace edge-linked coverage. Put nuanced labels such as “published summaries only” in `result_or_limitation`, keeping `inspection_status` within its documented vocabulary.
