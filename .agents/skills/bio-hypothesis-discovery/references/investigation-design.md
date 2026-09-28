@@ -10,6 +10,8 @@ Specify the endpoint and biological context. Regulation of transcription, RNA pe
 
 For broad questions, compare consequential unresolved branches before repeatedly deepening the most convenient assay. These can include upstream controls, regulatory elements, RNA processing, protein handling, temporal responses or interactions when relevant to the question and available data. Do not force every branch into every investigation or impose a candidate quota.
 
+Include plausible experiments collected for other purposes in that comparison. Use the `bio-data-discovery` indirect-discovery guide to search without requiring the central gene, inspect hidden measurements, and record the proposed connection. Repeated hits from one paper's bibliography are a reason to consider another search route, not evidence that the useful dataset universe is exhausted.
+
 ## Choose experiments for discriminatory value
 
 For plausible sources, compare exact experiment/file identities, independent biological units, endpoint and units, perturbation, material and context, prior outcome exposure, eligibility limits, and the alternatives the comparison could separate. First use metadata where possible; do not inspect validation outcomes to choose a successful-looking source.

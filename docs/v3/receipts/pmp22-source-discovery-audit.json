@@ -1,0 +1,111 @@
+{
+  "kind": "retrospective_source_discovery_audit",
+  "date": "2026-09-28",
+  "audit": "workspaces/source-discovery-audit/AUDIT.md",
+  "scope": "Two latest discovery continuations; limited contextual inspection of preceding predictor run. No new live agent run.",
+  "source_runs": [
+    {
+      "run": "workspaces/agent-evals/20260927T221733-775736d3",
+      "web_queries": 13,
+      "queries_naming_target_or_alias": 11,
+      "evidence_sha256": {
+        "workspaces/agent-evals/20260927T221733-775736d3/manifest.json": "0086d910b753906e78ee0b4102d7abce4ff85e96c567db768bb94b073b9fe1c8",
+        "workspaces/agent-evals/20260927T221733-775736d3/cases/pmp22-discovery-iteration/events.jsonl": "e8ded028a0ee53cae68049f3cac8cca949024266cd29d2b67cc9484108921727",
+        "workspaces/agent-evals/20260927T221733-775736d3/cases/pmp22-discovery-iteration/report.json": "d74c3c334dd17c4754a98ffa572cbc257281b21dcdb92dfe5b680f67779d9464"
+      }
+    },
+    {
+      "run": "workspaces/agent-evals/20260928T083001-102ffb1d",
+      "web_queries": 14,
+      "queries_naming_target_or_alias": 13,
+      "evidence_sha256": {
+        "workspaces/agent-evals/20260928T083001-102ffb1d/manifest.json": "83ae20684d66a64b0eb5b6f5b8c1bae4813250dace1678e34710f609ee3938f6",
+        "workspaces/agent-evals/20260928T083001-102ffb1d/cases/pmp22-discovery-iteration/events.jsonl": "19037cfde1896c1a610f55c1c46070a22a62d843da6dec971b477cad7f375256",
+        "workspaces/agent-evals/20260928T083001-102ffb1d/cases/pmp22-discovery-iteration/report.json": "ae6079a475e458e5f56045c1a15c05a8c8a8d397bfcd16adc99dff61fd53fe41"
+      }
+    }
+  ],
+  "observed": {
+    "web_queries": 27,
+    "queries_naming_target_or_alias": 24,
+    "other_web_queries": "Two biological design/context queries and one technical lookup; some target-named searches were appropriate novelty audits.",
+    "structured_searches": [
+      {
+        "query": "PMP22 AND (PERK OR thapsigargin OR translation OR gas3)",
+        "returned_resource_ids": 30,
+        "exhausted": false,
+        "warnings": [
+          "page_budget_exhausted"
+        ]
+      },
+      {
+        "query": "EXT_ID:19651891 OR EXT_ID:26108623 OR (PMP22 AND IRE1)",
+        "returned_resource_ids": 30,
+        "exhausted": false,
+        "warnings": [
+          "page_budget_exhausted"
+        ]
+      }
+    ],
+    "analyzed_geo_series": [
+      "GSE90070",
+      "GSE49598",
+      "GSE118660",
+      "GSE103667",
+      "GSE90869"
+    ],
+    "additional_quantitative_paper_sources": [
+      "PMC10940316 Figure 7 native exports",
+      "PMC2728407 Table I"
+    ],
+    "independence_limit": "GSE103667 and GSE90869 belong to one study. Round 2 added a count representation of GSE118660, not a new GEO study. Accessions, representations and inherited data are not independent experiments.",
+    "ridd_route": "Round 2 web result at events.jsonl:74 exposed a cardiac-study Pmp22 RNA-decay lead; explicit Hollien/Pmp22/IRE1 searches at line 80 preceded source XML acquisition at 84 and table analysis at 120. Exact author/year selection route before that query is not observable.",
+    "ridd_interpretation": "Recovery of a published 2009 PMP22 RNA-decay result, not a new mechanism or de novo discovery from an unfamiliar matrix.",
+    "strong_indirect_uses": [
+      "PMP22 granule-partition test in general stress-granulation data",
+      "Matched-background footprint comparison in general PERK stress data"
+    ],
+    "novelty_limit": "No demonstration that these datasets were never previously used for PMP22. Exact added analysis and bounded precedent review remain separate."
+  },
+  "changes": [
+    "Mechanism/assay/upstream queries without requiring central target",
+    "Inspect hidden measurements and document the proposed connection in existing notebook/queue",
+    "Review source routes, exact new use, study overlap, concrete rejection and answer change",
+    "No dataset quota, discovery quota or automatic scientific score"
+  ],
+  "live_tested": false,
+  "prior_evidence_unchanged": true,
+  "audit_sha256": {
+    "workspaces/source-discovery-audit/AUDIT.md": "057f0440cbc2cf56a559b4c310c5ea95cce371e369f1ba49c91cc6cf26aab791",
+    "workspaces/source-discovery-audit/query-audit.json": "107a6656115ac12771b1cfd6c8159e92e6db7d76bc82605bdc5e88649abb18b6",
+    "workspaces/source-discovery-audit/inspect_routes.py": "ae8319b19ae9ad3444c4c053d40f35df5e706fc6fb2cbcf2ea5eb9243f3de5b3"
+  },
+  "offline_validation": {
+    "command": "uv run pytest --junitxml=workspaces/source-discovery-audit/offline-tests.xml",
+    "passed": 171,
+    "testsuite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "3",
+      "tests": "174",
+      "time": "67.859",
+      "timestamp": "2026-09-28T14:36:58.001540-07:00",
+      "hostname": "Rileys-MacBook-Pro.local"
+    },
+    "xml_sha256": "30e7143178973507b2811dfc3d06987597fd98c1df002504568bd8a973a53bba",
+    "ruff": "passed",
+    "skills": "Three changed SKILL.md entrypoints passed quick_validate; updated suite passed model validation.",
+    "source_evidence": "Prior receipt run hashes and original audit hash unchanged."
+  },
+  "data_policy": "Full review, extraction script and query records remain ignored; compact receipt only.",
+  "changed_guidance_sha256": {
+    ".agents/skills/bio-data-discovery/SKILL.md": "9184cf5a2fe22275296e801fb8f04bc77e021b686fa44de279886d6fad1773c9",
+    ".agents/skills/bio-data-discovery/references/indirect-discovery.md": "71d13d3e381498bcf5db2500807a5eea949228395b11b8ca84973bd57d9b4a2c",
+    ".agents/skills/bio-mechanism-exploration/SKILL.md": "a031ca17891e1cc8ea5976ec648460db905bfe94fd2cbb0b04f13c7a3fe0cc93",
+    ".agents/skills/bio-evaluation-review/SKILL.md": "e82414e74ec1e89bd2648fe879a4dbadf861e403b890ba5072f6a849d1565c0f",
+    ".agents/skills/bio-hypothesis-discovery/references/investigation-design.md": "3be37bd7d9cbb8139f0bcf488b7128afcbdc76b74f617b447ebc650549b1873c",
+    "benchmarks/agent/review.py": "73a2beb7198f736900aa46675fa732d7aa6461b0b45a7198b51dae530978658e",
+    "benchmarks/agent/suites/discovery-iteration.json": "e3203b5cbc46355c585b267bab365e5a8ad67eea46fe07cf1c08ccccf064b86b"
+  }
+}

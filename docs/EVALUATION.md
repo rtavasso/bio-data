@@ -113,6 +113,8 @@ The existing mechanism rubric's `discovery_value` includes analytical insights a
 
 `discovery-iteration` keeps the broader PMP22 regulatory-system question visible while asking the agent to choose informative experiments, pursue consequential anomalies and distinguish new computation from new inference and biological novelty. The [investigation-design guide](../.agents/skills/bio-hypothesis-discovery/references/investigation-design.md) addresses control compatibility, endpoint selection, measured backgrounds and cross-context comparisons.
 
+Source selection also includes [finding useful data beyond target-name searches](../.agents/skills/bio-data-discovery/references/indirect-discovery.md). Review the actual route from search or citation to file inspection, a defensible connection to the question, executed analysis and changed conclusions. Separate recovery of known target literature from new use of broadly collected measurements. Report which studies were screened, inspected, analyzed, rejected or left open, accounting for shared samples and inherited work. Searches without the target name can expose hidden opportunities but are not a success metric by themselves. A paper that omits the target from its title may already report the result in a table. These judgments belong in the existing scientific criteria, not a dataset-count or field-novelty score.
+
 ```sh
 uv run python -m benchmarks.agent prepare --suite discovery-iteration --profile deep \
   --seed-workspace PRIOR_WORKSPACE --continue-question QUESTION_ID
@@ -126,6 +128,8 @@ The prediction-link helper checks inherited and new ledger entries without chang
 Execution leads require a literal invocation covered by the successful shell status. A failed analysis followed by a successful display command receives no automatic credit. Complex shell control flow, pipelines, dynamic execution and exact executed code versions need manual review. Separate analysis commands make the evidence easier to assess.
 
 The [two-iteration validation receipt](v3/receipts/pmp22-discovery-iteration.json) pins the research and review records. It distinguishes a new retrospective analytical finding from independently confirmed biological novelty. Full reports, data and the parent audit remain in the ignored run directories identified by that receipt. Final guidance refinements made after review are identified separately from the live-tested snapshots.
+
+The subsequent [source-discovery audit receipt](v3/receipts/pmp22-source-discovery-audit.json) traces literature queries and broader-purpose datasets in those same runs. It records target-name concentration, useful indirect analyses, and recovery of an already published RNA-decay mechanism. The resulting discovery guidance and review prompts have offline validation; they have not yet been tested in a new live run.
 
 ## What a run preserves
 
