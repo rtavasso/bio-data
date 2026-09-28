@@ -69,6 +69,9 @@ def copy_snapshot(trial, skills):
 def subject_prompt(case, skills, timeout, budget=None, continuation=None, profile="pilot"):
     budget = budget or ResearchBudget()
     skill_text = "Use " + ", ".join("$" + s for s in case.skills) + " as relevant.\n" if skills else ""
+    if skills and "bio-data-discovery" in case.skills and {"bio-mechanism-exploration", "bio-hypothesis-discovery"}.intersection(case.skills):
+        skill_text += ("Read .agents/skills/bio-data-discovery/references/indirect-discovery.md before broad source discovery. "
+            "Use its hypothetical examples to consider incidental measurements and justified rejections; adapt them to the question rather than treating them as a checklist.\n")
     data = ("Use only the supplied local data. Do not make data-network requests or web searches. Model inference is provided by the runner."
             if case.data_access == "offline" else
             f"Public data discovery is enabled. Limits: {budget.requests} requests, {budget.asset_bytes} bytes per file, "
