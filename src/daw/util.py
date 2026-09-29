@@ -3,6 +3,8 @@ import json
 import os
 import platform
 import re
+import shutil
+import sys
 from datetime import UTC, datetime
 from importlib.metadata import distributions
 from pathlib import Path
@@ -34,6 +36,19 @@ def file_hash(path: Path, algorithm="sha256") -> str:
         for chunk in iter(lambda: f.read(2**20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def copy_snapshot_file(source, target):
+    """Independent file copy; use APFS copy-on-write when available, never hardlinks."""
+    if sys.platform == "darwin" and not Path(target).exists():
+        import ctypes
+        clone = ctypes.CDLL(None, use_errno=True).clonefile
+        clone.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
+        clone.restype = ctypes.c_int
+        if clone(os.fsencode(source), os.fsencode(target), 0) == 0:
+            shutil.copystat(source, target)
+            return
+    shutil.copy2(source, target)
 
 
 def read_json(path):

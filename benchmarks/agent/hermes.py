@@ -149,6 +149,12 @@ def parse(path):
                 if not isinstance(event, dict) or not isinstance(event.get("type"), str):
                     raise ValueError("invalid event")
             except (ValueError, UnicodeDecodeError):
+                # Stock Hermes emits this known plain-text status on stdout.
+                # Keep its original position and bytes in the raw transcript.
+                if raw.decode("utf-8", errors="replace").strip() == "⟳ compacting context…":
+                    events.append({"line": line, "event": {"type": "runtime_status",
+                                   "text": raw.decode("utf-8")}})
+                    continue
                 malformed.append(line)
                 continue
             events.append({"line": line, "event": event})

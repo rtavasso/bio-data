@@ -32,6 +32,8 @@ Minimal example, with hypothetical labels rather than biological claims:
 
 Queue `revision` is an increasing positive integer. Queue status is `in_progress` or `bounded_complete`. Item priorities are `high`, `medium`, `low`; item statuses are `open`, `ready`, `running`, `analyzed`, `blocked`, `deferred`. All example fields are required; additional fields are welcome. IDs are unique. Declare at least one high-priority item.
 
+Validate the full queue and linked discovery records before handoff with `./bin/python -m daw.research_records workspace/questions/QUESTION`. Status-only helpers do not check the complete schemas or registered artifacts.
+
 - `analyzed` requires registered artifact IDs linked to this question and an observed finding. State whether the result resolves, narrows or fails to distinguish the alternatives; analysis status does not establish causal support.
 - `blocked` requires a specific limitation and `blocker_evidence` paths relative to the question, such as `inputs/retrieval-receipt.json` or saved sample metadata. Locate the relevant fields/passages in the notebook. A generic claim that data are unavailable is insufficient. Try a materially different lawful route or representation where it could resolve the block; avoid repeated equivalent requests after a shared transport failure.
 - `deferred` requires a reason and next action. Deferred high-priority work is unfinished.

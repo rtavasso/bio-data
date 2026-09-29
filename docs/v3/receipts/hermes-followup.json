@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "scope": "Real PMP22 handoff repair, Hermes consolidation and single follow-up reuse audit; no comparison arm.",
+  "offline": {
+    "pytest": {
+      "passed": 202,
+      "skipped": 3
+    },
+    "focused_after_memory_scope_correction": {
+      "passed": 24
+    },
+    "ruff": "passed",
+    "changed_skills": "validated"
+  },
+  "engineering_changes": [
+    "Shared full discovery/queue record validation and exact artifact/prediction references",
+    "Producing-script execution receipts; dependency success and stale outputs receive no automatic credit",
+    "Known Hermes compaction statuses retained without hiding genuinely malformed events",
+    "Receipt-backed retrieval guidance and explicit consolidation destinations",
+    "Independent APFS copy-on-write backup files with ordinary-copy fallback"
+  ],
+  "original_run": "workspaces/hermes-ready/20260929T130649-93481e88",
+  "corrected_checkpoint": {
+    "path": "workspaces/hermes-followup/corrected-seed",
+    "original_run_and_predictions_preserved": true,
+    "record_validation": "passed",
+    "outcomes_preserved": [
+      "Nae1 transfer contradicted in this source context",
+      "Original five-gene antioxidant test untestable",
+      "Four-gene comparison retrospective and exploratory",
+      "Hormonal/human-promoter coverage unfinished"
+    ]
+  },
+  "consolidation": {
+    "run": "workspaces/hermes-followup/consolidation/20260929T155242-3f3f5cb0",
+    "status": "complete",
+    "execution": {
+      "finished": "2026-09-29T23:10:02.006141+00:00",
+      "first_output_seconds": 9.5768,
+      "log_budget_bytes": 0,
+      "monotonic_seconds": 943.5383,
+      "returncode": 0,
+      "started": "2026-09-29T22:54:18.414060+00:00",
+      "state": "exited",
+      "timeout_seconds": 0,
+      "wall_seconds": 943.5922
+    },
+    "checks": {
+      "agent_completed": "pass",
+      "final_answer": "pass",
+      "transcript_parseable": "pass",
+      "project_unchanged": "pass",
+      "preserved_inputs": "pass",
+      "catalog_integrity": "pass",
+      "question": "pass",
+      "notebook": "pass",
+      "scientific_review": "unknown"
+    },
+    "events_sha256": "44f7b5fc53d3f39c8c484a794a395a4097561b6975ea637dfd62bf5c5a1c6ac3",
+    "checkpoint_sha256": "1a39a2eab1869344e440315a68c2b245aa81cd3edd55cb5ee7b736b459f7a840",
+    "history_retrieval_event": 42,
+    "native_memory_written": false,
+    "native_memory_scope": "Pinned stock Hermes reserves always-on memory for user/environment facts; scientific task knowledge was preserved in the archive and session history.",
+    "evidence_index": "workspace/questions/q_277f20df4b6b47cc/outputs/consolidation/REPORT.r001.md",
+    "audit_artifact": "artifact_78fc412f0d9a4d6abdb740b28057e070257909b9fbd9456aedd01bca09e706b9",
+    "producer_receipt_event": 146,
+    "learning_claim": "Verified retention and retrieval, not a causal quality improvement"
+  },
+  "followup": {
+    "case": "pmp22-state-composition",
+    "status": "running",
+    "comparison_arm": false,
+    "run": "workspaces/hermes-followup/research/20260929T161142-f522a101",
+    "question": "q_b6e71fffe204498a",
+    "scope": "Intake and decision audit only; scientific answer and final reuse remain pending.",
+    "observations": [
+      {
+        "event": 22,
+        "observation": "Created a new question and searched inherited work, antioxidant artifacts and Schwann data."
+      },
+      {
+        "event": 34,
+        "observation": "Inspected original question/artifact provenance and validated inherited records."
+      },
+      {
+        "event": 38,
+        "result_event": 41,
+        "observation": "Native session search returned original research session 20260929_133701_bc632e and consolidation session 20260929_155427_f27806."
+      },
+      {
+        "events": [
+          42,
+          43,
+          46,
+          60,
+          61
+        ],
+        "observation": "Read original antioxidant scripts, saved retrieval pointer and source papers."
+      },
+      {
+        "event": 74,
+        "result_event": 75,
+        "observation": "Executed and preserved an initial decision checkpoint before broad new public discovery. Kept the original five-gene test untestable and reduced panel retrospective; identified inherited GSE177037 as P18 rat repair rather than neonatal development, motivating a closer reference search."
+      }
+    ],
+    "notebook": "cases/pmp22-state-composition/trial/workspace/questions/q_b6e71fffe204498a/LABBOOK.md",
+    "learning_claim": "Observed archive/history retrieval and an explicit applicability-based planning decision. Final analysis reuse, answer quality and scientific result remain unreviewed; no comparison or causal learning claim."
+  }
+}

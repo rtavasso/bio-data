@@ -197,6 +197,8 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
         local = copied.root / "questions" / q["question"]
         script = local / "scripts/analyze.py"
         script.write_text("import sys\nfrom pathlib import Path\nPath(sys.argv[2]).write_text(str(sum(map(int,Path(sys.argv[1]).read_text().split()))))\n")
+        dependency = local / "scripts/dependency.py"
+        dependency.write_text("print('dependency completed')\n")
         output = local / "outputs/sum.txt"
         with copied.writer():
             source = copied.put_bytes(b"2 3")
@@ -205,7 +207,7 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
         with copied.writer():
             registration = register_artifact(copied, output, ArtifactRegistration(title="Actual synthetic analysis",
                 summary="Sum literal source values", derivation=Derivation(inputs=[ObjectInput(blob=source)],
-                    code=[copied.put_file(script, "code")], parameters={}, references=[], environment={"fixture": True})), question=q["question"])
+                    code=[copied.put_file(script, "code"), copied.put_file(dependency, "code")], parameters={}, references=[], environment={"fixture": True})), question=q["question"])
             (local / "LABBOOK.md").write_text("Prior work, retained\nNew analysis: 2 + 3 = 5\n")
             sync_work(copied, q["question"], summary="New computation")
         value = queue()
@@ -229,7 +231,7 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
         # A trailing display succeeds despite the actual analysis failing. Existing
         # output bytes and a matching script must not hide that process failure.
         failing = command[:2] + [str(local / "missing-input"), str(output)]
-        masked = shlex.join(failing) + "\ncat " + shlex.quote(str(output))
+        masked = shlex.join(failing) + "\n" + shlex.join([command[0], str(dependency)])
         masked_result = subprocess.run(["/bin/sh", "-c", masked], capture_output=True, text=True)
         assert masked_result.returncode == 0 and "FileNotFoundError" in masked_result.stderr
         failed_event = {"type": "item.completed", "item": {"type": "command_execution", "id": "masked-failure",
@@ -243,9 +245,21 @@ def test_continuation_counts_only_new_work_and_executed_result_evidence(ws, tmp_
             "command": shlex.join(command), "aggregated_output": ""}}, {"type": "turn.completed", "usage": {}}]
         (folder / "events.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
         report = build_report(root)["cases"][0]
+        assert next(c for c in report["checks"] if c["id"] == "executed_analysis")["status"] == "fail"
+        # Even a successful literal producer invocation is only a lead without
+        # its execution-time code and freshly produced output receipt.
+        helper = folder / "trial/.agents/skills/bio-research/scripts/run_analysis.py"
+        wrapped = [command[0], str(helper), "--receipt", str(local / "outputs/execution.json"),
+                   "--output", str(output), "--", *command]
+        completed = subprocess.run(wrapped, cwd=folder / "trial", capture_output=True, text=True, check=True)
+        events.insert(2, {"type": "item.completed", "item": {"type": "command_execution", "id": "producer",
+            "exit_code": 0, "command": shlex.join(wrapped), "aggregated_output": completed.stdout}})
+        (folder / "events.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
+        report = build_report(root)["cases"][0]
         checks = {c["id"]: c["status"] for c in report["checks"]}
         assert checks["executed_analysis"] == checks["notebook"] == checks["investigation_queue"] == "pass"
-        assert report["activity"]["new_registered_results"][0]["command_lines"] == [2]
+        assert report["activity"]["new_registered_results"][0]["command_lines"] == [1, 2]
+        assert report["activity"]["new_registered_results"][0]["producer_receipts"][0]["line"] == 3
         assert checks["scientific_review"] == "unknown"
         assert (original / "LABBOOK.md").read_text() == "Prior work, retained"
         assert output.read_text() == "5"

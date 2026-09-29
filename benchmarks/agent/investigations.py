@@ -1,15 +1,54 @@
 """Inspect question-local investigation records and observable new analysis work."""
 from pathlib import Path
+import json
 import re
 import shlex
-from typing import Literal
 
-from pydantic import Field, model_validator
 
 from daw.util import file_hash, read_json
 
-from .mechanisms import ResearchRecord
+from daw.research_records import Investigation, InvestigationQueue, inspect_queue  # noqa: F401
 from .runner import safe_path
+
+
+def execution_receipts(trial, commands, invocations):
+    """Match immutable helper output to producer-specific receipts; no dependency credit."""
+    helper = (trial / ".agents/skills/bio-research/scripts/run_analysis.py").resolve()
+    receipts = []
+    for command in commands:
+        if helper not in invocations.get(command["line"], set()):
+            continue
+        output = command.get("aggregated_output", "")
+        try:
+            envelope = json.loads(output)
+            if isinstance(envelope, dict) and isinstance(envelope.get("output"), str):
+                output = envelope["output"]  # Hermes terminal envelope.
+        except (ValueError, TypeError):
+            pass
+        for line in output.splitlines():
+            try:
+                event = json.loads(line)
+                if not isinstance(event, dict) or event.get("event") != "analysis_executed":
+                    continue
+                path = Path(event["receipt"])
+                if path.is_absolute():
+                    path = path.relative_to(trial.resolve())
+                path = safe_path(trial, path)
+                if path.stat().st_size > 2**20 or file_hash(path) != event["sha256"]:
+                    continue
+                receipt = read_json(path)
+                producer = Path(receipt["producer"])
+                if not producer.is_absolute():
+                    producer = trial / producer
+                producer = safe_path(trial, producer.relative_to(trial.resolve()))
+                if (receipt.get("complete") is not True or type(receipt.get("exit_code")) is not int
+                        or receipt["exit_code"] != 0 or receipt.get("code_unchanged") is not True
+                        or file_hash(producer) != receipt["code_sha256"]):
+                    continue
+                receipts.append({**receipt, "line": command["line"], "receipt": str(path.relative_to(trial))})
+            except (ValueError, OSError, KeyError, TypeError):
+                continue
+    return receipts
 
 
 def invoked_scripts(command, *, successful_only=False):
@@ -89,69 +128,6 @@ def invoked_scripts(command, *, successful_only=False):
         return set()
 
 
-class Investigation(ResearchRecord):
-    id: str = Field(min_length=1)
-    priority: Literal["high", "medium", "low"]
-    question: str = Field(min_length=1)
-    alternatives: list[str] = Field(min_length=2)
-    readout: str = Field(min_length=1)
-    assets: list[str]
-    prerequisites: list[str]
-    status: Literal["open", "ready", "running", "analyzed", "blocked", "deferred"]
-    artifacts: list[str]
-    finding: str
-    limitation: str
-    next_action: str = Field(min_length=1)
-    blocker_evidence: list[str]  # Paths relative to the question, not arbitrary host paths.
-
-    @model_validator(mode="after")
-    def evidenced_disposition(self):
-        if self.status == "analyzed" and (not self.artifacts or not self.finding.strip()):
-            raise ValueError("analyzed investigation requires registered results and a finding")
-        if self.status == "blocked" and (not self.blocker_evidence or not self.limitation.strip()):
-            raise ValueError("blocked investigation requires preserved evidence and a specific limitation")
-        if self.status == "deferred" and not self.limitation.strip():
-            raise ValueError("deferral requires a reason and remains unfinished")
-        return self
-
-
-class InvestigationQueue(ResearchRecord):
-    revision: int = Field(ge=1, strict=True)
-    scope: str = Field(min_length=1)
-    status: Literal["in_progress", "bounded_complete"]
-    stopping_reason: str = Field(min_length=1)
-    items: list[Investigation] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def honest_closure(self):
-        if len({i.id for i in self.items}) != len(self.items):
-            raise ValueError("duplicate investigation IDs")
-        if not any(i.priority == "high" for i in self.items):
-            raise ValueError("declare at least one high-priority investigation")
-        if self.status == "bounded_complete" and any(
-                i.priority == "high" and i.status not in {"analyzed", "blocked"} for i in self.items):
-            raise ValueError("open or deferred high-priority work is not bounded complete")
-        return self
-
-
-def inspect_queue(trial, question, artifact_ids):
-    folder = safe_path(trial / "workspace", question["path"])
-    path = safe_path(folder, "outputs/investigations.json")
-    if path.stat().st_size > 4 * 2**20:
-        raise ValueError("investigation queue exceeds 4 MiB inspection budget")
-    queue = InvestigationQueue.model_validate_json(path.read_text())
-    for item in queue.items:
-        if not set(item.artifacts) <= artifact_ids:
-            raise ValueError("investigation refers to an unregistered or unlinked artifact")
-        for evidence in item.blocker_evidence:
-            if not safe_path(folder, evidence).is_file():
-                raise ValueError("blocker evidence file is absent")
-    return {"question": question["id"], "revision": queue.revision, "status": queue.status,
-            "stopping_reason": queue.stopping_reason,
-            "items": [{"id": i.id, "priority": i.priority, "status": i.status, "artifacts": i.artifacts}
-                      for i in queue.items]}
-
-
 def analysis_activity(trial, baseline, state, questions, parsed, files):
     """Correlate saved outputs, registrations, source bytes and command events; no science grading."""
     old_artifacts = {a["id"] for a in baseline["artifact"]}
@@ -162,6 +138,7 @@ def analysis_activity(trial, baseline, state, questions, parsed, files):
     commands = [i for i in parsed["items"] if i.get("type") == "command_execution" and i.get("exit_code") == 0]
     invocations = {c["line"]: {(trial / p).resolve() for p in invoked_scripts(c.get("command", ""), successful_only=True)}
                    for c in commands}
+    receipts = execution_receipts(trial, commands, invocations)
     results = []
     for artifact in state.get("artifact", []):
         if artifact["id"] in old_artifacts or artifact["id"] not in linked:
@@ -178,11 +155,15 @@ def analysis_activity(trial, baseline, state, questions, parsed, files):
             for item in inputs:
                 sha = item["blob"]
                 valid &= file_hash(safe_path(trial / "workspace", f"blobs/sha256/{sha[:2]}/{sha}")) == sha
+            producer_receipts = [r for r in receipts if r["code_sha256"] in manifest["derivation"]["code"]
+                and any(o.get("sha256") == output and o.get("written") is True for o in r.get("outputs", []))]
             results.append({"artifact": artifact["id"], "output_role": artifact["output_role"],
                 "output_blob": output, "input_blobs": [i["blob"] for i in inputs],
                 "code_files": [s["path"] for s in matching], "command_lines": command_lines, "mention_lines": mentioned_lines,
-                "execution_evidence": bool(valid and matching and command_lines),
-                "note": "Shell exit status covers a literal saved-script invocation; masked failures and complex control flow need manual review. Matching saved code does not establish the exact executed version or scientific validity."})
+                "producer_receipts": [{"line": r["line"], "receipt": r["receipt"], "producer": r["producer"],
+                                       "code_sha256": r["code_sha256"]} for r in producer_receipts],
+                "execution_evidence": bool(valid and producer_receipts),
+                "note": "Automatic credit requires a successful producer receipt with execution-time code and newly written output hashes. Literal dependency invocations remain review leads only; legacy or truncated evidence needs manual review."})
         except (ValueError, OSError, KeyError) as e:
             results.append({"artifact": artifact["id"], "execution_evidence": False, "error": str(e)})
     old_assets = {a["id"] for a in baseline.get("asset_revision", [])}

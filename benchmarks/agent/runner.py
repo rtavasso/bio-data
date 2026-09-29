@@ -93,9 +93,12 @@ def subject_prompt(case, skills, timeout, budget=None, continuation=None, profil
         "When data permit, explore broader patterns as well as candidate genes. Every high-priority branch needs an executed analysis or a source-evidenced blocker; "
         "deferred branches remain unfinished. Save useful checkpoints before follow-up collection and before any configured deadline.\n" if profile == "deep" else "")
     learning = ("\nUse bio-research-consolidation before your final answer. Search prior work and persistent memory when relevant. "
-        "Save scientific findings and source pointers in the question notebook; use native memory/skill tools for durable retrieval pointers "
-        "and tested reusable procedures. You may write learned skills only in HERMES_HOME/skills. Finish these writes before answering; "
+        "Save scientific findings and source pointers in the searchable question notebook/index; respect the native memory tool's scope. "
+        "Hermes always-on memory is for user/environment facts, not research results. Native session history and the scientific archive retain task knowledge; "
+        "use native skills for useful evidence-retrieval routines or tested procedures. You may write learned skills only in HERMES_HOME/skills. Finish these writes before answering; "
         "automatic background review is disabled for reproducible checkpoints. Use workspace-relative paths and catalog IDs in memory.\n"
+        "For useful new or corrected knowledge, verify its saved destination and any native write, or explain why an existing pointer is sufficient. "
+        "In a follow-up, record which prior evidence you retrieved, whether it applies, and which decision it informed.\n"
         if runtime == "hermes" and skills else "")
     return (f"{skill_text}\n{case.question}\n\n"
         "Work in this isolated research checkout. Start with ./bin/bio --help. Use ./bin/python for analysis and ./bin/bio for workspace commands; "

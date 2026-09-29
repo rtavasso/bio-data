@@ -339,7 +339,8 @@ class Workspace:
         dest.mkdir(parents=True)
         with sqlite3.connect(dest / "catalog.sqlite") as target:
             self.db.backup(target)
-        shutil.copy2(self.root / "config.toml", dest / "config.toml")
+        from daw.util import copy_snapshot_file
+        copy_snapshot_file(self.root / "config.toml", dest / "config.toml")
         with sqlite3.connect(dest / "catalog.sqlite") as snapshot:
             blobs = snapshot.execute("SELECT sha256,path,size FROM blob ORDER BY sha256").fetchall()
         manifest = []
@@ -347,7 +348,7 @@ class Workspace:
             source = self.blob_path(sha)
             target = dest / relative
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+            copy_snapshot_file(source, target)
             if file_hash(target) != sha:
                 raise DawError("backup_integrity_failed", sha)
             manifest.append({"sha256": sha, "path": relative, "size": size})
@@ -364,7 +365,7 @@ class Workspace:
             target = dest / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             expected = file_hash(source)
-            shutil.copyfile(source, target)
+            copy_snapshot_file(source, target)
             if file_hash(target) != expected:
                 raise DawError("backup_source_changed", str(relative))
             work_files.append({"path": str(relative), "sha256": expected, "size": target.stat().st_size})

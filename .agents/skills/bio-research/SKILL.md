@@ -21,7 +21,20 @@ Analyze immutable source paths with ordinary Python/R/SQL and save the script al
 
 Use the explicitly supplied interpreter/wrappers when present; a login shell may reset PATH. Begin data analysis with design/quality checks and inspect broad patterns where appropriate, as well as the hypothesized features. Report unexpected observations and let them guide further acquisition. If prerequisites block an inference, preserve the evidence, perform still-valid analyses, and continue other feasible branches.
 
+In Hermes one-shot sessions, inline Python `-c` is blocked by the native approval policy. Use saved local scripts for inspection snippets as well as analyses; keep the existing approval configuration.
+
 Run a saved analysis as a separate command, or use a success-dependent chain. Preserve its exit status and executed code version before displaying logs; a successful trailing `cat` does not mean the analysis succeeded. Keep failed runs and corrections visible.
+
+For a registered computation, capture its producing invocation with the supplied helper. Declare the outputs that this script will write and use a fresh receipt path; stdout/stderr are saved beside it. A dependency script's success cannot establish that a later output was produced. For example:
+
+```sh
+./bin/python .agents/skills/bio-research/scripts/run_analysis.py \
+  --receipt workspace/questions/QUESTION/outputs/execution-r001.json \
+  --output workspace/questions/QUESTION/outputs/result.tsv \
+  -- ./bin/python workspace/questions/QUESTION/scripts/analyze.py
+```
+
+The helper records the executed producer hash, exit status and newly written output hashes. It does not validate the analysis or execute downloaded code for you. Existing results without such receipts remain reviewable; never rerun merely to obtain new-work credit or invent a historical receipt.
 
 Validate machine-readable outputs before registration. JSON must reject non-finite numbers (`allow_nan=False` in Python); represent missing values as `null` with their source token and meaning retained separately, never as zero or a silently discarded observation.
 

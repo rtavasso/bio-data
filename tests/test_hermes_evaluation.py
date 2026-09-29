@@ -152,3 +152,13 @@ def test_concurrent_tools_without_ids_do_not_get_fabricated_execution_credit(tmp
     path = tmp_path / "events.jsonl"
     path.write_text("\n".join(map(json.dumps, events)))
     assert all(item["exit_code"] is None for item in hermes.parse(path)["items"])
+
+
+def test_runtime_status_preserves_order_but_malformed_events_still_fail(tmp_path):
+    path = tmp_path / "events.jsonl"
+    raw = '{"type":"system","session_id":"one"}\n  ⟳ compacting context…\n{broken\n{"type":"result","exit_code":0,"text":"done"}\n'
+    path.write_text(raw)
+    parsed = hermes.parse(path)
+    assert parsed["malformed_lines"] == [3]
+    assert [(e["line"], e["event"]["type"]) for e in parsed["events"]] == [(1, "system"), (2, "runtime_status"), (4, "result")]
+    assert path.read_text() == raw
