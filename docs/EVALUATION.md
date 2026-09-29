@@ -12,6 +12,8 @@ The [PMP22 discovery audit](PMP22_DISCOVERY_AUDIT.md) records a 43-minute hypoth
 
 ## Quick start
 
+The optional Hermes runtime and its checkpoint/transfer rehearsal are documented in [HERMES.md](HERMES.md). Codex remains the default runtime and the independent reviewer. Both use the same source preservation and scientific checks. Hermes is an external installation, not a dependency of `bio` or the offline test suite.
+
 ```sh
 uv sync --all-extras
 uv run python -m benchmarks.agent --help

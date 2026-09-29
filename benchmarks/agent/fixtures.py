@@ -61,7 +61,7 @@ def seed_mechanism_fixture(ws, inputs):
         "design_limits": "Illustrative summaries; no independent-donor count, uncertainty estimate or causal mediation test. Do not infer intervention specificity."})
 
 
-def seed(root, kind, source_workspace=None, budget=None):
+def seed(root, kind, source_workspace=None, budget=None, disk_reserve_bytes=None):
     root = Path(root)
     budget = budget or ResearchBudget()
     if source_workspace:
@@ -90,6 +90,8 @@ def seed(root, kind, source_workspace=None, budget=None):
                     child.mkdir(parents=True, exist_ok=True)
             settings = tomllib.loads((root / "config.toml").read_text())["budgets"]
             settings.update(asset_bytes=budget.asset_bytes, bundle_bytes=budget.total_bytes, requests=budget.requests)
+            if disk_reserve_bytes is not None:
+                settings.update(reserve_bytes=disk_reserve_bytes, reserve_fraction=0.0)
             ws.budgets = Budgets.model_validate(settings)
             (root / "config.toml").write_text("[budgets]\n" + "\n".join(f"{k} = {str(v).lower()}" for k, v in settings.items()) + "\n")
             if kind == "mechanism-blindspots":

@@ -214,7 +214,12 @@ def checks_for(folder, case, execution, parsed, artifacts):
 
 
 def case_report(folder, case):
-    parsed = parse_events(folder / "events.jsonl")
+    runtime = read_json(folder.parent.parent / "manifest.json").get("runtime", "codex")
+    if runtime == "hermes":
+        from .hermes import parse
+        parsed = parse(folder / "events.jsonl")
+    else:
+        parsed = parse_events(folder / "events.jsonl")
     execution = read_json(folder / "execution.json") if (folder / "execution.json").exists() else {}
     (folder / "transcript.md").write_text(transcript_text(parsed))
     try:
@@ -229,6 +234,8 @@ def case_report(folder, case):
         status = "incomplete"
     commands = [i for i in parsed["items"] if i.get("type") == "command_execution"]
     result = {"case_id": case["id"], "question": case["question"], "status": status, "checks": checks,
+        "runtime": runtime, "capture_limitations": parsed.get("limitations", []),
+        "learning_checkpoint": read_json(folder / "checkpoint/checkpoint.json") if (folder / "checkpoint/checkpoint.json").exists() else None,
         "review_focus": case["review_focus"], "review_rubric": case.get("review_rubric", "standard"), "execution": execution, "thread_ids": parsed["thread_ids"],
         "usage": parsed["usage"], "usd": None, "tool_counts": dict(Counter(i.get("type", "unknown") for i in parsed["items"])),
         "failed_commands": [{"line": i["line"], "command": i.get("command"), "exit_code": i.get("exit_code")} for i in commands if i.get("exit_code") not in (None, 0)],
@@ -247,7 +254,9 @@ def case_report(folder, case):
         (("events.jsonl", "Raw JSONL"), ("transcript.md", "Full readable transcript"), ("stderr.log", "CLI diagnostics")) if (folder / name).is_file())
     body = (f"<p><a href=../../report.html>← Evaluation run</a></p><h1>{escape(case['id'])}</h1><span class='tag {escape(status)}'>{escape(status)}</span>"
         f"<p>{escape(case['question'])}</p><p class=muted>Wall seconds: {escape(execution.get('wall_seconds','unmeasured'))} · Tokens: {escape(parsed['usage'])} · USD: unmeasured</p>"
-        f"<h2>Checks</h2><p>Observable workflow checks are separate from scientific review.</p><table><tr><th>Check</th><th>Status</th><th>Evidence</th></tr>{rows}</table>"
+        f"<p>Runtime: {escape(runtime)} · Capture limitations: {escape(parsed.get('limitations', []))}</p>"
+        + ("<p><a href='checkpoint/checkpoint.json'>Learning changes and checkpoint</a> · <a href='learning-baseline.json'>Learning baseline</a></p>" if runtime == "hermes" else "")
+        + f"<h2>Checks</h2><p>Observable workflow checks are separate from scientific review.</p><table><tr><th>Check</th><th>Status</th><th>Evidence</th></tr>{rows}</table>"
         f"<h2>New research activity</h2><p>Inherited work is excluded. Acquisition volume is descriptive, not a quality score.</p><pre>{escape(activity)}</pre>"
         f"<h2>Investigation queue</h2><pre>{escape(investigations)}</pre>"
         f"<h2>Discovery records</h2><pre>{escape(discoveries)}</pre>"

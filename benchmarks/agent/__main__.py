@@ -15,8 +15,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("prepare", "run"):
-        sub = commands.add_parser(name, help="Create isolated inputs offline" if name == "prepare" else "Launch stock Codex; requires DAW_LIVE=1")
-        sub.add_argument("--suite", default="workflow", help="workflow, research, mechanisms, mechanisms-deep, mechanism-challenges, discovery, discovery-iteration, or a suite JSON path")
+        sub = commands.add_parser(name, help="Create isolated inputs offline" if name == "prepare" else "Launch a stock agent; requires DAW_LIVE=1")
+        sub.add_argument("--suite", default="workflow", help="workflow, research, mechanisms, mechanisms-deep, mechanism-challenges, discovery, discovery-iteration, learning, or a suite JSON path")
         sub.add_argument("--case", action="append", default=[], dest="cases")
         sub.add_argument("--output", type=Path, default=Path("workspaces/agent-evals"))
         sub.add_argument("--skills", choices=("on", "off"), default="on")
@@ -26,12 +26,17 @@ def main():
         sub.add_argument("--asset-mib", type=int, help="Per-file MiB allowance; default 0 means unlimited")
         sub.add_argument("--total-mib", type=int, help="Total newly downloaded MiB allowance; default 0 means unlimited")
         sub.add_argument("--model", help=f"Model override; default {DEFAULT_MODEL}")
+        sub.add_argument("--runtime", choices=("codex", "hermes"), help="Stock agent harness; default codex")
+        sub.add_argument("--hermes-provider", help="Hermes provider; default openai-codex")
+        sub.add_argument("--seed-checkpoint", type=Path, help="Restore a Hermes checkpoint's workspace and learned state")
+        sub.add_argument("--disk-reserve-gib", type=int, help="Override the copied workspace's free-disk reserve in GiB; default preserves its configuration")
         sub.add_argument("--reasoning-effort", help=f"Reasoning effort override; default {DEFAULT_REASONING_EFFORT}")
         sub.add_argument("--seed-workspace", type=Path, help="Copy a preserved workspace; never give the subject the original")
         sub.add_argument("--continue-question", help="Continue this question in a copied seed workspace; one selected case required")
         if name == "run":
             sub.add_argument("--prepared", type=Path, help="Launch a prepared run without overwriting any earlier execution")
             sub.add_argument("--codex", default="codex")
+            sub.add_argument("--hermes", default="hermes")
             sub.add_argument("--review", action="store_true", help="Run a separate agent review after the subjects")
     report = commands.add_parser("report", help="Rebuild JSON/HTML and readable transcripts offline")
     report.add_argument("run", type=Path)
@@ -54,7 +59,7 @@ def main():
             if args.command == "run" and os.environ.get("DAW_LIVE") != "1":
                 raise ValueError("agent execution requires DAW_LIVE=1; use prepare/report offline")
             root = getattr(args, "prepared", None)
-            if root and any((args.cases, args.seed_workspace, args.model, args.reasoning_effort, args.skills != "on", args.timeout is not None,
+            if root and any((args.cases, args.seed_workspace, args.seed_checkpoint, args.runtime, args.hermes_provider, args.disk_reserve_gib is not None, args.model, args.reasoning_effort, args.skills != "on", args.timeout is not None,
                              args.suite != "workflow", args.profile != "pilot", args.continue_question,
                              args.requests is not None, args.asset_mib is not None, args.total_mib is not None)):
                 raise ValueError("--prepared uses its recorded configuration; prepare a new run to change settings")
@@ -63,9 +68,11 @@ def main():
                 "total_bytes": args.total_mib * 2**20 if args.total_mib is not None else None}.items() if v is not None}
             root = root or prepare(args.suite, args.output, args.cases, args.skills == "on", args.timeout, args.model,
                 args.seed_workspace, profile=args.profile, budget=ResearchBudget(**limits), continue_question=args.continue_question,
-                reasoning_effort=args.reasoning_effort)
+                reasoning_effort=args.reasoning_effort, runtime=args.runtime or "codex",
+                hermes_provider=args.hermes_provider or "openai-codex", seed_checkpoint=args.seed_checkpoint,
+                disk_reserve_bytes=args.disk_reserve_gib * 2**30 if args.disk_reserve_gib is not None else None)
             if args.command == "run":
-                root = run(root, args.codex)
+                root = run(root, args.hermes if read_json(root / "manifest.json").get("runtime") == "hermes" else args.codex)
                 if args.review:
                     recorded = read_json(root / "manifest.json")
                     review_run(root, agent=True, executable=args.codex, model=recorded["requested_model"],

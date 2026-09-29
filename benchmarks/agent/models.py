@@ -23,7 +23,7 @@ class Case(BaseModel):
     question: str = Field(min_length=1, max_length=20000)
     setup: Literal["zero-vs-missing", "artifact-reuse", "limited-context", "mechanism-blindspots", "empty"] = "empty"
     data_access: Literal["offline", "public"] = "offline"
-    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration", "bio-hypothesis-discovery"]] = Field(default_factory=lambda: ["bio-research"])
+    skills: list[Literal["bio-research", "bio-data-discovery", "bio-artifact-reuse", "bio-mechanism-exploration", "bio-hypothesis-discovery", "bio-research-consolidation"]] = Field(default_factory=lambda: ["bio-research"])
     review_rubric: Literal["standard", "mechanism-exploration", "hypothesis-discovery"] = "standard"
     review_focus: list[str] = Field(default_factory=list)
     investigation_brief: str = Field(default="", max_length=10000)

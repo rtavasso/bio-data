@@ -1,6 +1,6 @@
 # Research workflow skills
 
-The repository ships six focused skills in `.agents/skills/`. Codex discovers repository skills from that directory; each skill also supports explicit invocation. See the [official skill documentation](https://learn.chatgpt.com/docs/build-skills).
+The repository ships seven focused skills in `.agents/skills/`. Codex discovers repository skills from that directory; each skill also supports explicit invocation. Hermes can use them from a trusted project. See the [official Codex skill documentation](https://learn.chatgpt.com/docs/build-skills) and [Hermes skills](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills/).
 
 | Skill | Use it for |
 | --- | --- |
@@ -10,6 +10,7 @@ The repository ships six focused skills in `.agents/skills/`. Codex discovers re
 | [`bio-data-discovery`](../.agents/skills/bio-data-discovery/SKILL.md) | Selecting useful measurements, inspecting exact files and recording access gaps |
 | [`bio-artifact-reuse`](../.agents/skills/bio-artifact-reuse/SKILL.md) | Assessing an existing derivation or registering and reusing a new representation |
 | [`bio-evaluation-review`](../.agents/skills/bio-evaluation-review/SKILL.md) | Reviewing an agent's transcript and outputs to propose concrete improvements |
+| [`bio-research-consolidation`](../.agents/skills/bio-research-consolidation/SKILL.md) | Retaining dataset capabilities, supported findings, reusable methods and unresolved tests across questions |
 
 For example: “Use $bio-research to investigate whether this PMP22 result could be explained by cell composition.” Or: “Use $bio-evaluation-review to diagnose this recorded evaluation run.” A fresh session can also select a relevant skill implicitly. No personal configuration or plugin installation is required for this checkout.
 

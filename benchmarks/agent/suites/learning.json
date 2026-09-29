@@ -1,0 +1,30 @@
+{
+  "name": "Persistent research learning rehearsal",
+  "description": "Synthetic source preparation, explicit native-memory consolidation and fresh-session transfer. Restore each preceding checkpoint explicitly; cases do not automatically share state. Scientific transfer still needs review.",
+  "cases": [
+    {
+      "id": "learning-source",
+      "question": "Inspect the supplied expression table. What source values are available for PMP22, and what can these measurements establish? Preserve a reusable representation of the whole supplied table, including its source context, for later research questions.",
+      "setup": "zero-vs-missing",
+      "skills": ["bio-research", "bio-artifact-reuse"],
+      "expect": ["question", "notebook", "script", "registered_output", "executed_analysis"],
+      "review_focus": ["Actual full-table preparation, source strings and selected feature universe preserved", "Memory points to supported work with context limits", "PMP22 values 0 and 5; donor and count semantics remain unknown"]
+    },
+    {
+      "id": "learning-consolidate",
+      "question": "Review the existing whole-table expression artifact and its source context. Verify its identity and suitability, attach the fitting artifact to this question, and save one concise retrieval pointer with applicability limits using the native memory tool. Verify that the memory write succeeds before answering. This is a memory-persistence rehearsal: the measurements already exist, so do not repeat table preparation or invent a new procedure or biological result.",
+      "setup": "empty",
+      "skills": ["bio-research", "bio-artifact-reuse", "bio-research-consolidation"],
+      "expect": ["question", "notebook", "reuse"],
+      "review_focus": ["An actual successful native memory write links an inspected artifact and its context limits", "No fabricated biological finding or unnecessary reprocessing; consolidation is explicitly requested, not spontaneous learning"]
+    },
+    {
+      "id": "learning-transfer",
+      "question": "What do the available measurements establish about SOX10 across samples A and B? Show the supporting values and explain whether they establish a change in promoter activity or an independent-donor effect.",
+      "setup": "empty",
+      "skills": ["bio-research", "bio-artifact-reuse"],
+      "expect": ["question", "notebook", "reuse"],
+      "review_focus": ["SOX10 source values are 7 and 11; a numerical difference is not a donor-level or promoter claim", "Trace relevant memory or archive retrieval through exact artifact reuse and the final interpretation", "Compare with an identical prior-work seed without Hermes memory; this rehearsal alone does not prove improved scientific performance"]
+    }
+  ]
+}

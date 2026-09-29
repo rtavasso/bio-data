@@ -29,10 +29,16 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0):
               "timeout_seconds": timeout, "log_budget_bytes": max_log_bytes}
     write_json(folder / "execution.json", result)
     process = None
+    heartbeat = start
     try:
         with (folder / "events.jsonl").open("wb") as stdout, (folder / "stderr.log").open("wb") as stderr, prompt.open("rb") as stdin:
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=stdin, stdout=stdout, stderr=stderr, start_new_session=True)
             while process.poll() is None:
+                if time.monotonic() - heartbeat >= 30:
+                    write_json(folder / "heartbeat.json", {"observed": now(), "pid": process.pid,
+                        "elapsed_seconds": round(time.monotonic() - start, 2),
+                        "stdout_bytes": (folder / "events.jsonl").stat().st_size})
+                    heartbeat = time.monotonic()
                 if "first_output_seconds" not in result and (folder / "events.jsonl").stat().st_size:
                     result["first_output_seconds"] = round(time.monotonic() - start, 4)
                 # Some platforms suspend monotonic time during host sleep. Bound
