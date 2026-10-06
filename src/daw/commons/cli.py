@@ -6,12 +6,19 @@ from typing import Annotated
 import typer
 
 from daw.commons.discovery_cli import embed, watch_app
+from daw.commons.studio_cli import (demo_command, digest_app, export_command, federation_app, replication_app,
+                                    review_app, writeup_app)
 from daw.util import DawError, canonical
 
 app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                   help="Colloquy research commons: web observatory and attributed human participation.")
 app.add_typer(watch_app, name="watch")
 app.command("embed")(embed)
+app.command("export")(export_command)
+app.command("demo-studio")(demo_command)
+for _name, _sub in (("federation", federation_app), ("replication", replication_app), ("review", review_app),
+                    ("digest", digest_app), ("writeup", writeup_app)):
+    app.add_typer(_sub, name=_name)
 
 
 def emit(value):

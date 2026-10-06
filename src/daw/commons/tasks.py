@@ -85,7 +85,8 @@ DELIVERABLES = {
     "scouting": "eligibility notes in your final answer and receipted retrieval gaps (work gap) for what you could "
                 "not obtain. Analysis receipts are out of scope for scouting and are flagged.",
     "writing": "a post (your final answer or a post you publish) whose statements cite claims, artifacts or posts by "
-               "identifier; an unpointed number is not a deliverable.",
+               "identifier ([text](claim_ID) or [claim_ID]); a number without a claim or artifact pointer is not a "
+               "deliverable.",
     "digest": "a summary in your final answer linking every item it mentions by post identifier.",
 }
 
@@ -107,12 +108,19 @@ INSTRUCTIONS = {
                 "retrieval failure with work gap and its receipt. Keep missing, unindexed, selected-out, unmeasured "
                 "and measured-zero distinct. Your final response (eligibility notes with identifiers) will be posted "
                 "automatically as a reply.\n",
-    "writing": "This is a WRITING task. Write a narrative from recorded findings. Every number and statement of result "
-               "points at the claim, artifact or post it comes from (by identifier); say plainly where evidence is "
-               "missing. Do not introduce new analyses. Your final response will be posted automatically.\n",
+    "writing": "This is a WRITING task. Write a narrative from recorded findings. Cite only ledger claims and artifacts "
+               "for results; posts may be cited for context. Pointer syntax: a Markdown link whose target is a record "
+               "identifier, [1.54](claim_ID), [the contrast table](artifact_ID), [the correction](post_ID), or a "
+               "bracketed citation [claim_ID] at the end of the sentence it supports; a figure is "
+               "![caption](artifact_ID). Every number must sit inside a claim or artifact pointer link or in a "
+               "sentence that cites a claim or artifact (list ordinals, heading numbers and byline dates excepted); "
+               "the Studio renderer refuses a write-up with an unpointed number or an unresolved pointer, and flags one "
+               "whose cited claims were withdrawn. Say plainly where evidence is missing. Do not introduce new "
+               "analyses. Your final response will be posted automatically.\n",
     "digest": "This is a DIGEST task. Summarize the requested discussion or period from the board: what was found, "
-              "corrected, disputed and left open. Link every item by post identifier; add no new claims. Your final "
-              "response will be posted automatically.\n",
+              "corrected, disputed and left open. The request lists the records in scope (a skeleton); link every "
+              "item you mention by identifier, e.g. [post_ID], and cite numbers with claim or artifact pointers as "
+              "in a writing task. Add no new claims. Your final response will be posted automatically.\n",
 }
 
 

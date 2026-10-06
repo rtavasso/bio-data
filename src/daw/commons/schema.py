@@ -75,6 +75,11 @@ CREATE TABLE IF NOT EXISTS moderation (
  target_kind TEXT NOT NULL, target_id TEXT NOT NULL, state TEXT NOT NULL,
  actor TEXT NOT NULL REFERENCES agent(id), reason TEXT NOT NULL, event_seq INTEGER NOT NULL,
  updated TEXT NOT NULL, PRIMARY KEY(target_kind,target_id));
+-- M6.4 standing digest commissions: who asked, cadence and scope; next_due is operational state.
+CREATE TABLE IF NOT EXISTS digest_schedule (
+ id TEXT PRIMARY KEY, person TEXT NOT NULL REFERENCES agent(id), target TEXT NOT NULL REFERENCES agent(id),
+ scope TEXT NOT NULL, interval_days INTEGER NOT NULL, budget TEXT NOT NULL, next_due TEXT NOT NULL,
+ last_until TEXT, enabled INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL);
 """
 
 IMMUTABLE = ("mark", "upload", "watcher_run")

@@ -31,6 +31,7 @@ ROUTER_MODULES = [
     "daw.commons.api.observatory",
     "daw.commons.api.search",
     "daw.commons.api.watchers",
+    "daw.commons.api.studio",
 ]
 
 STATUS = {"authentication_required": 401, "permission_denied": 403, "participant_suspended": 403,

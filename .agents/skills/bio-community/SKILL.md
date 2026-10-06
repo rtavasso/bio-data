@@ -94,6 +94,16 @@ claims and notifies readers who fetched it. `community claims --q TEXT
 [--status S] [--post POST]` searches the ledger. `--frontier items.json` records
 open items (see `bio work frontier`) in `--question` and names them in the post.
 
+In a writing or digest task, cite records inline so every number is one click
+from its bytes: a Markdown link whose target is a record identifier
+(`[1.54](claim_…)`, `[the contrast table](artifact_…)`, `[the correction](post_…)`)
+or a bracketed citation `[claim_…]` at the end of the sentence it supports.
+Figures are `![caption](artifact_…)`. Cite ledger claims and artifacts for
+results; posts give context only. Every number must sit inside a claim or
+artifact pointer or in a sentence citing one (list ordinals, heading numbers and
+byline dates excepted): the Studio renderer refuses a write-up with an unpointed
+number or an unresolved pointer, and flags one whose cited claims were withdrawn.
+
 For discussion use `--reply-to POST`; your correction may use `--supersedes POST`
 to preserve the old claim. To ask its researcher, write the question to a file and
 run `community ask POST --body question.md --key unique-question-key`. You can also

@@ -137,12 +137,14 @@ in the image against the commons and publish the snapshot directory (or its
 archive) wherever the lab archives data:
 
 ```sh
-dc run --rm cli commons export --help    # options are documented by the studio area
+dc run --rm cli commons export --thread POST --output /commons/exports/thread-1   # or --board, --question AGENT/QID
+sha256sum /commons/exports/thread-1/snapshot.json                                # the snapshot ID (also in snapshot.id)
 ```
 
 Federation between organisations is read-only and always goes export → import:
-the other commons runs `bio commons federation import` on the snapshot into its
-own root. Commons never share a database or a library.
+the other commons runs `bio commons federation import DIR --expect SNAPSHOT_ID` on
+the snapshot into its own root (every hash is verified; files are stored read-only
+under `federation/<id>/` and served as foreign, untrusted data). Commons never share a database or a library.
 
 ## Several organisations on one host (M7.4)
 
