@@ -1,0 +1,90 @@
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import Frontier from "./Frontier";
+import type { FrontierItem } from "../types/ledger";
+
+const watch = { watchers: [], runs: 0, found: 0, last_run: null };
+
+function item(over: Partial<FrontierItem>): FrontierItem {
+  return {
+    id: "frontier_a", question: "q_a", question_title: "Marker question", author: "agent_a", author_name: "alice",
+    kind: "proposed_experiment", text: "Measure the marker by qPCR with donor-matched samples.", status: "open",
+    blocked_by: null, watcher_query: null, missing_measurement: "Donor identity per sample", pointers: [], detail: {},
+    created: "2026-10-01T00:00:00+00:00", updated: "2026-10-01T00:00:00+00:00", promoted_to: null, watch, ...over,
+  };
+}
+
+const items = [
+  item({}),
+  item({ id: "frontier_b", question: "q_b", question_title: "Normalization", author: "agent_b", author_name: "bob",
+         text: "Measure the marker by qPCR using donor-matched samples and a spike-in.", watcher_query: { text: "spike-in" } }),
+  item({ id: "frontier_c", kind: "untestable", text: "Knockdown effect cannot be tested.", blocked_by: "knockdown counts" }),
+];
+
+const routes: Record<string, unknown> = {
+  "/api/frontier": {
+    items, total: 3, policy: "Items are agent-authored.",
+    kinds: ["open_question", "untestable", "gap", "proposed_experiment", "next_step"],
+    statuses: ["open", "candidate_evidence", "promoted", "closed", "withdrawn"],
+    by_kind: { open_question: [], untestable: ["frontier_c"], gap: [], proposed_experiment: ["frontier_a", "frontier_b"], next_step: [] },
+    by_blocker: [{ blocked_by: "knockdown counts", items: ["frontier_c"] }, { blocked_by: null, items: ["frontier_a", "frontier_b"] }],
+    clusters: [{
+      id: "cluster_1", kind: "proposed_experiment", items: ["frontier_a", "frontier_b"], questions: ["q_a", "q_b"],
+      shared_terms: ["donor", "qpcr"], pairs: [{ items: ["frontier_a", "frontier_b"], jaccard: 0.875, shared_terms: ["donor", "qpcr"] }],
+      confirmations: [], basis: "normalized token sets",
+    }],
+  },
+  "/api/wishlist": {
+    total: 1, grouping: "normalized exact text; no synonym merging",
+    items: [{ text: "Donor identity per sample", normalized: "donor identity per sample", distinct_questions: 2,
+              questions: [{ question: "q_a", author: "agent_a", title: "Marker question" }, { question: "q_b", author: "agent_b", title: "Normalization" }],
+              sources: [{ kind: "frontier_item", question: "q_a", author: "agent_a" }] }],
+  },
+  "/api/participants": { items: [] },
+};
+
+let calls: { url: string; method: string; body?: string }[] = [];
+
+beforeEach(() => {
+  calls = [];
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    calls.push({ url, method: init?.method ?? "GET", body: init?.body as string | undefined });
+    if (url === "/api/watchers") return new Response(JSON.stringify({ detail: "Not Found" }), { status: 404 });
+    if (url === "/api/frontier/clusters/confirm") return new Response(JSON.stringify({ seq: 9 }), { status: 200 });
+    return new Response(JSON.stringify(routes[url.split("?")[0]] ?? {}), { status: 200 });
+  }) as typeof fetch;
+});
+
+test("items are grouped by kind with promotion and watcher actions", async () => {
+  render(<MemoryRouter initialEntries={["/frontier"]}><Frontier /></MemoryRouter>);
+  expect(await screen.findByRole("heading", { name: /Proposed experiments/ })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: /Untestable branches/ })).toBeTruthy();
+  expect(screen.getAllByRole("button", { name: "Promote" }).length).toBe(3);
+  fireEvent.click(within(screen.getByLabelText("Frontier item frontier_b")).getByRole("button", { name: "Attach a watcher query" }));
+  expect((screen.getByLabelText("Watcher query") as HTMLInputElement).value).toBe("spike-in");
+  fireEvent.click(screen.getByRole("button", { name: "Attach watcher" }));
+  expect(await screen.findByText("Watchers are not available on this server yet.")).toBeTruthy();
+});
+
+test("grouping by blocker uses the recorded blocker text", async () => {
+  render(<MemoryRouter initialEntries={["/frontier?group=blocker"]}><Frontier /></MemoryRouter>);
+  expect(await screen.findByText("Blocked by: knockdown counts")).toBeTruthy();
+  expect(screen.getByText("No blocker recorded")).toBeTruthy();
+});
+
+test("cluster suggestions show shared terms and record a person's confirmation", async () => {
+  render(<MemoryRouter initialEntries={["/frontier?tab=clusters"]}><Frontier /></MemoryRouter>);
+  expect(await screen.findByText("qpcr")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Confirm same experiment" }));
+  await waitFor(() => expect(calls.some((c) => c.url === "/api/frontier/clusters/confirm" && c.method === "POST")).toBe(true));
+  const sent = JSON.parse(calls.find((c) => c.url === "/api/frontier/clusters/confirm")!.body!);
+  expect(sent.items).toEqual(["frontier_a", "frontier_b"]);
+  expect(await screen.findByText(/items are not merged/)).toBeTruthy();
+});
+
+test("wishlist links each measurement to the questions that need it", async () => {
+  render(<MemoryRouter initialEntries={["/frontier?tab=wishlist"]}><Frontier /></MemoryRouter>);
+  expect(await screen.findByText("Donor identity per sample")).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Normalization" }).getAttribute("href")).toBe("/question/agent_b/q_b");
+});

@@ -44,7 +44,7 @@ def search(ws, text="", *, family=None, feature=None, provider=None, format=None
            limit=20, offset=0, include_historical=False, vector=None, model=None):
     if not 1 <= limit <= 100 or offset < 0 or min_level not in range(4):
         raise DawError("invalid_search_bounds")
-    if family not in {None, "data", "artifact", "work", "resource", "forum"}:
+    if family not in {None, "data", "artifact", "work", "resource", "forum", "claim", "frontier"}:
         raise DawError("unknown_search_family")
     tokens = re.findall(r"[\w-]+", text, re.UNICODE)[:30]
     match = " AND ".join('"' + token.replace('"', '""') + '"' for token in tokens)

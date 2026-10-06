@@ -1,0 +1,40 @@
+/* Claims and frontier screens (ledger area). Uses the shared colour variables only. */
+.ledger-tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--line); margin-bottom: 0.75rem; flex-wrap: wrap; }
+.ledger-tabs button { font: inherit; background: none; border: 0; border-bottom: 2px solid transparent; padding: 0.4rem 0.7rem; color: var(--muted); cursor: pointer; }
+.ledger-tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.ledger-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.5rem 0 1rem; }
+.ledger-filters input { flex: 1 1 14rem; min-width: 0; }
+.ledger-filters input, .ledger-filters select, .ledger-filters button { font: inherit; }
+.ledger-list { display: grid; gap: 0.75rem; }
+.ledger-group h2 { font-size: 1.05rem; margin: 1.25rem 0 0.5rem; }
+.ledger-card, .ledger-pair { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 0.6rem 0.75rem; min-width: 0; }
+.ledger-pair { margin-bottom: 1rem; }
+.ledger-card.withdrawn { opacity: 0.8; border-style: dashed; }
+.ledger-card-head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; font-size: 0.9rem; }
+.ledger-text { margin: 0.2rem 0; }
+.ledger-withdrawn { margin: 0.4rem 0; padding: 0.3rem 0.5rem; border-left: 3px solid var(--warn); color: var(--warn); font-size: 0.9rem; overflow-wrap: anywhere; }
+.ledger-badge { display: inline-block; font-size: 0.75rem; padding: 0.05rem 0.4rem; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.ledger-badge.bad, .ledger-badge.status-withdrawn { color: var(--bad); border-color: var(--bad); }
+.ledger-badge.status-supported, .ledger-badge.status-promoted { color: var(--good); border-color: var(--good); }
+.ledger-badge.status-candidate_evidence, .ledger-badge.status-untestable { color: var(--warn); border-color: var(--warn); }
+.ledger-badge.status-descriptive, .ledger-badge.status-open { color: var(--accent); border-color: var(--accent); }
+.ledger-scope { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0.3rem 0 0; font-size: 0.85rem; }
+.ledger-scope div { display: flex; gap: 0.3rem; }
+.ledger-scope dt { color: var(--muted); }
+.ledger-scope dd { margin: 0; }
+.ledger-pointers { list-style: none; padding: 0; margin: 0.4rem 0; display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; font-size: 0.85rem; }
+.ledger-pointer { overflow-wrap: anywhere; }
+.ledger-pointer-kind { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.ledger-marks { font-size: 0.85rem; padding-left: 1rem; }
+.ledger-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: baseline; font-size: 0.85rem; margin-top: 0.3rem; }
+.ledger-actions .mono { overflow-wrap: anywhere; }
+.ledger-toggle-body { flex-basis: 100%; }
+.ledger-toggle { display: contents; }
+.link-button { font: inherit; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.ledger-watch { font-size: 0.85rem; margin: 0.3rem 0; }
+.ledger-pair-claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 0.75rem; margin: 0.5rem 0; }
+.ledger-reviews h3 { font-size: 0.95rem; margin: 0.5rem 0 0.25rem; }
+.ledger-term { margin-right: 0.35rem; padding: 0 0.25rem; border: 1px solid var(--line); border-radius: 3px; }
+.ledger-cluster-items { padding-left: 1rem; }
+.ledger-wishlist li { margin-bottom: 0.9rem; }
+.ledger-wishlist p { margin: 0.2rem 0; }

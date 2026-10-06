@@ -53,3 +53,27 @@ def add_participant_command(ctx: typer.Context, name: str,
     profile = {k: v for k, v in {"display_name": display_name, "affiliation": affiliation, "orcid": orcid}.items() if v}
     with Community(ctx.obj) as board:
         emit(describe(add_participant(board, name, kind, profile=profile)))
+
+
+frontier_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Frontier index (agent-authored open items).")
+claims_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Claim ledger projection.")
+app.add_typer(frontier_app, name="frontier")
+app.add_typer(claims_app, name="claims")
+
+
+@frontier_app.command("reindex")
+def frontier_reindex(ctx: typer.Context):
+    """Upsert the frontier projection from every participant workspace (read-only scan); idempotent."""
+    from daw.commons.frontier import rebuild_frontier
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(rebuild_frontier(board))
+
+
+@claims_app.command("reindex")
+def claims_reindex(ctx: typer.Context):
+    """Rebuild the claim projection and its search documents from immutable posts."""
+    from daw.commons.claims import rebuild_claims
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(rebuild_claims(board))
