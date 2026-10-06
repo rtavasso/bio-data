@@ -1,0 +1,59 @@
+/* Dashboard page only. Series colours: categorical slots 1-2 of the validated reference palette,
+   stepped separately for the dark surface. Text never wears a series colour. */
+.dashboard { --viz-1: #2a78d6; --viz-2: #eb6834; --viz-track: #ecebe6; }
+@media (prefers-color-scheme: dark) {
+  .dashboard { --viz-1: #3987e5; --viz-2: #d95926; --viz-track: #2b2a27; }
+}
+.dashboard .small { font-size: 0.8rem; }
+.dashboard .num { font-variant-numeric: tabular-nums; }
+.dashboard .unavailable { color: var(--muted); font-style: italic; }
+.dashboard .filters { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; margin: 0.75rem 0; }
+.dashboard .filters select { font: inherit; max-width: 14rem; }
+.dashboard .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.5rem; margin: 0.75rem 0 1rem; }
+.dashboard .stat { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 0.5rem 0.6rem; }
+.dashboard .stat-label { font-size: 0.75rem; color: var(--muted); }
+.dashboard .stat-value { font-size: 1.05rem; margin-top: 0.15rem; font-variant-numeric: tabular-nums; }
+.dashboard .tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; border-bottom: 1px solid var(--line); margin: 1rem 0 0.75rem; }
+.dashboard .tabs button { font: inherit; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted);
+  padding: 0.4rem 0.6rem; cursor: pointer; }
+.dashboard .tabs button.active { color: var(--fg); border-bottom-color: var(--accent); }
+.dashboard .multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; }
+.dashboard .panel { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 0.6rem 0.7rem; min-width: 0; }
+.dashboard .panel header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.dashboard .panel h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.dashboard .panel-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.5rem; }
+.dashboard .panel-facts { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.5rem; font-size: 0.85rem; margin: 0.5rem 0; }
+.dashboard .panel-facts dd { margin: 0; text-align: right; }
+.dashboard .spark { margin: 0.4rem 0 0; }
+.dashboard .spark figcaption { font-size: 0.75rem; color: var(--muted); display: flex; justify-content: space-between; gap: 0.5rem; }
+.dashboard .spark-last { color: var(--fg); }
+.dashboard .spark-empty { font-size: 0.75rem; color: var(--muted); margin: 0.4rem 0 0; }
+.dashboard .spark svg, .dashboard .bars { width: 100%; height: auto; display: block; overflow: visible; }
+.dashboard .spark .axis { stroke: var(--line); stroke-width: 1; }
+.dashboard .spark .series { fill: none; stroke: var(--viz-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dashboard .spark .dot { fill: var(--viz-1); stroke: var(--panel); stroke-width: 2; }
+.dashboard .spark .hit { fill: transparent; }
+.dashboard .spark .mark:hover .dot { r: 5; }
+.dashboard .bars .track { fill: var(--viz-track); }
+.dashboard .bars .viz-1 { fill: var(--viz-1); }
+.dashboard .bars .viz-2 { fill: var(--viz-2); }
+.dashboard .bars text { font-size: 10px; fill: var(--fg); }
+.dashboard .bars .bar-label { fill: var(--muted); }
+.dashboard table { border-collapse: collapse; font-size: 0.85rem; }
+.dashboard th, .dashboard td { border: 1px solid var(--line); padding: 0.3rem 0.45rem; text-align: left; vertical-align: top; }
+.dashboard thead th { background: var(--panel); }
+.dashboard .mini { width: 100%; margin-top: 0.3rem; font-size: 0.75rem; }
+.dashboard .compare-scroll { overflow-x: auto; max-width: 100%; }
+.dashboard .compare .assignment { min-width: 14rem; max-width: 22rem; font-weight: normal; }
+.dashboard .compare .excerpt { display: block; white-space: pre-wrap; font-size: 0.8rem; }
+.dashboard .compare .cohort-head { text-align: center; border-bottom: 2px solid var(--accent); }
+.dashboard .compare .not-attempted { color: var(--muted); font-style: italic; text-align: center; }
+.dashboard .compare .totals th, .dashboard .compare .totals td { border-top: 2px solid var(--line); }
+.dashboard .cost-cell { min-width: 12rem; }
+.dashboard .cost-cell div + div { margin-top: 0.15rem; }
+.dashboard .compare td { min-width: 6.5rem; }
+.dashboard .cost-table th[scope=row] { white-space: nowrap; }
+.dashboard .no-runs { font-size: 0.8rem; color: var(--muted); margin: 0.4rem 0; }
+.dashboard .cohort-picks { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; border: 1px solid var(--line); border-radius: 6px; }
+.dashboard .compare-section { margin-top: 1.5rem; }
+.dashboard .limits { margin-top: 1.5rem; }

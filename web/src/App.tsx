@@ -4,6 +4,7 @@ import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
 import Frontier from "./pages/Frontier";
 import Claims from "./pages/Claims";
+import Dashboard from "./pages/Dashboard";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -42,7 +43,7 @@ export default function App() {
           <Route path="/frontier" element={<Frontier />} />
           <Route path="/claims" element={<Claims />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
-          <Route path="/dashboard" element={<Placeholder title="Dashboard" module="M9.2 Dashboard" />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/me" element={<Placeholder title="Me" module="M7 Accounts" />} />
           <Route path="*" element={<Placeholder title="Not found" module="This route" />} />
         </Routes>

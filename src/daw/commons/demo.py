@@ -207,6 +207,7 @@ def notebook(title, findings, open_questions):
 EXTENSIONS = [
     "daw.commons.claims:extend_demo",
     "daw.commons.frontier:extend_demo",
+    "daw.commons.metrics:demo_cohort",
 ]
 
 
