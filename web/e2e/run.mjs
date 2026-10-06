@@ -524,6 +524,10 @@ await step("B4 readers who fetched the old post are affected and receive a syste
 await step("B5 the map re-labels the superseded post; a person marks the correction checked_source", async () => {
   const map = await api(`/api/map?participant=${A.dana}`);
   check(map.edges.some((e) => e.relation === "supersedes" && e.source === correctionB && e.target === postA), "no supersedes edge");
+  check(map.nodes.find((n) => n.id === postA)?.superseded_by?.includes(correctionB), "old post not re-labelled superseded");
+  const full = await api("/api/map?limit=10000");
+  const fetched = full.edges.find((e) => e.relation === "fetched" && e.target === postA && e.source === A.bob);
+  check(fetched?.into_superseded?.includes(correctionB), "the reader's fetch edge into the old post is not re-labelled");
   await page.goto(`${base}/post/${correctionB}`);
   await page.locator("summary", { hasText: /^Mark$/ }).click();
   const form = page.locator("details[open] form").first();

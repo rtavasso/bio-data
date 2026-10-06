@@ -24,6 +24,7 @@ export interface MapNode {
   post_kind?: string;
   hidden?: boolean;
   status?: string;
+  superseded_by?: string[];
   [field: string]: unknown;
 }
 
@@ -37,6 +38,8 @@ export interface MapEdge {
   records: EdgeRecord[];
   backed?: boolean | null;
   reason?: string | null;
+  /** Flow B: the target post was superseded by these posts (from recorded `supersedes` edges). */
+  into_superseded?: string[];
 }
 
 export interface EvidenceMap {

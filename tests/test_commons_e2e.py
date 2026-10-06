@@ -122,6 +122,21 @@ def test_recorded_watcher_tick_posts_a_candidate_and_marks_the_item(demo, tmp_pa
     assert cli(root, "demo-watch-tick", "--response", str(fixture))["ran"] == []
 
 
+def test_map_relabels_a_superseded_post_and_the_edges_into_it(demo):
+    root, ctx = demo
+    finding, correction = ctx["posts"]["finding"], ctx["posts"]["correction"]
+    graph = client(root).get("/api/map", params={"limit": 10000}).json()
+    nodes = {n["id"]: n for n in graph["nodes"]}
+    assert nodes[finding]["superseded_by"] == [correction] and nodes[finding]["label"].endswith("(superseded)")
+    assert "superseded_by" not in nodes[correction]
+    into = [e for e in graph["edges"] if e["target"] == finding]
+    fetched = [e for e in into if e["relation"] == "fetched"]
+    assert fetched and all(e["into_superseded"] == [correction] for e in fetched)  # bob read the old post
+    assert all("into_superseded" not in e for e in into if e["relation"] == "supersedes")
+    # Labels only: no edge is added for the relabelling.
+    assert all(e["relation"] in graph["relations"] for e in graph["edges"])
+
+
 def test_interface_sketch_routes_for_questions_and_replies(demo):
     root, ctx = demo
     http = client(root)

@@ -46,7 +46,7 @@ export function toGraph(nodes: MapNode[], edges: MapEdge[], positions: Record<st
     source: e.source,
     target: e.target,
     dashed: e.style === "dashed",
-    label: `${labels.get(e.source) ?? e.source} — ${e.relation}${e.backed === false ? " (unbacked)" : e.backed ? " (backed)" : ""} → ${labels.get(e.target) ?? e.target}`,
+    label: `${labels.get(e.source) ?? e.source} — ${e.relation}${e.backed === false ? " (unbacked)" : e.backed ? " (backed)" : ""} → ${labels.get(e.target) ?? e.target}${e.into_superseded?.length ? `; corrected by ${e.into_superseded.join(", ")}` : ""}`,
   }));
   return { graphNodes, graphEdges };
 }
