@@ -209,6 +209,7 @@ EXTENSIONS = [
     "daw.commons.frontier:extend_demo",
     "daw.commons.participation:demo_records",
     "daw.commons.questions:demo_extension",
+    "daw.commons.discovery_demo:extend",
     "daw.commons.metrics:demo_cohort",
 ]
 

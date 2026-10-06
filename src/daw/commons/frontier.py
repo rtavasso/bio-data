@@ -270,6 +270,13 @@ COLUMNS = ("question", "author", "workspace", "kind", "text", "status", "blocked
            "pointers", "source", "created", "updated")
 
 
+def _board_watcher(value):
+    try:
+        return isinstance(json.loads(value), dict) and "watcher" in json.loads(value)
+    except (TypeError, ValueError):
+        return False
+
+
 def rebuild_frontier(board):
     """Upsert the frontier projection from every participant workspace (read-only). Idempotent.
     A fork's inherited items (same question and event as an older participant) stay attributed to the
@@ -289,7 +296,10 @@ def rebuild_frontier(board):
                 identity = item_id(agent["id"], item["event"])
                 old = existing.get(identity)
                 status, when = _status(item, old)
-                query = item["watcher_query"]
+                # A watcher attached on the board (daw.commons.watchers) owns watcher_query, like promoted_to;
+                # the agent-authored query is used only while no watcher is attached.
+                query = old["watcher_query"] if old and old["watcher_query"] and _board_watcher(old["watcher_query"]) \
+                    else item["watcher_query"]
                 source = {"event": item["event"], "event_kind": item["event_kind"], "body_blob": item["body_blob"],
                           "missing_measurement": item["missing_measurement"], "key": item["key"], "post": item["post"],
                           "status_event": item.get("status_event"), "status_reason": item["status_reason"],
