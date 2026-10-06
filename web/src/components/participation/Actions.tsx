@@ -5,7 +5,7 @@ import { useApi } from "../../useApi";
 import {
   ask, commission, comment, createPost, explain, mark, promote, uploadFile, COMMISSION_TYPES, MARK_KINDS, TASK_TYPES,
   type Anchor, type Budget, type MarkKind, type TargetKind, type TaskType,
-} from "./actions";
+} from "./writes";
 import "./participation.css";
 
 // Human actions shared by every screen. Each posts to the attributed write API; nothing here sends

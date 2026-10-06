@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { explain } from "../participation/actions";
+import { explain } from "../participation/writes";
 import { parsePointers } from "../participation/Actions";
 import { submitReview } from "./studio";
 import type { ReviewVerdict } from "../../types/studio";

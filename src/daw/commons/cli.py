@@ -13,6 +13,23 @@ from daw.util import DawError, canonical
 app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                   help="Colloquy research commons: web observatory and attributed human participation.")
 app.add_typer(watch_app, name="watch")
+fixture_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                         help="Real-data fixtures: redacted, committable copies of a commons (C0).")
+app.add_typer(fixture_app, name="fixture")
+
+
+@fixture_app.command("build")
+def fixture_build(source: Path, out: Path, name: str | None = None):
+    """Copy a real commons without downloaded bytes, session databases or tool outputs; writes FIXTURE.json."""
+    from daw.commons.fixture import build_fixture
+    emit(build_fixture(source, out, name=name))
+
+
+@fixture_app.command("verify")
+def fixture_verify(root: Path):
+    """Check every file in FIXTURE.json against its recorded sha256."""
+    from daw.commons.fixture import verify_fixture
+    emit(verify_fixture(root))
 app.command("embed")(embed)
 app.command("export")(export_command)
 app.command("demo-studio")(demo_command)

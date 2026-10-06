@@ -1,6 +1,6 @@
 // Shapes returned by the participation and accounts API (daw.commons.participation, accounts, moderation).
 import type { Participant } from "../api";
-import type { Anchor, Budget, MarkKind, RequestRow } from "../components/participation/actions";
+import type { Anchor, Budget, MarkKind, RequestRow } from "../components/participation/writes";
 
 export interface Pointer {
   kind: string;

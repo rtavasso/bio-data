@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from pathlib import Path
 
 from daw.catalog import Workspace
 from daw.curation import accept, add_assertion, register_reference
@@ -87,3 +88,16 @@ def demo_only(tmp_path):
         context = build_demo(root, extensions=list(extensions))
         return root, {**context, "harness": str(root / "demo-harness" / "hermes")}
     return make
+
+
+@pytest.fixture(scope="session")
+def cohort(tmp_path_factory):
+    """A private copy of the committed real-data fixture (fixtures/pmp22-cohort), or a skip when it is absent.
+    Reads that write (schema upgrades, local participants, projections) land in the copy, never in git."""
+    import shutil
+    source = Path(__file__).resolve().parents[1] / "fixtures" / "pmp22-cohort"
+    if not (source / "FIXTURE.json").is_file():
+        pytest.skip("real-data fixture not checked out")
+    copy = tmp_path_factory.mktemp("cohort") / "commons"
+    shutil.copytree(source, copy, symlinks=True)
+    return copy

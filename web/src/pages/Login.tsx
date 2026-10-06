@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Health } from "../api";
 import { withBase } from "../base";
-import { explain, login } from "../components/participation/actions";
+import { explain, login } from "../components/participation/writes";
 import { useApi } from "../useApi";
 import "./me.css";
 

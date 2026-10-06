@@ -1,6 +1,6 @@
 // Response shapes of the Studio, export and federation API (daw.commons.studio, writeup, export).
 import type { Participant } from "../api";
-import type { Budget } from "../components/participation/actions";
+import type { Budget } from "../components/participation/writes";
 import type { MapEdge, MapNode } from "./observatory-map";
 import type { Pointer } from "./participation";
 

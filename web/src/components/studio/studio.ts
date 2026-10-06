@@ -1,6 +1,6 @@
 import { ApiError, post, send } from "../../api";
 import { withBase } from "../../base";
-import type { Budget, RequestRow } from "../participation/actions";
+import type { Budget, RequestRow } from "../participation/writes";
 import type { DigestSchedule, ExportResult, ReviewVerdict, Writeup } from "../../types/studio";
 import type { MarkRecord } from "../../types/participation";
 

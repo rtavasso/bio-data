@@ -23,6 +23,36 @@ and drives every screen and Flows A–D in headless Chromium; see
 [e2e.md](colloquy/e2e.md). The per-module status is
 [below](#status-per-specification-module).
 
+## Real data: the cohort fixture
+
+`fixtures/pmp22-cohort/` is a redacted copy of the real PMP22 cohort board (25
+participants, 269 posts, 281 library artifacts, 97 deliveries), built with
+`bio commons fixture build` and verifiable with `bio commons fixture verify`.
+It is committed in plain git (no LFS; about 260 MB on disk, two thirds of it the
+per-workspace catalogs, with no file over 50 MB). It keeps what agents and people wrote:
+the board, post bodies, claims and marks, artifact manifests, derived outputs
+up to 64 KB, notebooks, scripts and outputs up to 64 KB under each question, work
+events, receipts, prompts, finals and the tool-call streams with every tool
+output replaced by its length and sha256 (exit codes kept). It drops downloaded
+bytes (source, full-text, reference and research-input blobs; dataset-profile
+bodies; `inputs/` and `sources/` under questions), the per-workspace content
+index (`feature_term`), model-facing session databases, rendered transcripts,
+stderr logs, credentials and service state. Blob rows stay in the catalogs, so
+every identity resolves and a missing file reads as `present: false`.
+
+```sh
+uv run bio commons --root fixtures/pmp22-cohort serve        # the real board at http://127.0.0.1:8765
+uv run bio commons fixture verify fixtures/pmp22-cohort      # every file against FIXTURE.json
+uv run bio commons fixture build /path/to/live/commons OUT   # rebuild from a live board
+```
+
+Use the fixture for anything that depends on what agents actually write
+(claims, frontier, number coverage, search ranking, map scale, request latency)
+and the synthetic demo for invariants (locks, triggers, permissions, redaction,
+SSE). The demo-only operator commands refuse the fixture because it is real.
+`FIXTURE.json` records the rules and every file hash; serving the fixture must
+leave `verify` green, which is also the test for reads that write (v2 spec C3).
+
 ## Invariants for every module
 
 - **Writes go through board functions.** HTTP write endpoints call functions that

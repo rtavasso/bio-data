@@ -340,12 +340,31 @@ def _strip_paths(value):
     return value
 
 
+def _artifact_record(store, aid):
+    """`artifact_info`, or the row plus its manifest when the output bytes are absent from this store
+    (a fixture, or a workspace that only holds the record): the page still renders, with present=false."""
+    try:
+        return artifact_info(store, aid)
+    except DawError as error:
+        if error.reason != "missing_blob":
+            raise
+    row = store.one("SELECT * FROM artifact WHERE id=?", (aid,))
+    if not row:
+        raise DawError("unknown_artifact", aid)
+    try:
+        manifest = read_json(store.blob_path(row["manifest_blob"]))
+    except DawError:
+        manifest = {}
+    return {**row, "manifest": manifest, "path": None, "present": False,
+            "questions": store.rows("SELECT question_id,relationship FROM question_artifact WHERE artifact_id=?", (aid,))}
+
+
 def artifact_view(view, aid, *, depth=3):
     if not 0 <= depth <= 6:
         raise DawError("invalid_provenance_depth", "0 to 6")
     location = locate_artifact(view, aid)
     store = _store(view, location)
-    info = artifact_info(store, aid)
+    info = _artifact_record(store, aid)
     manifest = info["manifest"]
     derivation = manifest.get("derivation", {})
     inputs = []
@@ -367,7 +386,13 @@ def artifact_view(view, aid, *, depth=3):
         else:
             entry["kind"] = "object"
         inputs.append(entry)
-    graph = provenance(store, aid, depth=depth)
+    try:
+        graph = provenance(store, aid, depth=depth)
+    except DawError as error:
+        if error.reason != "missing_blob":
+            raise
+        graph = {"root": aid, "depth": depth, "nodes": {}, "edges": [], "frontier": [],
+                 "unavailable": f"provenance walk stopped at bytes absent from this store ({error.detail})"}
     questions = []
     for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
         ws = _workspace(view, agent["id"])
@@ -392,7 +417,9 @@ def artifact_view(view, aid, *, depth=3):
             "comments": [post_summary(index, pid, hidden, snippet=None) for pid, row in index["posts"].items()
                          if row["content"].get("kind") == "comment"
                          and comment_target(row["content"].get("evidence") or {}) == ("artifact", aid)],
-            "bytes": {"name": output.get("name"), "size": output.get("bytes"), "url": f"/api/artifacts/{aid}/bytes"},
+            "bytes": {"name": output.get("name"), "size": output.get("bytes"), "url": f"/api/artifacts/{aid}/bytes",
+                      "present": info.get("present", True)},
+            "present": info.get("present", True),
             "content_is_untrusted_data": True,
             "note": "Identical derivation permits byte reuse, not an assertion of scientific applicability"}
 

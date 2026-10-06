@@ -6,7 +6,7 @@ import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import { CommissionForm } from "../components/participation/Actions";
-import { explain } from "../components/participation/actions";
+import { explain } from "../components/participation/writes";
 import { shortId } from "../components/studio/Blocks";
 import { cancelDigest, createExport, scheduleDigest } from "../components/studio/studio";
 import type { ExportResult, GroupName, OutputStatus, StudioItem, StudioOverview } from "../types/studio";

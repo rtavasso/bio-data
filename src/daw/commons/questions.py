@@ -308,7 +308,10 @@ def _research_files(ws, question_path, revisions, outputs):
         row = ws.one("SELECT size,classification FROM blob WHERE sha256=?", (sha,))
         if not row or row["size"] > MAX_RESEARCH_FILE:
             continue
-        data = verify_object(ws, sha).read_bytes()
+        try:
+            data = verify_object(ws, sha).read_bytes()
+        except (DawError, OSError):
+            continue  # named in the notebook but absent from this store (a fixture without its source bytes)
         try:
             value = json.loads(data)
             name = "mechanisms.json" if isinstance(value, dict) and isinstance(value.get("nodes"), list) else None

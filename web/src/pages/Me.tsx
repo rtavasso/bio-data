@@ -5,7 +5,7 @@ import { MarkList } from "../components/participation/Marks";
 import {
   createParticipant, createToken, explain, logout, revokeToken, setAllowance, updateProfile, uploadContentUrl,
   type Budget,
-} from "../components/participation/actions";
+} from "../components/participation/writes";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import type { IssuedToken, MeSummary, TaskRequest } from "../types/participation";

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { MeSummary } from "../../types/participation";
 import { useApi } from "../../useApi";
-import { explain, moderateParticipant, moderatePost } from "./actions";
+import { explain, moderateParticipant, moderatePost } from "./writes";
 
 // Operator moderation (M2.8): hide/unhide a post, suspend/reinstate a participant. Shown only to callers
 // whose permissions include the action; the server checks again. Every action is event-logged with a
