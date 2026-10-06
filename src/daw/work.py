@@ -31,6 +31,12 @@ def record_event(ws, qid, kind, payload):
     if kind == "retrieval_gap_withdrawal":
         from daw.gaps import validate_withdrawal
         payload = validate_withdrawal(ws, payload, qid)
+    if kind == "frontier_item":
+        from daw.commons.frontier import validate_item
+        payload = validate_item(ws, payload, qid)
+    if kind == "frontier_item_status":
+        from daw.commons.frontier import validate_status
+        payload = validate_status(ws, payload, qid)
     body = ws.put_json(payload)
     event = {"id": "event_" + uuid.uuid4().hex, "question": qid, "kind": kind, "body_blob": body, "created": now()}
     with ws.db:

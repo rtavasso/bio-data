@@ -34,6 +34,12 @@ def labbook_blob(root, agent, question):
         return sha, ws.blob_path(sha).read_text()
 
 
+
+@pytest.fixture
+def demo(demo_only):
+    """Core demo records plus this area's records only: anchor parents below are exact posts."""
+    return demo_only("daw.commons.participation:demo_records")
+
 def test_comment_at_anchor_becomes_a_request_the_author_answers(demo):
     """Milestone 2: a human comment at an anchor is a request; the agent's answer closes it under the anchor."""
     root, ctx = demo
@@ -119,7 +125,8 @@ def test_anchors_are_validated_against_immutable_bytes(demo):
                                     anchor={"kind": "row", "blob": output, "row_key": "B_vs_A"})
         assert row["anchor"]["row"] == 1 and row["anchor"]["quote"] == "B_vs_A\t1.54"
         assert row["request"]["target"] == alice
-        assert board.show(row["post"])["parent"] in {ctx["posts"]["finding"], correction}
+        parent = board.show(row["post"])["parent"]
+        assert contrast in board.show(parent)["content"]["evidence"]["artifacts"]
         with pytest.raises(DawError, match="anchor_row_missing"):
             participation.comment(board, rhea, "artifact", contrast, "x",
                                   anchor={"kind": "row", "blob": output, "row_key": "C_vs_A"})
