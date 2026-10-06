@@ -14,6 +14,8 @@ from daw.util import DawError
 
 ROUTER_MODULES = [
     "daw.commons.api.meta",
+    "daw.commons.api.accounts",
+    "daw.commons.api.write",
 ]
 
 STATUS = {"authentication_required": 401, "permission_denied": 403, "participant_suspended": 403,

@@ -159,7 +159,9 @@ class Community:
             raise DawError("unknown_post", identity)
         from daw.profiles import verify_object
         body = read_json(verify_object(self.library, row["body_blob"]))
-        return {**row, "content": body, "content_is_untrusted_data": True,
+        # Board content is untrusted to agents regardless of author; the author's kind is a label, not a trust grant.
+        author_kind = self.one("SELECT kind FROM agent WHERE id=?", (row["author"],))["kind"]
+        return {**row, "author_kind": author_kind, "content": body, "content_is_untrusted_data": True,
                 "evidence_artifacts": self._evidence_summary(body.get("evidence") or {}),
                 "superseded_by": self.rows("SELECT id,author,created FROM post WHERE supersedes=? ORDER BY seq", (identity,)),
                 "replies": self.rows("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq", (identity,))}
@@ -216,6 +218,9 @@ class Community:
               evidence=None, request_key=None, kind="discussion"):
         """Caller holds board and library locks. Immutable post, index is rebuildable."""
         author = self.agent(author)
+        if self.one("SELECT 1 FROM moderation WHERE target_kind='participant' AND target_id=? AND state='suspended'",
+                    (author["id"],)):
+            raise DawError("participant_suspended", author["id"])
         if not title.strip() or not body.strip() or not channel.strip():
             raise DawError("empty_post")
         found = PROVIDER_CITATION.search(body)

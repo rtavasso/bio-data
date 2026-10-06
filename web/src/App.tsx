@@ -2,6 +2,8 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import Me from "./pages/Me";
+import Login from "./pages/Login";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -41,7 +43,8 @@ export default function App() {
           <Route path="/claims" element={<Placeholder title="Claims" module="M5.3 Claim search" />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
           <Route path="/dashboard" element={<Placeholder title="Dashboard" module="M9.2 Dashboard" />} />
-          <Route path="/me" element={<Placeholder title="Me" module="M7 Accounts" />} />
+          <Route path="/me" element={<Me />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Placeholder title="Not found" module="This route" />} />
         </Routes>
       </main>
