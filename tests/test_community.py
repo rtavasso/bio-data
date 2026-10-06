@@ -175,10 +175,10 @@ def test_posts_replies_corrections_keys_and_search_rebuild(board):
 
 def test_init_does_not_downgrade_unknown_board_version(board):
     with board.db:
-        board.db.execute("PRAGMA user_version=2")
+        board.db.execute("PRAGMA user_version=99")
     with pytest.raises(DawError, match="unsupported_community_version"):
         Community.create(board.root)
-    assert board.db.execute("PRAGMA user_version").fetchone()[0] == 2
+    assert board.db.execute("PRAGMA user_version").fetchone()[0] == 99
 
 
 def test_evaluator_does_not_inherit_live_community_identity(tmp_path, monkeypatch):

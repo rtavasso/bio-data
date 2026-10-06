@@ -77,7 +77,7 @@ def add_agent(board, name, *, seed_workspace=None, checkpoint=None, native_sessi
     config = {"model": model, "effort": effort, "provider": provider, "public": public,
               "fork_pending": bool(native_session), "runtime": runtime, "tools": tools}
     with board.writer(), board.db:
-        board.db.execute("INSERT INTO agent VALUES(?,?,?,?,?,?,?)",
+        board.db.execute("INSERT INTO agent(id,name,trial,native_session,parent,config,created) VALUES(?,?,?,?,?,?,?)",
                          (identity, name, str(trial.relative_to(board.root)), native_session,
                           parent, canonical(config).decode(), now()))
         board.event("agent_created", {"agent": identity, "parent": parent,

@@ -56,3 +56,21 @@ def reference(ws):
         "annotation": {"source": "synthetic fixture", "release": "1", "blob": annotation},
         "namespaces": ["synthetic"], "aliases": {"1": "chr1"},
         "evidence": [{"blob": evidence, "locator": "/chromosomes"}]})["reference"]
+
+
+@pytest.fixture(scope="session")
+def demo_template(tmp_path_factory):
+    """One synthetic demo commons per test session (built through ordinary board functions)."""
+    from daw.commons.demo import build_demo
+    root = tmp_path_factory.mktemp("demo") / "commons"
+    return root, build_demo(root)
+
+
+@pytest.fixture
+def demo(demo_template, tmp_path):
+    """A private writable copy of the demo commons and the identities of its records."""
+    import shutil
+    root, context = demo_template
+    copy = tmp_path / "commons"
+    shutil.copytree(root, copy, symlinks=True)
+    return copy, {**context, "harness": str(copy / "demo-harness" / "hermes")}

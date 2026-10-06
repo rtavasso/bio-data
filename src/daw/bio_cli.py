@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from daw.adapters import Sources
 from daw.artifacts import artifact_info, attach_artifact, check_output_role, find_derivation, provenance, register_artifact
 from daw.catalog import Workspace, restore_check
+from daw.commons.cli import app as commons_app
 from daw.community_cli import app as community_app
 from daw.gaps import report_gaps
 from daw.indexer import create_job, import_graph, index_status, run_job, schedule_feed, tick
@@ -38,6 +39,7 @@ app.add_typer(work_app, name="work")
 app.add_typer(index_app, name="index")
 app.add_typer(object_app, name="object")
 app.add_typer(community_app, name="community")
+app.add_typer(commons_app, name="commons")
 
 
 def emit(value):
