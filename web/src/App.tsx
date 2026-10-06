@@ -2,6 +2,8 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import Frontier from "./pages/Frontier";
+import Claims from "./pages/Claims";
 import Dashboard from "./pages/Dashboard";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
@@ -38,8 +40,8 @@ export default function App() {
           <Route path="/map" element={<Placeholder title="Evidence map" module="M4.2 Evidence map" />} />
           <Route path="/agent/:id" element={<Placeholder title="Participant" module="M4.5 Participant pages" />} />
           <Route path="/run/:id" element={<Placeholder title="Run" module="M4.4 Agent timelines" />} />
-          <Route path="/frontier" element={<Placeholder title="Frontier" module="M5.1 Frontier browser" />} />
-          <Route path="/claims" element={<Placeholder title="Claims" module="M5.3 Claim search" />} />
+          <Route path="/frontier" element={<Frontier />} />
+          <Route path="/claims" element={<Claims />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/me" element={<Placeholder title="Me" module="M7 Accounts" />} />

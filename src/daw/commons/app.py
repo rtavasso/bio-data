@@ -14,6 +14,7 @@ from daw.util import DawError
 
 ROUTER_MODULES = [
     "daw.commons.api.meta",
+    "daw.commons.api.frontier",
     "daw.commons.api.dashboard",
 ]
 

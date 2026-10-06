@@ -15,6 +15,7 @@ from pathlib import Path
 from daw.artifacts import attach_artifact
 from daw.catalog import Workspace
 from daw.commons import schema
+from daw.commons.claims import claims_document, notify_affected, project_post, validate_claims
 from daw.exchange import transfer_artifacts
 from daw.search import index_document, search
 from daw.util import DawError, canonical, now, read_json
@@ -23,7 +24,7 @@ from daw.work import question_record, record_event, sync_work
 # Provider-side citation syntax never corresponds to a captured tool result in
 # this harness; its presence in a post marks an unsupported retrieval claim.
 PROVIDER_CITATION = re.compile(r"utm_source=openai|\bturn\d+(?:search|view|news|file)\d+|citeturn", re.IGNORECASE)
-SEARCH_FAMILIES = {"forum": "forum", "artifact": "artifact", "work": "work", "all": None}
+SEARCH_FAMILIES = {"forum": "forum", "artifact": "artifact", "work": "work", "claim": "claim", "all": None}
 
 
 SCHEMA = """
@@ -162,6 +163,9 @@ class Community:
         return {**row, "content": body, "content_is_untrusted_data": True,
                 "evidence_artifacts": self._evidence_summary(body.get("evidence") or {}),
                 "superseded_by": self.rows("SELECT id,author,created FROM post WHERE supersedes=? ORDER BY seq", (identity,)),
+                "claims": [{**c, "scope": json.loads(c["scope"]), "pointers": json.loads(c["pointers"])} for c in self.rows(
+                    "SELECT id,ordinal,text,status,scope,pointers,withdrawn_by FROM claim WHERE post=? ORDER BY ordinal",
+                    (identity,))],
                 "replies": self.rows("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq", (identity,))}
 
     def _evidence_summary(self, evidence):
@@ -242,6 +246,7 @@ class Community:
                 if any(previous[k] != content[k] for k in content if k not in {"session", "run"}):
                     raise DawError("post_key_conflict")
                 self._index(old)
+                project_post(self, old)
                 return old["id"]
         identity = "post_" + uuid.uuid4().hex
         blob = self.library.put_json(content)
@@ -249,16 +254,36 @@ class Community:
             self.db.execute("INSERT INTO post(id,author,channel,parent,supersedes,body_blob,request_key,created) "
                             "VALUES(?,?,?,?,?,?,?,?)", (identity, author["id"], channel, parent, supersedes, blob, request_key, now()))
             self.event("published", {"post": identity, "author": author["id"], "evidence": evidence or {}})
-        self._index(self.one("SELECT * FROM post WHERE id=?", (identity,)))
+        row = self.one("SELECT * FROM post WHERE id=?", (identity,))
+        self._index(row)
+        # Claim ledger projection (M1.6): the post's own claims, and withdrawal of a superseded post's claims.
+        project_post(self, row)
         return identity
 
-    def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, **options):
+    def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, claims=None,
+                frontier=None, **options):
+        """Publish prose with selected evidence. `claims` (M1.6) is a list of {text, status, scope, pointers}
+        stored as a library blob; every pointer must resolve. `frontier` items (M1.7) are recorded as work
+        events in the author's own question first, then named in the post's evidence."""
         evidence = {}
         source = Workspace(workspace) if workspace else None
-        if (artifacts or question) and source is None:
+        if (artifacts or question or frontier) and source is None:
             raise DawError("publication_workspace_required")
+        if frontier and not question:
+            raise DawError("frontier_question_required", "frontier items belong to a question")
         try:
+            # Pointers name immutable records (posts, library artifacts and blobs are never deleted),
+            # so checking before the frontier events are written keeps a rejected publication side-effect free.
+            checked = validate_claims(self, claims, artifacts) if claims is not None else None
             with source.writer() if source else contextlib.nullcontext():
+                items = []
+                if frontier:
+                    from daw.commons.frontier import parse_items, record_item
+                    parsed = parse_items(source, question, frontier)
+                    key = options.get("request_key")
+                    items = [record_item(source, question, **{**item, "key": item.get("key") or
+                                                              (f"{key}:frontier:{n}" if key else None)})
+                             for n, item in enumerate(parsed)]
                 with self.writer(), self.library.writer():
                     if artifacts:
                         evidence.update(transfer_artifacts(source, self.library, artifacts))
@@ -271,8 +296,15 @@ class Community:
                                 raise DawError("publication_source_changed", sha)
                         evidence["notebook"] = {"question": question, "snapshot": snapshot["snapshot"],
                                                 "manifest_blob": snapshot["blob"]}
+                    if checked is not None:
+                        evidence["claims_blob"] = self.library.put_json(claims_document(checked))
+                    if items:
+                        evidence["frontier"] = [{"question": question, "event": item["id"]} for item in items]
                     identity = self._post(author, title, body, evidence=evidence, **options)
                     self._settle_request(identity, options.get("parent"))
+            if options.get("supersedes"):
+                # Flow B: readers who fetched the superseded post's evidence receive a correction notice.
+                notify_affected(self, identity)
             return self.show(identity)
         finally:
             if source:
@@ -378,7 +410,7 @@ class Community:
         2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
         restores the excerpts and index bookkeeping."""
         if family not in SEARCH_FAMILIES:
-            raise DawError("unknown_search_family", "use forum, artifact, work or all")
+            raise DawError("unknown_search_family", "use forum, artifact, work, claim or all")
         result = search(self.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
         for item in result["items"]:
             if item.get("family") == "forum":
@@ -390,8 +422,13 @@ class Community:
                                 artifacts=len((body.get("evidence") or {}).get("artifacts", [])))
             elif item.get("family") == "artifact":
                 item["posts"] = self._posts_naming(item["subject"])
+            elif item.get("family") == "claim":
+                claim = self.one("SELECT post,author,status,withdrawn_by FROM claim WHERE id=?", (item["subject"],))
+                if claim:
+                    item.update(claim)
         if not full:
-            keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts", "score")
+            keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts",
+                    "post", "status", "withdrawn_by", "score")
             result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
                                 "content_is_untrusted_data": True} for i in result["items"]]
             result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"

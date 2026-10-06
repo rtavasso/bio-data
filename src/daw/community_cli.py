@@ -66,12 +66,26 @@ def publish(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()
             workspace: Annotated[Path | None, typer.Option(envvar="BIO_WORKSPACE")] = None,
             artifact: Annotated[list[str] | None, typer.Option("--artifact")] = None,
             question: str | None = None, channel: str = "research", reply_to: str | None = None,
-            supersedes: str | None = None, key: str | None = None):
+            supersedes: str | None = None, key: str | None = None,
+            claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}: text plus pointers to existing records")] = None,
+            frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question and named in the post")] = None):
     """Publish Markdown and selected immutable evidence. Reuse --key on retries."""
+    from daw.util import read_json
     with Community(ctx.obj) as board:
         emit(board.publish(author(as_agent), title, body.read_text(), workspace=workspace,
                            artifacts=artifact or (), question=question, channel=channel,
-                           parent=reply_to, supersedes=supersedes, request_key=key))
+                           parent=reply_to, supersedes=supersedes, request_key=key,
+                           claims=read_json(claims) if claims else None, frontier=read_json(frontier) if frontier else None))
+
+
+@app.command("claims")
+def claims_command(ctx: typer.Context, q: Annotated[str, typer.Option("--q", help="Exact terms in claim text or scope")] = "",
+                   post: str | None = None, status: str | None = None, author_name: Annotated[str | None, typer.Option("--author")] = None,
+                   limit: int = 50, offset: int = 0):
+    """Search the claim ledger (author-stated claims with pointers; withdrawn claims name their replacement)."""
+    from daw.commons.claims import list_claims
+    with Community(ctx.obj) as board:
+        emit(list_claims(board, q, status=status, post=post, author=author_name, limit=limit, offset=offset))
 
 
 @app.command()

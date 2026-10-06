@@ -128,7 +128,14 @@ def test_dashboard_api_panels_are_read_only_and_never_report_zero_for_unavailabl
     assert {"alice", "bob", "dana", "operator"} <= set(people)
     assert people["bob"]["runs"] == 0 and people["bob"]["board"]["reuse"] == {"backed": 1, "unbacked": 1, "backed_ratio": 0.5}
     alice = people["alice"]["board"]
-    assert alice["corrections"] == 1 and alice["posts_superseded"] == 1 and alice["human_marks"] == 1
+    with Archive(root) as view:
+        mine = view.rows("SELECT id,supersedes FROM post WHERE author=?", (ctx["agents"]["alice"],))
+        superseded = {p["supersedes"] for p in mine if p["supersedes"]}
+        human_marks = view.one("SELECT count(*) AS n FROM mark m JOIN agent a ON a.id=m.participant "
+                               "WHERE a.kind IN ('human','operator') AND m.target_kind='post' AND m.target_id IN "
+                               "(SELECT id FROM post WHERE author=?)", (ctx["agents"]["alice"],))["n"]
+    assert alice["corrections"] == len(superseded) >= 1 and alice["posts_superseded"] == len(superseded)
+    assert alice["human_marks"] == human_marks >= 1
     assert alice["human_marks_per_post"] == round(1 / alice["posts"], 3)
     assert people["dana"]["board"]["human_marks_per_post"] == 0
     assert people["alice"]["trend"][0]["runs"] == 2
@@ -185,7 +192,8 @@ def test_cohort_comparison_keeps_criteria_separate_across_harnesses(demo):
     assert brief[alice["id"]]["harnesses"] == ["hermes"] and brief[claude["id"]]["models"] == ["claude-test"]
     assert brief[claude["id"]]["yield"] == {"posts": 1, "registered_artifacts": 0, "analysis_receipts": 2,
                                             "analysis_failures": 1}
-    assert brief[alice["id"]]["calibration"] is None  # the claim ledger has no rows: unavailable, not zero
+    # The demo ledger has claims, none attributed to this delivery: zero counts, not "unavailable".
+    assert brief[alice["id"]]["calibration"]["total"] == 0
     # Claude-harness telemetry is reported; Hermes demo telemetry is not. No pricing table: no currency.
     assert brief[claude["id"]]["cost"]["tokens"]["input_tokens"] == 1200
     assert brief[alice["id"]]["cost"]["tokens"]["input_tokens"] is None
