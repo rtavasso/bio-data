@@ -94,7 +94,7 @@ datetime with a timezone.
 
 The body lists `{run, request, agent, assignment, assignment_source}` for each
 run. `assignment` is the explicit key if one was given, otherwise the request
-body hash. Creating a cohort needs the operator `budget` permission and appends
+body hash. Creating a cohort needs the operator `cohort` permission and appends
 one `cohort_created` event.
 
 A comparison groups the runs of two or more cohorts by assignment. For each
@@ -201,5 +201,5 @@ The frontend tests are in `web/src/pages/Dashboard.test.tsx`.
 - A run is attributed to its time window. Workspace events of a participant's
   own work outside any run, or concurrent runs of one participant, cannot be
   separated further without a recorded run id on the workspace event.
-- Cohort creation reuses the operator `budget` permission. There is no dedicated
-  `cohort` action.
+- Cohort creation and metrics refresh use the dedicated operator `cohort`
+  permission (added by the hardening area).

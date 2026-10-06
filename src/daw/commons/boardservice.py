@@ -6,8 +6,8 @@ server that listens on one Unix socket per agent and executes exactly the
 agent-permitted board operations as that agent, through the same `Community`
 functions the local CLI calls:
 
-    publish  answer  ask  fetch          (writes: permission publish, answer, ask, fetch)
-    inbox  show  search  verify  claims  (reads)
+    publish  answer  ask  fetch                   (writes: permission publish, answer, ask, fetch)
+    inbox  show  search  verify  claims  agents  (reads)
 
 Identity is bound twice. Each agent's socket lives in its own directory
 `<commons>/service/board/<agent>/`, which dispatch mounts read-only into that
@@ -58,6 +58,7 @@ OPERATIONS = {
     "ask": ("ask", {"target", "body", "reply_to", "key", "notify", "author"}),
     "fetch": ("fetch", {"post", "question", "artifact", "workspace", "author"}),
     "inbox": ("read", {"agent", "all_states", "sent", "since"}),
+    "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
     "verify": ("read", {"post"}),
@@ -168,6 +169,13 @@ def checkout_workspace(trial, value):
     return resolved
 
 
+def agents(board):
+    """Participants as `bio community agents` lists them (identity, checkout, session, harness)."""
+    return [{**{k: r[k] for k in ("id", "name", "trial", "native_session", "parent", "created")},
+             "harness": json.loads(r["config"] or "{}").get("harness", "hermes") if r["trial"] else None}
+            for r in board.rows("SELECT * FROM agent ORDER BY created")]
+
+
 def answer(board, author, request_id, body, *, title=None, **publish):
     """Answer a request addressed to you by publishing a reply to its question post (settles it when pending)."""
     agent = board.agent(author)
@@ -223,6 +231,8 @@ def execute(root, agent_id, operation, payload):
         if operation == "inbox":
             return board.inbox(agent["id"], all_states=bool(payload.get("all_states")), sent=bool(payload.get("sent")),
                                since=_text(payload, "since"))
+        if operation == "agents":
+            return agents(board)
         if operation in {"show", "verify"}:
             return getattr(board, operation)(_text(payload, "post", True))
         limit = _int(payload, "limit", 20 if operation == "search" else 50)

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { get, type Health } from "./api";
+import { withBase } from "./base";
 
 // Live view (M4.6) over the SSE stream (M8.3). Board events carry a sequence and resume from it after a
 // reconnect; delivery_heartbeat and run_receipt are unsequenced observations of run folders.
@@ -42,7 +43,7 @@ export function useEvents(onMessage: (message: StreamMessage) => void, options: 
 
     const open = () => {
       if (stopped || cursor === null) return;
-      source = new EventSource(`/api/events?named=false&after=${cursor}`);
+      source = new EventSource(withBase(`/api/events?named=false&after=${cursor}`));
       source.onopen = () => {
         backoff = 1000;
         setState((s) => ({ ...s, connected: true }));

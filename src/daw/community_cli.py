@@ -27,7 +27,7 @@ def author(value):
 
 # In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
 # (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
-REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims"}
+REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents"}
 
 
 def remote():
@@ -72,10 +72,12 @@ def create_agent(ctx: typer.Context, name: str, seed_workspace: Path | None = No
 
 @app.command()
 def agents(ctx: typer.Context):
+    """List participants with their checkout, saved session and harness."""
+    from daw.commons.boardservice import agents as listing
+    if client := remote():
+        return emit(client.call("agents", {}))
     with Community(ctx.obj) as board:
-        emit([{**{k: r[k] for k in ("id", "name", "trial", "native_session", "parent", "created")},
-               "harness": json.loads(r["config"] or "{}").get("harness", "hermes") if r["trial"] else None}
-              for r in board.rows("SELECT * FROM agent ORDER BY created")])
+        emit(listing(board))
 
 
 @app.command()

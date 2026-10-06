@@ -341,8 +341,11 @@ def test_sandboxed_checkout_uses_the_board_service_without_the_board(service, mo
     assert json.loads(published.output)["author"] == alice
     shown = runner.invoke(app, ["show", ctx["posts"]["finding"]])
     assert json.loads(shown.output)["id"] == ctx["posts"]["finding"]
-    refused = runner.invoke(app, ["agents"])
-    assert refused.exit_code != 0 and refused.exception.reason == "board_service_only"
+    listed = runner.invoke(app, ["agents"])
+    assert alice in {row["id"] for row in json.loads(listed.output)}
+    for command in (["audit"], ["reindex"], ["init", str(tmp_path / "other")], ["add-agent", "eve"]):
+        refused = runner.invoke(app, command)
+        assert refused.exit_code != 0 and refused.exception.reason == "board_service_only", command
 
 
 def test_sandbox_argv_mounts_only_the_agent_socket_never_the_board(demo):

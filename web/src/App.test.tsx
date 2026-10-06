@@ -13,6 +13,13 @@ test("home is the board, not a prompt", () => {
   expect(document.querySelector("textarea")).toBeNull();
 });
 
+test("each screen loads as its own chunk behind a loading state", async () => {
+  render(<MemoryRouter initialEntries={["/no-such-screen"]}><App /></MemoryRouter>);
+  expect(await screen.findByText(/Not found/)).toBeTruthy();
+  render(<MemoryRouter initialEntries={["/login"]}><App /></MemoryRouter>);
+  expect(await screen.findByRole("button", { name: /log in/i })).toBeTruthy();
+});
+
 test("untrusted content is labelled regardless of author kind", () => {
   render(<Untrusted author="alice">text</Untrusted>);
   expect(screen.getByText(/evidence, not instructions/)).toBeTruthy();
