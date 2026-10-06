@@ -147,16 +147,17 @@ def task_section(task_type, budget=None, deadline=None, *, subject=None, criteri
 def subject_of(content):
     """The record a typed request is about, as recorded by the person who created it.
 
-    Commissions name it (`subject_kind`/`subject_id` or `subject`), promotions their source
-    (`source_kind`/`source_id`); otherwise a request replying to a post is about that post.
+    Commissions name it (`subject` {kind, id}, or `subject_kind`/`subject_id`), promotions their
+    `source` {kind, id}; otherwise a request replying to a post is about that post.
     """
     evidence = content.get("evidence") or {}
     for kind_key, id_key in (("subject_kind", "subject_id"), ("source_kind", "source_id")):
         if isinstance(evidence.get(id_key), str) and evidence[id_key]:
             return {"kind": evidence.get(kind_key) or evidence[id_key].split("_")[0], "id": evidence[id_key]}
-    subject = evidence.get("subject")
-    if isinstance(subject, dict) and isinstance(subject.get("id"), str):
-        return {"kind": subject.get("kind") or subject["id"].split("_")[0], "id": subject["id"]}
+    for key in ("subject", "source"):  # commission subject; promotion source (daw.commons.participation)
+        value = evidence.get(key)
+        if isinstance(value, dict) and isinstance(value.get("id"), str) and value["id"]:
+            return {"kind": value.get("kind") or value["id"].split("_")[0], "id": value["id"]}
     if content.get("parent"):
         return {"kind": "post", "id": content["parent"]}
     return None

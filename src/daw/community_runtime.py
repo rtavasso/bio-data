@@ -253,7 +253,9 @@ def _comment_section(board, post):
     anchor = evidence.get("anchor") if isinstance(evidence.get("anchor"), dict) else {}
     where = ", ".join(f"{k} {anchor[k]}" for k in ("kind", "blob", "offset", "length", "row_key", "node_id") if anchor.get(k)
                       is not None)
-    target = evidence.get("target_id") or post["parent"] or "the discussion"
+    target = evidence.get("target")  # {kind, id, author} as recorded by daw.commons.participation.comment
+    target = (f"{target.get('kind')} {target.get('id')}" if isinstance(target, dict)
+              else evidence.get("target_id") or post["parent"] or "the discussion")
     text = (f"This delivery is a COMMENT by {author['kind']} participant {author['name']} on {target}"
             + (f" (anchored at {where})" if where else "") + ". ")
     if anchor.get("quote"):

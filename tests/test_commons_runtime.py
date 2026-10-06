@@ -3,7 +3,6 @@ import asyncio
 import hashlib
 import json
 import sys
-import uuid
 from pathlib import Path
 
 import pytest
@@ -17,7 +16,7 @@ from daw.community import Community
 from daw.community_runtime import add_agent, assignment_prompt, dispatch, fork_agent
 from daw.community_service import expire_overdue, pending_deliveries
 from daw.harness import claude, codex, mcp, mcp_server, scripted
-from daw.util import DawError, now, read_json
+from daw.util import DawError, read_json
 
 def events(board, kind):
     return [json.loads(r["body"]) for r in board.rows("SELECT body FROM event WHERE kind=? ORDER BY seq", (kind,))]
@@ -27,17 +26,14 @@ def answer_for(answers, request, board, text):
     (answers / f"{board.one('SELECT post FROM request WHERE id=?', (request['id'],))['post']}.md").write_text(text)
 
 
-def comment(board, author, parent, body, target):
-    """A person's anchored comment that asks the target's author (the participation area's record shape)."""
-    with board.writer(), board.library.writer():
-        post = board._post(author, "Comment", body, parent=parent, kind="comment",
-                           evidence={"target_kind": "post", "target_id": parent, "ask_author": True,
-                                     "anchor": {"kind": "paragraph", "offset": 0, "length": 12, "quote": "log2 ratio"}})
-        identity = "request_" + uuid.uuid4().hex
-        with board.db:
-            board.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated) "
-                             "VALUES(?,?,?,'pending',NULL,NULL,?,?)", (identity, post, target, now(), now()))
-    return board.one("SELECT * FROM request WHERE id=?", (identity,))
+def comment(board, author, post, body):
+    """A person's anchored comment that asks the post's author (daw.commons.participation)."""
+    from daw.commons.participation import comment as post_comment
+    shown = board.show(post)
+    quote = shown["content"]["body"].split(" (")[0][:20]
+    return post_comment(board, author, "post", post, body, ask_author=True,
+                        anchor={"kind": "paragraph", "blob": shown["body_blob"], "offset": 0, "length": len(quote),
+                                "quote": quote})["request"]
 
 
 # ---- M3.3 adapters ------------------------------------------------------------------------------
@@ -221,10 +217,12 @@ def test_service_delivers_comments_and_person_authorized_tasks_but_never_notices
         fresh = add_agent(board, "fresh")
         alice = ctx["agents"]["alice"]
         note = notify(board, "watcher", alice, "New evidence", "An accession appeared.", key="n")
-        human_comment = comment(board, rhea["id"], ctx["posts"]["finding"], "Is this paired?", alice)
-        unstarted_comment = comment(board, rhea["id"], ctx["posts"]["finding"], "And here?", fresh["id"])
-        promoted = assign(board, "operator", fresh["id"], "Scout", "Find knockdown data.", task_type="scouting",
-                          budget={"minutes": 5})
+        human_comment = comment(board, rhea["id"], ctx["posts"]["finding"], "Is this paired?")
+        assert human_comment["target"] == alice
+        fresh_post = board.publish(fresh["id"], "Prepared note", "A note from an agent that never ran.")
+        unstarted_comment = comment(board, rhea["id"], fresh_post["id"], "And here?")
+        from daw.commons.participation import promote
+        promoted = promote(board, rhea["id"], "post", ctx["posts"]["gap"], "scouting", fresh["id"], {"minutes": 5})
         late = assign(board, "operator", ctx["agents"]["dana"], "Late", "Too late.", task_type="digest",
                       deadline="2020-01-01T00:00:00+00:00")
         selected = {r["id"] for r in pending_deliveries(board)}
@@ -240,7 +238,11 @@ def test_service_delivers_comments_and_person_authorized_tasks_but_never_notices
         assert board.show(done["answer"])["content"]["parent"] == human_comment["post"]
         prompt = (board.root / board.one("SELECT path FROM attempt WHERE request=?", (human_comment["id"],))["path"]
                   / "prompt.txt").read_text()
-        assert "COMMENT by human participant rhea" in prompt and '"log2 ratio"' in prompt
+        assert "COMMENT by human participant rhea on post " in prompt and "Quoted passage" in prompt
+        dispatch(board, promoted["id"], executable)  # never ran before: a person authorized this task
+        prompt = (_run_folder(board, promoted) / "prompt.txt").read_text()
+        assert "This is a SCOUTING task" in prompt and f"Subject: post {ctx['posts']['gap']}." in prompt
+        assert events(board, "task_outcome")[-1]["criteria"]["analysis_out_of_scope"]
 
 
 def test_expired_deadline_is_refused_at_dispatch(demo):
@@ -355,11 +357,12 @@ def test_replication_compares_bytes_and_requires_a_correction(demo, identical):
         request = assign(board, "operator", target["id"], "Replicate", "Replicate the contrast.", task_type="replication",
                          evidence={"subject_kind": "artifact", "subject_id": original})
         (answers / f"{request['post']}.hook.py").write_text(REPLICATE.format(original=original, content=content))
+        notices = len(events(board, "notice_queued"))
         dispatch(board, request["id"], executable)
         [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
         if identical:
             assert result["outcome"] == "byte_identical" and result["identical"] == [original]
-            assert not events(board, "notice_queued")
+            assert len(events(board, "notice_queued")) == notices
         else:
             assert result["outcome"] == "bytes_differ" and result["correction_required"] and not result["correction_post"]
             notice = events(board, "notice_queued")[-1]
