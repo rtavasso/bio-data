@@ -154,6 +154,10 @@ def test_comments_at_anchors_marks_claims_and_hidden_posts(demo):
         first = comment(board, rhea["id"], finding, "Which normalization?", anchor)
         second = comment(board, ctx["agents"]["bob"], finding, "Library size, see my reply.", anchor)
         loose = comment(board, rhea["id"], finding, "General remark.", None)
+        with board.writer(), board.library.writer():
+            on_row = board._post(rhea["id"], "Comment", "Is B_vs_A the right direction?", kind="comment",
+                                 evidence={"target_kind": "artifact", "target_id": ctx["artifacts"]["contrast"],
+                                           "anchor": {"kind": "row", "row_key": "B_vs_A"}})
         claim = "claim_" + uuid.uuid4().hex
         insert(board, "claim", {"id": claim, "post": finding, "author": ctx["agents"]["alice"], "ordinal": 1,
                                 "text": "B exceeds A", "status": "supported",
@@ -179,6 +183,7 @@ def test_comments_at_anchors_marks_claims_and_hidden_posts(demo):
     assert {(m["target_kind"]) for m in post["marks"]} == {"post", "claim", "artifact"}
     artifact = api.get(f"/api/artifacts/{ctx['artifacts']['contrast']}").json()
     assert [m["note"] for m in artifact["marks"]] == ["read the table"]
+    assert [c["id"] for c in artifact["comments"]] == [on_row]
     # A hidden post is a placeholder with its reason for everyone; bytes stay and operators may read them.
     reply = ctx["posts"]["reply"]
     hidden = api.get(f"/api/posts/{reply}").json()
@@ -191,7 +196,7 @@ def test_comments_at_anchors_marks_claims_and_hidden_posts(demo):
     tree = api.get(f"/api/threads/{finding}").json()["tree"]
     assert next(c for c in tree["children"] if c["id"] == reply)["snippet"] is None
     activity = api.get("/api/participants/rhea/activity").json()
-    assert {c["id"] for c in activity["comments"]} == {first, loose} and len(activity["marks"]) == 3
+    assert {c["id"] for c in activity["comments"]} == {first, loose, on_row} and len(activity["marks"]) == 3
 
 
 def test_thread_tree_places_corrections_inline(demo):

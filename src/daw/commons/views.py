@@ -388,6 +388,10 @@ def artifact_view(view, aid, *, depth=3):
                            "parameters": derivation.get("parameters", {}), "environment": derivation.get("environment", {})},
             "provenance": _strip_paths(graph), "questions": questions, "posts": naming, "fetchers": fetchers,
             "marks": marks_for(view, [("artifact", aid)]),
+            "comments": [post_summary(index, pid, hidden, snippet=None) for pid, row in index["posts"].items()
+                         if row["content"].get("kind") == "comment"
+                         and (row["content"].get("evidence") or {}).get("target_kind") == "artifact"
+                         and (row["content"].get("evidence") or {}).get("target_id") == aid],
             "bytes": {"name": output.get("name"), "size": output.get("bytes"), "url": f"/api/artifacts/{aid}/bytes"},
             "content_is_untrusted_data": True,
             "note": "Identical derivation permits byte reuse, not an assertion of scientific applicability"}
@@ -405,7 +409,8 @@ def artifact_bytes(view, aid):
     row = store.one("SELECT output_blob,manifest_blob FROM artifact WHERE id=?", (aid,))
     path = verify_object(store, row["output_blob"])
     name = (read_json(store.blob_path(row["manifest_blob"])).get("output") or {}).get("name") or row["output_blob"]
-    name = Path(name).name or row["output_blob"]
+    # The recorded name is untrusted: keep a header-safe basename for Content-Disposition.
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", Path(name).name).lstrip(".") or row["output_blob"]
     text = Path(name).suffix.lower() in TEXT_SUFFIXES and path.stat().st_size <= 20_000_000
     if text:
         with path.open("rb") as stream:
@@ -555,7 +560,7 @@ def post_view(view, pid, *, caller=None, full=False):
 
 def _requests_for_post(view, index, pid):
     """Requests whose post is this post, or whose question post replies to it (asks, comments to the author)."""
-    related = [pid] + [c for c in index["children"].get(pid, [])]
+    related = [pid, *index["children"].get(pid, [])]
     out = []
     for post in related:
         for row in index["requests"].get(post, []):

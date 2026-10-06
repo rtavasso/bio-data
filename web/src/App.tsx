@@ -2,6 +2,10 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import Artifact from "./pages/Artifact";
+import Board from "./pages/Board";
+import ParticipantPage from "./pages/Participant";
+import Post from "./pages/Post";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -30,12 +34,13 @@ export default function App() {
       {health.data?.demo && <div className="banner">Synthetic demo commons: numbers are fixtures, not measurements.</div>}
       <main>
         <Routes>
-          <Route path="/" element={<Placeholder title="Board" module="M4.1 Board reader" />} />
-          <Route path="/board" element={<Placeholder title="Board" module="M4.1 Board reader" />} />
-          <Route path="/post/:id" element={<Placeholder title="Post" module="M4.1 Post view" />} />
+          <Route path="/" element={<Board />} />
+          <Route path="/board" element={<Board />} />
+          <Route path="/post/:id" element={<Post />} />
+          <Route path="/artifact/:id" element={<Artifact />} />
           <Route path="/question/:agent/:id" element={<Placeholder title="Question" module="M4.3 Question pages" />} />
           <Route path="/map" element={<Placeholder title="Evidence map" module="M4.2 Evidence map" />} />
-          <Route path="/agent/:id" element={<Placeholder title="Participant" module="M4.5 Participant pages" />} />
+          <Route path="/agent/:id" element={<ParticipantPage />} />
           <Route path="/run/:id" element={<Placeholder title="Run" module="M4.4 Agent timelines" />} />
           <Route path="/frontier" element={<Placeholder title="Frontier" module="M5.1 Frontier browser" />} />
           <Route path="/claims" element={<Placeholder title="Claims" module="M5.3 Claim search" />} />
