@@ -34,6 +34,15 @@ def question_index(view: View, agent: str | None = None, status: str | None = No
     return questions.question_list(view, agent=agent, status=status)
 
 
+@router.get("/questions/{qid}")
+def question_by_id(qid: str, view: View, snapshot: str | None = None):
+    """The spec's GET /api/questions/{id}: a bare question id opens the earliest participant holding it (the
+    original author precedes its forks, whose workspaces carry inherited copies), as comments on questions do."""
+    from daw.commons.participation import question_owner
+    owner, question, _ = question_owner(view, qid)
+    return questions.question_page(view, owner, question, snapshot=snapshot)
+
+
 @router.get("/questions/{agent}/{qid}")
 def question(agent: str, qid: str, view: View, snapshot: str | None = None):
     return questions.question_page(view, agent, qid, snapshot=snapshot)

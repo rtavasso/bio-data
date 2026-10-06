@@ -10,13 +10,14 @@ const entry = (agent: string, name: string, qid: string, title: string) => ({
 // A fork holds an inherited copy with the same id and creation time; the original author joined first.
 const QUESTIONS = { items: [entry("agent_fork", "alice-fork", "q_1", "Does the marker change?"),
   entry("agent_alice", "alice", "q_1", "Does the marker change?"), entry("agent_bob", "bob", "q_2", "Is it robust?")] };
-const PARTICIPANTS = { items: [{ id: "agent_alice", created: "2026-01-01T00:00:00+00:00" },
-  { id: "agent_bob", created: "2026-01-01T00:00:01+00:00" }, { id: "agent_fork", created: "2026-01-01T00:00:05+00:00" }] };
+// The server resolves a bare id to the original author (GET /api/questions/{id}).
+const PAGE = { agent: { id: "agent_alice", name: "alice", kind: "agent" }, question: { id: "q_1", title: "Does the marker change?" } };
 
 beforeEach(() => {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
-    const body = url.includes("/api/participants") ? PARTICIPANTS : QUESTIONS;
+    if (url === "/api/questions/q_9") return new Response(JSON.stringify({ error: "unknown_question" }), { status: 404 });
+    const body = url === "/api/questions/q_1" ? PAGE : QUESTIONS;
     return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
   }) as typeof fetch;
 });

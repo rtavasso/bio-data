@@ -1,31 +1,20 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
-import type { QuestionEntry } from "../types/observatory-map";
+import type { QuestionEntry, QuestionPage } from "../types/observatory-map";
 import { useApi } from "../useApi";
 import "./Questions.css";
 
 // `/question` lists every question in every participant workspace; `/question/:id` (the spec's route) opens
-// the question by its bare id. A fork holds an inherited copy of its parent's question, so the bare id
-// resolves to the earliest holder (the original author), as comments on questions do; the other holders
-// are listed on the index.
-
-type Participants = { items: { id: string; created: string }[] };
-
-// The original author precedes its forks: order holders by when the participant joined (as the server does).
-function earliest(items: QuestionEntry[], participants: Participants, qid: string) {
-  const joined = new Map(participants.items.map((p) => [p.id, p.created]));
-  const key = (q: QuestionEntry) => joined.get(q.agent) ?? "\uffff";
-  return items.filter((q) => q.qid === qid).sort((a, b) => key(a).localeCompare(key(b)) || a.agent.localeCompare(b.agent))[0];
-}
+// the question by its bare id. A fork holds an inherited copy of its parent's question, so the server's
+// GET /api/questions/{id} resolves the bare id to the earliest holder (the original author), as comments on
+// questions do; the other holders are listed on the index.
 
 export function QuestionById() {
   const { id = "" } = useParams();
-  const list = useApi<{ items: QuestionEntry[] }>("/api/questions");
-  const people = useApi<Participants>("/api/participants");
-  if (!list.data || !people.data) return <><Status state={list} /><Status state={people} /></>;
-  const found = earliest(list.data.items, people.data, id);
-  if (!found) {
+  const page = useApi<QuestionPage>(`/api/questions/${encodeURIComponent(id)}`);
+  if (page.data) return <Navigate replace to={`/question/${page.data.agent.id}/${page.data.question.id}`} />;
+  if (page.error) {
     return (
       <section>
         <h1>Question not found</h1>
@@ -33,7 +22,7 @@ export function QuestionById() {
       </section>
     );
   }
-  return <Navigate replace to={`/question/${found.agent}/${found.qid}`} />;
+  return <Status state={page} />;
 }
 
 export default function Questions() {

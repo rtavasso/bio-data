@@ -133,6 +133,18 @@ def create_post(body: PostIn, who: Actor, config: Config):
                 supersedes=body.supersedes, upload_ids=body.upload_ids)
 
 
+class ReplyIn(Strict):
+    title: str
+    body: str
+    upload_ids: list[str] = Field(default_factory=list, max_length=20)
+
+
+@router.post("/posts/{identity}/replies")
+def create_reply(identity: str, body: ReplyIn, who: Actor, config: Config):
+    """The spec's reply path: the same `participation.post` with the post as parent."""
+    return call(config, participation.post, who["id"], body.title, body.body, parent=identity, upload_ids=body.upload_ids)
+
+
 @router.post("/comments")
 def create_comment(body: CommentIn, who: Actor, config: Config):
     return call(config, participation.comment, who["id"], body.target_kind, body.target_id, body.body,

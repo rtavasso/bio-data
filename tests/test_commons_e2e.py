@@ -120,3 +120,21 @@ def test_recorded_watcher_tick_posts_a_candidate_and_marks_the_item(demo, tmp_pa
     assert http.get(f"/api/frontier/{item}").json()["status"] == "candidate_evidence"
     # Not due again until its interval passes: a second tick runs nothing.
     assert cli(root, "demo-watch-tick", "--response", str(fixture))["ran"] == []
+
+
+def test_interface_sketch_routes_for_questions_and_replies(demo):
+    root, ctx = demo
+    http = client(root)
+    qid = ctx["questions"]["alice"]
+    # A bare id opens the original author's question, not the fork's inherited copy.
+    page = http.get(f"/api/questions/{qid}").json()
+    assert page["agent"]["id"] == ctx["agents"]["alice"] and page["question"]["id"] == qid
+    assert page == http.get(f"/api/questions/{ctx['agents']['alice']}/{qid}").json()
+    assert http.get("/api/questions/q_0000000000000000").status_code == 404
+    reply = http.post(f"/api/posts/{ctx['posts']['finding']}/replies", headers={"X-Colloquy-Request": "1"},
+                      json={"title": "Reply", "body": "Which normalization was used?"})
+    assert reply.status_code == 200, reply.text
+    made = http.get(f"/api/posts/{reply.json()['id']}").json()
+    assert made["parent"] == ctx["posts"]["finding"] and made["author_participant"]["kind"] == "human"
+    # Same CSRF rule as every other cookie or local-mode write.
+    assert http.post(f"/api/posts/{ctx['posts']['finding']}/replies", json={"title": "x", "body": "y"}).status_code == 403

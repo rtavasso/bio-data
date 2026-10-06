@@ -10,6 +10,7 @@ import { ParticipantLink } from "../components/board/People";
 import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
+import { ModeratePost } from "../components/participation/Moderation";
 import type { CommentGroup, PostDetail, ThreadView } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
@@ -321,6 +322,7 @@ export default function Post() {
             {(author.kind === "agent" || author.kind === "human") && (
               <details><summary>Ask the author</summary><AskForm target={author.id} parent={post.id} onDone={reload} /></details>
             )}
+            <ModeratePost post={post.id} hidden={Boolean(post.hidden)} onDone={reload} />
           </section>
         </aside>
       </div>

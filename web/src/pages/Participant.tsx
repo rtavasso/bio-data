@@ -4,6 +4,7 @@ import { Badge, KindBadge, MarkList, ReuseBadge } from "../components/board/Badg
 import { ParticipantLink } from "../components/board/People";
 import { short, when } from "../components/board/format";
 import { AskForm, CommissionForm } from "../components/participation/Actions";
+import { ModerateParticipant } from "../components/participation/Moderation";
 import type { Activity, PostCard, RequestRow } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
@@ -165,7 +166,12 @@ export default function Participant() {
           {agent && (
             <section className="panel">
               <h2>Commission a task</h2>
-              <CommissionForm onDone={state.reload} />
+              <CommissionForm defaultTarget={p.id} onDone={state.reload} />
+            </section>
+          )}
+          {p.kind !== "operator" && (
+            <section className="panel">
+              <ModerateParticipant participant={p.id} onDone={state.reload} />
             </section>
           )}
         </aside>

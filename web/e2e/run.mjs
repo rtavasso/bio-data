@@ -313,10 +313,16 @@ await step("A2 deliver with the scripted harness via the operator CLI; the new p
   const count = (frame) => frame === page.mainFrame() && (navigations += 1);
   page.on("framenavigated", count);
   const delivery = deliver(requestA.id, "Published the donor check. Next computable step: record donor identity.", hookA);
+  // M4.6: while the turn runs, the running-now strip lists the delivery (from delivery_started over SSE).
+  const strip = page.getByLabel("Running now");
+  const running = strip.getByText("research", { exact: true }).waitFor({ timeout: 60000 }).then(() => true, () => false);
   const card = page.getByLabel("E2E donor check of the demo contrast");
   await card.waitFor({ timeout: 90000 });
   await card.getByText("new", { exact: true }).waitFor();
   await delivery;
+  metrics.running_strip_showed_delivery = await running;
+  check(metrics.running_strip_showed_delivery, "the running-now strip never listed the active delivery");
+  await strip.getByText("No deliveries running.").waitFor({ timeout: 30000 });
   page.off("framenavigated", count);
   check(navigations === 0, "the board navigated instead of updating live");
   await snap("flowA-live-post");
@@ -436,6 +442,26 @@ await step("metric: three clicks from any sentence in a Studio write-up to the s
   check(checked.length >= 3, "too few numbers checked");
   metrics.three_clicks = { numbers_checked: checked.length, max_clicks: Math.max(...checked.map((c) => c.clicks)), checked };
   return { numbers: checked.length, max_clicks: metrics.three_clicks.max_clicks };
+});
+
+let snapshotId;
+await step("M6.5 export the Flow A thread as a static, content-addressed snapshot (UI)", async () => {
+  await page.goto(`${base}/studio`);
+  const form = page.getByRole("form", { name: "Export" });
+  await form.getByLabel("Export scope").selectOption("thread");
+  await form.getByLabel("Export subject").fill(postA);
+  await form.getByRole("button", { name: "Export static snapshot" }).click();
+  const status = form.getByRole("status");
+  await status.getByText(/Snapshot/).waitFor({ timeout: 60000 });
+  snapshotId = (await status.locator(".mono").innerText()).trim();
+  check(/^[0-9a-f]{64}$/.test(snapshotId), `not a sha256 snapshot id: ${snapshotId}`);
+  const exported = await api("/api/exports");
+  check(JSON.stringify(exported).includes(snapshotId), "export not listed");
+  const folder = path.join(commons, "exports", snapshotId);
+  const manifest = fs.readFileSync(path.join(folder, "snapshot.json"));
+  check(crypto.createHash("sha256").update(manifest).digest("hex") === snapshotId, "snapshot id is not the sha256 of snapshot.json");
+  check(fs.readFileSync(path.join(folder, "index.html"), "utf8").includes("E2E donor check"), "exported site lacks the thread");
+  return { snapshot: snapshotId };
 });
 
 // ---- Flow B ----------------------------------------------------------------------------------------
@@ -695,6 +721,12 @@ await step("tenant: /c/<tenant>/ login with a token, board, post and API under t
   check(!outside.length, `requests outside the tenant prefix: ${outside.map(([u]) => u).join(", ")}`);
   const failed = seen.filter(([url, status]) => status >= 400 && !/\/api\/me\b/.test(url) || status === 0);
   check(!failed.length, `failed responses: ${failed.map(([u, s]) => `${u} ${s}`).join(", ")}`);
+  // Federation is read-only: the tenant imports the exported snapshot, verified by hash, as foreign data.
+  if (snapshotId) {
+    await bio("commons", "--root", tenantRoot, "federation", "import", path.join(commons, "exports", snapshotId), "--expect", snapshotId);
+    const federated = await tenantPage.evaluate(async () => (await fetch("api/federation")).json());
+    check(JSON.stringify(federated).includes(snapshotId), "imported snapshot not listed under the tenant");
+  }
   const index = await (await fetch(`${host}/`)).text();
   check(index.includes("/c/lab/"), "tenant index does not list the tenant");
   await tenantPage.close();
