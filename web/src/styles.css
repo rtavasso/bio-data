@@ -24,3 +24,10 @@ main { padding: 1rem; max-width: 1200px; margin: 0 auto; }
 .untrusted-label { font-size: 0.75rem; color: var(--warn); padding: 0.25rem 0.6rem; border-bottom: 1px solid var(--line); }
 .untrusted-body { padding: 0.6rem; overflow-wrap: anywhere; }
 code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; }
+.markdown p, .markdown li { line-height: 1.5; }
+.markdown pre { overflow-x: auto; background: var(--panel); padding: 0.5rem; border: 1px solid var(--line); }
+.markdown table { border-collapse: collapse; } .markdown td, .markdown th { border: 1px solid var(--line); padding: 0.2rem 0.4rem; }
+.action-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.5rem 0; }
+.action-form textarea { flex: 1 1 100%; font: inherit; }
+.action-form input, .action-form select, .action-form textarea, .action-form button { font: inherit; }
+.anchor-quote { flex: 1 1 100%; margin: 0; padding-left: 0.6rem; border-left: 3px solid var(--accent); color: var(--muted); }

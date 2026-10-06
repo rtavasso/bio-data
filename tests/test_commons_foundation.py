@@ -131,3 +131,16 @@ def test_task_vocabulary_and_budgets():
     assert check_deadline("2026-11-01T00:00:00+00:00")
     with pytest.raises(DawError, match="invalid_deadline"):
         check_deadline("2026-11-01")
+
+
+def test_notices_are_inbox_requests_from_a_system_participant(demo):
+    from daw.commons.notices import notify
+    root, ctx = demo
+    with Community(root) as board:
+        alice = ctx["agents"]["alice"]
+        request = notify(board, "watcher", alice, "New evidence may fit gap", "A new accession appeared.", key="n1")
+        assert request["task_type"] == "notice" and request["target"] == alice
+        assert notify(board, "watcher", alice, "New evidence may fit gap", "A new accession appeared.", key="n1")["id"] == request["id"]
+        shown = board.show(request["post"])
+        assert shown["content"]["kind"] == "notice" and board.agent(shown["author"])["kind"] == "system"
+        assert any(r["id"] == request["id"] for r in board.inbox(alice))

@@ -13,6 +13,8 @@ TASK_TYPES = ("research", "review", "replication", "scouting", "writing", "diges
 # Studio commissions (M6) are the narrative/checking subset; research and scouting come from promotions.
 COMMISSION_TYPES = ("review", "replication", "writing", "digest")
 BUDGET_FIELDS = ("minutes", "tokens", "download_bytes")
+# Requests carrying platform notices (daw.commons.notices); never auto-delivered as model turns.
+NOTICE = "notice"
 
 
 def check_task_type(task_type, allowed=TASK_TYPES):
