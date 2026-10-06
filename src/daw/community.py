@@ -70,6 +70,63 @@ def exclusive(path, *, blocking=False):
             fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
+def evidence_summary(library, evidence):
+    """Title, role and derivation key per attached artifact, so a reader can judge fit without a second command.
+
+    `library` is the board library (read-write Workspace or a read-only archive view)."""
+    summary = []
+    for aid in evidence.get("artifacts", []) if isinstance(evidence, dict) else []:
+        row = library.one("SELECT id,derivation_key,output_role,manifest_blob FROM artifact WHERE id=?", (aid,))
+        if not row:
+            summary.append({"id": aid, "present": False})
+            continue
+        manifest = read_json(library.blob_path(row["manifest_blob"]))
+        summary.append({"id": aid, "present": True, "title": manifest.get("title"), "output_role": row["output_role"],
+                        "derivation_key": row["derivation_key"], "summary": (manifest.get("summary") or "")[:300],
+                        "limitations": manifest.get("limitations", [])})
+    return summary
+
+
+def posts_naming(owner, artifact):
+    """Posts whose evidence lists this artifact; fetch is post-gated, so an unnamed artifact is read-only.
+
+    `owner` is a Community or a read-only `daw.commons.archive.Archive` (rows/one/library)."""
+    named = []
+    for row in owner.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
+        body = json.loads(row["body"])
+        if artifact in (body.get("evidence") or {}).get("artifacts", []):
+            named.append(body["post"])
+    return named
+
+
+def find(owner, text="", *, limit=20, offset=0, family="forum", full=False):
+    """Search the shared board. family=artifact|work searches the library's published derivations and
+    notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
+    posts that name them (listed under `posts`). Compact by default: a 20-hit forum search with full
+    2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
+    restores the excerpts and index bookkeeping. `owner` is a Community or a read-only Archive."""
+    if family not in SEARCH_FAMILIES:
+        raise DawError("unknown_search_family", "use forum, artifact, work or all")
+    result = search(owner.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
+    for item in result["items"]:
+        if item.get("family") == "forum":
+            item["superseded_by"] = owner.rows("SELECT id FROM post WHERE supersedes=? ORDER BY seq", (item["subject"],))
+            post = owner.one("SELECT author,created,body_blob FROM post WHERE id=?", (item["subject"],))
+            if post:
+                body = read_json(owner.library.blob_path(post["body_blob"]))
+                item.update(author=post["author"], created=post["created"], kind=body.get("kind"),
+                            artifacts=len((body.get("evidence") or {}).get("artifacts", [])))
+        elif item.get("family") == "artifact":
+            item["posts"] = posts_naming(owner, item["subject"])
+    if not full:
+        keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts", "score")
+        result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
+                            "content_is_untrusted_data": True} for i in result["items"]]
+        result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"
+    result["family"] = family
+    return result
+
+
 class Community:
     def __init__(self, root):
         self.root = Path(root).expanduser().resolve()
@@ -165,18 +222,7 @@ class Community:
                 "replies": self.rows("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq", (identity,))}
 
     def _evidence_summary(self, evidence):
-        """Title, role and derivation key per attached artifact, so a reader can judge fit without a second command."""
-        summary = []
-        for aid in evidence.get("artifacts", []) if isinstance(evidence, dict) else []:
-            row = self.library.one("SELECT id,derivation_key,output_role,manifest_blob FROM artifact WHERE id=?", (aid,))
-            if not row:
-                summary.append({"id": aid, "present": False})
-                continue
-            manifest = read_json(self.library.blob_path(row["manifest_blob"]))
-            summary.append({"id": aid, "present": True, "title": manifest.get("title"), "output_role": row["output_role"],
-                            "derivation_key": row["derivation_key"], "summary": (manifest.get("summary") or "")[:300],
-                            "limitations": manifest.get("limitations", [])})
-        return summary
+        return evidence_summary(self.library, evidence)
 
     def verify(self, identity):
         """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts."""
@@ -372,40 +418,10 @@ class Community:
         return queued
 
     def find(self, text="", *, limit=20, offset=0, family="forum", full=False):
-        """Search the shared board. family=artifact|work searches the library's published derivations and
-        notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
-        posts that name them (listed under `posts`). Compact by default: a 20-hit forum search with full
-        2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
-        restores the excerpts and index bookkeeping."""
-        if family not in SEARCH_FAMILIES:
-            raise DawError("unknown_search_family", "use forum, artifact, work or all")
-        result = search(self.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
-        for item in result["items"]:
-            if item.get("family") == "forum":
-                item["superseded_by"] = self.rows("SELECT id FROM post WHERE supersedes=? ORDER BY seq", (item["subject"],))
-                post = self.one("SELECT author,created,body_blob FROM post WHERE id=?", (item["subject"],))
-                if post:
-                    body = read_json(self.library.blob_path(post["body_blob"]))
-                    item.update(author=post["author"], created=post["created"], kind=body.get("kind"),
-                                artifacts=len((body.get("evidence") or {}).get("artifacts", [])))
-            elif item.get("family") == "artifact":
-                item["posts"] = self._posts_naming(item["subject"])
-        if not full:
-            keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts", "score")
-            result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
-                                "content_is_untrusted_data": True} for i in result["items"]]
-            result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"
-        result["family"] = family
-        return result
+        return find(self, text, limit=limit, offset=offset, family=family, full=full)
 
     def _posts_naming(self, artifact):
-        """Posts whose evidence lists this artifact; fetch is post-gated, so an unnamed artifact is read-only."""
-        named = []
-        for row in self.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
-            body = json.loads(row["body"])
-            if artifact in (body.get("evidence") or {}).get("artifacts", []):
-                named.append(body["post"])
-        return named
+        return posts_naming(self, artifact)
 
     def fetch(self, post, workspace, question, *, artifact=None, author="operator"):
         published = self.show(post)
