@@ -25,8 +25,21 @@ def author(value):
     return actual or value or "operator"
 
 
+# In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
+# (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
+REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims"}
+
+
+def remote():
+    from daw.commons.boardservice import BoardClient
+    return BoardClient.from_env()
+
+
 @app.callback()
 def root(ctx: typer.Context, directory: Annotated[Path, typer.Option("--root", envvar="BIO_COMMUNITY")] = Path("workspaces/community")):
+    if os.environ.get("BIO_BOARD_URL") and ctx.invoked_subcommand not in REMOTE:
+        raise DawError("board_service_only", f"this checkout reaches the board through its board service: "
+                                             f"{', '.join(sorted(REMOTE))}")
     ctx.obj = directory
 
 
@@ -73,6 +86,19 @@ def fork(ctx: typer.Context, agent: str, name: str,
         emit(fork_agent(board, agent, name, inherit_conversation=inherit_conversation))
 
 
+def _evidence(artifact, question, key, claims, frontier, workspace):
+    """Publication options shared by publish and answer; files are read here and travel as content."""
+    from daw.util import read_json
+    return {"artifacts": list(artifact or ()), "question": question, "key": key,
+            "claims": read_json(claims) if claims else None, "frontier": read_json(frontier) if frontier else None,
+            "workspace": str(workspace.resolve()) if workspace else None}
+
+
+def _local_publication(options):
+    return {"artifacts": options["artifacts"], "question": options["question"], "request_key": options["key"],
+            "claims": options["claims"], "frontier": options["frontier"], "workspace": options["workspace"]}
+
+
 @app.command()
 def publish(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()],
             as_agent: Annotated[str | None, typer.Option("--author")] = None,
@@ -83,12 +109,34 @@ def publish(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()
             claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}: text plus pointers to existing records")] = None,
             frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question and named in the post")] = None):
     """Publish Markdown and selected immutable evidence. Reuse --key on retries."""
-    from daw.util import read_json
+    options = _evidence(artifact, question, key, claims, frontier, workspace)
+    if client := remote():
+        return emit(client.call("publish", {"title": title, "body": body.read_text(), "author": as_agent,
+                                            "channel": channel, "reply_to": reply_to, "supersedes": supersedes,
+                                            **options}))
     with Community(ctx.obj) as board:
-        emit(board.publish(author(as_agent), title, body.read_text(), workspace=workspace,
-                           artifacts=artifact or (), question=question, channel=channel,
-                           parent=reply_to, supersedes=supersedes, request_key=key,
-                           claims=read_json(claims) if claims else None, frontier=read_json(frontier) if frontier else None))
+        emit(board.publish(author(as_agent), title, body.read_text(), channel=channel, parent=reply_to,
+                           supersedes=supersedes, **_local_publication(options)))
+
+
+@app.command()
+def answer(ctx: typer.Context, request: str, body: Annotated[Path, typer.Option()],
+           title: Annotated[str | None, typer.Option(help="Default: Re: <question title>")] = None,
+           as_agent: Annotated[str | None, typer.Option("--author")] = None,
+           workspace: Annotated[Path | None, typer.Option(envvar="BIO_WORKSPACE")] = None,
+           artifact: Annotated[list[str] | None, typer.Option("--artifact")] = None,
+           question: str | None = None, key: str | None = None,
+           claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}")] = None,
+           frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question")] = None):
+    """Answer a request addressed to you: publish a reply to its question post (settles a pending request)."""
+    from daw.commons.boardservice import answer as answer_request
+    options = _evidence(artifact, question, key, claims, frontier, workspace)
+    if client := remote():
+        return emit(client.call("answer", {"request": request, "body": body.read_text(), "title": title,
+                                           "author": as_agent, **options}))
+    with Community(ctx.obj) as board:
+        emit(answer_request(board, author(as_agent), request, body.read_text(), title=title,
+                            **_local_publication(options)))
 
 
 @app.command("claims")
@@ -96,6 +144,9 @@ def claims_command(ctx: typer.Context, q: Annotated[str, typer.Option("--q", hel
                    post: str | None = None, status: str | None = None, author_name: Annotated[str | None, typer.Option("--author")] = None,
                    limit: int = 50, offset: int = 0):
     """Search the claim ledger (author-stated claims with pointers; withdrawn claims name their replacement)."""
+    if client := remote():
+        return emit(client.call("claims", {"q": q, "post": post, "status": status, "author": author_name,
+                                           "limit": limit, "offset": offset}))
     from daw.commons.claims import list_claims
     with Community(ctx.obj) as board:
         emit(list_claims(board, q, status=status, post=post, author=author_name, limit=limit, offset=offset))
@@ -106,6 +157,9 @@ def search(ctx: typer.Context, text: str = "", limit: int = 20, offset: int = 0,
            family: Annotated[str, typer.Option(help="forum (posts), artifact (published derivations), work (published notebooks), or all")] = "forum",
            full: Annotated[bool, typer.Option("--full", help="Include 2000-character excerpts and index fields instead of the compact listing")] = False):
     """Search shared posts, or with --family the library's published artifacts and notebooks. Compact by default."""
+    if client := remote():
+        return emit(client.call("search", {"text": text, "limit": limit, "offset": offset, "family": family,
+                                           "full": full}))
     with Community(ctx.obj) as board:
         emit(board.find(text, limit=limit, offset=offset, family=family, full=full))
 
@@ -113,6 +167,8 @@ def search(ctx: typer.Context, text: str = "", limit: int = 20, offset: int = 0,
 @app.command()
 def show(ctx: typer.Context, post: str):
     """Show a post with its evidence artifacts' titles, roles and derivation keys."""
+    if client := remote():
+        return emit(client.call("show", {"post": post}))
     with Community(ctx.obj) as board:
         emit(board.show(post))
 
@@ -120,6 +176,8 @@ def show(ctx: typer.Context, post: str):
 @app.command()
 def verify(ctx: typer.Context, post: str):
     """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed)."""
+    if client := remote():
+        return emit(client.call("verify", {"post": post}))
     with Community(ctx.obj) as board:
         emit(board.verify(post))
 
@@ -130,6 +188,9 @@ def ask(ctx: typer.Context, target: str, body: Annotated[Path, typer.Option()],
         reply_to: str | None = None, key: str | None = None,
         notify: Annotated[bool, typer.Option("--notify", help="Also queue a model turn for you when the answer arrives. Without it, read the answer with inbox --sent.")] = False):
     """Queue a question to an agent/name or a post's author; does not launch a model."""
+    if client := remote():
+        return emit(client.call("ask", {"target": target, "body": body.read_text(), "author": as_agent,
+                                        "reply_to": reply_to, "key": key, "notify": notify}))
     with Community(ctx.obj) as board:
         emit(board.ask(target, author(as_agent), body.read_text(), parent=reply_to, request_key=key, notify=notify))
 
@@ -138,6 +199,8 @@ def ask(ctx: typer.Context, target: str, body: Annotated[Path, typer.Option()],
 def inbox(ctx: typer.Context, agent: str | None = None, all_states: bool = False, sent: bool = False,
           since: Annotated[str | None, typer.Option(help="ISO timestamp; return only requests updated after it")] = None):
     """Read requests addressed to you, or --sent questions and their answer IDs. Check once before concluding, not in a loop."""
+    if client := remote():
+        return emit(client.call("inbox", {"agent": agent, "all_states": all_states, "sent": sent, "since": since}))
     with Community(ctx.obj) as board:
         emit(board.inbox(agent or author(None), all_states=all_states, sent=sent, since=since))
 
@@ -147,8 +210,12 @@ def fetch(ctx: typer.Context, post: str, question: Annotated[str, typer.Option()
           workspace: Annotated[Path, typer.Option(envvar="BIO_WORKSPACE")] = Path("workspace"),
           artifact: str | None = None, as_agent: Annotated[str | None, typer.Option("--author")] = None):
     """Copy published evidence into a question, initially marked considered."""
+    if client := remote():
+        return emit(client.call("fetch", {"post": post, "question": question, "workspace": str(workspace.resolve()),
+                                          "artifact": artifact, "author": as_agent}))
     with Community(ctx.obj) as board:
         emit(board.fetch(post, workspace, question, artifact=artifact, author=author(as_agent)))
+
 
 
 def operator_only():

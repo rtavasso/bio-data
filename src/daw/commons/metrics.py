@@ -130,7 +130,7 @@ def current_metrics(folder, harness, stored=None):
 def refresh_metrics(board, actor="operator"):
     """Recompute projection rows whose run files changed (idempotent). One event when anything changed."""
     participant = board.agent(actor)
-    require(board, participant, "budget")
+    require(board, participant, "cohort")
     with board.writer():
         stored = {r["run"]: r for r in board.rows("SELECT * FROM run_metrics")}
         primary = _primary_cohorts(board)
@@ -206,7 +206,7 @@ def create_cohort(board, actor, name, *, runs=(), agents=(), since=None, until=N
     """Record a named cohort. Selectors resolve to explicit run ids now; later runs never join silently.
     Runs = explicit `runs` plus attempts matching every given selector (agents, since, until)."""
     participant = board.agent(actor)
-    require(board, participant, "budget")
+    require(board, participant, "cohort")
     name = name.strip()
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}", name):
         raise DawError("invalid_cohort_name", "letters, digits, '.', '_', ':' or '-' (max 80)")

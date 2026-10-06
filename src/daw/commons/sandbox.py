@@ -24,11 +24,16 @@ and only explicitly named environment variables and credential files. Other
 agents' checkouts, run transcripts and service state are hidden. Secrets reach
 the container by name (`--env NAME`), never in argv.
 
-Multi-tenant serving (`bio commons serve --mode accounts` records tenancy)
-refuses live dispatch without a sandbox unless the operator overrides it with a
-recorded reason. Limitation: agents still write the board database and library
-through the bio CLI inside the container, so the board root is mounted
-read-write; a board-writing agent is trusted not to bypass the CLI.
+Multi-tenant serving (`bio commons serve --mode accounts`, `bio commons host`)
+records tenancy and refuses live dispatch without a sandbox unless the operator
+overrides it with a recorded reason.
+
+The board root is never mounted into the container. The checkout's `bio
+community` commands reach the board through the operator's board service
+(`daw.commons.boardservice`, `bio commons board-service`): only the agent's own
+socket directory is mounted (read-only), and `BIO_BOARD_URL` and the agent's
+`BIO_BOARD_TOKEN` are passed by name. Other agents' checkouts, the library,
+`runs/`, `service/`, `secrets/` and the board database are absent.
 """
 import os
 import sys
@@ -41,7 +46,6 @@ from daw.util import DawError, now, read_json, write_json
 
 ENGINES = ("docker", "podman")
 PLATFORM_PATHS = ("src", ".agents", "bin", "AGENTS.md", "README.md", "pyproject.toml", "uv.lock", "contracts", "examples", "docs")
-HIDDEN = ("agents", "runs", "service", "demo-harness")
 # Environment the harness and bio CLI need inside the container; anything else stays on the host.
 ENV_PREFIXES = ("BIO_", "HERMES_", "CLAUDE_", "CODEX_")
 ENV_NAMES = ("PYTHONPATH", "PYTHONUNBUFFERED", "TERMINAL_CWD", "DISABLE_AUTOUPDATER", "LANG", "LC_ALL", "TZ")
@@ -128,10 +132,19 @@ def container_env(env, config):
     return inside
 
 
-def container_argv(config, argv, env, *, trial, board_root, auth_files=(), name):
-    """(argv for the engine client, environment for the client process). Pure: no engine is called."""
+def container_argv(config, argv, env, *, trial, board_root, auth_files=(), name, board=None):
+    """(argv for the engine client, environment for the client process). Pure: no engine is called.
+
+    `board` is the agent's board-service endpoint ({dir, url, token}, `boardservice.provision`); without
+    it the container has no board access at all. `board_root` itself is never mounted."""
     trial, board_root = Path(trial).resolve(), Path(board_root).resolve()
+    if not trial.is_relative_to(board_root):
+        raise DawError("unsafe_agent_path", "the checkout must live under its commons")
     inside = container_env(env, config)
+    inside.pop("BIO_BOARD_URL", None)
+    inside.pop("BIO_BOARD_TOKEN", None)
+    if board:
+        inside.update(BIO_BOARD_URL=board["url"], BIO_BOARD_TOKEN=board["token"])
     args = [config.engine, "run", "--rm", "-i", "--init", "--name", name, "--label", f"colloquy.run={name}",
             "--network", config.network or "none", "--read-only", "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges", "--pids-limit", str(config.pids_limit),
@@ -141,14 +154,13 @@ def container_argv(config, argv, env, *, trial, board_root, auth_files=(), name)
         args += ["--memory", str(config.memory)]
     if config.cpus:
         args += ["--cpus", str(config.cpus)]
-    mounts = [f"type=bind,src={board_root},dst={board_root}"]
-    mounts += [f"type=tmpfs,dst={board_root / hidden},tmpfs-size=65536" for hidden in HIDDEN
-               if (board_root / hidden).exists()]
-    mounts.append(f"type=bind,src={trial},dst={trial}")
+    mounts = [f"type=bind,src={trial},dst={trial}"]
     mounts += [f"type=bind,src={trial / p},dst={trial / p},readonly" for p in PLATFORM_PATHS if (trial / p).exists()]
     read_only = [Path(p) for p in (*auth_files, *config.ro_mounts)]
     if config.mount_host_python:
         read_only += sorted({Path(sys.prefix), Path(sys.base_prefix)})
+    if board:
+        read_only.append(Path(board["dir"]))
     mounts += [f"type=bind,src={p},dst={p},readonly" for p in read_only]
     for mount in mounts:
         args += ["--mount", mount]
@@ -168,13 +180,16 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run)
             return argv, env, {"sandboxed": False, "override": decision["override"], "tenancy": decision["tenancy"],
                                "recorded": now()}
         return argv, env, None
+    from daw.commons import boardservice
     name = "colloquy-" + run
+    board = boardservice.provision(board_root, env["BIO_AGENT"])
     wrapped, client_env = container_argv(config, argv, env, trial=trial, board_root=board_root,
-                                         auth_files=adapter.auth_files(env), name=name)
+                                         auth_files=adapter.auth_files(env), name=name, board=board)
     receipt = {"sandboxed": True, "engine": config.engine, "image": config.image, "network": config.network or "none",
                "proxy": config.proxy, "container": name, "harness_argv": argv,
                "environment_names": sorted(k for k in client_env if k not in CLIENT_ENV),
-               "egress_allowlist": hosts(config, adapter.hosts(agent_config)), "recorded": now(),
+               "egress_allowlist": hosts(config, adapter.hosts(agent_config)), "board_mounted": False,
+               "board_service": {"url": board["url"], "listening": board["socket"].is_socket()}, "recorded": now(),
                "cleanup": [config.engine, "rm", "-f", name]}
     return wrapped, client_env, receipt
 

@@ -2,8 +2,11 @@
 
 GET /api/me answers 401 in accounts mode without a session or bearer token; the web
 app then shows /login. Session and token writes follow the same CSRF rule as every
-other write (see `daw.commons.auth`).
+other write (see `daw.commons.auth`). Failed logins are rate limited per client
+address and per presented token (`daw.commons.ratelimit`); session cookies are
+scoped to the commons' base path, so tenants on one host never share a cookie.
 """
+import math
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -17,6 +20,7 @@ from daw.commons.archive import Archive
 from daw.commons.auth import CSRF_HEADER, WRITERS
 from daw.commons.participants import describe
 from daw.commons.permissions import ACTIONS, suspended
+from daw.commons.ratelimit import token_key
 from daw.commons.tasks import TASK_TYPES
 from daw.util import DawError
 
@@ -115,14 +119,24 @@ def _login_view(request: Request, view: Annotated[Archive, Depends(archive)]):
 
 @router.post("/session")
 def login(body: LoginIn, request: Request, view: Annotated[Archive, Depends(_login_view)], config: Config):
-    participant, credential = accounts.token_participant(view, body.token.strip())
+    # Failed attempts are counted per client address and per presented token (daw.commons.ratelimit).
+    limiter = request.app.state.login_limiter
+    token = body.token.strip()
+    keys = ("ip:" + (request.client.host if request.client else "unknown"), token_key(token))
+    wait = limiter.retry_after(*keys)
+    if wait:
+        return JSONResponse({"error": "rate_limited", "detail": "too many failed login attempts; try again later"},
+                            status_code=429, headers={"Retry-After": str(math.ceil(wait))})
+    participant, credential = accounts.token_participant(view, token)
     if participant is None:
+        limiter.failed(*keys)
         raise DawError("authentication_required", "unknown or revoked token")
     if participant["kind"] not in WRITERS:
+        limiter.failed(*keys)
         raise DawError("permission_denied", f"{participant['kind']} participants do not log in to the web app")
     response = JSONResponse({**describe(participant), "mode": config.mode})
     response.set_cookie(accounts.COOKIE, accounts.sign_session(config.root, credential, participant["id"]),
-                        max_age=accounts.SESSION_SECONDS, httponly=True, samesite="strict", path="/",
+                        max_age=accounts.SESSION_SECONDS, httponly=True, samesite="strict", path=config.base,
                         secure=request.url.scheme == "https")
     return response
 
@@ -132,7 +146,7 @@ def logout(request: Request, config: Config):
     if request.headers.get(CSRF_HEADER) != "1":
         raise DawError("permission_denied", f"send the {CSRF_HEADER}: 1 header")
     response = JSONResponse({"logged_out": True})
-    response.delete_cookie(accounts.COOKIE, path="/", httponly=True, samesite="strict")
+    response.delete_cookie(accounts.COOKIE, path=config.base, httponly=True, samesite="strict")
     return response
 
 
