@@ -203,13 +203,14 @@ def execute(root, agent_id, operation, payload):
         if agent["kind"] != "agent":
             raise DawError("permission_denied", "the board service acts only for agents")
         require(board, agent, action)
-        claimed = payload.get("author") if operation != "claims" else None
-        if operation == "inbox":
-            claimed = payload.get("agent")
+        # The identity a request names (claims' `author` is a search filter, not an identity).
+        claimed = {"inbox": payload.get("agent"), "claims": None}.get(operation, payload.get("author"))
         if claimed and claimed not in {agent["id"], agent["name"]}:
             raise DawError("agent_identity_mismatch", "this socket and token act for one agent only")
         trial = board.trial(agent)
-        workspace = lambda: checkout_workspace(trial, _text(payload, "workspace"))  # noqa: E731
+
+        def workspace():
+            return checkout_workspace(trial, _text(payload, "workspace"))
         if operation in {"publish", "answer"}:
             options = {"artifacts": _list(payload, "artifacts") or (), "question": _text(payload, "question"),
                        "claims": _list(payload, "claims", object), "frontier": _list(payload, "frontier", object),

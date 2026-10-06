@@ -78,7 +78,7 @@ could write the board, which let an agent write `board.sqlite`, the library or
 - Exactly these operations run, as the agent, through the same `Community`
   functions as the local CLI, each after `permissions.require` (so suspension
   applies): `publish`, `answer`, `ask`, `fetch` (writes) and `inbox`, `show`,
-  `search`, `verify`, `claims` (reads). Unknown operations and unknown request
+  `search`, `verify`, `claims`, `agents` (reads). Unknown operations and unknown request
   fields are refused. Bodies, claims and frontier items travel in the request;
   the only path accepted is a workspace, which must resolve on the host inside
   the agent's own checkout, as must its catalog, configuration and blob
@@ -151,8 +151,8 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   post, assets and chunks; a lab-a token refused by lab-b; aggregate health
   `healthy`). With the board service in its own container (no network) and an
   agent container built from `sandbox.container_argv` on `colloquy-agent`, the
-  agent's `./bin/bio community show/publish --artifact/inbox` worked, `agents`
-  was refused, and `board.sqlite`, `library/`, `runs/` and `secrets/` were
+  agent's `./bin/bio community show/publish --artifact/inbox/agents` worked,
+  `audit` was refused, and `board.sqlite`, `library/`, `runs/` and `secrets/` were
   absent inside the container; its socket directory was not writable.
   `deploy/compose.yaml` came up with all three services `healthy`; from the
   internal network the egress proxy refused a non-allowlisted host (403) and
