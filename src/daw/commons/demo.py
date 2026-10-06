@@ -205,12 +205,19 @@ def notebook(title, findings, open_questions):
 # (board, context) after the core records exist, may add records through ordinary functions,
 # and may add identities to `context` under its own key.
 EXTENSIONS = [
+    "daw.commons.claims:extend_demo",
+    "daw.commons.frontier:extend_demo",
+    "daw.commons.participation:demo_records",
     "daw.commons.questions:demo_extension",
+    "daw.commons.metrics:demo_cohort",
 ]
 
 
 def build_demo(root, *, extensions=True):
-    """Create a synthetic demo commons at `root` (must not exist) and return identities of its records."""
+    """Create a synthetic demo commons at `root` (must not exist) and return identities of its records.
+
+    `extensions` is True (all of EXTENSIONS), False (core records only) or an explicit list of
+    "module:function" entries, so a test can pin exactly which records exist."""
     root = Path(root).expanduser().resolve()
     if root.exists() and any(root.iterdir()):
         raise DawError("demo_root_not_empty", str(root))
@@ -297,7 +304,7 @@ def build_demo(root, *, extensions=True):
                        requests={"brief": brief["id"], "question": q_req["id"]}, gap_event=gap["id"],
                        harness=harness)
             if extensions:
-                for target in EXTENSIONS:
+                for target in EXTENSIONS if extensions is True else extensions:
                     module, name = target.split(":")
                     getattr(importlib.import_module(module), name)(board, ctx)
     finally:

@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS run_metrics (
 CREATE TABLE IF NOT EXISTS credential (
  id TEXT PRIMARY KEY, participant TEXT NOT NULL REFERENCES agent(id), token_sha256 TEXT UNIQUE NOT NULL,
  label TEXT NOT NULL, created TEXT NOT NULL, revoked TEXT);
+-- Refresh keys for projections rebuilt from workspaces (frontier index); disposable bookkeeping.
+CREATE TABLE IF NOT EXISTS projection_state (name TEXT PRIMARY KEY, key TEXT NOT NULL, updated TEXT NOT NULL);
 -- M2.8 moderation: projection of hide/unhide/suspend/reinstate events. Never deletes bytes.
 CREATE TABLE IF NOT EXISTS moderation (
  target_kind TEXT NOT NULL, target_id TEXT NOT NULL, state TEXT NOT NULL,

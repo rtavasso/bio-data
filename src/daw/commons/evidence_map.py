@@ -32,6 +32,7 @@ import tempfile
 from datetime import UTC, datetime
 
 from daw.artifacts import reuse_links
+from daw.commons.participation import comment_target
 from daw.util import DawError, canonical, digest
 
 LAYOUT_VERSION = 1
@@ -296,7 +297,7 @@ def _comment_target(content, evidence):
     """A comment post records its target in evidence; only post and artifact targets map to nodes directly."""
     if content.get("kind") != "comment":
         return None
-    kind, identity = evidence.get("target_kind"), evidence.get("target_id")
+    kind, identity = comment_target(evidence)
     if not isinstance(identity, str):
         return None
     if kind in ("post", "artifact"):

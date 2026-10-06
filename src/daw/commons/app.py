@@ -14,6 +14,12 @@ from daw.util import DawError
 
 ROUTER_MODULES = [
     "daw.commons.api.meta",
+    "daw.commons.api.read",
+    "daw.commons.api.events",
+    "daw.commons.api.accounts",
+    "daw.commons.api.write",
+    "daw.commons.api.frontier",
+    "daw.commons.api.dashboard",
     "daw.commons.api.observatory",
 ]
 

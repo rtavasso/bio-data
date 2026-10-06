@@ -15,6 +15,7 @@ from pathlib import Path
 from daw.artifacts import attach_artifact
 from daw.catalog import Workspace
 from daw.commons import schema
+from daw.commons.claims import claims_document, notify_affected, project_post, validate_claims
 from daw.exchange import transfer_artifacts
 from daw.search import index_document, search
 from daw.util import DawError, canonical, now, read_json
@@ -23,7 +24,7 @@ from daw.work import question_record, record_event, sync_work
 # Provider-side citation syntax never corresponds to a captured tool result in
 # this harness; its presence in a post marks an unsupported retrieval claim.
 PROVIDER_CITATION = re.compile(r"utm_source=openai|\bturn\d+(?:search|view|news|file)\d+|citeturn", re.IGNORECASE)
-SEARCH_FAMILIES = {"forum": "forum", "artifact": "artifact", "work": "work", "all": None}
+SEARCH_FAMILIES = {"forum": "forum", "artifact": "artifact", "work": "work", "claim": "claim", "all": None}
 
 
 SCHEMA = """
@@ -68,6 +69,68 @@ def exclusive(path, *, blocking=False):
             yield stream.fileno()
         finally:
             fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def evidence_summary(library, evidence):
+    """Title, role and derivation key per attached artifact, so a reader can judge fit without a second command.
+
+    `library` is the board library (read-write Workspace or a read-only archive view)."""
+    summary = []
+    for aid in evidence.get("artifacts", []) if isinstance(evidence, dict) else []:
+        row = library.one("SELECT id,derivation_key,output_role,manifest_blob FROM artifact WHERE id=?", (aid,))
+        if not row:
+            summary.append({"id": aid, "present": False})
+            continue
+        manifest = read_json(library.blob_path(row["manifest_blob"]))
+        summary.append({"id": aid, "present": True, "title": manifest.get("title"), "output_role": row["output_role"],
+                        "derivation_key": row["derivation_key"], "summary": (manifest.get("summary") or "")[:300],
+                        "limitations": manifest.get("limitations", [])})
+    return summary
+
+
+def posts_naming(owner, artifact):
+    """Posts whose evidence lists this artifact; fetch is post-gated, so an unnamed artifact is read-only.
+
+    `owner` is a Community or a read-only `daw.commons.archive.Archive` (rows/one/library)."""
+    named = []
+    for row in owner.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
+        body = json.loads(row["body"])
+        if artifact in (body.get("evidence") or {}).get("artifacts", []):
+            named.append(body["post"])
+    return named
+
+
+def find(owner, text="", *, limit=20, offset=0, family="forum", full=False):
+    """Search the shared board. family=artifact|work searches the library's published derivations and
+    notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
+    posts that name them (listed under `posts`). Compact by default: a 20-hit forum search with full
+    2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
+    restores the excerpts and index bookkeeping. `owner` is a Community or a read-only Archive."""
+    if family not in SEARCH_FAMILIES:
+        raise DawError("unknown_search_family", "use forum, artifact, work, claim or all")
+    result = search(owner.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
+    for item in result["items"]:
+        if item.get("family") == "forum":
+            item["superseded_by"] = owner.rows("SELECT id FROM post WHERE supersedes=? ORDER BY seq", (item["subject"],))
+            post = owner.one("SELECT author,created,body_blob FROM post WHERE id=?", (item["subject"],))
+            if post:
+                body = read_json(owner.library.blob_path(post["body_blob"]))
+                item.update(author=post["author"], created=post["created"], kind=body.get("kind"),
+                            artifacts=len((body.get("evidence") or {}).get("artifacts", [])))
+        elif item.get("family") == "artifact":
+            item["posts"] = posts_naming(owner, item["subject"])
+        elif item.get("family") == "claim":
+            claim = owner.one("SELECT post,author,status,withdrawn_by FROM claim WHERE id=?", (item["subject"],))
+            if claim:
+                item.update(claim)
+    if not full:
+        keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts",
+                "post", "status", "withdrawn_by", "score")
+        result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
+                            "content_is_untrusted_data": True} for i in result["items"]]
+        result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"
+    result["family"] = family
+    return result
 
 
 class Community:
@@ -159,24 +222,18 @@ class Community:
             raise DawError("unknown_post", identity)
         from daw.profiles import verify_object
         body = read_json(verify_object(self.library, row["body_blob"]))
-        return {**row, "content": body, "content_is_untrusted_data": True,
+        # Board content is untrusted to agents regardless of author; the author's kind is a label, not a trust grant.
+        author_kind = self.one("SELECT kind FROM agent WHERE id=?", (row["author"],))["kind"]
+        return {**row, "author_kind": author_kind, "content": body, "content_is_untrusted_data": True,
                 "evidence_artifacts": self._evidence_summary(body.get("evidence") or {}),
                 "superseded_by": self.rows("SELECT id,author,created FROM post WHERE supersedes=? ORDER BY seq", (identity,)),
+                "claims": [{**c, "scope": json.loads(c["scope"]), "pointers": json.loads(c["pointers"])} for c in self.rows(
+                    "SELECT id,ordinal,text,status,scope,pointers,withdrawn_by FROM claim WHERE post=? ORDER BY ordinal",
+                    (identity,))],
                 "replies": self.rows("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq", (identity,))}
 
     def _evidence_summary(self, evidence):
-        """Title, role and derivation key per attached artifact, so a reader can judge fit without a second command."""
-        summary = []
-        for aid in evidence.get("artifacts", []) if isinstance(evidence, dict) else []:
-            row = self.library.one("SELECT id,derivation_key,output_role,manifest_blob FROM artifact WHERE id=?", (aid,))
-            if not row:
-                summary.append({"id": aid, "present": False})
-                continue
-            manifest = read_json(self.library.blob_path(row["manifest_blob"]))
-            summary.append({"id": aid, "present": True, "title": manifest.get("title"), "output_role": row["output_role"],
-                            "derivation_key": row["derivation_key"], "summary": (manifest.get("summary") or "")[:300],
-                            "limitations": manifest.get("limitations", [])})
-        return summary
+        return evidence_summary(self.library, evidence)
 
     def verify(self, identity):
         """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts."""
@@ -216,6 +273,9 @@ class Community:
               evidence=None, request_key=None, kind="discussion"):
         """Caller holds board and library locks. Immutable post, index is rebuildable."""
         author = self.agent(author)
+        if self.one("SELECT 1 FROM moderation WHERE target_kind='participant' AND target_id=? AND state='suspended'",
+                    (author["id"],)):
+            raise DawError("participant_suspended", author["id"])
         if not title.strip() or not body.strip() or not channel.strip():
             raise DawError("empty_post")
         found = PROVIDER_CITATION.search(body)
@@ -242,6 +302,7 @@ class Community:
                 if any(previous[k] != content[k] for k in content if k not in {"session", "run"}):
                     raise DawError("post_key_conflict")
                 self._index(old)
+                project_post(self, old)
                 return old["id"]
         identity = "post_" + uuid.uuid4().hex
         blob = self.library.put_json(content)
@@ -249,16 +310,36 @@ class Community:
             self.db.execute("INSERT INTO post(id,author,channel,parent,supersedes,body_blob,request_key,created) "
                             "VALUES(?,?,?,?,?,?,?,?)", (identity, author["id"], channel, parent, supersedes, blob, request_key, now()))
             self.event("published", {"post": identity, "author": author["id"], "evidence": evidence or {}})
-        self._index(self.one("SELECT * FROM post WHERE id=?", (identity,)))
+        row = self.one("SELECT * FROM post WHERE id=?", (identity,))
+        self._index(row)
+        # Claim ledger projection (M1.6): the post's own claims, and withdrawal of a superseded post's claims.
+        project_post(self, row)
         return identity
 
-    def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, **options):
+    def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, claims=None,
+                frontier=None, **options):
+        """Publish prose with selected evidence. `claims` (M1.6) is a list of {text, status, scope, pointers}
+        stored as a library blob; every pointer must resolve. `frontier` items (M1.7) are recorded as work
+        events in the author's own question first, then named in the post's evidence."""
         evidence = {}
         source = Workspace(workspace) if workspace else None
-        if (artifacts or question) and source is None:
+        if (artifacts or question or frontier) and source is None:
             raise DawError("publication_workspace_required")
+        if frontier and not question:
+            raise DawError("frontier_question_required", "frontier items belong to a question")
         try:
+            # Pointers name immutable records (posts, library artifacts and blobs are never deleted),
+            # so checking before the frontier events are written keeps a rejected publication side-effect free.
+            checked = validate_claims(self, claims, artifacts) if claims is not None else None
             with source.writer() if source else contextlib.nullcontext():
+                items = []
+                if frontier:
+                    from daw.commons.frontier import parse_items, record_item
+                    parsed = parse_items(source, question, frontier)
+                    key = options.get("request_key")
+                    items = [record_item(source, question, **{**item, "key": item.get("key") or
+                                                              (f"{key}:frontier:{n}" if key else None)})
+                             for n, item in enumerate(parsed)]
                 with self.writer(), self.library.writer():
                     if artifacts:
                         evidence.update(transfer_artifacts(source, self.library, artifacts))
@@ -271,8 +352,15 @@ class Community:
                                 raise DawError("publication_source_changed", sha)
                         evidence["notebook"] = {"question": question, "snapshot": snapshot["snapshot"],
                                                 "manifest_blob": snapshot["blob"]}
+                    if checked is not None:
+                        evidence["claims_blob"] = self.library.put_json(claims_document(checked))
+                    if items:
+                        evidence["frontier"] = [{"question": question, "event": item["id"]} for item in items]
                     identity = self._post(author, title, body, evidence=evidence, **options)
                     self._settle_request(identity, options.get("parent"))
+            if options.get("supersedes"):
+                # Flow B: readers who fetched the superseded post's evidence receive a correction notice.
+                notify_affected(self, identity)
             return self.show(identity)
         finally:
             if source:
@@ -372,40 +460,10 @@ class Community:
         return queued
 
     def find(self, text="", *, limit=20, offset=0, family="forum", full=False):
-        """Search the shared board. family=artifact|work searches the library's published derivations and
-        notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
-        posts that name them (listed under `posts`). Compact by default: a 20-hit forum search with full
-        2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
-        restores the excerpts and index bookkeeping."""
-        if family not in SEARCH_FAMILIES:
-            raise DawError("unknown_search_family", "use forum, artifact, work or all")
-        result = search(self.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
-        for item in result["items"]:
-            if item.get("family") == "forum":
-                item["superseded_by"] = self.rows("SELECT id FROM post WHERE supersedes=? ORDER BY seq", (item["subject"],))
-                post = self.one("SELECT author,created,body_blob FROM post WHERE id=?", (item["subject"],))
-                if post:
-                    body = read_json(self.library.blob_path(post["body_blob"]))
-                    item.update(author=post["author"], created=post["created"], kind=body.get("kind"),
-                                artifacts=len((body.get("evidence") or {}).get("artifacts", [])))
-            elif item.get("family") == "artifact":
-                item["posts"] = self._posts_naming(item["subject"])
-        if not full:
-            keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts", "score")
-            result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
-                                "content_is_untrusted_data": True} for i in result["items"]]
-            result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"
-        result["family"] = family
-        return result
+        return find(self, text, limit=limit, offset=offset, family=family, full=full)
 
     def _posts_naming(self, artifact):
-        """Posts whose evidence lists this artifact; fetch is post-gated, so an unnamed artifact is read-only."""
-        named = []
-        for row in self.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
-            body = json.loads(row["body"])
-            if artifact in (body.get("evidence") or {}).get("artifacts", []):
-                named.append(body["post"])
-        return named
+        return posts_naming(self, artifact)
 
     def fetch(self, post, workspace, question, *, artifact=None, author="operator"):
         published = self.show(post)

@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+from daw.commons.participation import comment_target
+
 from daw.artifacts import register_artifact
 from daw.catalog import Workspace
 from daw.commons.app import create_app
@@ -33,7 +35,10 @@ def _assert_recorded(view, edge):
             evidence = post["content"].get("evidence") or {}
             expected = {"authored": (post["author"], post["id"]), "reply_to": (post["id"], post["parent"]),
                         "supersedes": (post["id"], post["supersedes"])}
-            if relation == "evidence":
+            if relation == "comments_on":
+                kind, identity = comment_target(evidence)
+                assert source == post["id"] and target in {identity, "question:" + identity}
+            elif relation == "evidence":
                 assert source == post["id"] and target in evidence["artifacts"]
             elif relation == "notebook":
                 assert source == post["id"] and target == question_node(post["author"], evidence["notebook"]["question"])
@@ -74,6 +79,12 @@ def _assert_recorded(view, edge):
         elif table == "mark":
             row = view.one("SELECT * FROM mark WHERE id=?", (record["id"],))
             assert (source, target) in {(row["participant"], row["id"]), (row["id"], row["target_id"])}
+        elif table == "claim":
+            row = view.one("SELECT * FROM claim WHERE id=?", (record["id"],))
+            assert relation == "claim_of" and (source, target) == (row["id"], row["post"])
+        elif table == "frontier_item":
+            row = view.one("SELECT * FROM frontier_item WHERE id=?", (record["id"],))
+            assert relation == "frontier" and (source, target) == (question_node(row["author"], row["question"]), row["id"])
         else:
             pytest.fail(f"unexpected record table {table}")
 
@@ -265,7 +276,8 @@ def test_question_and_blob_endpoints_serve_only_referenced_bytes_safely(demo):
     assert client.get(f"/api/map/node/{ctx['agents']['bob']}").json()["record"]["name"] == "bob"
     assert client.get("/api/map/node/artifact_" + "0" * 64).status_code == 404
     body = client.get("/api/map?family=posts").json()
-    assert body["nodes"] and {n["kind"] for n in body["nodes"]} == {"post"}
+    kinds = {n["kind"] for n in body["nodes"]}
+    assert "post" in kinds and kinds <= {"post", "claim"}  # claims belong to the posts family
     assert client.get("/api/map?family=genes").status_code == 400
 
 
@@ -331,7 +343,9 @@ def test_timeline_shows_suspension_compactions_fallbacks_and_headline(demo):
     assert messages["total"] >= 2 and len(messages["items"]) == 1 and messages["content_is_untrusted_data"]
     everything = client.get(f"/api/runs/{run}/messages?limit=200").json()["items"]
     assert not any("earlier delivery" in m["content"] for m in everything)
-    assert client.get("/api/runs?agent=alice").json()["total"] == 2
+    with Archive(root) as view:
+        alice_runs = view.one("SELECT count(*) AS n FROM attempt WHERE target=?", (ctx["agents"]["alice"],))["n"]
+    assert alice_runs >= 2 and client.get("/api/runs?agent=alice").json()["total"] == alice_runs
     assert client.get("/api/runs?agent=bob").json()["total"] == 0
     assert client.get("/api/runs/run_missing").status_code == 404
 
