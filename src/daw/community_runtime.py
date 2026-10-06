@@ -331,6 +331,11 @@ def _record_outcome(board, request, content, agent, run_id, started, answer, par
                    "Compare the outputs and publish a correction if a reported value changes.",
                    parent=original_post, evidence={"request": request["id"], "run": run_id, "replication": result},
                    key=f"replication-mismatch:{run_id}:{result['original']}")
+    # Studio follow-up (M6.2, M6.3): review verdicts become marks; replications are confirmed or corrected.
+    from daw.commons.studio import after_delivery
+    followup = after_delivery(board, request)
+    if followup:
+        write_json(folder / "studio-followup.json", followup)
     return outcome
 
 

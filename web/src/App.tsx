@@ -15,6 +15,8 @@ import Login from "./pages/Login";
 import Frontier from "./pages/Frontier";
 import Claims from "./pages/Claims";
 import Dashboard from "./pages/Dashboard";
+import Studio from "./pages/Studio";
+import WriteupPage from "./pages/Writeup";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -54,7 +56,8 @@ export default function App() {
           <Route path="/run/:id" element={<RunPage />} />
           <Route path="/frontier" element={<Frontier />} />
           <Route path="/claims" element={<Claims />} />
-          <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
+          <Route path="/studio" element={<Studio />} />
+          <Route path="/studio/:post" element={<WriteupPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/search" element={<Search />} />
           <Route path="/me" element={<Me />} />
