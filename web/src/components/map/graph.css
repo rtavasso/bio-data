@@ -1,0 +1,47 @@
+/* Visualisation tokens. Categorical slots 1–3 (validated all-pairs in both modes) mark posts, artifacts and
+   questions; sources and participants are neutral inks told apart by shape. Light and dark are each selected
+   steps, not a flip. Scoped to chart containers so global styles stay untouched. */
+.force-graph, .viz {
+  --viz-posts: #2a78d6; --viz-artifacts: #eb6834; --viz-questions: #1baf7a; --viz-sources: #898781;
+  --viz-participants: #52514e; --viz-surface: #fcfcfb; --viz-ink: #0b0b0b; --viz-ink-2: #52514e;
+  --viz-muted: #898781; --viz-edge: #9c9a93; --viz-grid: #e1e0d9; --viz-axis: #c3c2b7;
+  --viz-good: #0ca30c; --viz-critical: #d03b3b; --viz-serious: #ec835a; --viz-warning: #fab219;
+  --viz-suspended: #e8e6e0;
+  --viz-seq-1: #b7d3f6; --viz-seq-2: #86b6ef; --viz-seq-3: #5598e7; --viz-seq-4: #2a78d6; --viz-seq-5: #1c5cab;
+  --viz-on-seq-1: #0b0b0b; --viz-on-seq-2: #0b0b0b; --viz-on-seq-3: #0b0b0b; --viz-on-seq-4: #ffffff; --viz-on-seq-5: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  .force-graph, .viz {
+    --viz-posts: #3987e5; --viz-artifacts: #d95926; --viz-questions: #199e70; --viz-sources: #898781;
+    --viz-participants: #c3c2b7; --viz-surface: #1a1a19; --viz-ink: #ffffff; --viz-ink-2: #c3c2b7;
+    --viz-muted: #898781; --viz-edge: #6f6e69; --viz-grid: #2c2c2a; --viz-axis: #383835;
+    --viz-suspended: #2c2c2a;
+    --viz-seq-1: #184f95; --viz-seq-2: #1c5cab; --viz-seq-3: #2a78d6; --viz-seq-4: #5598e7; --viz-seq-5: #9ec5f4;
+    --viz-on-seq-1: #ffffff; --viz-on-seq-2: #ffffff; --viz-on-seq-3: #ffffff; --viz-on-seq-4: #0b0b0b; --viz-on-seq-5: #0b0b0b;
+  }
+}
+
+.force-graph { position: relative; border: 1px solid var(--line); border-radius: 6px; background: var(--viz-surface);
+  overflow: hidden; touch-action: none; cursor: grab; }
+.force-graph:active { cursor: grabbing; }
+.force-graph svg, .force-graph canvas { display: block; }
+.force-graph-controls { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; z-index: 1; }
+.force-graph-controls button { font: inherit; font-size: 0.85rem; min-width: 2rem; padding: 0.15rem 0.4rem;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+.fg-edge { stroke: var(--viz-edge); stroke-width: 1.2; opacity: 0.85; }
+.fg-edge.dashed { stroke-dasharray: 4 3; }
+.fg-edge.dim, .fg-node.dim { opacity: 0.18; }
+.fg-arrow { fill: var(--viz-edge); }
+.fg-node { cursor: pointer; outline: none; }
+.fg-node path { stroke: var(--viz-surface); stroke-width: 1.5; }
+.fg-node.missing path { fill: var(--viz-surface); stroke: var(--viz-muted); stroke-dasharray: 2 2; }
+.fg-node.selected path, .fg-node:focus-visible path { stroke: var(--viz-ink); stroke-width: 2.5; }
+.fg-ring { fill: none; stroke: var(--viz-ink-2); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.fg-label { font-size: 11px; fill: var(--viz-ink-2); paint-order: stroke; stroke: var(--viz-surface); stroke-width: 3px;
+  pointer-events: none; }
+
+.viz-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.85rem; color: var(--muted); margin: 0.4rem 0; }
+.viz-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.viz-legend svg { flex: none; }
+.viz-legend .swatch-line { width: 22px; height: 0; border-top: 2px solid var(--viz-edge); display: inline-block; }
+.viz-legend .swatch-line.dashed { border-top-style: dashed; }

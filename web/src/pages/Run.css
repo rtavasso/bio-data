@@ -1,0 +1,24 @@
+.run-page h1 { font-size: 1.3rem; overflow-wrap: anywhere; }
+.run-clock { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin: 0.6rem 0; }
+.run-clock div { display: flex; flex-direction: column; }
+.run-clock dt { color: var(--muted); font-size: 0.8rem; }
+.run-clock dd { margin: 0; font-variant-numeric: tabular-nums; }
+.run-clock .suspended dd { background: var(--untrusted); color: var(--warn); padding: 0 0.3rem; border-radius: 3px; }
+.run-axis { font-size: 0.9rem; }
+.run-timeline { position: relative; border: 1px solid var(--line); border-radius: 6px; background: var(--viz-surface); overflow: hidden; }
+.run-timeline canvas { display: block; }
+.run-tip { position: absolute; max-width: 250px; background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 4px; padding: 0.25rem 0.45rem; font-size: 0.8rem; pointer-events: none; overflow-wrap: anywhere;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+.run-key { display: inline-block; width: 18px; height: 8px; border-radius: 2px; }
+.run-key.bar { background: var(--viz-posts); }
+.run-key.break { background: var(--viz-suspended); border: 1px solid var(--viz-axis); }
+.run-good { color: var(--good); }
+.run-bad { color: var(--bad); }
+.run-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem 2rem; }
+.run-grid h2 { font-size: 1.05rem; }
+.run-list { list-style: none; padding: 0; margin: 0; }
+.run-list li { padding: 0.15rem 0; overflow-wrap: anywhere; }
+.run-fallback { margin: 0.2rem 0; }
+.run-message { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 0.85rem; max-height: 24rem; overflow-y: auto; }
+.run-message-meta { margin: 0 0 0.3rem; font-size: 0.8rem; }

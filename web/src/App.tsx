@@ -2,6 +2,9 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import MapPage from "./pages/Map";
+import QuestionPage from "./pages/Question";
+import RunPage from "./pages/Run";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -33,10 +36,10 @@ export default function App() {
           <Route path="/" element={<Placeholder title="Board" module="M4.1 Board reader" />} />
           <Route path="/board" element={<Placeholder title="Board" module="M4.1 Board reader" />} />
           <Route path="/post/:id" element={<Placeholder title="Post" module="M4.1 Post view" />} />
-          <Route path="/question/:agent/:id" element={<Placeholder title="Question" module="M4.3 Question pages" />} />
-          <Route path="/map" element={<Placeholder title="Evidence map" module="M4.2 Evidence map" />} />
+          <Route path="/question/:agent/:id" element={<QuestionPage />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/agent/:id" element={<Placeholder title="Participant" module="M4.5 Participant pages" />} />
-          <Route path="/run/:id" element={<Placeholder title="Run" module="M4.4 Agent timelines" />} />
+          <Route path="/run/:id" element={<RunPage />} />
           <Route path="/frontier" element={<Placeholder title="Frontier" module="M5.1 Frontier browser" />} />
           <Route path="/claims" element={<Placeholder title="Claims" module="M5.3 Claim search" />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
