@@ -11,6 +11,7 @@ from pathlib import Path
 from daw import hermes
 from daw.artifacts import reuse_links
 from daw.catalog import Workspace
+from daw.commons.metrics import task_type_of
 from daw.commons.runmetrics import PLUMBING, SUSPENSION_FLOOR_SECONDS, compaction_summaries, run_metrics  # noqa: F401
 from daw.community import PROVIDER_CITATION, Community
 from daw.util import file_hash, now, write_json
@@ -21,11 +22,15 @@ def report(root, output):
     with Community(root) as board:
         audit = board.audit()
         runs = []
+        requests = {r["id"]: r for r in audit["requests"]}
         for attempt in audit["attempts"]:
             folder = board.root / attempt["path"]
             raw = folder / "events.jsonl"
             parsed = hermes.parse(raw)
+            request = requests[attempt["request"]]
             runs.append({**attempt, "transcript": str(folder / "transcript.md"),
+                         "harness": board.agent(attempt["target"])["config"].get("harness", "hermes"),
+                         "task_type": task_type_of(request, board.show(request["post"])["content"]),
                          "raw_sha256": file_hash(raw) if raw.exists() else None,
                          "native_sessions": parsed["thread_ids"], "turns_completed": parsed["turns_completed"],
                          "malformed_lines": parsed["malformed_lines"], "errors": parsed["errors"],
@@ -49,6 +54,7 @@ def report(root, output):
         lint = [{"post": e["body"]["post"]} for e in audit["events"] if e["kind"] == "published"
                 and PROVIDER_CITATION.search(json.dumps(board.show(e["body"]["post"])["content"]["body"]))]
         summary = {"runs": len(runs),
+                   "wall_hours": round(sum((r["metrics"]["wall_seconds"] or 0) for r in runs) / 3600, 2),
                    "monotonic_hours": round(sum((r["metrics"]["monotonic_seconds"] or 0) for r in runs) / 3600, 2),
                    "suspended_hours": round(sum(r["metrics"]["suspended_seconds"] for r in runs) / 3600, 2),
                    "notification_runs": len(notifications),
@@ -58,7 +64,15 @@ def report(root, output):
                    "reused_links_backed": sum(1 for r in reuse if r["relationship"] == "reused" and r.get("backed")),
                    "plumbing_scripts": sum(r["metrics"]["plumbing_scripts"] for r in runs),
                    "scripts_written": sum(r["metrics"]["scripts_written"] for r in runs),
-                   "posts_with_provider_citations": len(lint)}
+                   "suspensions": sum(1 for r in runs if r["metrics"]["suspended_seconds"]),
+                   "tool_calls": sum(r["metrics"]["tool_calls"] for r in runs),
+                   "inbox_calls": sum(r["metrics"]["inbox_calls"] for r in runs),
+                   "analysis_receipts": sum(r["metrics"]["analysis_receipts"] for r in runs),
+                   "analysis_failures": sum(r["metrics"]["analysis_failures"] for r in runs),
+                   "harnesses": ", ".join(sorted({r["harness"] for r in runs})) or "none",
+                   "task_types": ", ".join(sorted({r["task_type"] for r in runs})) or "none",
+                   "posts_with_provider_citations": len(lint),
+                   "finals_with_provider_citations": sum(1 for r in runs if r["metrics"]["provider_citation_in_final"])}
         value = {"created": now(), "community": str(board.root), "audit": audit, "runs": runs,
                  "artifact_links": links, "reuse_links": reuse, "summary": summary,
                  "limitations": ["Inherited artifact links are not new reuse; compare fork lineage and fetch events.",
@@ -70,12 +84,12 @@ def report(root, output):
              "## Summary", "", "| metric | value |", "|---|---|"]
     lines += [f"| {k} | {v} |" for k, v in summary.items()]
     lines += ["", "## Deliveries", "",
-              "| Request | State | Agent | monotonic min | suspended min | tools | analyses (failed) | plumbing/scripts | inbox | compactions (fallbacks) | tail min | Transcript |",
-              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+              "| Request | State | Agent | Harness | Task type | monotonic min | suspended min | tools | analyses (failed) | plumbing/scripts | inbox | compactions (fallbacks) | tail min | Transcript |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for run in runs:
         m = run["metrics"]
         mono = round((m["monotonic_seconds"] or 0) / 60, 1)
-        lines.append(f"| {run['request']} | {run['state']} | {run['target']} | {mono} | {round(m['suspended_seconds'] / 60, 1)} | "
+        lines.append(f"| {run['request']} | {run['state']} | {run['target']} | {run['harness']} | {run['task_type']} | {mono} | {round(m['suspended_seconds'] / 60, 1)} | "
                      f"{m['tool_calls']} | {m['analysis_receipts']} ({m['analysis_failures']}) | {m['plumbing_scripts']}/{m['scripts_written']} | "
                      f"{m['inbox_calls']} | {m['compactions']} ({m['compaction_fallbacks']}) | {m['minutes_after_last_successful_analysis']} | [Read]({run['transcript']}) |")
     lines += ["", "## Evidence acquisition", ""]

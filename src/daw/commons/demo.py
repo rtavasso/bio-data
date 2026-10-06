@@ -205,6 +205,7 @@ def notebook(title, findings, open_questions):
 # (board, context) after the core records exist, may add records through ordinary functions,
 # and may add identities to `context` under its own key.
 EXTENSIONS = [
+    "daw.commons.metrics:demo_cohort",
 ]
 
 
