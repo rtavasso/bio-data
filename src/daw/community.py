@@ -14,6 +14,7 @@ from pathlib import Path
 
 from daw.artifacts import attach_artifact
 from daw.catalog import Workspace
+from daw.commons import schema
 from daw.exchange import transfer_artifacts
 from daw.search import index_document, search
 from daw.util import DawError, canonical, now, read_json
@@ -77,9 +78,15 @@ class Community:
         self.db = sqlite3.connect(self.root / "board.sqlite", timeout=30)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA foreign_keys=ON")
-        if self.db.execute("PRAGMA user_version").fetchone()[0] != 1:
+        self.db.execute("PRAGMA busy_timeout=30000")
+        version = self.db.execute("PRAGMA user_version").fetchone()[0]
+        if version not in (1, schema.BOARD_VERSION):
             self.db.close()
             raise DawError("unsupported_community_version")
+        if version == 1 or not schema.current(self.db):
+            # Additive upgrade (v1 rows keep their meaning); serialized with every other board write.
+            with exclusive(self.root / ".board.lock", blocking=True):
+                schema.upgrade(self.db)
         self.library = Workspace(self.root / "library")
 
     @classmethod
@@ -89,7 +96,7 @@ class Community:
         with exclusive(root / ".board.lock", blocking=True):
             if (root / "board.sqlite").exists():
                 with sqlite3.connect(root / "board.sqlite") as existing:
-                    if existing.execute("PRAGMA user_version").fetchone()[0] != 1:
+                    if existing.execute("PRAGMA user_version").fetchone()[0] not in (1, schema.BOARD_VERSION):
                         raise DawError("unsupported_community_version")
             for name in ("agents", "runs"):
                 (root / name).mkdir(exist_ok=True)
@@ -98,9 +105,13 @@ class Community:
             if new_library:
                 (root / "library/config.toml").write_text(
                     "[budgets]\nasset_bytes=0\nbundle_bytes=0\nrequests=0\nreserve_bytes=5368709120\nreserve_fraction=0\n")
-            with sqlite3.connect(root / "board.sqlite") as db:
-                db.executescript(SCHEMA)
-                db.execute("INSERT OR IGNORE INTO agent VALUES('operator','operator',NULL,NULL,NULL,'{}',?)", (now(),))
+            with contextlib.closing(sqlite3.connect(root / "board.sqlite")) as db:
+                if db.execute("PRAGMA user_version").fetchone()[0] == 0:
+                    db.executescript(SCHEMA)
+                schema.upgrade(db)
+                with db:
+                    db.execute("INSERT OR IGNORE INTO agent(id,name,trial,native_session,parent,config,created,kind) "
+                               "VALUES('operator','operator',NULL,NULL,NULL,'{}',?,'operator')", (now(),))
         return cls(root)
 
     def close(self):
@@ -287,7 +298,10 @@ class Community:
             parent = target
             target = self.show(target)["author"]
         agent = self.agent(target)
-        self.trial(agent)
+        if agent["kind"] == "agent":
+            self.trial(agent)
+        elif agent["kind"] not in {"human", "operator"}:
+            raise DawError("participant_cannot_receive_requests", agent["kind"])
         with self.writer(), self.library.writer():
             post = self._post(author, "Question for " + agent["name"], body, parent=parent,
                               request_key=request_key, kind="question",
@@ -297,8 +311,8 @@ class Community:
                 return old
             identity = "request_" + uuid.uuid4().hex
             with self.db:
-                self.db.execute("INSERT INTO request VALUES(?,?,?,'pending',NULL,NULL,?,?)",
-                                (identity, post, agent["id"], now(), now()))
+                self.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated) "
+                                "VALUES(?,?,?,'pending',NULL,NULL,?,?)", (identity, post, agent["id"], now(), now()))
                 self.event("question_queued", {"request": identity, "post": post, "target": agent["id"]})
         return self.one("SELECT * FROM request WHERE id=?", (identity,))
 
@@ -350,8 +364,8 @@ class Community:
                     evidence={"source_request": request["id"], "answer": request["answer"], "target": request["author"]})
                 identity = "request_" + uuid.uuid4().hex
                 with self.db:
-                    self.db.execute("INSERT INTO request VALUES(?,?,?,'pending',NULL,NULL,?,?)",
-                                    (identity, post, request["author"], now(), now()))
+                    self.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated) "
+                                    "VALUES(?,?,?,'pending',NULL,NULL,?,?)", (identity, post, request["author"], now(), now()))
                     self.event("answer_notification_queued", {"request": identity, "source_request": request["id"],
                                "answer": request["answer"], "target": request["author"]})
                 queued.append(identity)
