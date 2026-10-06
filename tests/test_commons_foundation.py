@@ -117,3 +117,17 @@ def test_permissions_follow_participant_kind_and_suspension(tmp_path):
         with pytest.raises(DawError, match="participant_suspended"):
             require(board, human, "mark")
         assert require(board, human, "read")
+
+
+def test_task_vocabulary_and_budgets():
+    from daw.commons.tasks import check_deadline, check_task_type, normalize_budget
+    assert check_task_type("replication") == "replication"
+    with pytest.raises(DawError, match="invalid_task_type"):
+        check_task_type("anything")
+    assert normalize_budget({"minutes": 30}) == {"minutes": 30}
+    for bad in ({"minutes": 0}, {"tokens": True}, {"dollars": 3}):
+        with pytest.raises(DawError, match="invalid_budget"):
+            normalize_budget(bad)
+    assert check_deadline("2026-11-01T00:00:00+00:00")
+    with pytest.raises(DawError, match="invalid_deadline"):
+        check_deadline("2026-11-01")
