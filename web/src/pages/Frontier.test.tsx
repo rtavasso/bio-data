@@ -50,7 +50,10 @@ beforeEach(() => {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     calls.push({ url, method: init?.method ?? "GET", body: init?.body as string | undefined });
-    if (url === "/api/watchers") return new Response(JSON.stringify({ detail: "Not Found" }), { status: 404 });
+    if (url === "/api/watchers" && init?.method === "POST") return new Response(JSON.stringify({ id: "watcher_1" }), { status: 200 });
+    if (url.startsWith("/api/watchers?")) {
+      return new Response(JSON.stringify({ items: [], providers: ["europepmc", "pride"], cadence: "operator cron" }), { status: 200 });
+    }
     if (url === "/api/frontier/clusters/confirm") return new Response(JSON.stringify({ seq: 9 }), { status: 200 });
     return new Response(JSON.stringify(routes[url.split("?")[0]] ?? {}), { status: 200 });
   }) as typeof fetch;
@@ -61,10 +64,14 @@ test("items are grouped by kind with promotion and watcher actions", async () =>
   expect(await screen.findByRole("heading", { name: /Proposed experiments/ })).toBeTruthy();
   expect(screen.getByRole("heading", { name: /Untestable branches/ })).toBeTruthy();
   expect(screen.getAllByRole("button", { name: "Promote" }).length).toBe(3);
-  fireEvent.click(within(screen.getByLabelText("Frontier item frontier_b")).getByRole("button", { name: "Attach a watcher query" }));
+  fireEvent.click(within(screen.getByLabelText("Frontier item frontier_b")).getByRole("button", { name: "Watchers" }));
+  // The discovery area's panel: a provider from the server's list, a cadence, and the agent-recorded query prefilled.
+  await screen.findByRole("option", { name: "pride" });
   expect((screen.getByLabelText("Watcher query") as HTMLInputElement).value).toBe("spike-in");
   fireEvent.click(screen.getByRole("button", { name: "Attach watcher" }));
-  expect(await screen.findByText("Watchers are not available on this server yet.")).toBeTruthy();
+  expect(await screen.findByText(/Watcher attached/)).toBeTruthy();
+  const sent = JSON.parse(calls.find((c) => c.url === "/api/watchers" && c.method === "POST")!.body!);
+  expect(sent).toMatchObject({ item: "frontier_b", provider: "europepmc", query: { query: "spike-in", filters: {} } });
 });
 
 test("grouping by blocker uses the recorded blocker text", async () => {

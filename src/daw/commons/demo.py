@@ -11,6 +11,7 @@ synthetic. A DEMO.json marker states this on the board itself.
 """
 import contextlib
 import importlib
+import json
 import os
 import sqlite3
 import uuid
@@ -270,3 +271,59 @@ def build_demo(root, *, extensions=True):
         board.close()
     write_json(root / "demo-harness" / "context.json", ctx)
     return ctx
+
+
+def _demo_root(root):
+    """The resolved root of a synthetic demo commons; anything else is refused (`not_a_demo_commons`)."""
+    root = Path(root).expanduser().resolve()
+    marker = root / "DEMO.json"
+    try:
+        synthetic = marker.is_file() and json.loads(marker.read_text()).get("synthetic") is True
+    except ValueError:
+        synthetic = False
+    if not synthetic:
+        raise DawError("not_a_demo_commons", str(root))
+    return root
+
+
+def watch_tick_recorded(root, response, *, actor="operator", max_watchers=10):
+    """Run due watchers on a synthetic demo commons against a recorded Europe PMC search response.
+
+    The same `watchers.tick` as the scheduled job, with an httpx MockTransport serving `response` (a
+    Europe PMC search JSON object) for the search URL only, so Flow C can be exercised end to end
+    without network. Refused unless the commons carries the synthetic DEMO.json marker."""
+    from daw.commons.discovery_demo import recorded_transport
+    from daw.commons.watchers import tick
+    root = _demo_root(root)
+    if not isinstance(response, dict) or not isinstance((response.get("resultList") or {}).get("result"), list):
+        raise DawError("invalid_recorded_response", "a Europe PMC search JSON object with resultList.result")
+    with Community(root) as board:
+        return tick(board, transport=recorded_transport(response), max_watchers=max_watchers, actor=actor)
+
+
+def deliver_scripted(root, request_id, answer, *, hook=None):
+    """Deliver one pending request on a synthetic demo commons with the scripted stand-in harness.
+
+    The operator's equivalent of `bio community run` for demos and end-to-end checks: the request goes
+    through `community_runtime.dispatch` exactly as a live delivery would (prompt, stream, receipts, task
+    outcome, post-delivery hooks), but the agent's answer is the given text. `hook` is optional fixture
+    code that the scripted harness runs inside the agent's checkout before answering, as the agent's own
+    CLI calls would (e.g. `./bin/bio register`, `./bin/bio community publish`). Refused unless the commons
+    carries the synthetic DEMO.json marker, so it can never stand in for a real agent on a real board."""
+    root = _demo_root(root)
+    if not isinstance(answer, str) or not answer.strip():
+        raise DawError("answer_required")
+    with Community(root) as board, scripted_runtime(root) as (harness, answers):
+        request = board.one("SELECT * FROM request WHERE id=?", (request_id,))
+        if not request:
+            raise DawError("unknown_request", request_id)
+        if request["state"] != "pending":
+            raise DawError("request_not_pending", request["state"])
+        (answers / f"{request['post']}.md").write_text(answer)
+        hook_path = answers / f"{request['post']}.hook.py"
+        if hook:
+            hook_path.write_text(hook)
+        try:
+            return dispatch(board, request_id, harness)
+        finally:
+            hook_path.unlink(missing_ok=True)

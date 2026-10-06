@@ -90,6 +90,31 @@ def demo(directory: Path):
           "next": f"bio commons --root {directory} serve"})
 
 
+@app.command("demo-deliver")
+def demo_deliver(ctx: typer.Context, request: str,
+                 answer: Annotated[Path, typer.Option(help="Markdown file: the scripted agent's answer")],
+                 hook: Annotated[Path | None, typer.Option(help="Fixture Python run in the agent's checkout before it answers")] = None):
+    """Deliver one pending request on a synthetic demo commons with the scripted harness (operator; demo only)."""
+    acting("operator")
+    from daw.commons.demo import deliver_scripted
+    emit(deliver_scripted(ctx.obj, request, answer.read_text(), hook=hook.read_text() if hook else None))
+
+
+@app.command("demo-watch-tick")
+def demo_watch_tick(ctx: typer.Context,
+                    response: Annotated[Path, typer.Option(help="Recorded Europe PMC search JSON served to due watchers")],
+                    as_: Annotated[str, typer.Option("--as", help="Operator running the tick")] = "operator",
+                    max_watchers: int = 10):
+    """Run due watchers on a synthetic demo commons against a recorded response (no network; demo only)."""
+    acting("operator")
+    from daw.commons.demo import watch_tick_recorded
+    try:
+        payload = json.loads(response.read_text())
+    except ValueError as e:
+        raise DawError("invalid_recorded_response", str(e)) from e
+    emit(watch_tick_recorded(ctx.obj, payload, actor=as_, max_watchers=max_watchers))
+
+
 @app.command("add-participant")
 def add_participant_command(ctx: typer.Context, name: str,
                             kind: Annotated[str, typer.Option(help="human, operator or system")] = "human",

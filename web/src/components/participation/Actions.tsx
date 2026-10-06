@@ -163,11 +163,11 @@ export function PromoteForm({ sourceKind, sourceId, defaultTarget = "", onDone }
   );
 }
 
-export function CommissionForm({ subjectKind, subjectId, onDone, defaultTaskType = "writing", defaultNote = "" }: {
-  subjectKind?: string; subjectId?: string; onDone?: () => void; defaultTaskType?: TaskType; defaultNote?: string;
+export function CommissionForm({ subjectKind, subjectId, onDone, defaultTaskType = "writing", defaultNote = "", defaultTarget = "" }: {
+  subjectKind?: string; subjectId?: string; onDone?: () => void; defaultTaskType?: TaskType; defaultNote?: string; defaultTarget?: string;
 }) {
   const [taskType, setTaskType] = useState<TaskType>(defaultTaskType);
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState(defaultTarget);
   const [note, setNote] = useState(defaultNote);
   const budget = useBudget();
   const state = useSubmit(() => commission({

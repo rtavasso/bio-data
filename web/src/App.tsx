@@ -8,6 +8,8 @@ import Placeholder from "./pages/Placeholder";
 const Search = lazy(() => import("./pages/Search"));
 const MapPage = lazy(() => import("./pages/Map"));
 const QuestionPage = lazy(() => import("./pages/Question"));
+const Questions = lazy(() => import("./pages/Questions"));
+const QuestionById = lazy(() => import("./pages/Questions").then((m) => ({ default: m.QuestionById })));
 const RunPage = lazy(() => import("./pages/Run"));
 const Artifact = lazy(() => import("./pages/Artifact"));
 const Board = lazy(() => import("./pages/Board"));
@@ -24,6 +26,7 @@ const WriteupPage = lazy(() => import("./pages/Writeup"));
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
   ["/board", "Board"],
+  ["/question", "Questions"],
   ["/map", "Map"],
   ["/frontier", "Frontier"],
   ["/claims", "Claims"],
@@ -54,6 +57,8 @@ export default function App() {
             <Route path="/board" element={<Board />} />
             <Route path="/post/:id" element={<Post />} />
             <Route path="/artifact/:id" element={<Artifact />} />
+            <Route path="/question" element={<Questions />} />
+            <Route path="/question/:id" element={<QuestionById />} />
             <Route path="/question/:agent/:id" element={<QuestionPage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/agent/:id" element={<ParticipantPage />} />

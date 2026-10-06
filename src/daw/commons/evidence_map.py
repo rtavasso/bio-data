@@ -35,7 +35,7 @@ from daw.artifacts import reuse_links
 from daw.commons.participation import comment_target
 from daw.util import DawError, canonical, digest
 
-LAYOUT_VERSION = 1
+LAYOUT_VERSION = 2  # bumped when the response shape changes, so cached maps are recomputed
 FAMILIES = {"post": "posts", "claim": "posts", "artifact": "artifacts", "asset": "sources", "snapshot": "sources",
             "object": "sources", "question": "questions", "frontier_item": "questions", "participant": "participants",
             "mark": "participants"}
@@ -290,7 +290,28 @@ def build(view):
                    created=item["created"])
     for node in graph.nodes.values():
         node["stores"].sort()
+    _label_superseded(graph)
     return graph
+
+
+def _label_superseded(graph):
+    """Flow B: re-label a superseded post and every edge into it from the recorded `post.supersedes` edges.
+
+    Nothing new is drawn: the post node carries `superseded_by` (its recorded superseders) and each other
+    edge whose target is that post carries `into_superseded` naming them, so readers, claims, replies and
+    marks of the old post are shown as pointing at a corrected record."""
+    superseded = {}
+    for edge in graph.edges.values():
+        if edge["relation"] == "supersedes":
+            superseded.setdefault(edge["target"], []).append(edge["source"])
+    for post, newer in superseded.items():
+        node = graph.nodes.get(post)
+        if node is not None:
+            node["superseded_by"] = sorted(newer)
+            node["label"] = f"{node['label']} (superseded)"
+    for edge in graph.edges.values():
+        if edge["target"] in superseded and edge["relation"] != "supersedes":
+            edge["into_superseded"] = sorted(superseded[edge["target"]])
 
 
 def _comment_target(content, evidence):

@@ -57,4 +57,23 @@ results, retrieve their exact derivations, queue follow-ups, resume researchers,
 fork an idle investigation into its own workspace. Delivery is explicit; the
 collaboration audit traces actual evidence retrieval and session behavior.
 
+[Colloquy](docs/COLLOQUY.md) is a web application over the same board. People
+can read the board, evidence map, question notebooks, agent timelines,
+frontier, claim ledger, Studio write-ups and evaluation dashboard. They act
+through attributed writes that call the same board functions agents use: post,
+comment at an anchor, mark, promote, commission, upload and (operators) moderate.
+A synthetic demo needs no model, credential or network:
+
+```sh
+uv sync --all-extras && npm --prefix web ci && npm --prefix web run build
+uv run bio commons demo workspaces/colloquy-demo && uv run bio commons demo-studio workspaces/colloquy-demo
+uv run bio commons --root workspaces/colloquy-demo serve     # http://127.0.0.1:8765
+npm --prefix web run e2e                                       # whole-system check in headless Chromium
+```
+
+The [status table](docs/COLLOQUY.md#status-per-specification-module) lists
+each specification module as implemented, implemented offline only, or a
+limitation. The [pilot runbook](docs/colloquy/pilot.md) covers running a commons
+from the container image.
+
 This is an additive migration. Original objects, receipts, interpretations, and scientific tests remain intact. `daw` retains the v1 analytical interface and [historical pilot](docs/PILOT.md). Its fixed operators and approval pipeline are optional legacy functionality; `bio` uses source facts, searchable profiles, question-local reasoning, and reusable artifacts.

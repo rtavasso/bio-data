@@ -144,7 +144,7 @@ def comment_target(evidence):
     return kind, identity
 
 
-def _question_owner(view, identity):
+def question_owner(view, identity):
     """(owner, question) for 'q_…', 'owner/q_…' or 'owner:q_…' (the question page's id). A bare id resolves to the
     earliest participant holding it (forks copy their parent's questions, and the original author precedes its forks)."""
     owner, _, question = identity.replace(":", "/").rpartition("/")
@@ -169,7 +169,7 @@ def _resolve(board, view, kind, identity):
         return {"id": identity, "owner": shown["author"], "parent": identity,
                 "blobs": {shown["body_blob"]: ("post", shown["content"]["body"])}}
     if kind == "question":
-        owner, question, workspace = _question_owner(view, identity)
+        owner, question, workspace = question_owner(view, identity)
         blobs = {}
         for snap in workspace.rows("SELECT body_blob FROM work_snapshot WHERE question_id=?", (question,)):
             for sha in read_json(workspace.blob_path(snap["body_blob"])).get("files", {}).values():

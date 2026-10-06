@@ -69,8 +69,10 @@ function Runs({ watcher }: { watcher: Watcher }) {
   );
 }
 
-export function AttachWatcher({ item, providers, onDone }: { item: string; providers: string[]; onDone?: () => void }) {
-  const [text, setText] = useState("");
+export function AttachWatcher({ item, providers, onDone, defaultQuery = "" }: {
+  item: string; providers: string[]; onDone?: () => void; defaultQuery?: string;
+}) {
+  const [text, setText] = useState(defaultQuery);
   const [provider, setProvider] = useState("europepmc");
   const [cadence, setCadence] = useState(604800);
   const [filters, setFilters] = useState("");
@@ -114,7 +116,7 @@ export function AttachWatcher({ item, providers, onDone }: { item: string; provi
   );
 }
 
-export function WatcherPanel({ item, canAttach = true }: { item: string; canAttach?: boolean }) {
+export function WatcherPanel({ item, canAttach = true, defaultQuery }: { item: string; canAttach?: boolean; defaultQuery?: string }) {
   const list = useApi<WatcherList>(`/api/watchers${query({ item })}`);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export function WatcherPanel({ item, canAttach = true }: { item: string; canAtta
           </li>
         ))}
       </ul>
-      {canAttach && <AttachWatcher item={item} providers={list.data?.providers ?? []} onDone={list.reload} />}
+      {canAttach && <AttachWatcher item={item} providers={list.data?.providers ?? []} onDone={list.reload} defaultQuery={defaultQuery} />}
       {list.data && <p className="muted small">{list.data.cadence}</p>}
     </section>
   );

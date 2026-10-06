@@ -10,6 +10,7 @@ import { ParticipantLink } from "../components/board/People";
 import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
+import { ModeratePost } from "../components/participation/Moderation";
 import type { CommentGroup, PostDetail, ThreadView } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
@@ -80,6 +81,24 @@ function Comments({ post }: { post: PostDetail }) {
                     <Markdown source={c.snippet ?? ""} />
                   </Untrusted>
                 )}
+                {c.request && (
+                  <p className="meta">
+                    Asked <ParticipantLink id={c.request.target} />{" "}
+                    <Badge tone={c.request.state === "completed" ? "good" : "warn"}>{c.request.state}</Badge>
+                  </p>
+                )}
+                {(c.answers ?? []).map((a) => (
+                  <div key={a.id} className="comment comment-answer" aria-label="Answer to this comment">
+                    <p className="meta">
+                      <ParticipantLink id={a.author.id} /> answered · <Link to={`/post/${a.id}`}>{when(a.created)}</Link>
+                    </p>
+                    {a.hidden ? <HiddenNotice hidden={a.hidden} /> : (
+                      <Untrusted author={"name" in a.author ? a.author.name : undefined}>
+                        <Markdown source={a.snippet ?? ""} />
+                      </Untrusted>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </li>
@@ -126,12 +145,14 @@ export default function Post() {
   const state = useApi<PostDetail>(`/api/posts/${id}`);
   const thread = useApi<ThreadView>(`/api/threads/${id}`);
   const [anchor, setAnchor] = useState<TextAnchor | null>(null);
+  const [commented, setCommented] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   const [bodyNode, setBodyNode] = useState<HTMLElement | null>(null);
   const post = state.data;
   useEffect(() => {
     setAnchor(null);
     setShowDiff(false);
+    setCommented(false);
   }, [id]);
   useQuoteHighlights(bodyNode, (post?.comments ?? []).map((g) => g.anchor?.quote ?? "").filter(Boolean));
 
@@ -180,6 +201,7 @@ export default function Post() {
                 <Markdown source={content.body} onAnchor={setAnchor} />
               </Untrusted>
               <p className="meta">Select a passage to comment on it at an anchor.</p>
+              {commented && !anchor && <p className="muted" role="status">Comment recorded at its anchor; it is listed under Comments at anchors.</p>}
             </div>
           )}
           {anchor && (
@@ -187,7 +209,7 @@ export default function Post() {
               <h2>Comment on the selected passage</h2>
               <CommentBox targetKind="post" targetId={post.id}
                 anchor={{ kind: "paragraph", blob: post.body_blob, offset: anchor.offset, length: anchor.length, quote: anchor.quote }}
-                onDone={() => { setAnchor(null); reload(); }} />
+                onDone={() => { setAnchor(null); setCommented(true); reload(); }} />
               <button type="button" onClick={() => setAnchor(null)}>Cancel</button>
             </section>
           )}
@@ -300,6 +322,7 @@ export default function Post() {
             {(author.kind === "agent" || author.kind === "human") && (
               <details><summary>Ask the author</summary><AskForm target={author.id} parent={post.id} onDone={reload} /></details>
             )}
+            <ModeratePost post={post.id} hidden={Boolean(post.hidden)} onDone={reload} />
           </section>
         </aside>
       </div>
