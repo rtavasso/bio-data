@@ -19,8 +19,21 @@ def stop_process(process):
             process.wait(timeout=5)
 
 
-def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds=()):
-    if timeout < 0 or max_log_bytes < 0:
+# Wall time beyond monotonic time by more than this is reported as host sleep (M3.5).
+SLEEP_FLOOR_SECONDS = 60
+
+
+def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds=(), *,
+            stall_seconds=0, stall_timeout=0, on_stall=None):
+    """Run a stock CLI, capturing stdout/stderr losslessly.
+
+    Stall detection (optional): when stdout has not grown for `stall_seconds`,
+    write stall.json and call `on_stall(info)` once per stall episode; the
+    process keeps running (the operator decides). Only an explicit
+    `stall_timeout` stops it, with the reason recorded. Host sleep (wall minus
+    monotonic time beyond SLEEP_FLOOR_SECONDS) is recorded when detected.
+    """
+    if timeout < 0 or max_log_bytes < 0 or stall_seconds < 0 or stall_timeout < 0:
         raise ValueError("execution limits must be nonnegative; zero means unlimited")
     folder = Path(folder)
     start = time.monotonic()
@@ -30,6 +43,7 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds
     write_json(folder / "execution.json", result)
     process = None
     heartbeat = start
+    grown, size, stalled = start, 0, None
     try:
         with (folder / "events.jsonl").open("wb") as stdout, (folder / "stderr.log").open("wb") as stderr, prompt.open("rb") as stdin:
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=stdin, stdout=stdout, stderr=stderr,
@@ -44,6 +58,26 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds
                     heartbeat = time.monotonic()
                 if "first_output_seconds" not in result and (folder / "events.jsonl").stat().st_size:
                     result["first_output_seconds"] = round(time.monotonic() - start, 4)
+                if stall_seconds or stall_timeout:
+                    current = (folder / "events.jsonl").stat().st_size
+                    if current != size:
+                        grown, size, stalled = time.monotonic(), current, None
+                    quiet = time.monotonic() - grown
+                    if stall_seconds and stalled is None and quiet >= stall_seconds:
+                        stalled = {"observed": now(), "pid": process.pid, "stdout_bytes": current,
+                                   "quiet_seconds": round(quiet, 2), "stall_seconds": stall_seconds,
+                                   "episode": len(result.get("stalls", [])) + 1,
+                                   "action": "reported; the process keeps running until the operator decides"}
+                        result.setdefault("stalls", []).append(stalled)
+                        write_json(folder / "stall.json", stalled)
+                        write_json(folder / "execution.json", result)
+                        if on_stall:
+                            on_stall(stalled)
+                    if stall_timeout and quiet >= stall_timeout:
+                        result.update(state="stalled", stop_reason=f"no stdout growth for {round(quiet, 1)} s "
+                                      f"(operator stall timeout {stall_timeout} s)")
+                        stop_process(process)
+                        break
                 # Some platforms suspend monotonic time during host sleep. Bound
                 # both clocks so a resumed process cannot outlive the wall budget.
                 if timeout and max(time.monotonic() - start, time.time() - wall_start) > timeout:
@@ -68,6 +102,10 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds
     finally:
         result.update(finished=now(), wall_seconds=round(max(0, time.time() - wall_start), 4),
                       monotonic_seconds=round(time.monotonic() - start, 4))
+        # Recorded only when observed, so ordinary receipts keep their fields.
+        if result["wall_seconds"] - result["monotonic_seconds"] > SLEEP_FLOOR_SECONDS:
+            result.update(host_sleep_detected=True,
+                          suspended_seconds=round(result["wall_seconds"] - result["monotonic_seconds"], 1))
         write_json(folder / "execution.json", result)
     return result
 
