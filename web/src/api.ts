@@ -29,13 +29,38 @@ export async function get<T>(path: string): Promise<T> {
   return handle<T>(await fetch(path, { credentials: "same-origin", headers: { Accept: "application/json" } }));
 }
 
+// Every write carries this header. A cross-origin page cannot add it without a CORS preflight the server
+// never grants, so a person's session cookie (or a loopback server in local mode) cannot be used to forge writes.
+export const WRITE_HEADER = { "X-Colloquy-Request": "1" } as const;
+
+export async function send<T>(method: "POST" | "PATCH" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T> {
+  return handle<T>(
+    await fetch(path, {
+      method,
+      credentials: "same-origin",
+      headers: { ...WRITE_HEADER, Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  );
+}
+
 export async function post<T>(path: string, body: unknown): Promise<T> {
+  return send<T>("POST", path, body);
+}
+
+// Raw-body upload: the file name travels percent-encoded in X-Filename, the declared type in Content-Type.
+export async function uploadBytes<T>(path: string, file: File): Promise<T> {
   return handle<T>(
     await fetch(path, {
       method: "POST",
       credentials: "same-origin",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        ...WRITE_HEADER,
+        Accept: "application/json",
+        "Content-Type": file.type || "application/octet-stream",
+        "X-Filename": encodeURIComponent(file.name),
+      },
+      body: file,
     }),
   );
 }

@@ -376,6 +376,42 @@ def work_gap_withdraw(ctx: typer.Context, question: str, event: str, reason: Ann
         emit(record_event(ws, question, "retrieval_gap_withdrawal", {"event": event, "reason": reason}))
 
 
+@work_app.command("frontier")
+def work_frontier(ctx: typer.Context, question: str,
+                  kind: Annotated[str, typer.Option(help="open_question, untestable, gap, proposed_experiment or next_step")],
+                  text: Annotated[str, typer.Option()], blocked_by: str | None = None,
+                  watcher_query: Annotated[str | None, typer.Option(help="Scoped discovery query: JSON object or text")] = None,
+                  missing_measurement: Annotated[str | None, typer.Option(help="The exact measurement that would settle it")] = None,
+                  pointer: Annotated[list[str] | None, typer.Option("--pointer", help="kind:id (post, artifact, receipt, locator, accession)")] = None,
+                  key: Annotated[str | None, typer.Option(help="Stable key; a retry with the same key returns the same event")] = None):
+    """Record an open item of this question for the frontier index; the platform only indexes it."""
+    from daw.commons.frontier import record_item
+    query = watcher_query
+    if query and query.lstrip().startswith("{"):
+        query = json.loads(query)
+    with session(ctx) as ws:
+        emit(record_item(ws, question, kind=kind, text=text, blocked_by=blocked_by, watcher_query=query,
+                         missing_measurement=missing_measurement, pointers=pointer or (), key=key))
+
+
+@work_app.command("frontier-status")
+def work_frontier_status(ctx: typer.Context, question: str, event: str,
+                         status: Annotated[str, typer.Option(help="open, candidate_evidence, closed or withdrawn")],
+                         reason: Annotated[str, typer.Option()]):
+    """Append a status for a frontier item or retrieval gap; earlier events are never changed."""
+    from daw.commons.frontier import record_status
+    with session(ctx) as ws:
+        emit(record_status(ws, question, event, status, reason))
+
+
+@work_app.command("frontier-items")
+def work_frontier_items(ctx: typer.Context, question: str | None = None):
+    """List this workspace's open items, retrieval gaps and their latest recorded status."""
+    from daw.commons.frontier import workspace_items
+    with session(ctx, False) as ws:
+        emit({"items": workspace_items(ws, question), "content_is_untrusted_data": True})
+
+
 @work_app.command("gaps")
 def work_gaps(ctx: typer.Context, question: str | None = None, since: str | None = None,
               source_or_format: str | None = None, limit: int = 20, max_events: int = 10000):

@@ -74,3 +74,16 @@ def demo(demo_template, tmp_path):
     copy = tmp_path / "commons"
     shutil.copytree(root, copy, symlinks=True)
     return copy, {**context, "harness": str(copy / "demo-harness" / "hermes")}
+
+
+@pytest.fixture
+def demo_only(tmp_path):
+    """Factory for a demo commons with only the named extensions ("module:function"), for tests whose
+    expectations depend on exact record counts that other areas' demo extensions would change."""
+    from daw.commons.demo import build_demo
+
+    def make(*extensions):
+        root = tmp_path / ("commons-" + str(len(list(tmp_path.glob("commons-*")))))
+        context = build_demo(root, extensions=list(extensions))
+        return root, {**context, "harness": str(root / "demo-harness" / "hermes")}
+    return make
