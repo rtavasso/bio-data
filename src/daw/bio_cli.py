@@ -96,8 +96,18 @@ def local_search(ctx, text, family=None, feature=None, provider=None, format=Non
 @app.command("search")
 def search_command(ctx: typer.Context, text: str = "", family: str | None = None, feature: str | None = None,
                    provider: str | None = None, format: str | None = None, limit: int = 20, offset: int = 0,
-                   min_level: int = 0, include_historical: bool = False, vector: Path | None = None, model: str | None = None):
+                   min_level: int = 0, include_historical: bool = False, vector: Path | None = None, model: str | None = None,
+                   vector_text: Annotated[str | None, typer.Option(help="Embed this text with the pinned local model "
+                                                                    "(default hashing-ngram-v1) and rank by cosine")] = None):
     """Search local data and prior work; no internet, model, or scientific planner."""
+    if vector_text is not None:
+        from daw.embeddings import vector_search
+        if vector or text:
+            raise DawError("select_one_search_mode", "use TEXT, --vector or --vector-text")
+        with session(ctx, False) as ws:
+            emit(vector_search(ws, vector_text, model=model, family=family, provider=provider, format=format,
+                               limit=limit, offset=offset, min_level=min_level, include_historical=include_historical))
+        return
     local_search(ctx, text, family, feature, provider, format, limit, offset, min_level, include_historical, vector, model)
 
 
@@ -163,6 +173,30 @@ def fetch(ctx: typer.Context, asset: str, allow_raw: bool = False, question: str
             emit(result)
         finally:
             http.close()
+
+
+@data_app.command("fulltext")
+def data_fulltext(ctx: typer.Context, pmcid: str):
+    """Fetch Europe PMC JATS full text; index paragraphs with stable locators (sec[2]/p[3]) and SHA-256."""
+    with session(ctx) as ws:
+        source = Sources(ws)
+        try:
+            emit(source.fulltext(pmcid))
+        finally:
+            source.http.close()
+
+
+@data_app.command("supplementary")
+def data_supplementary(ctx: typer.Context, pmcid: str, max_files: int = 10, max_bytes: int = 256 * 2**20,
+                       max_asset_bytes: int = 64 * 2**20):
+    """List an article's supplementary files, fetch tables within budgets and inspect them safely (receipted)."""
+    with session(ctx) as ws:
+        source = Sources(ws)
+        source.native_metadata_only = True
+        try:
+            emit(source.supplementary(pmcid, max_files=max_files, max_bytes=max_bytes, max_asset_bytes=max_asset_bytes))
+        finally:
+            source.http.close()
 
 
 @data_app.command("import")
@@ -439,6 +473,17 @@ def index_embedding(ctx: typer.Context, manifest: Annotated[Path, typer.Option()
     """Register a model-versioned vector computed with the agent's chosen tools."""
     with session(ctx) as ws:
         emit(add_embedding(ws, Embedding.model_validate(read_json(manifest))))
+
+
+@index_app.command("embed")
+def index_embed(ctx: typer.Context, model: Annotated[str | None, typer.Option(help="hashing-ngram-v1 (default) or "
+                                                                            "sentence-transformers:<name>@<revision>")] = None,
+                family: str | None = None, limit: int | None = None, allow_download: bool = False):
+    """Embed index documents with a pinned local model; only documents whose fingerprint changed are re-embedded."""
+    from daw.embeddings import embed_documents, load_model
+    with session(ctx) as ws:
+        loaded = load_model(model, allow_download=allow_download)
+        emit({**embed_documents(ws, loaded, family=family, limit=limit), "model_card": loaded.card()})
 
 
 @index_app.command("document")

@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import Search from "./pages/Search";
 import MapPage from "./pages/Map";
 import QuestionPage from "./pages/Question";
 import RunPage from "./pages/Run";
@@ -23,6 +24,7 @@ export const NAV = [
   ["/claims", "Claims"],
   ["/studio", "Studio"],
   ["/dashboard", "Dashboard"],
+  ["/search", "Search"],
 ] as const;
 
 export default function App() {
@@ -54,6 +56,7 @@ export default function App() {
           <Route path="/claims" element={<Claims />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/me" element={<Me />} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<Placeholder title="Not found" module="This route" />} />

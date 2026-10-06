@@ -5,10 +5,13 @@ from typing import Annotated
 
 import typer
 
+from daw.commons.discovery_cli import embed, watch_app
 from daw.util import DawError, canonical
 
 app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                   help="Colloquy research commons: web observatory and attributed human participation.")
+app.add_typer(watch_app, name="watch")
+app.command("embed")(embed)
 
 
 def emit(value):
