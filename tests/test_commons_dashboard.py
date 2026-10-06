@@ -28,6 +28,12 @@ def stored(root):
         return {r["run"]: r for r in view.rows("SELECT * FROM run_metrics")}
 
 
+
+@pytest.fixture
+def demo(demo_only):
+    """Core demo records plus this area's cohort only: the expectations below count exact records."""
+    return demo_only("daw.commons.metrics:demo_cohort")
+
 def test_demo_cohort_projection_is_idempotent_and_refreshes_changed_runs(demo):
     root, ctx = demo
     with Archive(root) as view:
@@ -192,8 +198,7 @@ def test_cohort_comparison_keeps_criteria_separate_across_harnesses(demo):
     assert brief[alice["id"]]["harnesses"] == ["hermes"] and brief[claude["id"]]["models"] == ["claude-test"]
     assert brief[claude["id"]]["yield"] == {"posts": 1, "registered_artifacts": 0, "analysis_receipts": 2,
                                             "analysis_failures": 1}
-    # The demo ledger has claims, none attributed to this delivery: zero counts, not "unavailable".
-    assert brief[alice["id"]]["calibration"]["total"] == 0
+    assert brief[alice["id"]]["calibration"] is None  # the claim ledger has no rows: unavailable, not zero
     # Claude-harness telemetry is reported; Hermes demo telemetry is not. No pricing table: no currency.
     assert brief[claude["id"]]["cost"]["tokens"]["input_tokens"] == 1200
     assert brief[alice["id"]]["cost"]["tokens"]["input_tokens"] is None

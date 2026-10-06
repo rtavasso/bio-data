@@ -2,6 +2,8 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import type { Health, Participant } from "./api";
 import { useApi } from "./useApi";
 import Placeholder from "./pages/Placeholder";
+import Me from "./pages/Me";
+import Login from "./pages/Login";
 import Frontier from "./pages/Frontier";
 import Claims from "./pages/Claims";
 import Dashboard from "./pages/Dashboard";
@@ -44,7 +46,8 @@ export default function App() {
           <Route path="/claims" element={<Claims />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/me" element={<Placeholder title="Me" module="M7 Accounts" />} />
+          <Route path="/me" element={<Me />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Placeholder title="Not found" module="This route" />} />
         </Routes>
       </main>

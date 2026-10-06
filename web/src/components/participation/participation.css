@@ -1,0 +1,26 @@
+/* Participation components (Actions, Marks). Scoped by the pp- prefix; colours come from styles.css variables. */
+.pp-field { display: inline-flex; flex-direction: column; gap: 0.15rem; font-size: 0.8rem; color: var(--muted); }
+.pp-field input { width: 7em; }
+.pp-budget { display: inline-flex; gap: 0.5rem; flex-wrap: wrap; }
+.pp-wide { flex: 1 1 14rem; min-width: 0; }
+.pp-feedback { flex: 1 1 100%; min-height: 1.2em; }
+.pp-feedback:empty { display: none; }
+.pp-upload { display: inline-flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.pp-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.pp-file-label { cursor: pointer; border: 1px dashed var(--line); border-radius: 4px; padding: 0.2rem 0.6rem; color: var(--accent); }
+.pp-file:focus-visible + .pp-file-label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pp-file-label[aria-disabled="true"] { cursor: progress; color: var(--muted); }
+.pp-attached { flex: 1 1 100%; list-style: none; margin: 0; padding: 0; font-size: 0.85rem; }
+.pp-attached li { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; overflow-wrap: anywhere; }
+.pp-attached button { font-size: 0.8rem; }
+
+.pp-marks { border-left: 3px solid var(--line); padding-left: 0.6rem; margin: 0.5rem 0; }
+.pp-marks-label { font-size: 0.75rem; color: var(--muted); margin: 0 0 0.3rem; }
+.pp-marks ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.pp-mark { display: grid; gap: 0.15rem; overflow-wrap: anywhere; }
+.pp-mark-head { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; font-size: 0.9rem; }
+.pp-mark-kind { font-size: 0.75rem; border: 1px solid var(--line); border-radius: 999px; padding: 0 0.45rem; }
+.pp-mark-kind.checked_source { color: var(--good); }
+.pp-mark-kind.reproduced { color: var(--accent); }
+.pp-mark-kind.disputed { color: var(--bad); }
+.pp-mark-pointers { font-size: 0.8rem; margin: 0; padding-left: 1rem; }

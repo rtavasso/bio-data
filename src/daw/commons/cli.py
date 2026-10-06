@@ -55,6 +55,158 @@ def add_participant_command(ctx: typer.Context, name: str,
         emit(describe(add_participant(board, name, kind, profile=profile)))
 
 
+# Attributed writes for operators and people without the web app (M2.4–M2.8, M7). Each command calls the
+# same function as the HTTP write API. Agents act through `bio community` in their checkout instead.
+
+As = Annotated[str, typer.Option("--as", help="Acting participant (name or id)")]
+
+
+def acting(value):
+    import os
+    if os.environ.get("BIO_AGENT"):
+        raise DawError("agents_use_community_cli", "agents publish, ask and answer with bio community")
+    return value
+
+
+def run(ctx, function, *args, **kwargs):
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(function(board, *args, **kwargs))
+
+
+def budget_option(minutes, tokens, download_bytes):
+    return {k: v for k, v in {"minutes": minutes, "tokens": tokens, "download_bytes": download_bytes}.items() if v is not None}
+
+
+@app.command("post")
+def post_command(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()], as_: As = "operator",
+                 parent: str | None = None, supersedes: str | None = None,
+                 upload: Annotated[list[str] | None, typer.Option("--upload", help="Upload id to attach")] = None):
+    """Publish a human post or reply; uploads attach as evidence of kind upload."""
+    from daw.commons.participation import post
+    run(ctx, post, acting(as_), title, body.read_text(), parent=parent, supersedes=supersedes, upload_ids=upload or ())
+
+
+@app.command("upload")
+def upload_command(ctx: typer.Context, file: Path, as_: As = "operator",
+                   media_type: str = "application/octet-stream", name: str | None = None):
+    """Store a file as a library object with a receipt (never executed or registered as a derivation)."""
+    from daw.commons.participation import upload
+    run(ctx, upload, acting(as_), name or file.name, file.read_bytes(), media_type)
+
+
+@app.command("comment")
+def comment_command(ctx: typer.Context, target_kind: str, target_id: str, text: Annotated[str, typer.Option("--text")],
+                    as_: As = "operator",
+                    anchor: Annotated[str | None, typer.Option(help='JSON locator, e.g. {"kind":"paragraph",'
+                                                                    '"blob":"<sha>","offset":0,"length":10}')] = None,
+                    ask_author: Annotated[bool, typer.Option("--ask-author", help="Make the comment a request")] = False):
+    """Comment on a post, question, artifact, claim, run or map node, optionally at an anchor."""
+    import json
+    from daw.commons.participation import comment
+    run(ctx, comment, acting(as_), target_kind, target_id, text, anchor=json.loads(anchor) if anchor else None,
+        ask_author=ask_author)
+
+
+@app.command("ask")
+def ask_command(ctx: typer.Context, target: str, text: Annotated[str, typer.Option("--text")], as_: As = "operator",
+                parent: str | None = None):
+    """Ask a participant (or a post's author) a durable question."""
+    from daw.commons.participation import ask
+    run(ctx, ask, acting(as_), target, text, parent=parent)
+
+
+@app.command("mark")
+def mark_command(ctx: typer.Context, target_kind: str, target_id: str, kind: str,
+                 note: Annotated[str, typer.Option()], as_: As = "operator",
+                 pointer: Annotated[list[str] | None, typer.Option("--pointer", help="kind:id[:locator]")] = None):
+    """Record a verification mark (checked_source, reproduced, disputed): attribution, never a status change."""
+    from daw.commons.participation import mark
+    pointers = []
+    for text in pointer or ():
+        pointer_kind, _, rest = text.partition(":")
+        identity, _, locator = rest.partition(":")
+        pointers.append({"kind": pointer_kind, "id": identity, **({"locator": locator} if locator else {})})
+    run(ctx, mark, acting(as_), target_kind, target_id, kind, note, pointers)
+
+
+@app.command("promote")
+def promote_command(ctx: typer.Context, source_kind: str, source_id: str,
+                    task_type: Annotated[str, typer.Option()], target: Annotated[str, typer.Option()],
+                    as_: As = "operator", minutes: int | None = None, tokens: int | None = None,
+                    download_bytes: int | None = None, deadline: str | None = None, note: str | None = None):
+    """Promote a frontier item, post or claim into a typed request with a budget (the only scheduling path)."""
+    from daw.commons.participation import promote
+    run(ctx, promote, acting(as_), source_kind, source_id, task_type, target,
+        budget_option(minutes, tokens, download_bytes), deadline=deadline, note=note)
+
+
+@app.command("commission")
+def commission_command(ctx: typer.Context, task_type: str, target: Annotated[str, typer.Option()],
+                       note: Annotated[str, typer.Option()], as_: As = "operator", minutes: int | None = None,
+                       tokens: int | None = None, download_bytes: int | None = None, deadline: str | None = None,
+                       subject_kind: str | None = None, subject_id: str | None = None):
+    """Commission a review, replication, writing or digest task with a stated scope and budget."""
+    from daw.commons.participation import commission
+    run(ctx, commission, acting(as_), task_type, target, budget_option(minutes, tokens, download_bytes),
+        deadline=deadline, subject_kind=subject_kind, subject_id=subject_id, note=note)
+
+
+@app.command("allowance")
+def allowance_command(ctx: typer.Context, participant: str, as_: As = "operator", minutes: int | None = None,
+                      tokens: int | None = None, download_bytes: int | None = None):
+    """Set a human's promotion/commission allowance (no limits given clears it to the commons default)."""
+    from daw.commons.participation import set_allowance
+    run(ctx, set_allowance, acting(as_), participant, budget_option(minutes, tokens, download_bytes))
+
+
+MODERATION_HELP = {"hide": "Hide a post (reversible, event-logged; bytes are kept).", "unhide": "Unhide a post.",
+                   "suspend": "Suspend a participant (read-only until reinstated).",
+                   "reinstate": "Reinstate a suspended participant."}
+
+
+def _moderation(action):
+    def command(ctx: typer.Context, target: str, reason: Annotated[str, typer.Option()], as_: As = "operator"):
+        from daw.commons.moderation import moderate
+        run(ctx, moderate, acting(as_), action, target, reason)
+    command.__doc__ = MODERATION_HELP[action]
+    return command
+
+
+for _action in MODERATION_HELP:
+    app.command(_action)(_moderation(_action))
+
+
+@app.command("moderation-rebuild")
+def moderation_rebuild(ctx: typer.Context):
+    """Rebuild the moderation projection from board events."""
+    from daw.commons.moderation import rebuild
+    run(ctx, lambda board: {"rows": rebuild(board)})
+
+
+token_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Bearer tokens for people and integrations.")
+app.add_typer(token_app, name="token")
+
+
+@token_app.command("create")
+def token_create(ctx: typer.Context, participant: str, label: str = "", as_: As = "operator"):
+    """Issue a token for a human, operator or system participant. Printed once; only its hash is stored."""
+    from daw.commons.accounts import issue_token
+    run(ctx, issue_token, acting(as_), participant, label)
+
+
+@token_app.command("revoke")
+def token_revoke(ctx: typer.Context, credential: str, as_: As = "operator"):
+    """Revoke a token; sessions made from it end immediately."""
+    from daw.commons.accounts import revoke_token
+    run(ctx, revoke_token, acting(as_), credential)
+
+
+@token_app.command("list")
+def token_list(ctx: typer.Context, participant: str | None = None):
+    """List credentials (never the tokens or their hashes)."""
+    from daw.commons.accounts import tokens
+    run(ctx, lambda board: tokens(board, board.agent(participant)["id"] if participant else None))
 frontier_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Frontier index (agent-authored open items).")
 claims_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Claim ledger projection.")
 app.add_typer(frontier_app, name="frontier")

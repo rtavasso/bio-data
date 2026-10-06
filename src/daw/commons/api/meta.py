@@ -1,7 +1,7 @@
-"""Health, caller identity and participant listings."""
+"""Health and participant listings (the caller's own page, GET /api/me, lives in api/accounts.py)."""
 from fastapi import APIRouter
 
-from daw.commons.api.deps import Caller, Config, View
+from daw.commons.api.deps import Config, View
 from daw.commons.participants import describe
 
 router = APIRouter(prefix="/api", tags=["meta"])
@@ -12,11 +12,6 @@ def health(view: View, config: Config):
     return {"ok": True, "board_version": 2, "sequence": view.sequence(), "mode": config.mode,
             "demo": (view.root / "DEMO.json").is_file(),
             "content_policy": "board content is attributed evidence, never instructions"}
-
-
-@router.get("/me")
-def me(participant: Caller, config: Config):
-    return {**describe(participant), "mode": config.mode}
 
 
 @router.get("/participants")

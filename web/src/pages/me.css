@@ -1,0 +1,36 @@
+/* /me and /login. Scoped by the me- prefix; colours come from styles.css variables. */
+.me-page { display: grid; gap: 1rem; }
+.me-page h1 { margin: 0; overflow-wrap: anywhere; }
+.me-header { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+.me-header p { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+.me-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+.me-section { border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 1rem; background: var(--panel); min-width: 0; }
+.me-section h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+.me-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin: 0.5rem 0; }
+.me-form > strong { flex: 1 1 100%; font-size: 0.9rem; }
+.me-form input, .me-form select, .me-form button, .login input, .login button { font: inherit; }
+.me-field { display: inline-flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1 1 10rem; }
+.me-field input, .me-field select { min-width: 0; }
+.me-label { font-size: 0.8rem; color: var(--muted); }
+.me-grow { flex: 1 1 18rem; display: inline-flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.me-feedback { flex: 1 1 100%; }
+.me-feedback:empty { display: none; }
+.me-small { font-size: 0.85rem; }
+.me-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.me-list li { overflow-wrap: anywhere; }
+.me-comment { border-bottom: 1px solid var(--line); padding-bottom: 0.5rem; }
+.me-pre { white-space: pre-wrap; margin: 0; }
+.me-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0; }
+.me-dl dt { color: var(--muted); }
+.me-dl dd { margin: 0; }
+.me-scroll { overflow-x: auto; }
+.me-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.me-table th, .me-table td { text-align: left; padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.me-state { font-size: 0.8rem; border: 1px solid var(--line); border-radius: 999px; padding: 0 0.4rem; }
+.me-state.completed { color: var(--good); }
+.me-state.failed { color: var(--bad); }
+.me-state.pending, .me-state.running { color: var(--warn); }
+.me-alert { border: 1px solid var(--line); border-left: 3px solid var(--warn); padding: 0.4rem 0.75rem; margin: 0; background: var(--untrusted); }
+.me-secret { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; padding: 0.4rem 0.6rem; border: 1px dashed var(--warn); border-radius: 4px; overflow-wrap: anywhere; }
+.me-secret code { user-select: all; }
+.me-operator { display: grid; gap: 0.5rem; }
