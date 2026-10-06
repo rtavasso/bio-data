@@ -1,0 +1,18 @@
+# One commons per organisation, served by one process: bio commons host --config tenants.toml
+# Each tenant is mounted at /c/<name>/ in accounts mode with its own root: board, library, agent
+# checkouts, runs, accounts and secrets/session.key, sandbox.toml, and commons.toml limits.
+# Roots must be initialized (bio community init) and must not share or nest directories.
+# Federation between tenants is read-only and goes through exported snapshots, never a shared database.
+# See docs/colloquy/pilot.md.
+
+[host]
+# static_dir = "/app/web/dist"      # default: COLLOQUY_WEB_DIST (set in the image) or web/dist
+
+[tenants.lab-a]
+root = "/srv/colloquy/lab-a"         # absolute, or relative to this file
+title = "Lab A"
+
+[tenants.lab-b]
+root = "/srv/colloquy/lab-b"
+title = "Lab B"
+login = { attempts = 5, window_seconds = 600 }   # overrides lab-b's commons.toml [login]

@@ -477,7 +477,9 @@ def test_container_argv_mounts_platform_read_only_and_passes_secrets_by_name(tmp
     assert f"type=bind,src={trial},dst={trial}" in mounts
     assert f"type=bind,src={trial / 'src'},dst={trial / 'src'},readonly" in mounts
     assert f"type=bind,src={trial / '.agents'},dst={trial / '.agents'},readonly" in mounts
-    assert f"type=tmpfs,dst={root / 'agents'},tmpfs-size=65536" in mounts and f"type=tmpfs,dst={root / 'runs'},tmpfs-size=65536" in mounts
+    # The board root is never mounted, so other checkouts, runs/, service/ and secrets/ are absent.
+    assert not any(f"src={root}," in m or f"src={root / 'runs'}" in m or f"src={root / 'agents'}," in m for m in mounts)
+    assert all(m.split("src=")[1].startswith((str(trial), str(auth))) for m in mounts if "src=" in m)
     assert f"type=bind,src={auth},dst={auth},readonly" in mounts
     assert argv[argv.index("--network") + 1] == "egress-net" and "--read-only" in argv and "ALL" in argv
     assert "/tmp:rw,size=1048576,mode=1777" in argv and client["HTTPS_PROXY"] == "http://egress:3128"
@@ -509,6 +511,7 @@ def test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override(demo):
             dispatch(board, wrapped["id"], executable)  # no container engine in the offline test environment
         receipt = read_json(_run_folder(board, wrapped) / "sandbox.json")
         assert receipt["sandboxed"] and receipt["network"] == "none" and receipt["harness_argv"][0] == executable
+        assert receipt["board_mounted"] is False and receipt["board_service"]["url"].startswith("unix://")
         assert read_json(_run_folder(board, wrapped) / "execution.json")["argv"][:2] == ["docker", "run"]
 
 

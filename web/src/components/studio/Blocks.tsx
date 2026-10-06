@@ -1,5 +1,6 @@
 import { Fragment, useId, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { withBase } from "../../base";
 import type { Block, PointerEntry, Sentence, Token } from "../../types/studio";
 
 // Renders the server's HTML-safe write-up blocks without ever injecting HTML. Every pointer is a link to its
@@ -34,7 +35,7 @@ function Pointer({ token, entry, onOpen, active }: {
   const className = `st-pointer kind-${token.kind ?? "unknown"}${withdrawn ? " withdrawn" : ""}${active ? " active" : ""}`;
   return (
     <span className="st-pointer-wrap">
-      <a href={routeOf(token.id, entry) ?? "#"} className={className} aria-describedby={tip} data-pointer={token.id}
+      <a href={withBase(routeOf(token.id, entry) ?? "#")} className={className} aria-describedby={tip} data-pointer={token.id}
         onClick={(event) => { event.preventDefault(); onOpen(token.id); }}>
         {label}
       </a>
@@ -89,11 +90,11 @@ function Sentences({ sentences, ...rest }: { sentences: Sentence[]; pointers: Re
 function Figure({ id, caption, entry, onOpen }: { id: string; caption: string; entry?: PointerEntry; onOpen: (id: string) => void }) {
   return (
     <figure className="st-figure">
-      {entry?.image_url ? <img src={entry.image_url} alt={caption} /> : <div className="st-figure-missing">No image preview</div>}
+      {entry?.image_url ? <img src={withBase(entry.image_url)} alt={caption} /> : <div className="st-figure-missing">No image preview</div>}
       <figcaption>
         {caption} ·{" "}
         <button type="button" className="linkish" onClick={() => onOpen(id)}>source artifact</button>
-        {entry?.bytes_url && <> · <a href={entry.bytes_url}>bytes</a></>}
+        {entry?.bytes_url && <> · <a href={withBase(entry.bytes_url)}>bytes</a></>}
       </figcaption>
     </figure>
   );
@@ -168,7 +169,7 @@ export function PointerDetail({ id, entry, onClose }: { id: string; entry?: Poin
                 <span className="muted">{p.kind}</span>{" "}
                 {p.route ? <Link to={p.route}>{shortId(p.id)}</Link> : <span className="mono">{p.id}</span>}
                 {p.locator ? ` (${p.locator})` : ""}
-                {p.bytes_url && <> · <a href={p.bytes_url}>bytes</a></>}
+                {p.bytes_url && <> · <a href={withBase(p.bytes_url)}>bytes</a></>}
               </li>
             ))}
           </ul>
@@ -182,7 +183,7 @@ export function PointerDetail({ id, entry, onClose }: { id: string; entry?: Poin
             <dt>Output</dt><dd className="mono">{entry.name} · sha256 {entry.sha256}</dd>
             <dt>Held in</dt><dd>{entry.location?.store === "library" ? "shared library" : `workspace of ${entry.location?.participant}`}</dd>
           </dl>
-          <p><Link to={`/artifact/${id}`}>Artifact page (derivation and provenance)</Link> · {entry.bytes_url && <a href={entry.bytes_url}>Verified bytes</a>}</p>
+          <p><Link to={`/artifact/${id}`}>Artifact page (derivation and provenance)</Link> · {entry.bytes_url && <a href={withBase(entry.bytes_url)}>Verified bytes</a>}</p>
         </>
       )}
       {entry?.kind === "post" && entry.present && (

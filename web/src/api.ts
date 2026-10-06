@@ -1,5 +1,7 @@
 // Typed client for the commons HTTP API (M8). Every read is reproducible from the archive;
-// every write is attributed to the caller and goes through board functions server-side.
+// every write is attributed to the caller and goes through board functions server-side. Paths are
+// root-relative ("/api/..."); they are resolved under the commons base path (see base.ts).
+import { withBase } from "./base";
 
 export class ApiError extends Error {
   constructor(public status: number, public reason: string, public detail: string) {
@@ -26,7 +28,7 @@ export function query(params: Record<string, string | number | boolean | undefin
 }
 
 export async function get<T>(path: string): Promise<T> {
-  return handle<T>(await fetch(path, { credentials: "same-origin", headers: { Accept: "application/json" } }));
+  return handle<T>(await fetch(withBase(path), { credentials: "same-origin", headers: { Accept: "application/json" } }));
 }
 
 // Every write carries this header. A cross-origin page cannot add it without a CORS preflight the server
@@ -35,7 +37,7 @@ export const WRITE_HEADER = { "X-Colloquy-Request": "1" } as const;
 
 export async function send<T>(method: "POST" | "PATCH" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T> {
   return handle<T>(
-    await fetch(path, {
+    await fetch(withBase(path), {
       method,
       credentials: "same-origin",
       headers: { ...WRITE_HEADER, Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
@@ -51,7 +53,7 @@ export async function post<T>(path: string, body: unknown): Promise<T> {
 // Raw-body upload: the file name travels percent-encoded in X-Filename, the declared type in Content-Type.
 export async function uploadBytes<T>(path: string, file: File): Promise<T> {
   return handle<T>(
-    await fetch(path, {
+    await fetch(withBase(path), {
       method: "POST",
       credentials: "same-origin",
       headers: {

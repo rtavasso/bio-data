@@ -294,6 +294,12 @@ task outcomes; tests call `studio_demo.apply` on a private copy. All synthetic.
 - Write-up rendering and the embedded map are computed per request (the map is
   cached in-process by event sequence and workspace fingerprint); `/studio`
   renders every commissioned output without its map.
+- Review marks, replication checks, digest ticks and exports run host-side (the
+  runtime's post-delivery hook or operator commands), never inside an agent's
+  sandbox; the agent itself needs only the board service's existing operations
+  (show, verify, fetch, publish, answer).
+- Studio links to `/api/...` go through `withBase()`, so the screens work under a
+  tenant prefix (`/c/<tenant>/`); `/studio` routes are lazy chunks.
 - Standing digests need an operator cron for `digest tick`; nothing runs on a
   timer inside the server.
 - Federated snapshots are served as text or attachments, not as browsable HTML

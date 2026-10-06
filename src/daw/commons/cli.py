@@ -34,12 +34,10 @@ def root(ctx: typer.Context, directory: Annotated[Path, typer.Option("--root", e
 def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
           mode: Annotated[str, typer.Option(help="local (single user, no login) or accounts")] = "local",
           user: Annotated[str, typer.Option(help="Human participant used in local mode")] = "local",
-          static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None):
+          static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None,
+          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For (login rate limits count client addresses)")] = None):
     """Serve the read API, write API, event stream and built web app for one commons."""
-    try:
-        import uvicorn
-    except ImportError as e:
-        raise DawError("commons_extra_required", "install with: uv sync --extra commons") from e
+    uvicorn = _uvicorn()
     from daw.commons.app import create_app
     if host not in {"127.0.0.1", "localhost", "::1"} and mode == "local":
         raise DawError("local_mode_is_loopback_only", "use --mode accounts to listen on other interfaces")
@@ -47,7 +45,41 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, **_forwarded(forwarded_allow_ips))
+
+
+def _uvicorn():
+    try:
+        import uvicorn
+    except ImportError as e:
+        raise DawError("commons_extra_required", "install with: uv sync --extra commons") from e
+    return uvicorn
+
+
+def _forwarded(value):
+    return {"proxy_headers": True, "forwarded_allow_ips": value} if value else {}
+
+
+@app.command("host")
+def host_command(config: Annotated[Path, typer.Option("--config", help="tenants.toml")], host: str = "127.0.0.1",
+                 port: int = 8765,
+                 static_dir: Annotated[Path | None, typer.Option(help="Built web app (overrides [host] static_dir)")] = None,
+                 forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For")] = None):
+    """Serve one commons per organisation from one process, each at /c/<tenant>/ in accounts mode (M7.4)."""
+    import dataclasses
+
+    uvicorn = _uvicorn()
+    from daw.commons import tenants
+    from daw.commons.sandbox import record_tenancy
+    loaded = tenants.load(config)
+    if static_dir:
+        loaded = dataclasses.replace(loaded, static_dir=static_dir.resolve())
+    app = tenants.create_host_app(loaded)
+    for tenant in loaded.tenants:
+        record_tenancy(tenant.root, "accounts")  # every tenant is multi-tenant: live dispatch needs its sandbox
+    typer.echo(canonical({"listen": f"{host}:{port}", "tenants": {t.name: {"base": t.base, "root": str(t.root)}
+                                                                 for t in loaded.tenants}}).decode())
+    uvicorn.run(app, host=host, port=port, **_forwarded(forwarded_allow_ips))
 
 
 @app.command()
@@ -395,3 +427,19 @@ def egress_command(ctx: typer.Context, host: str = "0.0.0.0", port: int = 3128,
         log.parent.mkdir(exist_ok=True)
     typer.echo(canonical({"listen": f"{host}:{port}", "hosts": allowed, "log": str(log)}).decode())
     egress.serve(egress.Policy(allowed), host, port, log)
+
+
+@app.command("board-service")
+def board_service_command(ctx: typer.Context,
+                          agent: Annotated[list[str] | None, typer.Option("--agent", help="Serve only these agents (repeatable; default every agent with a checkout)")] = None,
+                          poll_seconds: Annotated[float, typer.Option(help="How often to pick up newly added agents")] = 5.0,
+                          log: Annotated[Path | None, typer.Option(help="JSONL request log (default <commons>/service/board-service.jsonl)")] = None):
+    """Serve sandboxed agents' bio community commands over one Unix socket per agent (run beside the server)."""
+    import os
+    from daw.commons.boardservice import BoardService
+    if os.environ.get("BIO_AGENT"):
+        raise DawError("operator_only", "the board service is run by the operator")
+    service = BoardService(ctx.obj, agent or (), log)
+    typer.echo(canonical({"commons": str(service.root), "agents": service.refresh(),
+                          "log": str(service.log_path)}).decode())
+    service.serve_forever(poll_seconds)

@@ -209,8 +209,9 @@ tests sit beside `Me.tsx` and `Actions.tsx`.
 
 - No live model or real cohort board was used; the agent answer in tests comes
   from the scripted stand-in harness.
-- Rate limits and allowances are per participant, not per IP; login attempts
-  are not rate limited (tokens carry 256 bits of entropy).
+- Rate limits and allowances are per participant, not per IP. Failed login
+  attempts are limited per client address and per token (`[login]`, see
+  [hardening.md](hardening.md)).
 - Row anchors split on the first delimiter and do not parse quoted CSV fields.
 - Hidden posts are flagged in the moderation projection; how a hidden post is
   collapsed in read views is up to the observatory screens

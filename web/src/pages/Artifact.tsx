@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { withBase } from "../base";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import { Badge, MarkList, ReuseBadge } from "../components/board/Badges";
@@ -65,8 +66,8 @@ export default function Artifact() {
               {a.bytes.name ?? "output"} · {size(a.bytes.size)} · <span className="mono" title={a.output_blob}>sha256 {a.output_blob.slice(0, 16)}…</span>
             </p>
             <p>
-              <a href={a.bytes.url} target="_blank" rel="noopener noreferrer">Open as text</a> ·{" "}
-              <a href={`${a.bytes.url}?download=true`} download>Download</a>{" "}
+              <a href={withBase(a.bytes.url)} target="_blank" rel="noopener noreferrer">Open as text</a> ·{" "}
+              <a href={withBase(`${a.bytes.url}?download=true`)} download>Download</a>{" "}
               <span className="muted">(served as plain text or an attachment, never rendered)</span>
             </p>
           </section>

@@ -1,4 +1,5 @@
 import { ApiError, post, send } from "../../api";
+import { withBase } from "../../base";
 import type { Budget, RequestRow } from "../participation/actions";
 import type { DigestSchedule, ExportResult, ReviewVerdict, Writeup } from "../../types/studio";
 import type { MarkRecord } from "../../types/participation";
@@ -7,7 +8,7 @@ import type { MarkRecord } from "../../types/participation";
 // 422 body: a refused write-up is a list of locations to show, not an error to swallow.
 
 export async function loadWriteup(postId: string): Promise<Writeup> {
-  const response = await fetch(`/api/studio/writeups/${encodeURIComponent(postId)}`, {
+  const response = await fetch(withBase(`/api/studio/writeups/${encodeURIComponent(postId)}`), {
     credentials: "same-origin", headers: { Accept: "application/json" },
   });
   const body = await response.json().catch(() => null);

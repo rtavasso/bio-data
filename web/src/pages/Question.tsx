@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { withBase } from "../base";
 import { query } from "../api";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
@@ -133,7 +134,7 @@ export default function QuestionPageView() {
         {data.scripts.length > 0 && (
           <details>
             <summary>Scripts in this revision ({data.scripts.length}; preserved, never executed)</summary>
-            <ul>{data.scripts.map((s) => <li key={s.path}><a href={s.url} target="_blank" rel="noopener noreferrer" className="mono">{s.path}</a></li>)}</ul>
+            <ul>{data.scripts.map((s) => <li key={s.path}><a href={withBase(s.url)} target="_blank" rel="noopener noreferrer" className="mono">{s.path}</a></li>)}</ul>
           </details>
         )}
       </section>

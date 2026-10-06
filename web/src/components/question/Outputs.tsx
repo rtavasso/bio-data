@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { withBase } from "../../base";
 import { Untrusted } from "../Untrusted";
 import type { Output } from "../../types/observatory-map";
 
@@ -28,7 +29,7 @@ export default function Outputs({ outputs }: { outputs: Output[] }) {
           {figures.map((o) => (
             <figure key={o.artifact}>
               <Untrusted>
-                <img src={o.blob_url!} alt={o.title ?? o.output_name} loading="lazy" />
+                <img src={withBase(o.blob_url!)} alt={o.title ?? o.output_name} loading="lazy" />
               </Untrusted>
               <figcaption>
                 <Link to={`/artifact/${o.artifact}`}>{o.title ?? o.output_name}</Link> <span className="muted">{o.output_role}</span>
@@ -49,7 +50,7 @@ export default function Outputs({ outputs }: { outputs: Output[] }) {
                 </td>
                 <td className="mono">{o.output_role || "—"}</td>
                 <td>
-                  {o.blob_url ? <a href={o.blob_url} target="_blank" rel="noopener noreferrer">{o.output_name || "bytes"}</a> : "—"}
+                  {o.blob_url ? <a href={withBase(o.blob_url)} target="_blank" rel="noopener noreferrer">{o.output_name || "bytes"}</a> : "—"}
                   {o.bytes !== null && o.bytes !== undefined && <span className="muted"> {o.bytes} B</span>}
                 </td>
                 <td><Relationship output={o} /></td>

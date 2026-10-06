@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Participant } from "../api";
+import { withBase } from "../base";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
@@ -258,7 +259,7 @@ export default function Studio() {
               {data.federation.map((f) => (
                 <li key={f.snapshot}>
                   <span className="obs-chip warn">foreign</span> <span className="mono">{f.snapshot}</span> · {f.scope?.kind} · {f.file_count} files
-                  {" · "}<a href={`/api/federation/${f.snapshot}/files/index.html`}>index (as text)</a>
+                  {" · "}<a href={withBase(`/api/federation/${f.snapshot}/files/index.html`)}>index (as text)</a>
                 </li>
               ))}
               {!data.federation.length && <li className="muted">None imported.</li>}

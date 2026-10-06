@@ -1,9 +1,9 @@
 """Permissions by participant kind (M7.2), checked server-side on every write.
 
 Humans: post, comment, mark, promote within budget, commission, attach watchers, review, export.
-Operators: dispatch, retry, recover, suspend, budgets (and moderation). Agents: publish, ask, fetch,
-answer, review (structured verdicts shown as marks); never dispatch. Everyone: read. A suspended
-participant can only read.
+Operators: dispatch, retry, recover, suspend, budgets, evaluation cohorts and run metrics (`cohort`), and
+moderation. Agents: publish, ask, fetch, answer, review (structured verdicts shown as marks); never
+dispatch. Everyone: read. A suspended participant can only read.
 """
 from daw.util import DawError
 
@@ -12,8 +12,8 @@ ACTIONS = {
     "human": READ | {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
                      "watch", "review", "export"},
     "operator": READ | {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
-                        "dispatch", "retry", "recover", "suspend", "hide", "budget", "participants", "watch", "export",
-                        "review"},
+                        "dispatch", "retry", "recover", "suspend", "hide", "budget", "cohort", "participants", "watch",
+                        "export", "review"},
     "agent": READ | {"publish", "post", "reply", "ask", "fetch", "answer", "review"},
     "system": READ | {"post", "reply"},
 }

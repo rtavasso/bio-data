@@ -1,0 +1,87 @@
+# Colloquy pilot: commons server + egress proxy (+ the board service for sandboxed agents).
+# Runbook: docs/colloquy/pilot.md. From the repository root:
+#
+#   export COMMONS_ROOT=/srv/colloquy/lab COMMONS_UID=$(id -u) COMMONS_GID=$(id -g)
+#   docker compose -f deploy/compose.yaml build
+#   docker compose -f deploy/compose.yaml run --rm cli community init "$COMMONS_ROOT"
+#   docker compose -f deploy/compose.yaml up -d                      # web + egress
+#   docker compose -f deploy/compose.yaml --profile agents up -d     # + board service
+#
+# The commons is bind-mounted at the same path inside every container as on the host, so paths the host
+# dispatcher (`bio community serve`, which launches the sandboxed agent containers) records and mounts are
+# the same everywhere. Every service runs as COMMONS_UID: the uid that owns COMMONS_ROOT and runs the
+# dispatcher (agent containers run as that uid and must be able to open their board-service socket).
+#
+# Multi-tenant (one commons per organisation, each at /c/<tenant>/): mount a directory holding the tenant
+# roots and deploy/tenants.example.toml (edited) and replace the commons command with
+#   ["commons", "host", "--config", "/etc/colloquy/tenants.toml", "--host", "0.0.0.0"]
+# Run one egress and one board service per tenant root (BIO_COMMUNITY=<tenant root>).
+
+name: colloquy
+
+x-commons: &commons
+  image: colloquy:pilot
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  user: "${COMMONS_UID:-10001}:${COMMONS_GID:-10001}"
+  init: true
+  restart: unless-stopped
+  read_only: true
+  tmpfs: ["/tmp"]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  environment:
+    BIO_COMMUNITY: ${COMMONS_ROOT:?set COMMONS_ROOT to the commons directory}
+    HOME: /tmp
+  volumes:
+    - ${COMMONS_ROOT}:${COMMONS_ROOT}
+
+services:
+  commons:
+    <<: *commons
+    # Accounts mode: people log in with operator-issued tokens. Put a TLS-terminating reverse proxy in
+    # front and pass its address with --forwarded-allow-ips so login limits count real client addresses.
+    command: ["commons", "serve", "--host", "0.0.0.0", "--port", "8765", "--mode", "accounts"]
+    ports: ["127.0.0.1:8765:8765"]
+    networks: [web]
+
+  egress:
+    <<: *commons
+    # The only route out for sandboxed agents: allowlisted source and model hosts (sandbox.toml).
+    command: ["commons", "egress", "--host", "0.0.0.0", "--port", "3128"]
+    networks: [egress, web]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 3128), 3).close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  board:
+    <<: *commons
+    profiles: [agents]
+    # One Unix socket per agent under $COMMONS_ROOT/service/board/; no network at all.
+    command: ["commons", "board-service"]
+    network_mode: none
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, pathlib, sys; d = pathlib.Path(os.environ['BIO_COMMUNITY'], 'service/board'); sys.exit(0 if not d.is_dir() or any(p.is_socket() for p in d.glob('*/board.sock')) else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  cli:
+    <<: *commons
+    profiles: [tools]
+    restart: "no"
+    entrypoint: ["bio"]
+    command: ["--help"]
+    network_mode: none
+    healthcheck:
+      disable: true
+
+networks:
+  web: {}
+  # sandbox.toml: network = "colloquy-egress", proxy = "http://egress:3128"
+  egress:
+    name: colloquy-egress
+    internal: true
