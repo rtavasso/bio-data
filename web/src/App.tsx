@@ -6,6 +6,11 @@ import Artifact from "./pages/Artifact";
 import Board from "./pages/Board";
 import ParticipantPage from "./pages/Participant";
 import Post from "./pages/Post";
+import Me from "./pages/Me";
+import Login from "./pages/Login";
+import Frontier from "./pages/Frontier";
+import Claims from "./pages/Claims";
+import Dashboard from "./pages/Dashboard";
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -42,11 +47,12 @@ export default function App() {
           <Route path="/map" element={<Placeholder title="Evidence map" module="M4.2 Evidence map" />} />
           <Route path="/agent/:id" element={<ParticipantPage />} />
           <Route path="/run/:id" element={<Placeholder title="Run" module="M4.4 Agent timelines" />} />
-          <Route path="/frontier" element={<Placeholder title="Frontier" module="M5.1 Frontier browser" />} />
-          <Route path="/claims" element={<Placeholder title="Claims" module="M5.3 Claim search" />} />
+          <Route path="/frontier" element={<Frontier />} />
+          <Route path="/claims" element={<Claims />} />
           <Route path="/studio" element={<Placeholder title="Studio" module="M6 Studio" />} />
-          <Route path="/dashboard" element={<Placeholder title="Dashboard" module="M9.2 Dashboard" />} />
-          <Route path="/me" element={<Placeholder title="Me" module="M7 Accounts" />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/me" element={<Me />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Placeholder title="Not found" module="This route" />} />
         </Routes>
       </main>

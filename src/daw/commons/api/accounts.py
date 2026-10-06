@@ -1,0 +1,164 @@
+"""Accounts API (M7): the caller's own page, sessions, tokens and operator account management.
+
+GET /api/me answers 401 in accounts mode without a session or bearer token; the web
+app then shows /login. Session and token writes follow the same CSRF rule as every
+other write (see `daw.commons.auth`).
+"""
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict
+
+from daw.commons import accounts, participation
+from daw.commons.api.deps import Caller, Config, View, archive
+from daw.commons.api.write import Actor, call
+from daw.commons.archive import Archive
+from daw.commons.auth import CSRF_HEADER, WRITERS
+from daw.commons.participants import describe
+from daw.commons.permissions import ACTIONS, suspended
+from daw.commons.tasks import TASK_TYPES
+from daw.util import DawError
+
+router = APIRouter(prefix="/api", tags=["accounts"])
+RECENT = 200
+
+
+class Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class ProfileIn(Strict):
+    display_name: str | None = None
+    affiliation: str | None = None
+    orcid: str | None = None
+    role: str | None = None
+
+
+class LoginIn(Strict):
+    token: str
+
+
+class TokenIn(Strict):
+    participant: str | None = None
+    label: str = ""
+
+
+class ParticipantIn(Strict):
+    name: str
+    kind: str = "human"
+    display_name: str | None = None
+    affiliation: str | None = None
+    orcid: str | None = None
+
+
+class AllowanceIn(Strict):
+    minutes: int | None = None
+    tokens: int | None = None
+    download_bytes: int | None = None
+
+
+def summary(view, participant, mode):
+    """Identity, permissions, budget and the participant's own attributed writes (read-only archive)."""
+    pid = participant["id"]
+    posts = view.rows("SELECT * FROM post WHERE author=? ORDER BY seq DESC LIMIT ?", (pid, RECENT))
+    comments, authored = [], []
+    for row in posts:
+        content = view.library.json_blob(row["body_blob"])
+        evidence = content.get("evidence") or {}
+        if content.get("kind") == "comment":
+            request = view.one("SELECT id,state,target,answer FROM request WHERE post=?", (row["id"],))
+            comments.append({"id": row["id"], "created": row["created"], "parent": row["parent"], "body": content["body"],
+                             "target": evidence.get("target"), "anchor": evidence.get("anchor"), "request": request})
+        elif content.get("kind") not in {"promotion", "commission"}:
+            authored.append({"id": row["id"], "created": row["created"], "title": content["title"],
+                             "kind": content.get("kind"), "parent": row["parent"]})
+    tasks = view.rows("SELECT r.*,p.created AS posted FROM request r JOIN post p ON p.id=r.post WHERE p.author=? AND "
+                      "r.task_type IN (%s) ORDER BY r.created DESC LIMIT ?" % ",".join("?" * len(TASK_TYPES)),
+                      (pid, *TASK_TYPES, RECENT))
+    for row in tasks:
+        row["kind"] = view.library.json_blob(view.one("SELECT body_blob FROM post WHERE id=?", (row["post"],))["body_blob"]
+                                             ).get("kind")
+    marks = view.rows("SELECT * FROM mark WHERE participant=? ORDER BY created DESC LIMIT ?", (pid, RECENT))
+    kind = participant.get("kind", "agent")
+    return {**describe(participant), "mode": mode, "auth": participant.get("auth"),
+            "permissions": sorted(ACTIONS.get(kind, ())), "writes_over_http": kind in WRITERS,
+            "suspended": suspended(view, pid), "budget": participation.budget_summary(view, participant),
+            "posts": authored, "comments": comments,
+            "promotions": [participation.request_row(r) for r in tasks if r["kind"] == "promotion"],
+            "commissions": [participation.request_row(r) for r in tasks if r["kind"] == "commission"],
+            "marks": [participation.mark_row(r) for r in marks],
+            "uploads": view.rows("SELECT * FROM upload WHERE uploader=? ORDER BY created DESC LIMIT ?", (pid, RECENT)),
+            "inbox": view.rows("SELECT * FROM request WHERE target=? AND state!='completed' ORDER BY created", (pid,)),
+            "tokens": accounts.tokens(view, pid),
+            "csrf_header": CSRF_HEADER}
+
+
+@router.get("/me")
+def me(participant: Caller, view: View, config: Config):
+    return summary(view, participant, config.mode)
+
+
+@router.patch("/me")
+def edit_me(body: ProfileIn, who: Actor, config: Config):
+    changes = {k: (v or "") for k, v in body.model_dump(exclude_unset=True).items()}
+    return describe(call(config, accounts.edit_profile, who["id"], changes))
+
+
+def _login_view(request: Request, view: Annotated[Archive, Depends(archive)]):
+    if request.app.state.settings.mode != "accounts":
+        raise DawError("local_mode_has_no_login", "local mode acts as its single local participant")
+    if request.headers.get(CSRF_HEADER) != "1":
+        raise DawError("permission_denied", f"send the {CSRF_HEADER}: 1 header")
+    return view
+
+
+@router.post("/session")
+def login(body: LoginIn, request: Request, view: Annotated[Archive, Depends(_login_view)], config: Config):
+    participant, credential = accounts.token_participant(view, body.token.strip())
+    if participant is None:
+        raise DawError("authentication_required", "unknown or revoked token")
+    if participant["kind"] not in WRITERS:
+        raise DawError("permission_denied", f"{participant['kind']} participants do not log in to the web app")
+    response = JSONResponse({**describe(participant), "mode": config.mode})
+    response.set_cookie(accounts.COOKIE, accounts.sign_session(config.root, credential, participant["id"]),
+                        max_age=accounts.SESSION_SECONDS, httponly=True, samesite="strict", path="/",
+                        secure=request.url.scheme == "https")
+    return response
+
+
+@router.delete("/session")
+def logout(request: Request, config: Config):
+    if request.headers.get(CSRF_HEADER) != "1":
+        raise DawError("permission_denied", f"send the {CSRF_HEADER}: 1 header")
+    response = JSONResponse({"logged_out": True})
+    response.delete_cookie(accounts.COOKIE, path="/", httponly=True, samesite="strict")
+    return response
+
+
+@router.get("/tokens")
+def list_tokens(participant: Caller, view: View):
+    everyone = participant.get("kind") == "operator"
+    return {"items": accounts.tokens(view, None if everyone else participant["id"])}
+
+
+@router.post("/tokens")
+def create_token(body: TokenIn, who: Actor, config: Config):
+    return call(config, accounts.issue_token, who["id"], body.participant, body.label)
+
+
+@router.delete("/tokens/{credential}")
+def revoke_token(credential: str, who: Actor, config: Config):
+    return call(config, accounts.revoke_token, who["id"], credential)
+
+
+@router.post("/participants")
+def create_participant(body: ParticipantIn, who: Actor, config: Config):
+    profile = {k: v for k, v in {"display_name": body.display_name, "affiliation": body.affiliation,
+                                 "orcid": body.orcid}.items() if v}
+    return describe(call(config, accounts.create_participant, who["id"], body.name, body.kind, profile))
+
+
+@router.put("/participants/{identity}/allowance")
+def set_allowance(identity: str, body: AllowanceIn, who: Actor, config: Config):
+    return call(config, participation.set_allowance, who["id"], identity, body.model_dump(exclude_none=True))

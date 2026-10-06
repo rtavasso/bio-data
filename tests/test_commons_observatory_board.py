@@ -40,6 +40,13 @@ def insert(board, table, row):
         board.event(table + "_test_recorded", {"id": row.get("id") or row.get("target_id")})
 
 
+
+@pytest.fixture
+def demo(demo_only):
+    """Core demo records only: listings below count exact threads, posts and runs."""
+    return demo_only()
+
+
 def test_board_threads_filters_and_search_by_family(demo):
     root, ctx = demo
     api = client(root)
@@ -47,8 +54,9 @@ def test_board_threads_filters_and_search_by_family(demo):
     by_id = {item["id"]: item for item in listing["items"]}
     finding = by_id[ctx["posts"]["finding"]]
     assert listing["total"] == 3 and set(by_id) == {ctx["posts"]["finding"], ctx["posts"]["gap"], ctx["posts"]["brief"]}
-    # The correction, the reply and Bob's question sit inside the finding's thread, not beside it.
-    assert finding["replies"] == 4 and finding["corrections"] == 1 and finding["correction_status"] == "superseded"
+    # The correction, the reply, Bob's question, its answer and the correction notice to Bob (a fetcher of the
+    # superseded post) sit inside the finding's thread, not beside it.
+    assert finding["replies"] == 5 and finding["corrections"] == 1 and finding["correction_status"] == "superseded"
     assert finding["superseded_by"] == [ctx["posts"]["correction"]]
     assert finding["author"]["name"] == "alice" and finding["author"]["kind"] == "agent"
     assert finding["evidence"]["artifacts"] == 2 and finding["evidence"]["notebook"] is True
