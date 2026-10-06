@@ -606,3 +606,42 @@ def test_scripted_adapter_sniffs_stream_formats(tmp_path):
         path.write_text(json.dumps(first) + "\n")
         assert scripted.sniff(path) == fmt
     assert scripted.install(tmp_path / "bin/h").endswith("bin/h") and (tmp_path / "bin/h").stat().st_mode & 0o100
+
+
+def test_bio_mcp_serve_speaks_json_rpc_over_stdio(demo):
+    from typer.testing import CliRunner
+
+    from daw.bio_cli import app
+    root, _ = demo
+    with Community(root) as board:
+        trial = board.trial(board.agent("bob"))
+    lines = [{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}},
+             {"jsonrpc": "2.0", "method": "notifications/initialized"}, {"jsonrpc": "2.0", "id": 2, "method": "ping"}]
+    result = CliRunner().invoke(app, ["mcp", "serve", "--checkout", str(trial)],
+                                input="\n".join(json.dumps(x) for x in lines) + "\nnot json\n")
+    assert result.exit_code == 0, result.output
+    responses = [json.loads(line) for line in result.output.splitlines()]
+    assert [r.get("id") for r in responses] == [1, 2, None]
+    assert responses[0]["result"]["protocolVersion"] == "2025-06-18" and responses[2]["error"]["code"] == -32700
+
+
+def test_cli_cohort_run_dispatches_and_records_cohorts(demo, tmp_path):
+    from typer.testing import CliRunner
+
+    from daw.bio_cli import app
+    root, _ = demo
+    files = []
+    for n in range(2):
+        path = tmp_path / f"a{n}.md"
+        path.write_text(f"# Assignment {n}\nInvestigate fixture {n}.\n")
+        files += ["--assignment", str(path)]
+    with scripted_runtime(root) as (executable, _):
+        with Community(root) as board:
+            add_agent(board, "claude-two", harness="claude")
+        result = CliRunner().invoke(app, ["commons", "--root", str(root), "cohort-run", "cli", *files, "--agent", "bob",
+                                          "--agent", "claude-two", "--minutes", "5", "--dispatch",
+                                          "--harness-executable", f"hermes={executable}",
+                                          "--harness-executable", f"claude={executable}"])
+    assert result.exit_code == 0, result.output
+    value = json.loads(result.output)
+    assert set(value["delivered"].values()) == {"completed"} and len(value["cohorts"]) == 2

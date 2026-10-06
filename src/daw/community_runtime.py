@@ -459,10 +459,6 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                     board.db.execute("UPDATE attempt SET state='completed',finished=? WHERE id=?", (now(), run_id))
                     board.event("delivery_completed", {"request": request_id, "run": run_id, "answer": answer,
                                                         "session": native})
-            if request["task_type"]:
-                _record_outcome(board, request, post["content"], agent, run_id, started, answer, parsed,
-                                budget_receipt, folder)
-            return board.one("SELECT * FROM request WHERE id=?", (request_id,))
         except BaseException as error:
             # Interrupts can occur after the harness created a session but before normal
             # finalization. Preserve its identity so an explicit retry can resume.
@@ -483,6 +479,15 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                 board.db.execute("UPDATE request SET state='failed',updated=? WHERE id=?", (now(), request_id))
                 board.event("delivery_failed", {"request": request_id, "run": run_id, "error": type(error).__name__})
             raise
+        if request["task_type"]:
+            # The delivery is complete; recording its outcome can no longer fail it.
+            try:
+                _record_outcome(board, request, post["content"], agent, run_id, started, answer, parsed,
+                                budget_receipt, folder)
+            except (DawError, sqlite3.Error, OSError) as e:
+                write_json(folder / "task-outcome-error.json", {"error": getattr(e, "reason", type(e).__name__),
+                                                                 "observed": now()})
+        return board.one("SELECT * FROM request WHERE id=?", (request_id,))
 
 
 def retry(board, request_id):

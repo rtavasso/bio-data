@@ -1,0 +1,14 @@
+# Copy to <commons>/sandbox.toml. See docs/colloquy/runtime.md (Sandbox).
+engine = "docker"                    # or "podman"
+image = "colloquy-agent:latest"      # deploy/agent.Dockerfile
+network = "colloquy-egress"          # internal network: docker network create --internal colloquy-egress
+proxy = "http://egress:3128"         # `bio commons egress` attached to that network and the outside
+allow_hosts = []                     # extra data hosts (source adapter hosts are built in)
+model_hosts = []                     # extra model hosts (each harness adds its provider's)
+scratch_bytes = 2147483648
+memory = "8g"
+cpus = "4"
+pids_limit = 1024
+env = ["ANTHROPIC_API_KEY"]          # names of host variables the harness may receive
+ro_mounts = []
+mount_host_python = false
