@@ -8,6 +8,7 @@ import time
 import uuid
 from pathlib import Path
 
+from daw.harness.codex import codex_command as codex_command
 from daw.util import canonical, digest, file_hash, now, read_json, write_json
 
 from .capture import execute
@@ -193,22 +194,6 @@ def prepare(suite="workflow", output=Path("workspaces/agent-evals"), cases=(), s
         manifest["setup_seconds"] = round(time.monotonic() - started, 4)
         write_json(root / "manifest.json", manifest)
     return root
-
-
-def codex_command(executable, cwd, output, *, model=DEFAULT_MODEL, reasoning_effort=DEFAULT_REASONING_EFFORT,
-                  public=False, schema=None, readonly=False):
-    argv = [executable, "--no-daemon", "--ask-for-approval", "never", "exec", "--json", "--ephemeral", "--ignore-user-config",
-            "--sandbox", "read-only" if readonly else "workspace-write", "--skip-git-repo-check", "--color", "never",
-            "--cd", str(cwd), "--output-last-message", str(output),
-            "-c", 'web_search="live"' if public else 'web_search="disabled"',
-            "-c", "sandbox_workspace_write.network_access=" + ("true" if public else "false")]
-    if model:
-        argv += ["--model", model]
-    if reasoning_effort:
-        argv += ["-c", "model_reasoning_effort=" + json.dumps(reasoning_effort)]
-    if schema:
-        argv += ["--output-schema", str(schema)]
-    return argv + ["-"]
 
 
 def subject_environment(trial, manifest):
