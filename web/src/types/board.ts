@@ -153,9 +153,16 @@ export interface AnchorRecord {
   quote?: string;
 }
 
+export interface CommentCard extends PostCard {
+  /** The request to the author when the comment asked them (Flow D); null otherwise. */
+  request?: RequestBrief | null;
+  /** Replies to the comment, e.g. the author's answer that closed its request. */
+  answers?: PostCard[];
+}
+
 export interface CommentGroup {
   anchor: AnchorRecord | null;
-  comments: PostCard[];
+  comments: CommentCard[];
 }
 
 export interface DiffLine {

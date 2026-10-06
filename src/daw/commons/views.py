@@ -522,6 +522,10 @@ def post_view(view, pid, *, caller=None, full=False):
         cbody = crow["content"]
         card = post_summary(index, child, hidden, snippet=None)
         if cbody.get("kind") == "comment":
+            # Flow D: the author's answer (a reply to the comment, which closes its request) is shown under
+            # the anchor, with the request's state.
+            card["request"] = _request_brief((index["requests"].get(child) or [None])[0])
+            card["answers"] = [post_summary(index, a, hidden, snippet=None) for a in index["children"].get(child, [])]
             anchor = (cbody.get("evidence") or {}).get("anchor")
             key = _anchor_key(anchor) if isinstance(anchor, dict) else "null"
             group = comments.setdefault(key, {"anchor": anchor if isinstance(anchor, dict) else None, "comments": []})

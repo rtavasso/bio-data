@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, post } from "../../api";
 import { Untrusted } from "../Untrusted";
 import { MarkForm, PromoteForm } from "../participation/Actions";
+import { WatcherPanel } from "../discovery/WatcherPanel";
 import type { Claim, FrontierItem, Pointer } from "../../types/ledger";
 
 // Shared pieces of the claim ledger and frontier screens. Every author-stated string renders inside
@@ -97,47 +97,12 @@ export function ClaimCard({ claim, onChange }: { claim: Claim; onChange?: () => 
   );
 }
 
-// POST /api/watchers is implemented by the discovery area; a server without the route answers 404
-// (unknown_endpoint from the SPA fallback, or FastAPI's plain Not Found) or 405.
-export function watchersUnavailable(reason: unknown): boolean {
-  if (!(reason instanceof ApiError)) return false;
-  return reason.status === 405 || (reason.status === 404 && ["unknown_endpoint", "request_failed"].includes(reason.reason));
-}
-
-export function WatcherForm({ item, defaultQuery }: { item: string; defaultQuery?: string }) {
-  const [query, setQuery] = useState(defaultQuery ?? "");
-  const [provider, setProvider] = useState("geo");
-  const [days, setDays] = useState("7");
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setBusy(true);
-    setMessage(null);
-    try {
-      await post("/api/watchers", { item, query, provider, interval_seconds: Number(days) * 86400 });
-      setMessage({ ok: true, text: "Watcher attached; it retrieves, the author judges applicability." });
-    } catch (reason) {
-      setMessage({ ok: false, text: watchersUnavailable(reason) ? "Watchers are not available on this server yet." : (reason as Error).message });
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <form className="action-form" onSubmit={submit}>
-      <input value={query} onChange={(e) => setQuery(e.target.value)} required placeholder="Scoped discovery query" aria-label="Watcher query" />
-      <input value={provider} onChange={(e) => setProvider(e.target.value)} required aria-label="Provider" style={{ width: "7em" }} />
-      <label>every <input type="number" min={1} value={days} onChange={(e) => setDays(e.target.value)} style={{ width: "4em" }} aria-label="Interval in days" /> days</label>
-      <button disabled={busy}>Attach watcher</button>
-      {message && <span className={message.ok ? "muted" : "error"} role={message.ok ? "status" : "alert"}>{message.text}</span>}
-    </form>
-  );
-}
-
+// The agent-recorded query (text or {text}/{query}) prefills the form; the person attaches it as a watcher.
 function queryText(query: FrontierItem["watcher_query"]): string | undefined {
   if (!query) return undefined;
   if (typeof query === "string") return query;
-  return typeof query.text === "string" ? query.text : JSON.stringify(query);
+  for (const key of ["text", "query"] as const) if (typeof query[key] === "string") return query[key] as string;
+  return JSON.stringify(query);
 }
 
 export function WatchSummary({ item }: { item: FrontierItem }) {
@@ -176,7 +141,7 @@ export function FrontierCard({ item }: { item: FrontierItem }) {
       <footer className="ledger-actions">
         <span className="mono muted">{item.id}</span>
         <Toggle label="Promote"><PromoteForm sourceKind="frontier_item" sourceId={item.id} defaultTarget={item.author} /></Toggle>
-        <Toggle label="Attach a watcher query"><WatcherForm item={item.id} defaultQuery={queryText(item.watcher_query)} /></Toggle>
+        <Toggle label="Watchers"><WatcherPanel item={item.id} defaultQuery={queryText(item.watcher_query)} /></Toggle>
       </footer>
     </article>
   );

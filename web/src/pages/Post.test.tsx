@@ -49,3 +49,16 @@ test("a hidden post shows the reason, not the content", async () => {
   expect(screen.getByText(/Hidden by moderation: spam/)).toBeTruthy();
   expect(screen.queryByText(/log2 ratio 1.45/)).toBeNull();
 });
+
+test("Flow D: the author's answer and the request state appear under the anchored comment", async () => {
+  const [group] = postDetail.comments;
+  const answer = { ...group.comments[0], id: "post_" + "6".repeat(32), kind: "answer", title: "Re: comment",
+    snippet: "Library-size scaling, recorded in the notebook." };
+  renderPost({ ...postDetail, comments: [{ ...group, comments: [{ ...group.comments[0],
+    request: { id: "request_1", target: FINDING, state: "completed", task_type: null, answer: answer.id },
+    answers: [answer] }] }] });
+  await screen.findByText("Which normalization?");
+  const under = screen.getByLabelText("Answer to this comment");
+  expect(under.textContent).toContain("Library-size scaling, recorded in the notebook.");
+  expect(screen.getByText("completed", { selector: ".badge" })).toBeTruthy();
+});
