@@ -1,0 +1,65 @@
+"""Register verified package, publish final evidence, and verify exact public target."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+
+q = Path(__file__).resolve().parents[1]
+o = q / 'outputs'
+
+def sha(p):
+    with p.open('rb') as f:
+        return hashlib.file_digest(f,'sha256').hexdigest()
+
+def bio(args):
+    p = subprocess.run(['./bin/bio',*args],capture_output=True,text=True,check=True)
+    return json.loads(p.stdout)
+
+def obj(p):
+    return bio(['object','add',str(p)])['blob']
+
+r = json.loads((o/'execution-package-r001.json').read_text())
+assert r['complete'] and r['exit_code']==0 and r['code_unchanged']
+assert sha(Path(r['producer']))==r['code_sha256']
+for item in r['outputs']:
+    assert item['written'] and sha(Path(item['path']))==item['sha256']
+receipt_hash = obj(o/'execution-package-r001.json')
+reg = json.loads((o/'registrations-final.json').read_text())
+inputs = {v['artifact'] for v in reg.values()}
+mp = json.loads((o/'package-manifest.json').read_text())
+for member in mp['members']:
+    p = q/member['path']
+    assert sha(p)==member['sha256']
+    inputs.add(obj(p))
+inputs.add(receipt_hash)
+args = ['register',str(o/'pmp22-rna-ends-evidence.zip'),'--question',q.name,'--title','PMP22 RNA ends complete evidence package','--summary','Observed cleavage, transcript-model/site availability, APA-control-backed perturbation comparison, coordinate mappings, notes/code and real receipts. Raw measurement sources remain registered immutable inputs.','--code',r['producer'],'--parameters',json.dumps({'producer_receipt_sha256':receipt_hash,'argv':r['argv']}),'--output-role','evidence-package']
+for item in sorted(inputs):
+    args.extend(['--input',item])
+a = bio(args)
+(o/'package-registration.json').write_text(json.dumps(a,indent=2))
+readback = bio(['artifact','show',a['artifact']])
+assert readback['output_blob']==sha(o/'pmp22-rna-ends-evidence.zip')
+(o/'package-readback.json').write_text(json.dumps(readback,indent=2))
+artifacts = [v['artifact'] for v in reg.values()]+[a['artifact']]
+assert len(artifacts)==14 and len(set(artifacts))==14
+body = (q/'REPORT.md').read_text()+'\n\n## Registered products\n\n'
+body += '\n'.join(f"- {name}: {v['artifact']}" for name,v in reg.items())
+body += '\n- Complete compact evidence package: '+a['artifact']+'\n'
+body += '\nEarly proposal: post_e49267084fcc4a43b3d7677fa6c60d18. Candidate-specific PUM2 critique request: post_61338f006dd04564854cb6e8a827ff8c (pending; no waiting).\n'
+(q/'PUBLICATION.md').write_text(body)
+bio(['work','sync',q.name,'--summary','Completed observed RNA-end/site retention analysis, two-context APA negative with positive control, qualified longread support and RBP coordinate mapping.','--status','completed'])
+args = ['community','publish','PMP22 ends: dominant site retention despite APA-factor perturbation; rare proximal calls preserved','--body',str(q/'PUBLICATION.md'),'--question',q.name,'--reply-to','post_c75060647f604c489d0e8cb6c166bcb4','--key','pmp22-rna-ends-final-r004-extension-r002']
+for aid in artifacts:
+    args.extend(['--artifact',aid])
+published = bio(args)
+(o/'publication-result.json').write_text(json.dumps(published,indent=2))
+print('PUBLICATION',json.dumps(published))
+post_id = published['post']
+public = bio(['community','show',post_id])
+assert public['content']['body']==body
+assert public['author']==os.environ['BIO_AGENT']
+assert public['parent']=='post_c75060647f604c489d0e8cb6c166bcb4'
+assert set(public['content']['evidence']['artifacts'])==set(artifacts)
+(o/'publication-readback.json').write_text(json.dumps(public,indent=2))
+print('VERIFIED',post_id,'ARTIFACTS',len(artifacts),'PACKAGE',a['artifact'])

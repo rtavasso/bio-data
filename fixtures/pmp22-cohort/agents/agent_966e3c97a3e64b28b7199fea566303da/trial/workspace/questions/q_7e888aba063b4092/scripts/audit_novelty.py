@@ -1,0 +1,53 @@
+"""Source-paper novelty and representation audit; no downloaded code execution."""
+import gzip
+import hashlib
+import io
+import json
+import subprocess
+from pathlib import Path
+import openpyxl
+import pandas as pd
+from defusedxml import ElementTree as ET
+
+R=Path(__file__).resolve().parents[1]
+S=R/'inputs'/'sources'
+OUT=R/'outputs'
+report={'source_papers':[],'supplement_hits':[],'literature_search':[]}
+for name in ['PMC4383229.xml','PMC4341466.xml','PMC12807861.xml']:
+    root=ET.parse(S/name).getroot()
+    hits=[]
+    for i,p in enumerate(root.iter('p'),1):
+        text=' '.join(''.join(p.itertext()).split())
+        if 'pmp22' in text.lower() or 'peripheral myelin protein 22' in text.lower():
+            hits.append({'paragraph':i,'text':text})
+    report['source_papers'].append({'source':name,'sha256':hashlib.sha256((S/name).read_bytes()).hexdigest(),'PMP22_paragraph_hits':hits})
+for name in ['GSE55195-supp','elife05033s001.xlsx','elife05033s002.xlsx','GSE256237-S2']:
+    data=(S/name).read_bytes()
+    if data[:2]==b'\x1f\x8b':
+        data=gzip.decompress(data)
+    wb=openpyxl.load_workbook(io.BytesIO(data),read_only=True,data_only=False)
+    for ws in wb:
+        hits=[]
+        formulas=0
+        for i,row in enumerate(ws.iter_rows(values_only=True),1):
+            if any(isinstance(v,str) and v.startswith('=') for v in row):
+                formulas+=1
+            if any(isinstance(v,str) and ('pmp22' in v.lower() or 'peripheral myelin protein 22' in v.lower()) for v in row):
+                hits.append({'row':i,'values':list(row)})
+        report['supplement_hits'].append({'source':name,'sheet':ws.title,'rows':ws.max_row,'formula_rows_not_executed':formulas,'PMP22_hits':hits})
+# Preserve exact versions rather than joining superficially related uc identifiers.
+raw=pd.read_csv(OUT/'GSE65778-full-native-counts.tsv.gz',sep='\t',index_col=0)
+related=raw.loc[raw.index.str.startswith('uc002goj.')]
+report['related_uc_prefix_only_not_equivalence']=json.loads(related.reset_index().to_json(orient='records'))
+search=json.loads((OUT/'novelty-discovery.json').read_text())
+for subject in search['resources']:
+    result=json.loads(subprocess.run(['./bin/bio','data','show',subject],capture_output=True,text=True,check=True).stdout)
+    report['literature_search'].append(result)
+report['literature_search_scope']={'request':search['request'],'exhausted':search['exhausted'],'next_cursor':search.get('next_cursor'),'limitation':'Bounded structured search, not a claim of exhaustive novelty or priority. Search hits are not all read papers.'}
+(OUT/'novelty-and-representation-audit.json').write_text(json.dumps(report,indent=2,allow_nan=False,default=str)+'\n')
+print('PAPER HITS',json.dumps(report['source_papers']))
+for entry in report['supplement_hits']:
+    print(entry['source'],entry['sheet'],'target rows',[h['row'] for h in entry['PMP22_hits']])
+print('LITERATURE TITLES')
+for x in report['literature_search']:
+    print(json.dumps(x)[:1000])

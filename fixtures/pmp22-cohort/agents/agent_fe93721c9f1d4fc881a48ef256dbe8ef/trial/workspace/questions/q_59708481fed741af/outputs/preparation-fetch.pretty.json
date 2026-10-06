@@ -1,0 +1,301 @@
+{
+  "blobs": [
+    "286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d",
+    "2cac2aba38f37bcaba7c28a0f85bacd3b2a080f1cb4da2f46e7472ddc67c564a",
+    "48c22b5349766c5d66bc94fcbe00f3947d9017ccb614aaa68916fdb4a4df3636",
+    "90e703f2c6d46e9274d9ed90d37952ae533145c01c1a15f219470b1f12e4a6e5",
+    "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+    "a7cb72e4210e413185c896954d9bf8308bc84b81f43418ad3adbd35b98db34c9",
+    "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+    "c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9",
+    "cac3b22fa991c68fb955223f5ec1dbef208c223f89d23428fcc37c7a8971fbd1",
+    "cc3f098b687c26493f4095548b1f9822259f92ac30f26ef5b5d470b5ec8f924b",
+    "d6ae5df6421f1776f93d0731cd430bc6148c58e11fd557b6f9380cea83c03cf4",
+    "da77805e9129a8e93a5a440986ebf24806a27a93b0ba8007ee01af872d143a1d",
+    "dd7ab71334b810af805f78b1198b7223628e662901d04488224953ace2f2b62f",
+    "e1bf0fa45b77d49d0136cbe52594a61566312ff0c81648ea15caa4f987f72ca8",
+    "e5cf000e43a57f5b05361be047b15321cd249e9f5042b71d73ccb0582eadeb93"
+  ],
+  "format_version": 1,
+  "records": {
+    "artifact": [
+      {
+        "created": "2026-09-27T15:00:59.299754+00:00",
+        "derivation_key": "4a80c0c80e02972e22c94c3fdbb3d160df529eca65f92e523d14df758023b150",
+        "id": "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+        "manifest_blob": "dd7ab71334b810af805f78b1198b7223628e662901d04488224953ace2f2b62f",
+        "output_blob": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+        "output_role": "prepared_table"
+      }
+    ],
+    "artifact_input": [
+      {
+        "artifact_id": "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+        "blob": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+        "role": "source_table",
+        "source_identity": "asset_5de0f13aed91ff279c9633dbded6a267"
+      }
+    ],
+    "assertion": [
+      {
+        "body": "{\"alternatives\":[],\"evidence\":{\"blob\":\"cc3f098b687c26493f4095548b1f9822259f92ac30f26ef5b5d470b5ec8f924b\",\"locator\":\"text:!Sample_data_processing = Read summarization was done with featureCounts (https://doi.org/10.1093/bioinformatics/btt656) using the RefSeq annotation of the rn6 genome extracted from the refGene.txt file (http://hgdownload.cse.ucsc.edu/goldenPath/rn6/database/refGene.txt.gz).\",\"method\":\"source-backed conservative mapping; unknown completeness is not an asserted tested universe\"},\"field\":\"units\",\"raw_value\":\"!Sample_data_processing = Read summarization was done with featureCounts (https://doi.org/10.1093/bioinformatics/btt656) using the RefSeq annotation of the rn6 genome extracted from the refGene.txt file (http://hgdownload.cse.ucsc.edu/goldenPath/rn6/database/refGene.txt.gz).\",\"scope\":{},\"subject\":\"asset_9d3f7926793679d9541119aa\",\"value\":\"source_reported_counts\"}",
+        "evidence_blob": "cc3f098b687c26493f4095548b1f9822259f92ac30f26ef5b5d470b5ec8f924b",
+        "field": "units",
+        "id": "assert_68c229bdabc6a512ae0f988fdf3cad36b8c34a19083d88e7ab58c6be4cb5cec6",
+        "subject": "asset_9d3f7926793679d9541119aa"
+      },
+      {
+        "body": "{\"alternatives\":[],\"evidence\":{\"blob\":\"b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580\",\"locator\":\"lines:1-1\",\"method\":\"source-backed conservative mapping; unknown completeness is not an asserted tested universe\"},\"field\":\"selection\",\"raw_value\":\"#Geneid\\tLentiAS-1\\tLentiAS-2\\tLentiGFP-1\\tLentiGFP-2\\tdescription\",\"scope\":{},\"subject\":\"asset_9d3f7926793679d9541119aa\",\"value\":\"unknown\"}",
+        "evidence_blob": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+        "field": "selection",
+        "id": "assert_3a14c7fb0decc681bb5937e51d554c202dabaa515291d4aa6d34dcdf278e0834",
+        "subject": "asset_9d3f7926793679d9541119aa"
+      },
+      {
+        "body": "{\"alternatives\":[],\"evidence\":{\"blob\":\"b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580\",\"locator\":\"lines:1-1\",\"method\":\"source-backed conservative mapping; unknown completeness is not an asserted tested universe\"},\"field\":\"namespace\",\"raw_value\":\"#Geneid\\tLentiAS-1\\tLentiAS-2\\tLentiGFP-1\\tLentiGFP-2\\tdescription\",\"scope\":{},\"subject\":\"asset_9d3f7926793679d9541119aa\",\"value\":\"literal_rat_source_gene_name\"}",
+        "evidence_blob": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+        "field": "namespace",
+        "id": "assert_98faed1ea0fe4c0b0a9db32f3a25d0fa0d96ed740dcd926973d3b79f800ff70d",
+        "subject": "asset_9d3f7926793679d9541119aa"
+      }
+    ],
+    "asset_revision": [
+      {
+        "access": "available_full",
+        "blob": "286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d",
+        "body": "{\"access\":\"available_full\",\"checksum\":null,\"checksum_scope\":\"file\",\"license\":\"unknown\",\"metadata\":{\"acquisition_reason\":null,\"level\":\"series\",\"listed_url\":\"ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz\",\"source_field\":\"Series_supplementary_file\",\"source_record\":\"study_51eb4187c1555e3ea6fea306\"},\"name\":\"GSE201623_LentiAS.rnaseq.counts.txt.gz\",\"native_id\":\"GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz\",\"raw\":false,\"selector\":{},\"size\":null,\"url\":\"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz\",\"version\":null}",
+        "created": "2026-09-27T11:05:52.475563+00:00",
+        "id": "asset_073430afcff5e551f5ede5a5eb64f2e1",
+        "resource_id": "asset_e0a2aec389a9f53de8509ed2",
+        "snapshot_id": "snap_880aa188e0e24702a8db671ec0bf2cc6"
+      },
+      {
+        "access": "available_full",
+        "blob": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+        "body": "{\"access\":\"available_full\",\"checksum\":null,\"checksum_scope\":\"file\",\"license\":\"unknown\",\"metadata\":{},\"name\":\"GSE201623_LentiAS.rnaseq.counts.txt\",\"native_id\":\"asset_073430afcff5e551f5ede5a5eb64f2e1!GSE201623_LentiAS.rnaseq.counts.txt\",\"raw\":false,\"selector\":{\"chain\":[{\"blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"member\":\"GSE201623_LentiAS.rnaseq.counts.txt\",\"parent\":\"asset_073430afcff5e551f5ede5a5eb64f2e1\"}]},\"size\":922032,\"url\":null,\"version\":null}",
+        "created": "2026-09-27T11:05:52.982879+00:00",
+        "id": "asset_5de0f13aed91ff279c9633dbded6a267",
+        "resource_id": "asset_9d3f7926793679d9541119aa",
+        "snapshot_id": "snap_880aa188e0e24702a8db671ec0bf2cc6"
+      }
+    ],
+    "curation_revision": [
+      {
+        "asset_revision": "asset_5de0f13aed91ff279c9633dbded6a267",
+        "blob": "2cac2aba38f37bcaba7c28a0f85bacd3b2a080f1cb4da2f46e7472ddc67c564a",
+        "created": "2026-09-27T11:17:39.046557+00:00",
+        "digest": "2cac2aba38f37bcaba7c28a0f85bacd3b2a080f1cb4da2f46e7472ddc67c564a",
+        "selector": "{}",
+        "supersedes": null,
+        "validation_blob": "48c22b5349766c5d66bc94fcbe00f3947d9017ccb614aaa68916fdb4a4df3636"
+      }
+    ],
+    "dataset_profile": [
+      {
+        "body_blob": "e1bf0fa45b77d49d0136cbe52594a61566312ff0c81648ea15caa4f987f72ca8",
+        "created": "2026-09-27T14:59:08.622050+00:00",
+        "id": "profile_e1bf0fa45b77d49d0136cbe52594a61566312ff0c81648ea15caa4f987f72ca8",
+        "level": 2,
+        "origin": "structural",
+        "subject": "asset_5de0f13aed91ff279c9633dbded6a267"
+      },
+      {
+        "body_blob": "da77805e9129a8e93a5a440986ebf24806a27a93b0ba8007ee01af872d143a1d",
+        "created": "2026-09-27T15:00:57.282257+00:00",
+        "id": "profile_da77805e9129a8e93a5a440986ebf24806a27a93b0ba8007ee01af872d143a1d",
+        "level": 3,
+        "origin": "agent:v2-pilot",
+        "subject": "asset_5de0f13aed91ff279c9633dbded6a267"
+      },
+      {
+        "body_blob": "a7cb72e4210e413185c896954d9bf8308bc84b81f43418ad3adbd35b98db34c9",
+        "created": "2026-09-27T14:58:44.513639+00:00",
+        "id": "profile_a7cb72e4210e413185c896954d9bf8308bc84b81f43418ad3adbd35b98db34c9",
+        "level": 1,
+        "origin": "source_manifest",
+        "subject": "asset_5de0f13aed91ff279c9633dbded6a267"
+      }
+    ],
+    "identifier": [],
+    "inspection": [
+      {
+        "asset_revision": "asset_5de0f13aed91ff279c9633dbded6a267",
+        "blob": "cac3b22fa991c68fb955223f5ec1dbef208c223f89d23428fcc37c7a8971fbd1",
+        "created": "2026-09-27T11:09:00.950103+00:00",
+        "id": "inspect_241218af2a1849259fd9720c24f4152d",
+        "status": "structure_inspected"
+      },
+      {
+        "asset_revision": "asset_073430afcff5e551f5ede5a5eb64f2e1",
+        "blob": "e5cf000e43a57f5b05361be047b15321cd249e9f5042b71d73ccb0582eadeb93",
+        "created": "2026-09-27T11:09:00.496224+00:00",
+        "id": "inspect_075d1890518344b5a1e59161e0ea1361",
+        "status": "partially_inspected"
+      },
+      {
+        "asset_revision": "asset_5de0f13aed91ff279c9633dbded6a267",
+        "blob": "cac3b22fa991c68fb955223f5ec1dbef208c223f89d23428fcc37c7a8971fbd1",
+        "created": "2026-09-27T11:05:53.411897+00:00",
+        "id": "inspect_5263c77cd7a442b4a895dd2755c601a6",
+        "status": "structure_inspected"
+      },
+      {
+        "asset_revision": "asset_5de0f13aed91ff279c9633dbded6a267",
+        "blob": "cac3b22fa991c68fb955223f5ec1dbef208c223f89d23428fcc37c7a8971fbd1",
+        "created": "2026-09-27T11:08:57.616315+00:00",
+        "id": "inspect_200fc3f31629408c9f99a3408f2bf492",
+        "status": "structure_inspected"
+      },
+      {
+        "asset_revision": "asset_073430afcff5e551f5ede5a5eb64f2e1",
+        "blob": "e5cf000e43a57f5b05361be047b15321cd249e9f5042b71d73ccb0582eadeb93",
+        "created": "2026-09-27T11:05:52.960308+00:00",
+        "id": "inspect_66965dd8ce5843808205047fcbe34025",
+        "status": "partially_inspected"
+      }
+    ],
+    "link": [
+      {
+        "id": "a1b0dcf923c74c6613e939a41c4c47a39594487a41be8245aa84b2ab3f12fa24",
+        "locator": "{\"chain\":[{\"blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"member\":\"GSE201623_LentiAS.rnaseq.counts.txt\",\"parent\":\"asset_073430afcff5e551f5ede5a5eb64f2e1\"}]}",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "derived_from",
+        "snapshot_id": "snap_880aa188e0e24702a8db671ec0bf2cc6",
+        "state": "accepted",
+        "subject": "asset_9d3f7926793679d9541119aa"
+      },
+      {
+        "id": "b7469e0c8336a4739a3b0b40fc356e634f60ef8e595a59c51ff4cd70569e4f10",
+        "locator": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "contains",
+        "snapshot_id": "snap_1da1123ad210407a8179da6522d78765",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      },
+      {
+        "id": "55d2c37cca5c3ae8aa15e597452b9aa74485fc5b18c9f6f16342f8c47d4121c4",
+        "locator": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "contains",
+        "snapshot_id": "snap_376cf1b53dda4f8cbadabebcd45372bb",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      },
+      {
+        "id": "1b04dd455fcb81d58b2aa03166555906397b1c4f267d10df14366875c024d2ad",
+        "locator": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "contains",
+        "snapshot_id": "snap_b3562ac02fd04aa58b725f13a03b4bda",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      },
+      {
+        "id": "aa86fa98d004f3b554ace0b51000bb6f5c895d23e8c35e68d6829fe4b107c905",
+        "locator": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "contains",
+        "snapshot_id": "snap_47fecbaaba8a47d59609ec18d776f316",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      },
+      {
+        "id": "3a5b461953c750657a1ea3d2e6219c031e73f4eac33511466c3051de175d4b8f",
+        "locator": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "object": "asset_e0a2aec389a9f53de8509ed2",
+        "relationship": "contains",
+        "snapshot_id": "snap_880aa188e0e24702a8db671ec0bf2cc6",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      },
+      {
+        "id": "89c310a4f14f768843b41e66496968651dac623562808b1553a652f0d927928c",
+        "locator": "asset_073430afcff5e551f5ede5a5eb64f2e1!GSE201623_LentiAS.rnaseq.counts.txt",
+        "object": "asset_9d3f7926793679d9541119aa",
+        "relationship": "contains",
+        "snapshot_id": "snap_880aa188e0e24702a8db671ec0bf2cc6",
+        "state": "accepted",
+        "subject": "bundle_51eb4187c1555e3ea6fea306"
+      }
+    ],
+    "resource": [
+      {
+        "body": "{\"reference\":\"GSE201623\"}",
+        "created": "2026-09-27T04:38:30.073910+00:00",
+        "id": "bundle_51eb4187c1555e3ea6fea306",
+        "kind": "bundle",
+        "native_id": "GSE201623",
+        "provider": "geo"
+      },
+      {
+        "body": "{}",
+        "created": "2026-09-27T11:05:52.961895+00:00",
+        "id": "asset_9d3f7926793679d9541119aa",
+        "kind": "asset",
+        "native_id": "asset_073430afcff5e551f5ede5a5eb64f2e1!GSE201623_LentiAS.rnaseq.counts.txt",
+        "provider": "archive"
+      },
+      {
+        "body": "{}",
+        "created": "2026-09-27T04:38:32.418401+00:00",
+        "id": "asset_e0a2aec389a9f53de8509ed2",
+        "kind": "asset",
+        "native_id": "GSE201623:/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "provider": "geo"
+      }
+    ],
+    "review_decision": [],
+    "snapshot": [
+      {
+        "blob": "286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d",
+        "body": "{\"attempt\":1,\"checksum\":null,\"checksum_scope\":\"file\",\"file_blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"headers\":{\"content-length\":\"375563\",\"content-type\":\"application/x-gzip\",\"last-modified\":\"Tue, 26 Apr 2022 21:51:09 GMT\"},\"http_representation_blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"identity_strength\":\"local_sha256\",\"redirects\":[],\"resume\":\"disabled; every retry starts fresh\",\"retrieved_utc\":\"2026-09-27T11:09:00.085187+00:00\",\"status\":200,\"transferred_bytes\":375563,\"transport_encoding\":\"identity\",\"url\":\"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz\"}",
+        "id": "snap_47fecbaaba8a47d59609ec18d776f316",
+        "locator": "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "outcome": "available_full",
+        "resource_id": "asset_e0a2aec389a9f53de8509ed2",
+        "retrieved": "2026-09-27T11:09:00.085249+00:00"
+      },
+      {
+        "blob": "c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9",
+        "body": "{\"attempt\":1,\"checksum\":null,\"checksum_scope\":\"file\",\"file_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"headers\":{\"content-type\":\"geo/text\"},\"http_representation_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"identity_strength\":\"local_sha256\",\"redirects\":[],\"resume\":\"disabled; every retry starts fresh\",\"retrieved_utc\":\"2026-09-27T04:38:30.309403+00:00\",\"status\":200,\"transferred_bytes\":2956,\"transport_encoding\":\"identity\",\"url\":\"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full\"}",
+        "id": "snap_1da1123ad210407a8179da6522d78765",
+        "locator": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full",
+        "outcome": "available_full",
+        "resource_id": null,
+        "retrieved": "2026-09-27T04:38:30.309472+00:00"
+      },
+      {
+        "blob": "286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d",
+        "body": "{\"attempt\":1,\"checksum\":null,\"checksum_scope\":\"file\",\"file_blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"headers\":{\"content-length\":\"375563\",\"content-type\":\"application/x-gzip\",\"last-modified\":\"Tue, 26 Apr 2022 21:51:09 GMT\"},\"http_representation_blob\":\"286a56de7afd39b581052693ddba9bd144437cc386d40e9d447f6eb0fe036d2d\",\"identity_strength\":\"local_sha256\",\"redirects\":[],\"resume\":\"disabled; every retry starts fresh\",\"retrieved_utc\":\"2026-09-27T11:05:52.471705+00:00\",\"status\":200,\"transferred_bytes\":375563,\"transport_encoding\":\"identity\",\"url\":\"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz\"}",
+        "id": "snap_880aa188e0e24702a8db671ec0bf2cc6",
+        "locator": "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201623/suppl/GSE201623_LentiAS.rnaseq.counts.txt.gz",
+        "outcome": "available_full",
+        "resource_id": "asset_e0a2aec389a9f53de8509ed2",
+        "retrieved": "2026-09-27T11:05:52.471834+00:00"
+      },
+      {
+        "blob": "c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9",
+        "body": "{\"attempt\":1,\"checksum\":null,\"checksum_scope\":\"file\",\"file_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"headers\":{\"content-type\":\"geo/text\"},\"http_representation_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"identity_strength\":\"local_sha256\",\"redirects\":[],\"resume\":\"disabled; every retry starts fresh\",\"retrieved_utc\":\"2026-09-27T11:40:20.790352+00:00\",\"status\":200,\"transferred_bytes\":2956,\"transport_encoding\":\"identity\",\"url\":\"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full\"}",
+        "id": "snap_376cf1b53dda4f8cbadabebcd45372bb",
+        "locator": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full",
+        "outcome": "available_full",
+        "resource_id": null,
+        "retrieved": "2026-09-27T11:40:20.790597+00:00"
+      },
+      {
+        "blob": "c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9",
+        "body": "{\"attempt\":1,\"checksum\":null,\"checksum_scope\":\"file\",\"file_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"headers\":{\"content-type\":\"geo/text\"},\"http_representation_blob\":\"c45f83500edd72e9ea8a1b588fee2a545abb2096c9a89f1d5a7231427dd02ab9\",\"identity_strength\":\"local_sha256\",\"redirects\":[],\"resume\":\"disabled; every retry starts fresh\",\"retrieved_utc\":\"2026-09-27T11:07:39.005857+00:00\",\"status\":200,\"transferred_bytes\":2956,\"transport_encoding\":\"identity\",\"url\":\"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full\"}",
+        "id": "snap_b3562ac02fd04aa58b725f13a03b4bda",
+        "locator": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&acc=GSE201623&form=text&view=full",
+        "outcome": "available_full",
+        "resource_id": null,
+        "retrieved": "2026-09-27T11:07:39.005927+00:00"
+      }
+    ]
+  },
+  "roots": [
+    "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a"
+  ],
+  "scope": "selected derivations, source receipts and recorded input interpretations; no mutable heads"
+}

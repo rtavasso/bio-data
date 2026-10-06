@@ -1,0 +1,43 @@
+{
+  "primary_pass": false,
+  "primary_status": "inconclusive_threshold_failure",
+  "primary_medians": [
+    {
+      "genotype": "ATF4KO",
+      "log2_effect": 0.025736329999999974,
+      "interaction_vs_WT": 0.346179827875
+    },
+    {
+      "genotype": "Fv2E-PERK",
+      "log2_effect": -0.9623065125,
+      "interaction_vs_WT": -0.641863014625
+    },
+    {
+      "genotype": "PERKKO",
+      "log2_effect": 0.5304117475,
+      "interaction_vs_WT": 0.850855245375
+    },
+    {
+      "genotype": "Wild Type",
+      "log2_effect": -0.32044349787500004,
+      "interaction_vs_WT": 0.0
+    },
+    {
+      "genotype": "eIF2a A/A",
+      "log2_effect": 1.047350177,
+      "interaction_vs_WT": 1.367793674875
+    }
+  ],
+  "array_rows": 55821,
+  "array_finite_all_samples": 55821,
+  "Pmp22_eligible": true,
+  "Pmp22_probe_count": 2,
+  "array_semantics": "Deposited normalized log2 intensity, no relog. Source excludes nonuniform flagged features; per-cell flags and precise normalization/centering not in series matrix. Negative log2 values retained.",
+  "replication": "WT4 and mutants2 labelled replicates/group, no donor independence assumed; no inferential p-values. Probe variants are not independent experiments.",
+  "footprint_rows": 22406,
+  "footprint_eligible": 7776,
+  "footprint_Pmp22_eligible": true,
+  "footprint_min_Pmp22_count": 107.0,
+  "footprint_min_Pmp22_TPM": 66.11,
+  "footprint_limits": "One library/genotype/time. Source mentions TPM flooring4 but deposits values below4; eligibility excludes floor-sensitive values. Footprints conflate RNA abundance, ribosome occupancy and elongation. No matched RNA, no absolute synthesis, no independent validation of translation efficiency."
+}

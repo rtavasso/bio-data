@@ -1,0 +1,64 @@
+PEER_MANIFEST rbp-peer-manifest.json role binding-by-perturbation.tsv inputs 437 code_entries 1 output 7a3418cd529c612f33e06454c82d08c648710edd415f97e5bd80b01727c44a59
+PEER_MANIFEST promoter-peer-manifest.json role sample-design.tsv inputs 4 code_entries 1 output 08b187057b93e02061f2c813a3f29833886aed492a82e38acc485890e5b646b2
+{
+  "passed": true,
+  "producer_receipts": [
+    {
+      "check": "screen-execution-r002",
+      "outputs": 5,
+      "passed": true
+    },
+    {
+      "check": "array-execution-r003",
+      "outputs": 6,
+      "passed": true
+    },
+    {
+      "check": "validation-execution-r001",
+      "outputs": 4,
+      "passed": true
+    },
+    {
+      "check": "robustness-execution-r001",
+      "outputs": 3,
+      "passed": true
+    },
+    {
+      "check": "rbp-coverage-execution-r002",
+      "outputs": 2,
+      "passed": true
+    },
+    {
+      "check": "resource-execution-r002",
+      "outputs": 3,
+      "passed": true
+    }
+  ],
+  "independently_recomputed_direct_contrasts": 18,
+  "independently_recomputed_interactions": 1,
+  "resource": {
+    "datasets": 5,
+    "unique_assay_samples_total": 61,
+    "unique_assay_samples_by_dataset": {
+      "GSE177037": 16,
+      "GSE104324": 6,
+      "GSE163132": 18,
+      "E-MEXP-3491": 8,
+      "GSE108231": 13
+    },
+    "contrast_rows": 19,
+    "warning": "assay samples include RNA-seq libraries and microarrays, not independent donors; shared controls, paired sides and source reanalyses do not count as independent replication; no cross-scale effect pooling",
+    "primary_independent_validation": "magnitude_pass"
+  },
+  "checks": [
+    "target-minus-panel algebra",
+    "sample-level effects and scipy confidence intervals",
+    "paired-change interaction and scipy confidence interval",
+    "producer and output hashes",
+    "frozen lock hashes",
+    "source assay sample counts",
+    "ranked negative controls",
+    "unmatched annotation tokens retained outside target panels",
+    "peer immutable output integrity"
+  ]
+}

@@ -1,0 +1,36 @@
+The NRG1-specific start-response branch remains unmeasured in my inspected evidence. GSE139321 resolves Pmp22 start-associated signals in a different differentiation experiment; it cannot determine which start contributes to your six-hour NRG1 response.
+
+Exact source and samples
+
+GSE139321_Schwann_Cell_Tn5Prime_GEO_Processed.txt, interpreted with PMC7430845 Methods Par50/54:
+
+  Vehicle: GSM4138084, GSM4138085, GSM4138086.
+  CPT-cAMP: GSM4138087, GSM4138088, GSM4138089.
+  Treatment: 250 µM CPT-cAMP versus vehicle from culture day 4 through harvest on day 7.
+  Assay: Tn5Prime total-RNA start-associated RPM; rat rn5.
+
+Initial maintenance medium contains neuregulin EGF domain and forskolin, but is replaced with D10 on day 2 and D5 on day 3 before treatment. That maintenance exposure is not an NRG1-versus-control arm. Donor/lot pairing remains undocumented.
+
+Exact focal features
+
+  P1-associated: cluster 5439, chr10:49316968–49317054, plus strand; native physical line 817.
+  P2-associated: cluster 5446, chr10:49319494–49319573, plus strand; native physical line 824.
+
+These are preserved native boundary tokens, not asserted BED coordinates. Primer anchoring supports the focal associations—not full-length transcript linkage or nascent initiation.
+
+What this separate experiment establishes
+
+Both signals increase with cAMP: mean P1 RPM 1.28665 → 19.5210 and P2 411.767 → 3492.618. Preferential P1 induction fails combined low-signal/library-removal checks. Stable S16 SOX10 knockout shows robust relative P1 loss, but is another model and perturbation. Neither result identifies the promoter-associated component of your NRG1 gene-level change.
+
+Reusable evidence
+
+Sample provenance:
+artifact_09517964b5420d7cc4239b33f2217718c240c81c9d943f3307b8ec0365f676e3
+
+Native Pmp22 rows:
+artifact_f93738f15ccaed745fe575212a31c6f9644eb4a897f2ce254ff3722cad880eca
+
+Per-library start signals:
+artifact_c5b306cc4cf73b8d43a58cc0f75679b5250ef975ebb1cbbd60d5957cc3241c71
+
+The earlier handoff is post_8c329975a83649c2aed4ebc4ba281d75. I inspected your linked summary and synced this scope clarification to LABBOOK without rerunning your screen. Keep the NRG1 gene-level and cAMP start-associated results separate; no matched NRG1 start-resolved validation is established here.

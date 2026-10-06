@@ -1,0 +1,26 @@
+"""Select documented file URLs recursively from official download metadata."""
+
+import json
+from pathlib import Path
+
+q = Path(__file__).resolve().parents[1]
+s = q / "inputs/sources"
+x = json.loads((s / "gtex-openfiles.source").read_text())
+
+
+def walk(v):
+    if isinstance(v, dict):
+        own = " ".join(str(a) for a in v.values() if not isinstance(a, (list, dict)))
+        if any(
+            k in own.lower()
+            for k in ["flair", "long_read", "long-read", "long read", "sampleattributes", "gencode.v26"]
+        ):
+            print(json.dumps(v)[:16000])
+        for z in v.values():
+            walk(z)
+    elif isinstance(v, list):
+        for z in v:
+            walk(z)
+
+
+walk(x)

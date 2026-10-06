@@ -1,0 +1,383 @@
+{
+  "created": "2026-09-27T15:00:59.299754+00:00",
+  "derivation_key": "4a80c0c80e02972e22c94c3fdbb3d160df529eca65f92e523d14df758023b150",
+  "id": "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "90e703f2c6d46e9274d9ed90d37952ae533145c01c1a15f219470b1f12e4a6e5"
+      ],
+      "command": [
+        "python",
+        "{code}",
+        "{source_table}",
+        "{output}"
+      ],
+      "environment": {
+        "lock": "c02c9961f245564caa278ec1cadcab556f5413345738fc01ce85d166c5c66df6",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.3"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "anndata",
+            "0.12.19"
+          ],
+          [
+            "annotated-doc",
+            "0.0.5"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "anyio",
+            "4.15.1"
+          ],
+          [
+            "array-api-compat",
+            "1.15.0"
+          ],
+          [
+            "asciitree",
+            "0.3.3"
+          ],
+          [
+            "bioframe",
+            "0.8.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.1"
+          ],
+          [
+            "click",
+            "8.5.0"
+          ],
+          [
+            "coloredlogs",
+            "15.0.1"
+          ],
+          [
+            "contourpy",
+            "1.4.0"
+          ],
+          [
+            "cooler",
+            "0.10.4"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "cytoolz",
+            "1.1.0"
+          ],
+          [
+            "data-archaeology-workbench",
+            "0.2.0"
+          ],
+          [
+            "defusedxml",
+            "0.7.1"
+          ],
+          [
+            "dill",
+            "0.4.1"
+          ],
+          [
+            "donfig",
+            "0.8.1.post1"
+          ],
+          [
+            "duckdb",
+            "1.5.5"
+          ],
+          [
+            "et_xmlfile",
+            "2.0.0"
+          ],
+          [
+            "fonttools",
+            "4.66.0"
+          ],
+          [
+            "google-crc32c",
+            "1.9.0"
+          ],
+          [
+            "h11",
+            "0.16.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "httpcore",
+            "1.0.9"
+          ],
+          [
+            "httpx",
+            "0.28.1"
+          ],
+          [
+            "humanfriendly",
+            "10.0"
+          ],
+          [
+            "hypothesis",
+            "6.168.1"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "iniconfig",
+            "2.3.0"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "legacy-api-wrap",
+            "1.5"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "msgspec",
+            "0.21.1"
+          ],
+          [
+            "multiprocess",
+            "0.70.19"
+          ],
+          [
+            "natsort",
+            "8.4.0"
+          ],
+          [
+            "numcodecs",
+            "0.17.0"
+          ],
+          [
+            "numpy",
+            "2.5.3"
+          ],
+          [
+            "openpyxl",
+            "3.1.5"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pandas",
+            "2.3.3"
+          ],
+          [
+            "pephubclient",
+            "0.6.0"
+          ],
+          [
+            "peppy",
+            "0.40.8"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "pluggy",
+            "1.6.0"
+          ],
+          [
+            "pyBigWig",
+            "0.3.26"
+          ],
+          [
+            "pyarrow",
+            "23.0.1"
+          ],
+          [
+            "pydantic",
+            "2.13.5"
+          ],
+          [
+            "pydantic_core",
+            "2.46.5"
+          ],
+          [
+            "pyfaidx",
+            "0.9.0.4"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "pytest",
+            "9.1.1"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "pytz",
+            "2026.4"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "ruff",
+            "0.16.9"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "scverse-misc",
+            "0.1.6"
+          ],
+          [
+            "session-info2",
+            "0.4.2"
+          ],
+          [
+            "shellingham",
+            "1.5.4"
+          ],
+          [
+            "simplejson",
+            "4.1.2"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sortedcontainers",
+            "2.4.0"
+          ],
+          [
+            "toml",
+            "0.10.2"
+          ],
+          [
+            "toolz",
+            "1.1.0"
+          ],
+          [
+            "typer",
+            "0.27.2"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "tzdata",
+            "2026.4"
+          ],
+          [
+            "ubiquerg",
+            "0.9.3"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "zarr",
+            "3.4.0"
+          ]
+        ],
+        "platform": "macOS-15.7.2-x86_64-i386-64bit",
+        "python": "3.12.8",
+        "source": "53ea96840675f875058101a027e02870f813bf0510092f38a280dc3cca44e680"
+      },
+      "inputs": [
+        {
+          "blob": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+          "role": "source_table",
+          "selector": {
+            "representation": "entire supplied table"
+          },
+          "source_identity": "asset_5de0f13aed91ff279c9633dbded6a267"
+        }
+      ],
+      "parameters": {
+        "cell_representation": "string",
+        "normalization": "none",
+        "source_rows": "1-based including header"
+      },
+      "references": []
+    },
+    "derivation_key": "4a80c0c80e02972e22c94c3fdbb3d160df529eca65f92e523d14df758023b150",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "parquet",
+    "limitations": [
+      "Gene-level table; no promoter-specific output",
+      "No normalization, pooling, or donor inference"
+    ],
+    "output": {
+      "blob": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+      "bytes": 550385,
+      "name": "prepared.parquet"
+    },
+    "output_role": "prepared_table",
+    "scientific_applicability": "assessed at question time",
+    "summary": "All original cell strings and source rows prepared once as Parquet for arbitrary gene lookup",
+    "title": "GSE201623 rat Schwann source-preserving expression table"
+  },
+  "manifest_blob": "dd7ab71334b810af805f78b1198b7223628e662901d04488224953ace2f2b62f",
+  "output_blob": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+  "output_role": "prepared_table",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/library/blobs/sha256/a2/a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+  "questions": []
+}

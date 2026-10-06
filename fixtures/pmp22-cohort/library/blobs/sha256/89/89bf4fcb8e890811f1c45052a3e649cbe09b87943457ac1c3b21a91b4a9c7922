@@ -1,0 +1,45 @@
+{
+  "branches": [
+    {
+      "question": "Does another membrane-cargo corrector improve measured PMP22 surface signal?",
+      "test": "JCI S4B compared with S4A",
+      "status": "No improvement demonstrated, not equivalence",
+      "next": "Independent preregistered matched cargo assay with verified construct/vehicle and viable-cell normalization"
+    },
+    {
+      "question": "Can a general cargo handling regulator increase delivered amount rather than shrink the denominator?",
+      "test": "366 HRP siRNA labels, two repeats, full NT/background grid",
+      "status": "ACSL5 gain in reporter activity with near-unchanged intracellular activity; FCF1/ERVFRD-1 also pass; threshold/comparator dependent",
+      "next": "Frozen other-protein prediction remains unevaluated; mass/viability assay and independent reagents discriminate"
+    },
+    {
+      "question": "Do generic secretion hits distinguish retained accumulation from loss of reporter?",
+      "test": "TMEM220 versus GPR161/FAM98B repeat-specific CL and SN",
+      "status": "TMEM220 retention-like; GPR161 and FAM98B ratio direction reverses",
+      "next": "Compare mature/ER pools and viable-cell amounts without averaging away repeat conflict"
+    },
+    {
+      "question": "Is less glycan surveillance intrinsically productive?",
+      "test": "IGF1R UGGT1/2/ALG6 pulse-chase and DNJ IGF1R/HEXB",
+      "status": "Maturation loss, especially ALG6; not improved delivery",
+      "next": "PMP22-specific initial-cohort yield needed; no transfer from annotation-only Q01453"
+    },
+    {
+      "question": "Does increased membrane localization assure function?",
+      "test": "KCNQ1 coding variants and separate CHO-KCNE1 currents",
+      "status": "Not uniformly; cell-level counts/nesting and context differ",
+      "next": "Do not label PMP22 myelin rescue without a functional endpoint"
+    }
+  ],
+  "prediction": {
+    "question": "q_9598a00912a748ce",
+    "status": "Prospective to independent validation outcome lookup; retrospective candidate selection from the analyzed HRP data",
+    "exposed_discovery": "CAM40408-S4.xlsx HeLa ssHRP selected-siRNA screen; both repeats and all local NT/background sensitivity already examined. ACSL5 passes descriptive SN>=1.25 and SN/CL>=1.25 in both repeats. Other hits are not separate validation.",
+    "prediction": "If ACSL5 depletion increases productive general secretory transport rather than HRP-specific enzymatic activity, an independent culture/reagent dataset measuring another secretory cargo should show increased delivered amount relative to its own control, with no intracellular-only accumulation explanation.",
+    "validation_priority": "Independent human-cell RNAi/cargo-transport screen using VSVG, secreted luciferase or surface reporter; actual target coverage, depletion direction and measured endpoint required. No PMP22 requirement for this submechanism test.",
+    "criterion": "Direction positive for directly measured delivery amount, not merely surface/total ratio. If source provides comparable fold units, seek >=1.25 in separately reported biological repeat estimates; absence of target, amount endpoint or replicates makes the test unavailable rather than negative. Opposite direction with adequate controls falsifies generic transfer in that assay, not the HRP measurement.",
+    "limits": "No claim that ACSL5 inhibition improves PMP22 or myelin. VSVG general cargo differs from tetraspan PMP22. Activity assays need orthogonal mass/viability checks. Do not tune threshold to validation outcomes.",
+    "secondary_prediction": "TMEM220 loss should produce reduced secreted amount with relative intracellular retention more consistently than GPR161 loss; the present two-repeat HRP data already support this contrast, so these exact rows are not prospective validation. GPR161 is a repeat-sensitive localization/retention interpretation despite lower SN in both repeats."
+  },
+  "decision": "Bounded task yields a tested direct-PMP22 transfer rejection and an assay-specific ACSL5 handling lead, with alternative machinery failures quantified. It does not identify a validated PMP22 maturation/surface improver. Carry the independent ACSL5 protein-cargo prediction as an open dependency, not an invented validation result."
+}

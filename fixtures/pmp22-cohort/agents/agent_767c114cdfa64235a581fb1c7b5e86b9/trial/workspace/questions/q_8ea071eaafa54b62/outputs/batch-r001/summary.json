@@ -1,0 +1,120 @@
+{
+  "rows": 223,
+  "paired_contexts": 203,
+  "batch_response_pass_count": 2,
+  "bound_batch_response_pass_count": 0,
+  "batch_universe_count": 2,
+  "binding_followups": [
+    {
+      "rbp": "IGF2BP2",
+      "cell": "K562",
+      "pmp22_log2FoldChange": 0.396773930952065,
+      "batch_log2FoldChange": 0.20924358549355,
+      "batch_ci95_lower": -0.9677796273228125,
+      "batch_ci95_upper": 1.3862667983099124,
+      "batch_pvalue": 0.727517471159089,
+      "batch_padj": 0.993533142260721,
+      "batch_bh203": 0.9652682787274188,
+      "batch_direction_agrees": true,
+      "batch_target_rna_depletion": {
+        "ENSG00000073792.11": {
+          "baseMean": 142.771997832409,
+          "log2FoldChange": -2.01314849572306,
+          "lfcSE": 0.288893728081835,
+          "stat": -6.96847421745615,
+          "pvalue": 3.20396681145086e-12,
+          "padj": 1.17916658550763e-08
+        }
+      }
+    },
+    {
+      "rbp": "TIA1",
+      "cell": "K562",
+      "pmp22_log2FoldChange": 0.352055072750361,
+      "batch_log2FoldChange": 0.48455448599015,
+      "batch_ci95_lower": -0.6613169048880916,
+      "batch_ci95_upper": 1.6304258768683917,
+      "batch_pvalue": 0.407212089944924,
+      "batch_padj": null,
+      "batch_bh203": 0.89995696255343,
+      "batch_direction_agrees": true,
+      "batch_target_rna_depletion": {
+        "ENSG00000116001.11": {
+          "baseMean": 109.897180503294,
+          "log2FoldChange": -0.318239094562696,
+          "lfcSE": 0.318596719664224,
+          "stat": -0.998877499109516,
+          "pvalue": 0.317854037455446,
+          "padj": null
+        }
+      }
+    },
+    {
+      "rbp": "SND1",
+      "cell": "K562",
+      "pmp22_log2FoldChange": 0.6622987397132,
+      "batch_log2FoldChange": 0.663545350541577,
+      "batch_ci95_lower": -0.4375155754253416,
+      "batch_ci95_upper": 1.7646062765084958,
+      "batch_pvalue": 0.237540659488341,
+      "batch_padj": 0.999999130959455,
+      "batch_bh203": 0.8036792312688871,
+      "batch_direction_agrees": true,
+      "batch_target_rna_depletion": {
+        "ENSG00000197157.6": {
+          "baseMean": 2351.30535036998,
+          "log2FoldChange": -0.647457396265755,
+          "lfcSE": 0.432348783196565,
+          "stat": -1.49753491030734,
+          "pvalue": 0.134254128878822,
+          "padj": 0.999999130959455
+        }
+      }
+    },
+    {
+      "rbp": "PUM2",
+      "cell": "K562",
+      "pmp22_log2FoldChange": 0.731510222100873,
+      "batch_log2FoldChange": 0.33632349319256,
+      "batch_ci95_lower": -1.197820019692861,
+      "batch_ci95_upper": 1.870467006077981,
+      "batch_pvalue": 0.667432631173704,
+      "batch_padj": 0.999925707394824,
+      "batch_bh203": 0.9579650101764824,
+      "batch_direction_agrees": true,
+      "batch_target_rna_depletion": {
+        "ENSG00000055917.11": {
+          "baseMean": 103.956930510121,
+          "log2FoldChange": -1.1678037144072,
+          "lfcSE": 0.622793443445418,
+          "stat": -1.87510598690102,
+          "pvalue": 0.0607781440908361,
+          "padj": 0.999925707394824
+        }
+      }
+    },
+    {
+      "rbp": "QKI",
+      "cell": "K562",
+      "pmp22_log2FoldChange": -0.197630554973682,
+      "batch_log2FoldChange": -0.51166148273586,
+      "batch_ci95_lower": -1.548612017032044,
+      "batch_ci95_upper": 0.525289051560324,
+      "batch_pvalue": 0.333492494909759,
+      "batch_padj": 0.999758028028698,
+      "batch_bh203": 0.8779265931788902,
+      "batch_direction_agrees": true,
+      "batch_target_rna_depletion": {
+        "ENSG00000112531.12": {
+          "baseMean": 456.026516701612,
+          "log2FoldChange": -1.21180534958707,
+          "lfcSE": 0.268921650658368,
+          "stat": -4.50616507306258,
+          "pvalue": 6.60097430615726e-06,
+          "padj": 0.00174673015841868
+        }
+      }
+    }
+  ],
+  "not_independent": true
+}

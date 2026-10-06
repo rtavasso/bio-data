@@ -1,0 +1,11 @@
+{
+  "assembly": "rn6, sourced from reference parent URL and GSE201627 methods",
+  "window": "strand-aware -1500/+500 bp around RefSeq transcript TSS; 0-based half-open",
+  "peak_totals": {
+    "GFP1": 54289,
+    "GFP2": 35646,
+    "AS1": 43312,
+    "AS2": 46125
+  },
+  "limitations": "Called-peak overlap is not differential accessibility. Peak absence is selected-out, not measured-zero. signalValue is not compared across libraries. Reference downloaded 2026 may differ from original author reference; P1/P2 assignment not assumed. Duplicate transcript promoter windows retained, not independent evidence."
+}

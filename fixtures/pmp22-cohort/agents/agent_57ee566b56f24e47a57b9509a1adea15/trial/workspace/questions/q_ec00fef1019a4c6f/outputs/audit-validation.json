@@ -1,0 +1,36 @@
+{
+  "sample_rows": 42,
+  "dataset_counts": {
+    "GSE137947": 12,
+    "GSE138577": 6,
+    "GSE177037": 16,
+    "GSE241269": 8
+  },
+  "unique_gsms": 42,
+  "p5_subjects": 4,
+  "p1_pools": 3,
+  "eligibility_rows": 8,
+  "rejected_http200_payloads": [
+    {
+      "file": "repair-supp4.xlsx",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "reason": "Client Challenge HTML",
+      "not_measurement": true
+    },
+    {
+      "file": "repair-supp4-pmc.response",
+      "sha256": "4028de96728e9163034376d53175b9631822d5ecf14dfa8d22a71bc9da69ca86",
+      "reason": "recaptcha HTML",
+      "not_measurement": true
+    },
+    {
+      "file": "repair-publisher.html",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "reason": "Client Challenge HTML",
+      "not_measurement": true
+    }
+  ],
+  "generic_mixture_identity_verified": true,
+  "mixture_identity_status": "algebra check only; no synthetic biological values or fitted cell fractions",
+  "json_finite": true
+}

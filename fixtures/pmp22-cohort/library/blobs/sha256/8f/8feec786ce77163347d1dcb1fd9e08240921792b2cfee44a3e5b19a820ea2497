@@ -1,0 +1,928 @@
+{
+  "dataset": "GSE108231",
+  "question": "q_6a3a0a07fa5d4da1",
+  "native_input": "8c59b58eced870603fb5932ce37c143c5697983360e9f32206b5c9c7400c1d48",
+  "features": 40787,
+  "samples": 13,
+  "source_genome": "GRCm38",
+  "annotation": {
+    "Pmp22": {
+      "sha256": "8ed873b27185ea07d63c0be52dc60f511be4206dcc073bfc411ee6347ed4c0a0",
+      "stable_id": "ENSMUSG00000018217",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mpz": {
+      "sha256": "51df900ebf0e688384c6b62b8969cca5eed79180fe6025552cc4c056885c41af",
+      "stable_id": "ENSMUSG00000056569",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mbp": {
+      "sha256": "e3429a19ae0cfe2e2c38a492f4a108ba17e10ae666005c92bf4881f31630fe3b",
+      "stable_id": "ENSMUSG00000041607",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mag": {
+      "sha256": "4d7f11dbb777fff3117e3c4d12e16f3241305a942c08a8b1c9215918242351c5",
+      "stable_id": "ENSMUSG00000036634",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Prx": {
+      "sha256": "6cd4c56d2de4857af80dd571ff05575eee5b02a88ce070b5304288918e2607a6",
+      "stable_id": "ENSMUSG00000053198",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Plp1": {
+      "sha256": "eb9daa7275f865ce51d9bb4c6238363304137d567999531aaeaff306794a4d47",
+      "stable_id": "ENSMUSG00000031425",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Cnp": {
+      "sha256": "4cc310667b3521c4ea5bfbe1f66a375d7083517196b3c755be698b9527424ba9",
+      "stable_id": "ENSMUSG00000006782",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mal": {
+      "sha256": "b58d2750efe26334989de21f0c5abd09c5d6cbc9f131ebdd4ce271315b6bf800",
+      "stable_id": "ENSMUSG00000027375",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Sox10": {
+      "sha256": "8ac33f37094b8429c39755b352f13f8d46aadbfd6da06632162d37cbda5a9013",
+      "stable_id": "ENSMUSG00000033006",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "S100b": {
+      "sha256": "24b147207d8edf25879ab0b1ad861aabf4432a10b7ecbd3f667ca779bb961441",
+      "stable_id": "ENSMUSG00000033208",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Erbb3": {
+      "sha256": "4af81e143d49c363dfd7c3dcc9c5ba1b1ec2323767d9cda5773b4d1446c0c93b",
+      "stable_id": "ENSMUSG00000018166",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Dhh": {
+      "sha256": "8ca6878fd5da9ea7b113761353114b0148b11b93b2c15ecbde9bbe04d3326599",
+      "stable_id": "ENSMUSG00000023000",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mki67": {
+      "sha256": "dcc4d904af753235a5358d0869d805caa560ffd732713314b28f136bf8d79af2",
+      "stable_id": "ENSMUSG00000031004",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Top2a": {
+      "sha256": "9750d0b6a4faaaef2fd1aa22fb9072a9931cbfd76d1a83697d43b44a4d5b8664",
+      "stable_id": "ENSMUSG00000020914",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Pcna": {
+      "sha256": "65309e6550b3e296089c0fcbf6fee7fb3cb19175a2127dd9f9864f68daceb9cd",
+      "stable_id": "ENSMUSG00000027342",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Ccnb1": {
+      "sha256": "a54cb12c561d0d54201f8b1d8360f593ca2f5f1053537982b9d42221e9ef834f",
+      "stable_id": "ENSMUSG00000041431",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Cdk1": {
+      "sha256": "1b9215e8de41073a11b812a81f7d6a99f991c22f4828455735f040ef4f0f2c08",
+      "stable_id": "ENSMUSG00000019942",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Mcm2": {
+      "sha256": "73196bcba321d5bbfc845ab9593611f2d26d85c49f751711bed2080fd4988634",
+      "stable_id": "ENSMUSG00000002870",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Atf3": {
+      "sha256": "f34043b4527e1d54efed349f0eed7577370224b3f1743ab2b1484136d9b3e93a",
+      "stable_id": "ENSMUSG00000026628",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Jun": {
+      "sha256": "d03773960e4e17cf44a5e34c17638a162bae10ed89eed46f9a2990653ab40833",
+      "stable_id": "ENSMUSG00000052684",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Ddit3": {
+      "sha256": "21d85640dbf0965c5e3a3b4ec6e0c21d80692021c2b84b5bd9a2df2957eb65b7",
+      "stable_id": "ENSMUSG00000116429",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Hspa5": {
+      "sha256": "ac6fef9f4b563983cfa2299c2fcd01bf9e467d28519c9c06769301271167db51",
+      "stable_id": "ENSMUSG00000026864",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Hmox1": {
+      "sha256": "89e4312ed4a28e99b1f2b330f8b2d5643224b381d93be13baa146fc488a77c91",
+      "stable_id": "ENSMUSG00000005413",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    },
+    "Nqo1": {
+      "sha256": "e241dcff829ec3bf3e89941e320f66e8e87685972254886d3dea0f165ede268b",
+      "stable_id": "ENSMUSG00000003849",
+      "lookup_assembly": "GRCm39",
+      "usage": "stable-ID label only; source matrix GRCm38 coordinates not altered"
+    }
+  },
+  "unmapped_current_symbols": {
+    "Ddit3": "ENSMUSG00000116429"
+  },
+  "sample_metadata": {
+    "KO1_ctrlat": {
+      "accession": "GSM2893416",
+      "source_title": "KO1_contralateral",
+      "native_column": "KO1_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200064",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480683"
+      ],
+      "mouse_pair_label": "KO1"
+    },
+    "Control1_ctrlat": {
+      "accession": "GSM2893410",
+      "source_title": "Control1_contralateral",
+      "native_column": "Control1_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200071",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480677"
+      ],
+      "mouse_pair_label": "Control1"
+    },
+    "Control1_crush": {
+      "accession": "GSM2893409",
+      "source_title": "Control1_crush",
+      "native_column": "Control1_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200070",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480676"
+      ],
+      "mouse_pair_label": "Control1"
+    },
+    "KO3_ctrlat": {
+      "accession": "GSM2893420",
+      "source_title": "KO3_contralateral",
+      "native_column": "KO3_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200063",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480687"
+      ],
+      "mouse_pair_label": "KO3"
+    },
+    "KO2_ctrlat": {
+      "accession": "GSM2893418",
+      "source_title": "KO2_contralateral",
+      "native_column": "KO2_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200066",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480685"
+      ],
+      "mouse_pair_label": "KO2"
+    },
+    "KO2_crush": {
+      "accession": "GSM2893417",
+      "source_title": "KO2_crush",
+      "native_column": "KO2_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200067",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480684"
+      ],
+      "mouse_pair_label": "KO2"
+    },
+    "Control3_ctrlat": {
+      "accession": "GSM2893414",
+      "source_title": "Control3_contralateral",
+      "native_column": "Control3_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200075",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480681"
+      ],
+      "mouse_pair_label": "Control3"
+    },
+    "Control3_crush": {
+      "accession": "GSM2893413",
+      "source_title": "Control3_crush",
+      "native_column": "Control3_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200073",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480680"
+      ],
+      "mouse_pair_label": "Control3"
+    },
+    "KO3_crush": {
+      "accession": "GSM2893419",
+      "source_title": "KO3_crush",
+      "native_column": "KO3_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200068",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480686"
+      ],
+      "mouse_pair_label": "KO3"
+    },
+    "Control2_crush": {
+      "accession": "GSM2893411",
+      "source_title": "Control2_crush",
+      "native_column": "Control2_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200072",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480678"
+      ],
+      "mouse_pair_label": "Control2"
+    },
+    "Control2_ctrlat": {
+      "accession": "GSM2893412",
+      "source_title": "Control2_contralateral",
+      "native_column": "Control2_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Control",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200074",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480679"
+      ],
+      "mouse_pair_label": "Control2"
+    },
+    "KO1_crush": {
+      "accession": "GSM2893415",
+      "source_title": "KO1_crush",
+      "native_column": "KO1_crush",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Injured"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200076",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480682"
+      ],
+      "mouse_pair_label": "KO1"
+    },
+    "KO4_ctrlat": {
+      "accession": "GSM2893421",
+      "source_title": "KO4_contralateral",
+      "native_column": "KO4_ctrlat",
+      "characteristics": [
+        "tissue: Sciatic nerve",
+        "strain: C57BL/6",
+        "age: 5 days post-crush",
+        "genotype: Raptor knockout",
+        "surgery: Uninjured contrataleral"
+      ],
+      "source_relations": [
+        "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN08200065",
+        "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX3480688"
+      ],
+      "mouse_pair_label": "KO4"
+    }
+  },
+  "library_sums": {
+    "Control1_crush": 10491331.21999997,
+    "Control2_crush": 10297473.659999998,
+    "Control3_crush": 9792216.63999997,
+    "KO1_crush": 10445769.259999922,
+    "KO2_crush": 11734611.399999982,
+    "KO3_crush": 10286791.369999915,
+    "Control1_ctrlat": 11851083.419999955,
+    "Control2_ctrlat": 13322951.799999926,
+    "Control3_ctrlat": 10897796.519999929,
+    "KO1_ctrlat": 9617484.939999929,
+    "KO2_ctrlat": 13581806.629999954,
+    "KO3_ctrlat": 10719388.359999957,
+    "KO4_ctrlat": 8200502.869999974
+  },
+  "median_ratio_positive_features": 14160,
+  "noninteger_count_values": 62039,
+  "panel_spec_sha256": "6a69de9578a208fc92c8b8069261c1e5b2ade8559f8b41247f3eb6de4dac2a1c",
+  "frozen_prediction_sha256": "d269ccf4bb8ad924887f8d3fcc583e179cfc794fc6762554f76f43a4a7bbddf3",
+  "selection_sha256": "777de5f7d93286c52f8ee7c83495fb55b436dc5e526d9a9219c92fe04db8e623",
+  "primary_decision": "magnitude_pass",
+  "primary_direction_interval_supported": true,
+  "contrasts": [
+    {
+      "dataset": "GSE108231",
+      "contrast": "control_injury_d5",
+      "role": "frozen primary independent bulk-context transfer",
+      "control": [
+        "Control1_ctrlat",
+        "Control2_ctrlat",
+        "Control3_ctrlat"
+      ],
+      "treated": [
+        "Control1_crush",
+        "Control2_crush",
+        "Control3_crush"
+      ],
+      "paired": true,
+      "n_control": 3,
+      "n_treated": 3,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 18560.96767737649,
+        "Mpz": 35233.85076368933,
+        "Mbp": 21576.631146667954,
+        "Mag": 308.1347617345153,
+        "Prx": 6191.706951640711,
+        "Plp1": 1218.927192772202,
+        "Cnp": 951.2213139297364,
+        "Mal": 3149.245130283022,
+        "Sox10": 605.30270716703,
+        "S100b": 775.0867015900818,
+        "Erbb3": 284.82581508228014,
+        "Dhh": 293.5489806947167,
+        "Mki67": 4.436904529730692,
+        "Top2a": 1.4659296294179065,
+        "Pcna": 60.00264190871346,
+        "Ccnb1": 0.14490797345221673,
+        "Cdk1": 0.14736837289795024,
+        "Mcm2": 3.8445784453829592,
+        "Atf3": 10.44319677366794,
+        "Jun": 42.1313962107642,
+        "Hspa5": 234.82862956011886,
+        "Hmox1": 105.76971620779001,
+        "Nqo1": 13.1826160829622
+      },
+      "Pmp22": {
+        "effect": -5.379727066732788,
+        "ci_low": -5.698449080147996,
+        "ci_high": -5.06100505331758,
+        "df": 2,
+        "paired_unit_effects": [
+          -5.494885784857681,
+          -5.241429182637114,
+          -5.40286623270357
+        ],
+        "exact_signflip_p": 0.25
+      },
+      "myelin7": {
+        "effect": -3.6172183289626045,
+        "ci_low": -4.275206199850626,
+        "ci_high": -2.959230458074584,
+        "df": 2,
+        "paired_unit_effects": [
+          -3.8753906016757487,
+          -3.346112905772875,
+          -3.6301514794391903
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 7,
+        "missing": []
+      },
+      "identity4": {
+        "effect": -0.6895886576547898,
+        "ci_low": -1.0004547039007847,
+        "ci_high": -0.3787226114087948,
+        "df": 2,
+        "paired_unit_effects": [
+          -0.8151396908125239,
+          -0.5648629252104573,
+          -0.6887633569413882
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 4,
+        "missing": []
+      },
+      "proliferation6": {
+        "effect": 6.42239884931126,
+        "ci_low": 5.495490801238102,
+        "ci_high": 7.349306897384418,
+        "df": 2,
+        "paired_unit_effects": [
+          6.853138194760922,
+          6.215645030175209,
+          6.19841332299765
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 6,
+        "missing": []
+      },
+      "stress6": {
+        "effect": 1.550195336224161,
+        "ci_low": 1.1949334586586948,
+        "ci_high": 1.905457213789627,
+        "df": 2,
+        "paired_unit_effects": [
+          1.7139596813873084,
+          1.449917382147481,
+          1.4867089451376936
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 5,
+        "missing": [
+          "Ddit3"
+        ]
+      },
+      "primary_selectivity": {
+        "effect": -1.7625087377701838,
+        "ci_low": -2.1058004006363733,
+        "ci_high": -1.419217074903994,
+        "df": 2,
+        "paired_unit_effects": [
+          -1.6194951831819324,
+          -1.8953162768642393,
+          -1.7727147532643794
+        ],
+        "exact_signflip_p": 0.25
+      },
+      "unpaired_sensitivity": {
+        "effect": -1.7625087377701836,
+        "ci_low": -1.959299098829515,
+        "ci_high": -1.5657183767108522,
+        "df": 3.531425596971289
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 0.08688829970013257,
+        "Mbp": -0.36633992199805065,
+        "Mag": -1.7261230610519283,
+        "Prx": 0.17313772620209877,
+        "Plp1": -5.22051066630863,
+        "Cnp": -3.7388593314915712,
+        "Mal": -1.5457542094433288
+      }
+    },
+    {
+      "dataset": "GSE108231",
+      "contrast": "raptorKO_injury_d5",
+      "role": "exploratory; KO4 has no injured partner",
+      "control": [
+        "KO1_ctrlat",
+        "KO2_ctrlat",
+        "KO3_ctrlat"
+      ],
+      "treated": [
+        "KO1_crush",
+        "KO2_crush",
+        "KO3_crush"
+      ],
+      "paired": true,
+      "n_control": 3,
+      "n_treated": 3,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 16184.77325782768,
+        "Mpz": 31929.139249818963,
+        "Mbp": 21483.398350773245,
+        "Mag": 305.8165854121518,
+        "Prx": 6311.735770327387,
+        "Plp1": 489.23458004030425,
+        "Cnp": 936.5240441978008,
+        "Mal": 2606.4477271272403,
+        "Sox10": 508.86929465860885,
+        "S100b": 414.1426755920956,
+        "Erbb3": 207.75171042036922,
+        "Dhh": 312.2824491448281,
+        "Mki67": 12.787699002606212,
+        "Top2a": 4.867336737232835,
+        "Pcna": 61.245781734447746,
+        "Ccnb1": 0.40803345446299116,
+        "Cdk1": 1.0558678944418356,
+        "Mcm2": 7.819830103215115,
+        "Atf3": 4.232215891305745,
+        "Jun": 44.325301476815376,
+        "Hspa5": 227.90003615110993,
+        "Hmox1": 72.90131792707638,
+        "Nqo1": 11.580659315635465
+      },
+      "Pmp22": {
+        "effect": -5.3931430943024905,
+        "ci_low": -6.078363571363449,
+        "ci_high": -4.707922617241532,
+        "df": 2,
+        "paired_unit_effects": [
+          -5.139278388685483,
+          -5.686662767483519,
+          -5.353488126738467
+        ],
+        "exact_signflip_p": 0.25
+      },
+      "myelin7": {
+        "effect": -3.639933769615862,
+        "ci_low": -4.053885303188786,
+        "ci_high": -3.225982236042937,
+        "df": 2,
+        "paired_unit_effects": [
+          -3.455786501068764,
+          -3.7803347560097613,
+          -3.68368005176906
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 7,
+        "missing": []
+      },
+      "identity4": {
+        "effect": -0.7248598892686967,
+        "ci_low": -0.8975107046909395,
+        "ci_high": -0.5522090738464539,
+        "df": 2,
+        "paired_unit_effects": [
+          -0.7307987105948284,
+          -0.6525797337946138,
+          -0.7912012234166479
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 4,
+        "missing": []
+      },
+      "proliferation6": {
+        "effect": 4.521279847198804,
+        "ci_low": 3.9155478689679555,
+        "ci_high": 5.127011825429653,
+        "df": 2,
+        "paired_unit_effects": [
+          4.531300589196119,
+          4.272584018157928,
+          4.759954934242367
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 6,
+        "missing": []
+      },
+      "stress6": {
+        "effect": 1.696027359603297,
+        "ci_low": 1.5389508367437383,
+        "ci_high": 1.8531038824628558,
+        "df": 2,
+        "paired_unit_effects": [
+          1.7592688920349264,
+          1.6960079094931375,
+          1.6328052772818271
+        ],
+        "exact_signflip_p": 0.25,
+        "coverage": 5,
+        "missing": [
+          "Ddit3"
+        ]
+      },
+      "primary_selectivity": {
+        "effect": -1.7532093246866278,
+        "ci_low": -2.0830557723122523,
+        "ci_high": -1.4233628770610032,
+        "df": 2,
+        "paired_unit_effects": [
+          -1.6834918876167189,
+          -1.9063280114737573,
+          -1.6698080749694073
+        ],
+        "exact_signflip_p": 0.25
+      },
+      "unpaired_sensitivity": {
+        "effect": -1.7532093246866278,
+        "ci_low": -2.0730857331984196,
+        "ci_high": -1.433332916174836,
+        "df": 2.3196996128520926
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 0.10923873592909428,
+        "Mbp": -0.4484020849412846,
+        "Mag": -1.1363541327588464,
+        "Prx": 0.0660077463888491,
+        "Plp1": -5.911655706519158,
+        "Cnp": -3.287768631147349,
+        "Mal": -1.6635311997577058
+      }
+    },
+    {
+      "dataset": "GSE108231",
+      "contrast": "raptorKO_vs_control_injured",
+      "role": "exploratory genotype contrast",
+      "control": [
+        "Control1_crush",
+        "Control2_crush",
+        "Control3_crush"
+      ],
+      "treated": [
+        "KO1_crush",
+        "KO2_crush",
+        "KO3_crush"
+      ],
+      "paired": false,
+      "n_control": 3,
+      "n_treated": 3,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 448.02713970314284,
+        "Mpz": 817.8513317808953,
+        "Mbp": 674.7892222221923,
+        "Mag": 25.80325776940214,
+        "Prx": 135.74303926886958,
+        "Plp1": 1092.7068482107718,
+        "Cnp": 305.691622718401,
+        "Mal": 222.7144484921114,
+        "Sox10": 458.9376975782052,
+        "S100b": 422.13563698325385,
+        "Erbb3": 335.73649250032264,
+        "Dhh": 89.31132884271072,
+        "Mki67": 752.3139587298978,
+        "Top2a": 332.17799397489125,
+        "Pcna": 229.96957827814927,
+        "Ccnb1": 69.98886198726277,
+        "Cdk1": 94.16345279716404,
+        "Mcm2": 69.00327388013056,
+        "Atf3": 178.23516364727314,
+        "Jun": 330.9353942512871,
+        "Hspa5": 636.4201660461346,
+        "Hmox1": 91.54746884355058,
+        "Nqo1": 8.972798994917257
+      },
+      "Pmp22": {
+        "effect": -0.2171890707256079,
+        "ci_low": -0.6854659021709402,
+        "ci_high": 0.25108776071972433,
+        "df": 3.9585114804787174
+      },
+      "myelin7": {
+        "effect": -0.27849012849356125,
+        "ci_low": -0.8159742354097116,
+        "ci_high": 0.2589939784225891,
+        "df": 3.381708817988062,
+        "coverage": 7,
+        "missing": []
+      },
+      "identity4": {
+        "effect": -0.4179161404431939,
+        "ci_low": -0.891177251824401,
+        "ci_high": 0.055344970938013216,
+        "df": 2.4497870635383934,
+        "coverage": 4,
+        "missing": []
+      },
+      "proliferation6": {
+        "effect": -0.6155257704955064,
+        "ci_low": -0.802792771641073,
+        "ci_high": -0.4282587693499397,
+        "df": 2.997184663180364,
+        "coverage": 6,
+        "missing": []
+      },
+      "stress6": {
+        "effect": -0.23847311711113406,
+        "ci_low": -0.6062063975803156,
+        "ci_high": 0.12926016335804752,
+        "df": 2.8366155694465873,
+        "coverage": 5,
+        "missing": [
+          "Ddit3"
+        ]
+      },
+      "primary_selectivity": {
+        "effect": 0.06130105776795536,
+        "ci_low": -0.227186407603938,
+        "ci_high": 0.3497885231398487,
+        "df": 3.5299129578516313
+      },
+      "unpaired_sensitivity": {
+        "effect": 0.06130105776795536,
+        "ci_low": -0.227186407603938,
+        "ci_high": 0.3497885231398487,
+        "df": 3.5299129578516313
+      },
+      "target_vs_each_myelin": {
+        "Mpz": -0.034533551729010625,
+        "Mbp": -0.27871881460018777,
+        "Mag": 0.40644636911088927,
+        "Prx": -0.33480154692461284,
+        "Plp1": 0.42637975485679125,
+        "Cnp": 0.2796421015558901,
+        "Mal": -0.03530690789407853
+      }
+    },
+    {
+      "dataset": "GSE108231",
+      "contrast": "raptorKO_vs_control_contralateral",
+      "role": "exploratory genotype contrast",
+      "control": [
+        "Control1_ctrlat",
+        "Control2_ctrlat",
+        "Control3_ctrlat"
+      ],
+      "treated": [
+        "KO1_ctrlat",
+        "KO2_ctrlat",
+        "KO3_ctrlat",
+        "KO4_ctrlat"
+      ],
+      "paired": false,
+      "n_control": 3,
+      "n_treated": 4,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 18560.96767737649,
+        "Mpz": 35233.85076368933,
+        "Mbp": 21576.631146667954,
+        "Mag": 308.1347617345153,
+        "Prx": 6191.706951640711,
+        "Plp1": 1218.927192772202,
+        "Cnp": 951.2213139297364,
+        "Mal": 3149.245130283022,
+        "Sox10": 605.30270716703,
+        "S100b": 775.0867015900818,
+        "Erbb3": 284.82581508228014,
+        "Dhh": 293.5489806947167,
+        "Mki67": 4.436904529730692,
+        "Top2a": 1.4659296294179065,
+        "Pcna": 60.00264190871346,
+        "Ccnb1": 0.14490797345221673,
+        "Cdk1": 0.14736837289795024,
+        "Mcm2": 3.8445784453829592,
+        "Atf3": 10.44319677366794,
+        "Jun": 42.1313962107642,
+        "Hspa5": 234.82862956011886,
+        "Hmox1": 105.76971620779001,
+        "Nqo1": 13.1826160829622
+      },
+      "Pmp22": {
+        "effect": -0.18506602157230567,
+        "ci_low": -0.41983488959204174,
+        "ci_high": 0.04970284644743039,
+        "df": 4.657412358524978
+      },
+      "myelin7": {
+        "effect": -0.2283343640833433,
+        "ci_low": -0.4616971274259085,
+        "ci_high": 0.005028399259221938,
+        "df": 3.224150965864312,
+        "coverage": 7,
+        "missing": []
+      },
+      "identity4": {
+        "effect": -0.37104012180697943,
+        "ci_low": -0.5556255627857413,
+        "ci_high": -0.18645468082821762,
+        "df": 4.525749316744791,
+        "coverage": 4,
+        "missing": []
+      },
+      "proliferation6": {
+        "effect": 1.3647258011004397,
+        "ci_low": 0.7129933613005001,
+        "ci_high": 2.0164582409003793,
+        "df": 4.020518662484354,
+        "coverage": 6,
+        "missing": []
+      },
+      "stress6": {
+        "effect": -0.37865124590867794,
+        "ci_low": -0.4748087438703263,
+        "ci_high": -0.2824937479470296,
+        "df": 4.98595590326913,
+        "coverage": 5,
+        "missing": [
+          "Ddit3"
+        ]
+      },
+      "primary_selectivity": {
+        "effect": 0.04326834251103939,
+        "ci_low": -0.092077990165599,
+        "ci_high": 0.1786146751876778,
+        "df": 2.9561570961342056
+      },
+      "unpaired_sensitivity": {
+        "effect": 0.04326834251103939,
+        "ci_low": -0.092077990165599,
+        "ci_high": 0.1786146751876778,
+        "df": 2.9561570961342056
+      },
+      "target_vs_each_myelin": {
+        "Mpz": -0.04980789339075187,
+        "Mbp": -0.21338105906056803,
+        "Mag": -0.13894809446590184,
+        "Prx": -0.21022443370493327,
+        "Plp1": 0.9705398196940425,
+        "Cnp": -0.1972062243651811,
+        "Mal": 0.14190628287057505
+      }
+    }
+  ],
+  "genotype_by_injury": {
+    "contrast": "genotype_by_injury",
+    "unit": "difference of paired changes, 3 independent source-numbered mice/genotype; KO4 excluded",
+    "selectivity": {
+      "effect": 0.009299413083555974,
+      "ci_low": -0.2980990945414445,
+      "ci_high": 0.31669792070855646,
+      "df": 3.9936319168714864
+    },
+    "Pmp22": {
+      "effect": -0.013416027569702393,
+      "ci_low": -0.5922754527316355,
+      "ci_high": 0.5654433975922307,
+      "df": 2.8267155526571597
+    },
+    "myelin7": {
+      "effect": -0.022715440653257257,
+      "ci_low": -0.5636791939483282,
+      "ci_high": 0.5182483126418137,
+      "df": 3.3687425935532334
+    }
+  },
+  "pairing_basis": "GEO numbered Control1-3/KO1-3 injured and contralateral titles; primary PMC5956991 unilateral injury/corresponding contralateral design and Fig6 n=3 mice; unpaired sensitivity retained. Not a direct tissue-composition-adjusted effect."
+}

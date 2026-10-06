@@ -1,0 +1,291 @@
+{
+  "revision": 1,
+  "scope": {
+    "target": "PMP22",
+    "endpoint": [
+      "promoter output",
+      "RNA abundance",
+      "functional protein abundance"
+    ],
+    "species_context": "Human Schwann cells prioritized; other species and states kept distinct",
+    "assumptions": "All initial edges are recalled, unverified hypotheses. No completeness claim."
+  },
+  "nodes": [
+    {
+      "id": "dosage",
+      "label": "PMP22 copy number / cis architecture",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "promoters",
+      "label": "PMP22 P1/P2 promoter output",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "rna",
+      "label": "PMP22 RNA abundance",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "protein",
+      "label": "PMP22 folded surface/myelin protein",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "sox",
+      "label": "SOX10 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "egr",
+      "label": "EGR2 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "axon",
+      "label": "Axonal NRG1 / ERBB signaling",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "camp",
+      "label": "cAMP / PKA / differentiation",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "chromatin",
+      "label": "Chromatin / enhancer activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mir",
+      "label": "miRNA / RNA stability",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "qc",
+      "label": "ER quality control / proteasome / autophagy",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "injury",
+      "label": "Injury / c-JUN repair state",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mechanical",
+      "label": "Mechanical signals / YAP TAZ",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "as",
+      "label": "EGR2 antisense RNA",
+      "kind": "regulatory state"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "dosage",
+      "target": "rna",
+      "mechanism": "Dosage-dependent expression",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e2",
+      "source": "sox",
+      "target": "promoters",
+      "mechanism": "Promoter/enhancer activation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e3",
+      "source": "egr",
+      "target": "promoters",
+      "mechanism": "Myelination transcription",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e4",
+      "source": "axon",
+      "target": "egr",
+      "mechanism": "Signal-dependent differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e5",
+      "source": "camp",
+      "target": "egr",
+      "mechanism": "Differentiation-dependent induction",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e6",
+      "source": "chromatin",
+      "target": "promoters",
+      "mechanism": "Accessible cis elements",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e7",
+      "source": "promoters",
+      "target": "rna",
+      "mechanism": "Transcription",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e8",
+      "source": "mir",
+      "target": "rna",
+      "mechanism": "Post-transcriptional repression",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e9",
+      "source": "rna",
+      "target": "protein",
+      "mechanism": "Translation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e10",
+      "source": "qc",
+      "target": "protein",
+      "mechanism": "Folding trafficking and degradation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e11",
+      "source": "injury",
+      "target": "egr",
+      "mechanism": "Repair/myelination antagonism",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e12",
+      "source": "mechanical",
+      "target": "egr",
+      "mechanism": "Mechanosensitive differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e13",
+      "source": "as",
+      "target": "egr",
+      "mechanism": "Antisense modulation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    }
+  ],
+  "frontier": [
+    {
+      "node": "dosage",
+      "question": "What controls PMP22 copy number / cis architecture, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "promoters",
+      "question": "What controls PMP22 P1/P2 promoter output, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "sox",
+      "question": "What controls SOX10 activity, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "egr",
+      "question": "What controls EGR2 activity, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "axon",
+      "question": "What controls Axonal NRG1 / ERBB signaling, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "camp",
+      "question": "What controls cAMP / PKA / differentiation, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "chromatin",
+      "question": "What controls Chromatin / enhancer activity, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "mir",
+      "question": "What controls miRNA / RNA stability, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "qc",
+      "question": "What controls ER quality control / proteasome / autophagy, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "injury",
+      "question": "What controls Injury / c-JUN repair state, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "mechanical",
+      "question": "What controls Mechanical signals / YAP TAZ, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    },
+    {
+      "node": "as",
+      "question": "What controls EGR2 antisense RNA, and which measurements distinguish direct PMP22 control from shared cell state?",
+      "priority": "High for endpoint-specific causal interpretation",
+      "reason": "Avoid equating gene expression with promoter or protein output",
+      "status": "open"
+    }
+  ],
+  "changes": []
+}

@@ -1,0 +1,114 @@
+{
+  "inputs": {
+    "MEF": "14ca149475bf0716e53a54775c0519d6f111deb5a41e17db368a4633de9a0169",
+    "NIH": "6f893c348e2297eb7bac49bf61c0cb6ab0dd3fcd512eb90124f7715a9fc77287"
+  },
+  "units": "RSEMfractionalexpectedcounts; per-library compositional normalization, not absolute synthesis",
+  "normalizers": {
+    "CPM": {
+      "PERK_WT_Control": 11.949174,
+      "PERK_WT_Tg2hr": 2.525029,
+      "NIH3T3_Cont": 11.121006,
+      "NIH3T3_Tg2hr": 2.569965
+    },
+    "median_ratio": {
+      "PERK_WT_Control": 2.031806561988022,
+      "PERK_WT_Tg2hr": 0.45649506582001703,
+      "NIH3T3_Cont": 2.184515522660069,
+      "NIH3T3_Tg2hr": 0.49900985845502466
+    }
+  },
+  "pmp22_expected_counts": {
+    "PERK_WT_Control": 250,
+    "PERK_WT_Tg2hr": 107,
+    "NIH3T3_Cont": 405,
+    "NIH3T3_Tg2hr": 51
+  },
+  "results": [
+    {
+      "normalization": "CPM",
+      "count_floor": 0,
+      "n": 1276,
+      "excluded_fixed_reference_genes": [],
+      "Pmp22_min_expected_count": 51.0,
+      "Pmp22_MEF": 1.0182217330369066,
+      "Pmp22_NIH": -0.875886073247429,
+      "Pmp22_delta": 1.8941078062843355,
+      "reference_median": 0.11578600996286345,
+      "Pmp22_relative_residual": 1.7783217963214721,
+      "Pmp22_percentile": 0.9976489028213166,
+      "count_vs_TPM_residual_difference": 0.03844840299139407,
+      "reference_abs_countTPM_residual_difference_median": 0.00901714678036207
+    },
+    {
+      "normalization": "CPM",
+      "count_floor": 20,
+      "n": 1265,
+      "excluded_fixed_reference_genes": [
+        "Bola3",
+        "Cmc2",
+        "Coa6",
+        "Cox19",
+        "Deb1",
+        "Fam195b",
+        "Ift20",
+        "Mrpl57",
+        "Oaf",
+        "Timm9",
+        "Tmem167b"
+      ],
+      "Pmp22_min_expected_count": 51.0,
+      "Pmp22_MEF": 1.0182217330369066,
+      "Pmp22_NIH": -0.875886073247429,
+      "Pmp22_delta": 1.8941078062843355,
+      "reference_median": 0.12201759121083375,
+      "Pmp22_relative_residual": 1.7720902150735018,
+      "Pmp22_percentile": 0.9976284584980237,
+      "count_vs_TPM_residual_difference": 0.03363422946762329,
+      "reference_abs_countTPM_residual_difference_median": 0.013556249366705797
+    },
+    {
+      "normalization": "median_ratio",
+      "count_floor": 0,
+      "n": 1276,
+      "excluded_fixed_reference_genes": [],
+      "Pmp22_min_expected_count": 51.0,
+      "Pmp22_MEF": 0.9297745871458681,
+      "Pmp22_NIH": -0.8591796214129256,
+      "Pmp22_delta": 1.7889542085587937,
+      "reference_median": 0.010632412237321476,
+      "Pmp22_relative_residual": 1.7783217963214724,
+      "Pmp22_percentile": 0.9976489028213166,
+      "count_vs_TPM_residual_difference": 0.03844840299139429,
+      "reference_abs_countTPM_residual_difference_median": 0.00901714678036225
+    },
+    {
+      "normalization": "median_ratio",
+      "count_floor": 20,
+      "n": 1265,
+      "excluded_fixed_reference_genes": [
+        "Bola3",
+        "Cmc2",
+        "Coa6",
+        "Cox19",
+        "Deb1",
+        "Fam195b",
+        "Ift20",
+        "Mrpl57",
+        "Oaf",
+        "Timm9",
+        "Tmem167b"
+      ],
+      "Pmp22_min_expected_count": 51.0,
+      "Pmp22_MEF": 0.9297745871458681,
+      "Pmp22_NIH": -0.8591796214129256,
+      "Pmp22_delta": 1.7889542085587937,
+      "reference_median": 0.0168639934852918,
+      "Pmp22_relative_residual": 1.7720902150735018,
+      "Pmp22_percentile": 0.9976284584980237,
+      "count_vs_TPM_residual_difference": 0.03363422946762329,
+      "reference_abs_countTPM_residual_difference_median": 0.013556249366705908
+    }
+  ],
+  "limits": "Same13unreplicatedlibraries; retrospective. FixedTPMbaseline references; count floor sensitivity is not independentvalidation. Gene-specific effective length effect can be assessed but underlyingmapping artifact remains possible."
+}

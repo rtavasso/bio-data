@@ -1,0 +1,351 @@
+{
+  "checks": [
+    "All 20 inherited panel effects reproduced within 1e-12; original failed/untestable locks unchanged",
+    "All 11,339 annotated P1 cells mapped once across 3 pools and 11 labels; no cells counted as independent mice",
+    "All LP solutions terminated with success or explicit infeasibility, not numeric failure",
+    "Positive-mixture ratio bound algebra checked on known synthetic vectors (test only, not scientific data)",
+    "Producer output hashes match successful prepare/state/composition execution receipts"
+  ],
+  "retrospective": true,
+  "repair_normalization": [
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.3585849174992397
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.15271457331059857
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -3.8340691458067084
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -3.1469892962788215
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.5576116510512428
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.3847726413983885
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -3.0344849761474677
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -2.0812018889193418
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.718716318383942
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.3104930774043888
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -1.6043479719558356
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -1.2381106853071415
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": 0.42543411128685626
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": 0.8682915748015674
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -5.7859774021576165
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -4.474196492293652
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.13005614491474393
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": 0.3727779408676355
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -5.216285913851971
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -3.45742255961024
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "antioxidant4",
+      "normalization": "within-compartment median ratio",
+      "effect": -0.2531556174050422
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "no_Nqo1",
+      "normalization": "within-compartment median ratio",
+      "effect": 0.19084041760596104
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "Pmp22",
+      "normalization": "within-compartment median ratio",
+      "effect": -3.4012388025024975
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "myelin7",
+      "normalization": "within-compartment median ratio",
+      "effect": -2.086117522873657
+    }
+  ],
+  "mixture_distinct_variants": [
+    {
+      "study": "Nae1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 5,
+      "count": 35
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 35,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 35
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 35
+    }
+  ],
+  "source_vs_interpretation": "Source outcomes reproduced; computational pass is not causal validation"
+}

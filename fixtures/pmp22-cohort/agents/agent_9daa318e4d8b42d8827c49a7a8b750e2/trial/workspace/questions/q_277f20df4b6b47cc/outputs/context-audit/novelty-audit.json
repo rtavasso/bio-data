@@ -1,0 +1,121 @@
+{
+  "date": "2026-09-28",
+  "exact_claim": "At the shared 2-hour endpoint in GSE118660, the Pmp22 MEF-minus-NIH3T3 relative footprint difference is unusually positive relative to genes matched on both untreated abundances. The count-based departure persists, while conditioning on the published late-induction program reduces its distinctiveness.",
+  "status": "not_found_in_scoped_search",
+  "contribution": "New retrospective numerical comparison and inference within an existing published dataset; no new biological mechanism or global novelty claim.",
+  "closest_prior_work": [
+    {
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6416471/",
+      "locator": "Results Figure3/program transfer; TableS5A/B; MethodsCellculture/Dataanalysis",
+      "relationship": "Published the same measurements and general program transfer, includingPmp22latecluster membership. Did not identify the exact baseline-matchedPmp22context departure in inspected text.",
+      "preserved": "inputs/iteration/PMC6416471.xml; outputs/iteration/PMC6416471-primary-text.txt"
+    },
+    {
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5730339/",
+      "locator": "ResultsFigure7paragraph namingPMP22; matchedRNA/polysome study",
+      "relationship": "PMP22congruent chronicstress regulation is explicitly known; differentdose/time/assay cannot validate currentcontextmechanism.",
+      "preserved": "inputs/iteration/PMC5730339.html"
+    },
+    {
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2728407/",
+      "locator": "TableIrow5; Microarrayexperimentsandanalysis; mainFigures1/3visuallyinspected",
+      "relationship": "Pmp22RNAstresslossanddecreasedstability are known. Other targets tested in nuclease-mutantfigures; noPmp22cleavage-site proof here.",
+      "preserved": "inputs/context-audit/PMC2728407.xml"
+    },
+    {
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4571326/",
+      "locator": "ResultsFigures4-7; Discussion",
+      "relationship": "PERK/translation/RIDDcoupling and substrate/cell differences known for otherRNAs; not evidence that this explainsPmp22footprints.",
+      "preserved": "inputs/context-audit/PMC4571326.xml"
+    },
+    {
+      "source": "https://pubmed.ncbi.nlm.nih.gov/9972819/",
+      "locator": "Abstract only",
+      "relationship": "AlternativeUTRandcell-cycle-dependentPMP22RNAstability/translation already reported; fulltext not inspected in this continuation.",
+      "preserved": "inputs/context-audit/web-search-r001.json"
+    }
+  ],
+  "searches": [
+    {
+      "query": "\"PMP22\" \"Gonen\" PERK",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r001.json"
+    },
+    {
+      "query": "\"Pmp22\" \"NIH3T3\" thapsigargin",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r001.json"
+    },
+    {
+      "query": "\"PMP22\" \"ribosome\" stress PERK",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r001.json"
+    },
+    {
+      "query": "\"PMP22\" \"thapsigargin\" translation",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r002.json"
+    },
+    {
+      "query": "\"PMP22\" \"PERK\" \"Guan\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r002.json"
+    },
+    {
+      "query": "\"NIH3T3\" \"MEF\" \"ribosome\" \"thapsigargin\" dose",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r002.json"
+    },
+    {
+      "query": "\"Schwann\" \"ribosome profiling\" \"Pmp22\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r002.json"
+    },
+    {
+      "query": "Hollien 2009 Pmp22 IRE1 dependent decay mammalian cells GSE",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r003.json"
+    },
+    {
+      "query": "\"PMP22\" \"IRE1\" Mendez Maurel",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r003.json"
+    },
+    {
+      "query": "\"Regulated Ire1-dependent decay\" \"Pmp22\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r003.json"
+    },
+    {
+      "query": "\"PMP22\" \"PERK-independent\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r004.json"
+    },
+    {
+      "query": "\"Pmp22\" \"late\" \"NIH3T3\" stress",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r004.json"
+    },
+    {
+      "query": "\"GAS3\" \"ribosome\" \"stress\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r004.json"
+    },
+    {
+      "query": "\"PMP22\" \"Gonen\" \"2019\"",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/web-search-r004.json"
+    },
+    {
+      "query": "PMP22 AND (PERK OR thapsigargin OR translation OR gas3)",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/discovery-literature.json"
+    },
+    {
+      "query": "EXT_ID:19651891 OR EXT_ID:26108623 OR (PMP22 AND IRE1)",
+      "date": "2026-09-28",
+      "evidence": "inputs/context-audit/discovery-ridd.json"
+    }
+  ],
+  "limitation": "Four bounded web-search batches and two first-page EuropePMC searches; source papers and closest RIDD primary texts inspected. The broad EuropePMC query exceeded its page budget. This is not an exhaustive full-text or citation-graph search. No untouched independent outcome test. Yeast GAS3 hits are unrelated synonym collisions."
+}

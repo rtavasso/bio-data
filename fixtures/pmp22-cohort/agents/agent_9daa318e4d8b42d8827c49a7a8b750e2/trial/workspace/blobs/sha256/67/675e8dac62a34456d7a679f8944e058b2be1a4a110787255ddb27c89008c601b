@@ -1,0 +1,17 @@
+flowchart LR
+  N[Axonal NRG / ERK / YY1 state] --> A[Egr2-AS and chromatin timing]
+  A --> E[Nascent EGR2 control]
+  A -. steady-state discrepancy .-> S[EGR2 / SOX10 / Schwann state]
+  C[cAMP] --> T[PMP22 promoter-associated RNA]
+  S --> T
+  Y[TEAD / YAP / TAZ] --> T
+  D[Dosage and distal / intronic cis elements] --> T
+  T --> R[Mature PMP22 RNA]
+  M[miR-29 / Dicer / AGO2 / 3-prime UTR] --> R
+  R --> P[Total PMP22 protein]
+  Q[Glycosylation / folding / retention / degradation] --> P
+  Q --> F[Processed and trafficked PMP22]
+  P --> F
+  F --> L[ABCA1 / cholesterol handling]
+  L --> P
+  L -. promoter feedback unresolved .-> T

@@ -1,0 +1,32 @@
+{
+  "record_type": "agent-transcribed observations of actual web tool outputs; not native HTTP receipts",
+  "article": "PMC13234107 / PMID42067619 / DOI 10.1038/s12276-026-01708-0",
+  "observations": [
+    {
+      "operation": "web.run open",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13234107/",
+      "result": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov ...",
+      "article_full_text_received_by_this_open": false
+    },
+    {
+      "operation": "web.run open",
+      "url": "https://www.nature.com/articles/s12276-026-01708-0.pdf",
+      "result": "Internal Error; opening the error result states URL cannot be opened (non-retryable error); no HTTP status or authorization diagnosis exposed",
+      "pdf_bytes_received": false
+    },
+    {
+      "operation": "web.run search_query",
+      "source": "indexed primary PMC13234107 and publisher article text",
+      "result": "Returned Fig2 caption and variant directions, rMATS context, RT-PCR methods identifying Supplementary Tables1/2 for primers, and on-request data availability",
+      "native_download_receipt": false
+    },
+    {
+      "operation": "web.run open",
+      "url": "https://www.ncbi.nlm.nih.gov/gene/5376/",
+      "result": "Opened RefSeq descriptions for NM_000304.4, NM_153321.3 and NM_001330143.2",
+      "paper_primer_mapping_established": false
+    }
+  ],
+  "not_attempted": ["supplementary primer download", "publisher HTML open", "PDF screenshot", "raw RNA-seq processing"],
+  "limitation": "No exact Fig2 assay-to-accession or diagnostic-junction assignment was verified; no absence claim about supplementary evidence"
+}

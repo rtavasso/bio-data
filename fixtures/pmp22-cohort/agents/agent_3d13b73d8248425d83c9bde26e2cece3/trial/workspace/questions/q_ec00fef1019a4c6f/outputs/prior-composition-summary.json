@@ -1,0 +1,411 @@
+{
+  "inputs": [
+    {
+      "name": "elife-58591-supp2.xls",
+      "blob": "290f9547a79c3a6bf9586d19f34acf6906b95043fd3846aabe94ff08a035b61d",
+      "asset": "asset_510e3c0feba59b8d964312a0092fbe67"
+    },
+    {
+      "name": "GSM4113877_10X_P1_1_genes.tsv.gz",
+      "blob": "68362b80e13d7b32804493e60eaf2bdc127aeb96ca10d902b892f198d05257be",
+      "asset": "asset_a8655cf23e8c4d17b35cb7d33630dd5b"
+    },
+    {
+      "name": "GSM4113877_10X_P1_1_barcodes.tsv.gz",
+      "blob": "b18f4f3b1b63ca5981066cd68c7a62b67b41933977499e2cd02bb537457d060b",
+      "asset": "asset_9ea48bd35f7008957ffdd81ef5fe7f8b"
+    },
+    {
+      "name": "GSM4113877_10X_P1_1_matrix.mtx.gz",
+      "blob": "85f60e18c69a397a5547e40edbedea87a2b387e9b69d99a1025f850bf31e076b",
+      "asset": "asset_815ff787645d135fab2a665626f008f6"
+    },
+    {
+      "name": "GSM4113878_10X_P1_2_genes.tsv.gz",
+      "blob": "fc9205fb1bb2eb5b59bd332b7461c7cbbe9ab1fe7b0af19f2dc228e06a760d64",
+      "asset": "asset_4ec76bbca826f418354fad92e6bbc0aa"
+    },
+    {
+      "name": "GSM4113878_10X_P1_2_barcodes.tsv.gz",
+      "blob": "0d2eac411430840880702cbe30bd5146f911e06200447b6e2ac36c90632ab111",
+      "asset": "asset_b92ea904ac647417e4a368d40bca1327"
+    },
+    {
+      "name": "GSM4113878_10X_P1_2_matrix.mtx.gz",
+      "blob": "801a03baa4bab3dd85d7cfcb251fffd4465e342f32654422b12bb1bbaf624acd",
+      "asset": "asset_8464356a89825b95cb7dbcf906403bc3"
+    },
+    {
+      "name": "GSM4113879_10X_P1_3_genes.tsv.gz",
+      "blob": "d5a4e0be55c567fb54d75474f1eab443ac88f22edcdc3a0d8f2acd661d463979",
+      "asset": "asset_e401de6c67fd0ddd173419cff3551b7d"
+    },
+    {
+      "name": "GSM4113879_10X_P1_3_barcodes.tsv.gz",
+      "blob": "856df32b109925ac43696441ac5fb7b69f9277f1269f1fa8ab370fd12893736d",
+      "asset": "asset_23e6f366a77b621734d9e81647f39644"
+    },
+    {
+      "name": "GSM4113879_10X_P1_3_matrix.mtx.gz",
+      "blob": "20c42c2e23b08b29fa62aa746ce9a20c1ffa22f5b09697958e707e13866d0074",
+      "asset": "asset_c9e32e2f7457f9e2d1807d6e3ac7fb39"
+    }
+  ],
+  "annotated_cells": 11339,
+  "independent_biological_pools": 3,
+  "cell_types": [
+    "EC",
+    "EnC",
+    "EpC",
+    "FbRel*",
+    "IC",
+    "Per/VSMC",
+    "PnC",
+    "iSC",
+    "pmSC",
+    "prol. Fb",
+    "prol. SC"
+  ],
+  "markers_per_type": {
+    "EC": 10,
+    "EnC": 10,
+    "EpC": 10,
+    "FbRel*": 10,
+    "IC": 10,
+    "Per/VSMC": 10,
+    "PnC": 10,
+    "iSC": 7,
+    "pmSC": 10,
+    "prol. Fb": 10,
+    "prol. SC": 10
+  },
+  "SC_state_effects": [
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "antioxidant4",
+      "effect": -0.06681738112139701,
+      "pool_ci_low": -0.8767027370574298,
+      "pool_ci_high": 0.7430679748146358,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "no_Nqo1",
+      "effect": -0.4426782317033557,
+      "pool_ci_low": -0.9376908799614582,
+      "pool_ci_high": 0.0523344165547468,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "Pmp22",
+      "effect": -3.212958187337819,
+      "pool_ci_low": -3.3413298196473553,
+      "pool_ci_high": -3.0845865550282827,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "myelin7",
+      "effect": -1.685070599297605,
+      "pool_ci_low": -1.7391923477128666,
+      "pool_ci_high": -1.6309488508823433,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "Nqo1",
+      "effect": 1.0607651706244807,
+      "pool_ci_low": -0.7041678222940042,
+      "pool_ci_high": 2.825698163542966,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "Hmox1",
+      "effect": -2.047812868967964,
+      "pool_ci_low": -2.3069708882102646,
+      "pool_ci_high": -1.7886548497256638,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "Gclc",
+      "effect": 0.4577521260699724,
+      "pool_ci_low": -1.3078627005977768,
+      "pool_ci_high": 2.2233669527377216,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "iSC",
+      "control": "pmSC",
+      "panel": "Gclm",
+      "effect": 0.2620260477879229,
+      "pool_ci_low": -0.3098932402061841,
+      "pool_ci_high": 0.8339453357820299,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "antioxidant4",
+      "effect": 0.012418556699475817,
+      "pool_ci_low": -0.0030938255407145076,
+      "pool_ci_high": 0.02793093893966614,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "no_Nqo1",
+      "effect": -0.551890437716894,
+      "pool_ci_low": -0.882246536667779,
+      "pool_ci_high": -0.22153433876600892,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "Pmp22",
+      "effect": -3.368892493931996,
+      "pool_ci_low": -3.586872107478066,
+      "pool_ci_high": -3.150912880385926,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "myelin7",
+      "effect": -2.231708010134493,
+      "pool_ci_low": -2.3535266630189327,
+      "pool_ci_high": -2.1098893572500534,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "Nqo1",
+      "effect": 1.705345539948585,
+      "pool_ci_low": 0.7011048935904547,
+      "pool_ci_high": 2.7095861863067157,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "Hmox1",
+      "effect": -2.59185328842082,
+      "pool_ci_low": -4.321849201415597,
+      "pool_ci_high": -0.8618573754260423,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "Gclc",
+      "effect": 0.5864571599698506,
+      "pool_ci_low": -0.7031335422815547,
+      "pool_ci_high": 1.876047862221256,
+      "n_independent_pools": 3
+    },
+    {
+      "alternative": "prol. SC",
+      "control": "pmSC",
+      "panel": "Gclm",
+      "effect": 0.34972481530028726,
+      "pool_ci_low": -0.2766767689398601,
+      "pool_ci_high": 0.9761263995404346,
+      "n_independent_pools": 3
+    }
+  ],
+  "profile_unit": "UMI sums within source labelled cluster/run, divided by all mapped UMIs; equal-pool mean for between-type profiles",
+  "assumptions": [
+    "Fixed P1 cell-type profiles; no pathogenic cell state permitted",
+    "Within-gene assay effects constant across source cell types; not established for bulk versus 10x",
+    "Anchor-normalized logfold constraints tolerate 0.5 or 1.0 log2 per gene",
+    "All 11 annotated types included, permitting arbitrarily large mixture shifts; no tissue fraction assumed"
+  ],
+  "limits": [
+    "P1 is not P7 and lacks mature myelinating-cell capture",
+    "P1 FACS depleted SC; cluster frequencies cannot estimate tissue composition",
+    "Feasibility does not establish real mixtures; infeasibility rejects only the reference-restricted null",
+    "No estimates of absolute cell abundance or absolute RNA output"
+  ],
+  "compatibility_counts": [
+    {
+      "study": "Nae1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 5,
+      "count": 45
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 4,
+      "count": 45
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "Nae1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "PTENKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 5,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "RaptorKO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 4,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 0.5,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "antioxidants_only",
+      "tolerance_log2": 1.0,
+      "sum": 45,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_only",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 0.5,
+      "sum": 0,
+      "count": 45
+    },
+    {
+      "study": "TSC1KO",
+      "constraints": "markers_plus_antioxidants",
+      "tolerance_log2": 1.0,
+      "sum": 0,
+      "count": 45
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+{
+  "question": "q_a9976f21480c4fec",
+  "reviewed_post": "post_39c7e08ff5fa43498fe97be20590edf5",
+  "scope": "Consistency/interpretation audit of peer-derived outputs, not independent ENCORE analysis or replication",
+  "inputs": [
+    {
+      "role": "screen",
+      "artifact": "artifact_6a0119b8ecd1d29ff44d122e74920f2097d6b1c9179ab9572f2237585effc047",
+      "blob": "7a3418cd529c612f33e06454c82d08c648710edd415f97e5bd80b01727c44a59",
+      "bytes": 150689,
+      "copied_into_own_object_store": true
+    },
+    {
+      "role": "sites",
+      "artifact": "artifact_5edca4e4c4bd89c62c6779dcb242b33a8bc3f88a42b60c9f4897653b3ee20b85",
+      "blob": "06d02d8b73a971a4e44118f92dd3525d4a363434876f3e5104054bb9a6885647",
+      "bytes": 1937,
+      "copied_into_own_object_store": true
+    },
+    {
+      "role": "GSE118660 existing metadata",
+      "blob": "1a77e2d66f06c77cd027adc35ea14f231f95c679193faa7354a619513edee3cb",
+      "bytes": 82038
+    }
+  ],
+  "checks": {
+    "contexts": 223,
+    "paired_contrasts": 203,
+    "binding_contexts": 5,
+    "all_binding_contexts_K562": true,
+    "joint_hits": 0,
+    "unmatched_contrasts_not_negative_tests": 20,
+    "distinct_PUM2_intervals": 4,
+    "PUM2_CI_matches_unadjusted_Wald": true
+  },
+  "source_rows": {
+    "PUM2": {
+      "rbp": "PUM2",
+      "cell": "K562",
+      "eclip_experiment": "ENCSR661ICQ",
+      "eclip_control": "ENCSR439GXW",
+      "peak_file": "ENCFF767LWE",
+      "assembly": "hg19",
+      "target_gene_id": "ENSG00000109099.9",
+      "questionable_eclip_qc": "False",
+      "selected_idr_peak_rows_genome": "5666",
+      "pmp22_idr_peak_rows": "4",
+      "binding_status": "selected_reproducible_peak",
+      "site_classes": "[\"3UTR\", \"CDS\"]",
+      "max_signal_column7": "5.66073763108584",
+      "rna_experiment": "ENCSR118XYK",
+      "rna_control": "ENCSR620PUP",
+      "control_matches": "True",
+      "de_file": "ENCFF217GTE",
+      "superseded_de_file": "ENCFF196PBV",
+      "pmp22_baseMean": "94.2064939877548",
+      "pmp22_log2FoldChange": "0.731510222100873",
+      "pmp22_lfcSE": "0.375469488843156",
+      "pmp22_stat": "1.94825476859571",
+      "pmp22_pvalue": "0.0513844863996308",
+      "pmp22_padj": "0.546408791733981",
+      "rna_status": "measured",
+      "ci95_lower": "-0.004396453325376415",
+      "ci95_upper": "1.4674168975271225",
+      "absolute_effect_lower95": "0",
+      "kd_target_gene_ids": "[\"ENSG00000055917.11\"]",
+      "target_rna_depletion": "{\"baseMean\": 397.261098933342, \"lfcSE\": 0.195370213149684, \"log2FoldChange\": -0.752827313104225, \"padj\": 0.00755664846914634, \"pvalue\": 0.000116518739899428, \"stat\": -3.85333721536887}",
+      "adequate_target_rna_depletion": "False",
+      "source_sequencing_qc": "{\"control_reads\": [62015428, 148536488], \"kd_reads\": [94971156, 93407292], \"source_reported_de_genes\": 618}",
+      "pmp22_screen_bh203": "0.9963359699896903",
+      "pmp22_screen_by203": "1.0",
+      "primary_joint_candidate": "False",
+      "low_coverage_flag": "False"
+    },
+    "PUM1": {
+      "rbp": "PUM1",
+      "cell": "K562",
+      "eclip_experiment": "ENCSR308YNT",
+      "eclip_control": "ENCSR832DWW",
+      "peak_file": "ENCFF969AOQ",
+      "assembly": "hg19",
+      "target_gene_id": "ENSG00000109099.9",
+      "questionable_eclip_qc": "False",
+      "selected_idr_peak_rows_genome": "2621",
+      "pmp22_idr_peak_rows": "0",
+      "binding_status": "no_selected_reproducible_peak_not_a_binding_zero",
+      "site_classes": "[]",
+      "max_signal_column7": "",
+      "rna_experiment": "ENCSR745WVZ",
+      "rna_control": "ENCSR620PUP",
+      "control_matches": "True",
+      "de_file": "ENCFF926EAK",
+      "superseded_de_file": "ENCFF427TYR",
+      "pmp22_baseMean": "92.7969179300587",
+      "pmp22_log2FoldChange": "0.690041737613201",
+      "pmp22_lfcSE": "0.375717049287316",
+      "pmp22_stat": "1.83659948070527",
+      "pmp22_pvalue": "0.0662690440486072",
+      "pmp22_padj": "",
+      "rna_status": "measured",
+      "ci95_lower": "-0.04635014736759868",
+      "ci95_upper": "1.4264336225940006",
+      "absolute_effect_lower95": "0",
+      "kd_target_gene_ids": "[\"ENSG00000134644.11\"]",
+      "target_rna_depletion": "{\"baseMean\": 565.781018568495, \"lfcSE\": 0.211499218990899, \"log2FoldChange\": -0.983720143434168, \"padj\": 0.00038701699046223, \"pvalue\": 3.30047103703934e-06, \"stat\": -4.65117624607634}",
+      "adequate_target_rna_depletion": "False",
+      "source_sequencing_qc": "{\"control_reads\": [62015428, 148536488], \"kd_reads\": [90719356, 122440156], \"source_reported_de_genes\": 489}",
+      "pmp22_screen_bh203": "0.9963359699896903",
+      "pmp22_screen_by203": "1.0",
+      "primary_joint_candidate": "False",
+      "low_coverage_flag": "False"
+    },
+    "PUM2_sites": [
+      {
+        "chrom": "chr17",
+        "start": "15133388",
+        "end": "15133423",
+        "strand": "-",
+        "rbp": "PUM2",
+        "cell": "K562",
+        "source_file": "ENCFF767LWE",
+        "signal_column7": "4.44782896206979",
+        "negative_log10p_column8": "8.73210465937278",
+        "transcript_features": "{\"ENST00000312280.3\": [\"3UTR\"], \"ENST00000395938.2\": [\"3UTR\"]}",
+        "same_strand_overlapping_genes": "[\"ENSG00000109099.9\"]"
+      },
+      {
+        "chrom": "chr17",
+        "start": "15133966",
+        "end": "15134024",
+        "strand": "-",
+        "rbp": "PUM2",
+        "cell": "K562",
+        "source_file": "ENCFF767LWE",
+        "signal_column7": "4.9970399886899",
+        "negative_log10p_column8": "17.9403230064152",
+        "transcript_features": "{\"ENST00000312280.3\": [\"3UTR\"], \"ENST00000395938.2\": [\"3UTR\"], \"ENST00000494511.1\": [\"3UTR\"]}",
+        "same_strand_overlapping_genes": "[\"ENSG00000109099.9\"]"
+      },
+      {
+        "chrom": "chr17",
+        "start": "15134036",
+        "end": "15134088",
+        "strand": "-",
+        "rbp": "PUM2",
+        "cell": "K562",
+        "source_file": "ENCFF767LWE",
+        "signal_column7": "4.30010102030671",
+        "negative_log10p_column8": "7.49878554291305",
+        "transcript_features": "{\"ENST00000312280.3\": [\"3UTR\"], \"ENST00000395938.2\": [\"3UTR\"], \"ENST00000494511.1\": [\"3UTR\", \"CDS\"]}",
+        "same_strand_overlapping_genes": "[\"ENSG00000109099.9\"]"
+      },
+      {
+        "chrom": "chr17",
+        "start": "15133169",
+        "end": "15133238",
+        "strand": "-",
+        "rbp": "PUM2",
+        "cell": "K562",
+        "source_file": "ENCFF767LWE",
+        "signal_column7": "5.66073763108584",
+        "negative_log10p_column8": "24.5674154945748",
+        "transcript_features": "{\"ENST00000312280.3\": [\"3UTR\"], \"ENST00000395938.2\": [\"3UTR\"]}",
+        "same_strand_overlapping_genes": "[\"ENSG00000109099.9\"]"
+      }
+    ]
+  },
+  "derived_arithmetic": {
+    "PUM2_RNA_fraction_remaining": 0.5934394277544773,
+    "PUM2_RNA_percent_decrease": 40.656057224552264,
+    "PMP22_KD_control_fold": 1.6603762743872315,
+    "PMP22_unadjusted_CI_fold": [
+      0.9969572493505555,
+      2.765263379491857
+    ],
+    "note": "Exponentiated reported log2 values only. No protein knockdown estimate, new significance test or selection-adjusted confidence interval."
+  },
+  "mechanistic_limits": [
+    "Four reproducible intervals on shared sequence do not resolve binding to each transcript, functional motifs or independent mechanisms.",
+    "PUM2 fails original depletion/response thresholds; preserve them and nominal-versus-screen-wide uncertainty.",
+    "Weak target RNA depletion is not protein/activity depletion; no knockdown-efficacy rescaling of the PMP22 effect is justified.",
+    "PUM1 similarly positive point estimate shares a control experiment; no independent corroboration or compensation evidence.",
+    "No selected PUM1 peak is not measured absence of PUM1 binding.",
+    "Binding contradicts only absence of detectable reproducible association at these assayed intervals, not indirect causation or nonproductive binding.",
+    "Transcription, isoform redistribution, translation with no RNA change, paralog buffering and nonproductive association remain possible; none demonstrated."
+  ],
+  "conditional_ActD_model": {
+    "status": "Algebraic identifiability statement, not measured RNA kinetics",
+    "assumptions": [
+      "Actual arm-specific t0 immediately before ActD",
+      "No ongoing input to measured mature RNA",
+      "First-order constant net loss over interval",
+      "Comparable recovery/normalization and accounted growth/dilution",
+      "Biological replicate and batch design respected"
+    ],
+    "M_model": "M_g(t)=M_g(0)*exp(-k_g*t)",
+    "D_definition": "D(t)=log2(M_KD(t)/M_control(t))",
+    "contrast": "D(4)-D(0)=-(4/ln(2))*(k_KD-k_control)",
+    "delta_k_per_log2_interaction_per_hour": -0.17328679513998632,
+    "interpretation": "Positive baseline-normalized interaction implies slower conditional net loss in KD under assumptions, not unperturbed decay or direct mediation.",
+    "post_only": "D(4) alone confounds starting abundance ratio and loss difference.",
+    "vehicle_control": "A parallel four-hour vehicle is not the pre-drug t0 without a separately supported trajectory/steady-state assumption.",
+    "model_check": "Two time points cannot validate a monoexponential trajectory; multicompartment processing, differential block/toxicity and relative library scaling remain alternatives.",
+    "empirical_decay_rates": null
+  },
+  "candidate_followups": {
+    "GSE159510": "Peer-described HCT116 dual-PUM PAC-seq candidate; not metadata or outcome revalidated here. Dual perturbation cannot isolate PUM2; audit poly(A)-site capture versus gene-total interpretation.",
+    "GSE123016": "Peer-described TCam-2 single-PUM plus4h ActD candidate; no t0, completeness-of-block or sample pairing assumed here.",
+    "QKI": "Recent source/primer claims remain attributed to peer. Shared3UTR eCLIP and a gene-level null do not adjudicate first-exon/isoform mechanisms."
+  },
+  "GSE118660_erratum": {
+    "prior_artifact": "artifact_882bd250c232e55f8c377e3c895353fe414351297a3fbd9b76a4483d8874f486",
+    "incorrect_classification": "Total RNA-seq only",
+    "correct_classification": "Ribosome-footprint profiling; no separate matched total-RNA denominator established",
+    "source_protocols": [
+      {
+        "sample": "GSM3336241",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336243",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336236",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336246",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336235",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336240",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336237",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336242",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336238",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336245",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336239",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336247",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      },
+      {
+        "sample": "GSM3336244",
+        "protocol": [
+          "RNAseq- RNAeasy for RNA extraction and standard illumina PE including size selection. Riboseq - RNA extraction and library prepration as described in Ingolia et al. Science, 2009",
+          "Ribosome footprint profiling data was mapped to mm10 version of the genome using RefSeq CDSs. Transcripts shorter that 100 nucleotides were filtered-out and 30 nucleotides were clipped form the start and end of each CDS, similarly to Ingolia (21). Ribosome footprint sequences were trimmed to maximal size of 34 and polyA sequences from the polyA tailing step were removes, such that footprints of lengths 22-34 were considered. FASTQ files were then filtered for rRNAs and tRNAs using STAR(22). Expression levels were quantified using RSEM (23) after mapping to clipped CDSs using Bowtie2(24) to produce transcript and gene level quantification TPM (Transcript Per Million) values.",
+          "Lowly expressed genes with an average TPM <2 across all samples were filtered out and  expression of all other genes was thresholded to a TPM of 4.",
+          "Genome_build: mm10",
+          "Supplementary_files_format_and_content: Samples' read counts and TPM values"
+        ]
+      }
+    ],
+    "peer_correction": "post_7154883a19834d05a66ec224770f9c83",
+    "effect_on_conclusion": "Assay identity corrected; prior rate/synthesis non-identifiability remains. Older bytes are preserved, not overwritten."
+  }
+}

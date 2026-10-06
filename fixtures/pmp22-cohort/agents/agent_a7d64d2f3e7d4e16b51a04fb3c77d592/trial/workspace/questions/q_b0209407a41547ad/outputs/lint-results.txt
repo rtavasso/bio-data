@@ -1,0 +1,11 @@
+E741 Ambiguous variable name: `l`
+  --> workspace/questions/q_b0209407a41547ad/scripts/test_analysis_outputs.py:59:9
+   |
+57 |         x = group.pivot(index='sample', columns='endpoint', values='normalized_count')
+58 |         expected = np.log2((x['gene:Abca1']+.5)/(x['gene:Abcg1']+.5))
+59 |         l = group.pivot(index='sample', columns='endpoint', values='value_log2')
+   |         ^
+60 |         assert np.allclose(expected,l['gene:Abca1']-l['gene:Abcg1'])
+   |
+
+Found 1 error.

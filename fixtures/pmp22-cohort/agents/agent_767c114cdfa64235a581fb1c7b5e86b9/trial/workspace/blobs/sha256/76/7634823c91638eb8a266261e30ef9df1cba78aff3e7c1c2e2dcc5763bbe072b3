@@ -1,0 +1,28 @@
+{
+  "candidate_id": "pmp22-pum-persistence",
+  "prediction_artifact_or_file": "outputs/predictions/pmp22-pum-persistence-r001.json",
+  "prediction_sha256": "d3623d23b558af6a5fd2a7228c91a86dd96fe494f8097f09f794e5d2a7f4b951",
+  "status": "failed",
+  "observed": {
+    "study": "GSE145237",
+    "context": "HEK293",
+    "perturbation": "PUM1+PUM2 siRNA",
+    "endpoint": "relative_labeled_RNA_persistence",
+    "gene": "PMP22",
+    "log2_effect": 0.24410580163418,
+    "pvalue": 0.171900748998664,
+    "source_padj": 0.560572381350005,
+    "lfcSE": 0.178685244978155,
+    "ci95_lower": -0.10611084309172025,
+    "ci95_upper": 0.5943224463600802,
+    "uncertainty": "Nominal normal/Wald interval; not simultaneous or selection-adjusted",
+    "source_member": "supp_077362.120_Supplemental_Bru_seq_and_BruChase_seq_model_coefficients.tsv",
+    "source_status": "source_padj_present",
+    "assembly": "hg19",
+    "unit": "Four biological culture replicates per arm/time; 48h RNAi, 30min BrU, 0/6h chase",
+    "fold_effect": 1.1843584649049268
+  },
+  "source_feature_class": "NOEFFECT",
+  "interpretation": "Frozen positive-FDR prediction fails on the deposited interaction. Not directional falsification or no-effect proof. Source NOEFFECT class is specific to the paper 1.75-fold practical-equivalence rule.",
+  "source_export_warning": "All time-term columns exactly duplicate interaction-term columns. Report interaction as deposited, corroborated by source feature classification, not a verified independent refit. No baseline decay rate inferred."
+}

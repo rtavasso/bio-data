@@ -1,0 +1,146 @@
+NIH3T3 deposited columns ['NIH3T3_Tg2hr', 'NIH3T3_Tg7hr', 'NIH3T3_Cont']
+{'NIH3T3_Tg2hr': 39.38, 'NIH3T3_Tg7hr': 33.34, 'NIH3T3_Cont': 102.35}
+{
+  "gonens5A_matches_GEO_shared_cells": true,
+  "gonens5A_shared_genes": 22381,
+  "gonens5A_unmatched_GEO_labels": [
+    "1-Mar",
+    "1-Sep",
+    "10-Mar",
+    "10-Sep",
+    "11-Mar",
+    "11-Sep",
+    "12-Sep",
+    "14-Sep",
+    "15-Sep",
+    "2-Mar",
+    "2-Sep",
+    "3-Mar",
+    "3-Sep",
+    "4-Mar",
+    "4-Sep",
+    "5-Mar",
+    "5-Sep",
+    "6-Mar",
+    "6-Sep",
+    "7-Mar",
+    "7-Sep",
+    "8-Mar",
+    "8-Sep",
+    "9-Mar",
+    "9-Sep"
+  ],
+  "gonens5A_label_limit": "25 date-like gene strings in GEO do not match Excel native date cells; no gene identity guessed. Pmp22 matches exactly.",
+  "Gonen_Pmp22_late_cluster": 1,
+  "Gonen_NIH3T3_source_values": {
+    "NIH3T3_Tg2hr": 39.38,
+    "NIH3T3_Tg7hr": 33.34,
+    "NIH3T3_Cont": 102.35
+  },
+  "Gonen_NIH3T3_limit": "TableS5B labels late column8h; GEO/paper methods say7h. Same numbers inspected; retain discrepancy, no fabricated timing. MEF1uM and NIH3T3 200nM differ in dose as well as cell line.",
+  "TE_source_rows": 18983,
+  "TE_positive_eligible_rows": 18806,
+  "TE_eligible_genes": 11298,
+  "TE_Pmp22_rows": 7,
+  "TE_Pmp22_gene_percentile": 0.3346610019472473,
+  "TE_Pmp22_log2ratio_if_linear": -2.4896932547005224,
+  "TE_unit_caveat": "GEO TE.norm source values nonnegative up to1032; likely linear TE while paper plots log10 TE. Explicit file units absent; log2 ratios conditional on linear interpretation, direct source-unit decrease holds regardless. Raw coverage processing not performed.",
+  "granule_source_audit": [
+    {
+      "rep": 1,
+      "source_rows": 34739,
+      "exact_spike_label_hits": []
+    },
+    {
+      "rep": 2,
+      "source_rows": 34739,
+      "exact_spike_label_hits": []
+    },
+    {
+      "rep": 3,
+      "source_rows": 34739,
+      "exact_spike_label_hits": []
+    }
+  ],
+  "granule_total_unique_genes": 24171,
+  "granule_duplicate_RefSeq_labels": 1062,
+  "excluded_annotation_mismatch_rows": [
+    26401
+  ],
+  "granule_Pmp22_min_source_count": 266.0,
+  "granule_Pmp22_results": [
+    {
+      "gene": "Pmp22",
+      "stress": "THAP",
+      "replicate": 1,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": -0.07809023400079579,
+      "median_centered_change": -0.31343458322337103,
+      "median_ratio_change": -0.2978217785711543,
+      "rank_percentile": 0.31925606247431154
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "THAP",
+      "replicate": 2,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 0.4276821036372257,
+      "median_centered_change": -0.2914111079230207,
+      "median_ratio_change": -0.21003306624680673,
+      "rank_percentile": 0.34689683518290176
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "THAP",
+      "replicate": 3,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 0.488022634584701,
+      "median_centered_change": 0.43975593332036406,
+      "median_ratio_change": 0.4176714181222197,
+      "rank_percentile": 0.7037607891491985
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "AS",
+      "replicate": 1,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 0.7028752754493549,
+      "median_centered_change": -0.08040113089997125,
+      "median_ratio_change": -0.21595770200337305,
+      "rank_percentile": 0.47129941126997477
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "AS",
+      "replicate": 2,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 0.9732515941670805,
+      "median_centered_change": -0.1416074653919761,
+      "median_ratio_change": -0.2962526035866093,
+      "rank_percentile": 0.44049621530698063
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "HS",
+      "replicate": 1,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 1.2725750385147832,
+      "median_centered_change": -0.04022343299465647,
+      "median_ratio_change": -0.027704341726205062,
+      "rank_percentile": 0.48861189801699717
+    },
+    {
+      "gene": "Pmp22",
+      "stress": "HS",
+      "replicate": 2,
+      "eligible": true,
+      "uncalibrated_log2_fraction_change": 1.8290004944232665,
+      "median_centered_change": 0.16854649153805767,
+      "median_ratio_change": -0.04398415719309434,
+      "rank_percentile": 0.5637393767705382
+    }
+  ],
+  "TE_RG_joint_genes": 9309,
+  "TE_RG_spearman_descriptive": 0.35433309286100023,
+  "granule_limits": "No named spike calibrator rows in deposits. Absolute %RG or absolute stress-induced recruitment unidentifiable; relative rankings and centered changes only. Cyt includes insoluble fraction. 3 ER biological replicates source-documented, 2 other-stress reps. Not independent of TE source study; altered stress affects granule recovery. No granule-causality claim."
+}

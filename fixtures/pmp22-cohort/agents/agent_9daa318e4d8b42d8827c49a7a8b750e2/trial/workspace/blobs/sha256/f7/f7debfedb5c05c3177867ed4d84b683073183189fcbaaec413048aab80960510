@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>Held-out missing feature · absence differs from sparse zero · Data Archaeology Workbench</title>
+<style>
+:root{--ink:#18332f;--paper:#f4f3ec;--line:#d3d9cd;--green:#236958;--amber:#9a6321;--muted:#62736b}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,sans-serif}
+header{background:var(--ink);color:#eff3df;padding:28px max(6vw,24px)}.brand{font:12px ui-monospace,monospace;letter-spacing:.17em;text-transform:uppercase}
+.mast{display:flex;justify-content:space-between;gap:30px;align-items:end}h1{font-size:clamp(30px,4vw,54px);line-height:1.08;letter-spacing:-.045em;font-weight:500;margin:38px 0 18px;max-width:1000px}
+.subtitle{color:#b4c5b1;max-width:780px}main{max-width:1500px;padding:32px max(6vw,24px) 70px;margin:auto}
+.run{font:11px ui-monospace,monospace;overflow-wrap:anywhere;color:#b4c5b1}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);margin-bottom:32px;background:#fafaf4}.stat{padding:23px;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat strong{display:block;font-size:38px;line-height:1.2;font-weight:500}.stat span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.07em}
+h2{font-size:23px;font-weight:500;letter-spacing:-.02em;margin:30px 0 4px}.caption{color:var(--muted);font-size:13px;margin:4px 0 18px}.note{padding:16px 20px;border-left:3px solid var(--amber);background:#ebe6d8;margin:22px 0}.toolbar{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}input,select{font:inherit;padding:10px 12px;border:1px solid var(--line);background:#fafaf4;color:var(--ink);border-radius:4px}input{flex:1;min-width:220px}.table-wrap{overflow:auto;border:1px solid var(--line);max-height:640px}table{border-collapse:collapse;width:100%;font-size:13px}th{background:#e8ede1;position:sticky;top:0;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}th,td{padding:13px 15px;border-bottom:1px solid var(--line);vertical-align:top}td{max-width:550px;overflow-wrap:anywhere}tr:last-child td{border-bottom:0}.badge{display:inline-block;border-radius:3px;padding:3px 7px;font:11px ui-monospace,monospace;white-space:nowrap;background:#e2e9dc}.pending,.unresolved{background:#efe1c8;color:#82500f}.not_measurable{background:#e3e3e0;color:#575d55}.evaluated_detected{background:#d6e8dc;color:#1c634a}.mono{font:11px ui-monospace,monospace}.number{font:14px ui-monospace,monospace;font-variant-numeric:tabular-nums}.downloads{display:flex;gap:10px;flex-wrap:wrap}.downloads a{border:1px solid var(--line);padding:8px 12px;color:var(--green);text-decoration:none}.empty{padding:35px;color:var(--muted);border:1px dashed var(--line)}footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}details{margin-top:15px}summary{cursor:pointer;color:var(--green)}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#e8ede1;padding:18px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.stat{border-bottom:1px solid var(--line)}.mast{display:block}}
+</style>
+<header><div class="brand">DAW / Data Archaeology Workbench</div><div class="mast"><div><h1>Held-out missing feature · absence differs from sparse zero</h1>
+<p class="subtitle">Recover the measurement. Preserve its context. Keep the unknown visible.</p></div><div class="run">IMMUTABLE QUERY RECEIPT<br>run_73c090d6b4964f618b7d284de0dd736e</div></div></header>
+<main><div class="stats"><div class="stat"><strong>1</strong><span>Frozen candidates</span></div>
+<div class="stat"><strong>0</strong><span>Evaluated representations</span></div><div class="stat"><strong>0</strong><span>Extracted measurements</span></div><div class="stat"><strong>0</strong><span>Pending / unresolved</span></div></div>
+<div class="brand">expression.feature_values</div><p class="caption">frozen listed asset revisions and inventoried workbook sheets within requested local catalog scope. Candidate set <span class="mono">cb2c5b29cd2a752d</span></p>
+<div class="note">A row match or extracted value is a measurement, not a significance or causal claim. Missing rows in selected tables remain unresolved. Coverage describes this saved candidate set, not all public evidence.</div>
+<h2>Measurement ledger</h2><p class="caption">Native values, kept separate by source representation. Displaying up to 500 rows; the Parquet package contains all accepted rows.</p>
+<div class="empty">No measurements were accepted for this request. The coverage ledger records why each candidate could not answer it.</div>
+<h2>Experimental context</h2><p class="caption">Interpretations stay separate by representation. Repeated source rows and alternate files are not independent biological replicates. Long collections are abbreviated here; the context download preserves them in full.</p>
+<details><summary>pbmc3k_raw.h5ad · source_count_value · {}</summary><p class="mono">Source 89a96f1beaa2dd83a687666d3f19a4513ac27a2a2d12581fcd77afed7ea653a1<br>Interpretation 5f0a539bc9955dd210070678e93f73d9d0c8882784f518a3f568457b83d8a792</p><pre>{
+  &#34;biological_context&#34;: &#34;human peripheral blood mononuclear cells from the published PBMC3k library&#34;,
+  &#34;feature_presence&#34;: {
+    &#34;pbmc3k&#34;: [
+      &#34;MIR1302-10&#34;,
+      &#34;FAM138A&#34;,
+      &#34;OR4F5&#34;,
+      &#34;RP11-34P13.7&#34;,
+      &#34;RP11-34P13.8&#34;,
+      &#34;AL627309.1&#34;,
+      &#34;RP11-34P13.14&#34;,
+      &#34;RP11-34P13.9&#34;,
+      &#34;AP006222.2&#34;,
+      &#34;RP4-669L17.10&#34;,
+      &#34;OR4F29&#34;,
+      &#34;RP4-669L17.2&#34;,
+      &#34;RP5-857K21.15&#34;,
+      &#34;RP5-857K21.1&#34;,
+      &#34;RP5-857K21.2&#34;,
+      &#34;RP5-857K21.3&#34;,
+      &#34;RP5-857K21.4&#34;,
+      &#34;RP5-857K21.5&#34;,
+      &#34;OR4F16&#34;,
+      &#34;RP11-206L10.3&#34;,
+      &#34;RP11-206L10.5&#34;,
+      &#34;RP11-206L10.4&#34;,
+      &#34;RP11-206L10.2&#34;,
+      &#34;RP11-206L10.9&#34;,
+      &#34;… 32714 more in context download&#34;
+    ]
+  },
+  &#34;layer&#34;: &#34;X&#34;,
+  &#34;namespace&#34;: &#34;published_gene_symbols_with_original_uniquification&#34;,
+  &#34;transform&#34;: &#34;none_in_published_conversion&#34;,
+  &#34;units&#34;: &#34;source_count_value&#34;
+}</pre><details><summary>Source metadata</summary><pre>{&#34;acquisition_reason&#34;:null}</pre></details></details>
+<h2>Coverage & remaining work</h2><p class="caption">All 1 candidates, including unacquired assets and uncurated workbook sheets.</p>
+<div class="toolbar"><input id="search" type="search" placeholder="Filter by source, reason, or sheet…" aria-label="Search coverage"><select id="state" aria-label="Filter result state"><option value="">All result states</option><option>not_measurable</option></select></div>
+<div class="table-wrap"><table id="coverage"><thead><tr><th>Resource / scope</th><th>Acquisition</th><th>Inspection</th><th>Capability</th><th>Result</th><th>Reason / next prerequisite</th></tr></thead><tbody>
+<tr data-state="not_measurable"><td>pbmc3k_raw.h5ad<br><span class="mono">{}</span></td><td>available_full</td><td>structure_inspected</td><td>ready_with_limits</td><td><span class="badge not_measurable">not_measurable</span></td><td>feature_absent_from_selected_layer</td></tr>
+</tbody></table></div><p id="visible" class="caption" aria-live="polite">1 candidates shown</p>
+<h2>Reproducible package</h2><p class="caption">These local files preserve the request, frozen plan, numerical results, context, and provenance.</p>
+<div class="downloads"><a href="request.json" download>request.json</a><a href="plan.json" download>plan.json</a><a href="measurements.parquet" download>measurements.parquet</a><a href="measurement_context.parquet" download>measurement_context.parquet</a><a href="coverage.parquet" download>coverage.parquet</a><a href="provenance.json" download>provenance.json</a><a href="validation.json" download>validation.json</a></div>
+<details><summary>Validation receipt</summary><pre>{&#39;coverage_complete_for_frozen_candidate_set&#39;: True, &#39;measurement_ids_unique&#39;: True, &#39;all_measurements_have_context&#39;: True, &#39;unrestricted_sql&#39;: False, &#39;implicit_cross_study_pooling&#39;: False, &#39;result_counts&#39;: {&#39;not_measurable&#39;: 1}}</pre></details>
+<footer>Private · local · no remote scripts, fonts, trackers, or model calls. This is a historical result; refresh and corrected interpretations create new runs. Check <a href="current_status.json">current catalog status</a> when this report is regenerated.</footer></main>
+<script>const input=document.getElementById('search'),state=document.getElementById('state');function filter(){let n=0;for(const row of document.querySelectorAll('#coverage tbody tr')){const show=row.textContent.toLowerCase().includes(input.value.toLowerCase())&&(!state.value||row.dataset.state===state.value);row.hidden=!show;if(show)n++}document.getElementById('visible').textContent=n+' candidates shown'}input.addEventListener('input',filter);state.addEventListener('change',filter);</script></html>

@@ -1,0 +1,1265 @@
+{
+  "revision": 18,
+  "scope": {
+    "target": "PMP22",
+    "endpoint": [
+      "promoter output",
+      "RNA abundance",
+      "functional protein abundance"
+    ],
+    "species_context": "Human Schwann cells prioritized; other species and states kept distinct",
+    "assumptions": "All initial edges are recalled, unverified hypotheses. No completeness claim."
+  },
+  "nodes": [
+    {
+      "id": "dosage",
+      "label": "PMP22 copy number / cis architecture",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "promoters",
+      "label": "PMP22 P1/P2 promoter output",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "rna",
+      "label": "PMP22 RNA abundance",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "protein",
+      "label": "PMP22 folded surface/myelin protein",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "sox",
+      "label": "SOX10 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "egr",
+      "label": "EGR2 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "axon",
+      "label": "Axonal NRG1 / ERBB signaling",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "camp",
+      "label": "cAMP / PKA / differentiation",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "chromatin",
+      "label": "Chromatin / enhancer activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mir",
+      "label": "miRNA / RNA stability",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "qc",
+      "label": "ER quality control / proteasome / autophagy",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "injury",
+      "label": "Injury / c-JUN repair state",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mechanical",
+      "label": "Mechanical signals / YAP TAZ",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "as",
+      "label": "EGR2 antisense RNA",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "tead",
+      "label": "TEAD1 activity",
+      "kind": "transcription factor activity"
+    },
+    {
+      "id": "yy1",
+      "label": "YY1 signaling-dependent activity",
+      "kind": "transcription factor activity"
+    },
+    {
+      "id": "ezh",
+      "label": "EZH2-associated repressive chromatin",
+      "kind": "chromatin complex"
+    },
+    {
+      "id": "wdr",
+      "label": "WDR5-associated active chromatin",
+      "kind": "chromatin complex"
+    },
+    {
+      "id": "jun",
+      "label": "C-JUN / AP-1 activity",
+      "kind": "repair-state activity"
+    },
+    {
+      "id": "lipid",
+      "label": "Cholesterol trafficking / ABCA1 efflux",
+      "kind": "downstream physiology"
+    },
+    {
+      "id": "mir_up",
+      "label": "miR-29 biogenesis and loading",
+      "kind": "upstream unresolved control"
+    },
+    {
+      "id": "hormone",
+      "label": "Hormonal metabolic and pharmacological inputs",
+      "kind": "unresolved branch"
+    },
+    {
+      "id": "glycan",
+      "label": "N-glycosylation / OST-A and OST-B",
+      "kind": "protein maturation"
+    },
+    {
+      "id": "uggt",
+      "label": "UGGT1 calnexin-cycle folding surveillance",
+      "kind": "protein quality control"
+    },
+    {
+      "id": "globin",
+      "label": "Unexpected globin-rich RNA response",
+      "kind": "observed data pattern, mechanism unresolved"
+    },
+    {
+      "id": "runx",
+      "label": "RUNX1/3 repression in NF1-deficient Schwann lineage",
+      "kind": "context-specific transcription factor activity"
+    },
+    {
+      "id": "g3bp",
+      "label": "G3BP1-associated PMP22 RNA regulation",
+      "kind": "RNA-binding protein / mechanism unresolved"
+    },
+    {
+      "id": "erk",
+      "label": "NRG-responsive ERK activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "nascent_egr",
+      "label": "Nascent Egr2 transcription",
+      "kind": "assay-specific regulatory state"
+    },
+    {
+      "id": "mir_processing",
+      "label": "Dicer / AGO2-associated miRNA regulation",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "abca",
+      "label": "ABCA1-dependent lipid handling",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "specific_residual",
+      "label": "Pmp22 RNA beyond measured myelin program",
+      "kind": "statistical endpoint"
+    },
+    {
+      "id": "candidate_predictor",
+      "label": "Measured regulator RNA candidates",
+      "kind": "exploratory predictor"
+    },
+    {
+      "id": "immune_composition",
+      "label": "Myeloid abundance or shared injury activation",
+      "kind": "alternative explanation"
+    },
+    {
+      "id": "hck_rna",
+      "label": "Hck RNA abundance",
+      "kind": "candidate regulator transcript"
+    },
+    {
+      "id": "isr",
+      "label": "PERK / chronic integrated stress response",
+      "kind": "activity"
+    },
+    {
+      "id": "translation",
+      "label": "PMP22 polysome association relative to cytosolic RNA",
+      "kind": "assay endpoint"
+    },
+    {
+      "id": "pten",
+      "label": "PTEN abundance and PI3K/Akt/mTOR signaling",
+      "kind": "signaling"
+    },
+    {
+      "id": "granule",
+      "label": "PMP22 RNA partition into insoluble granules",
+      "kind": "RNA disposition"
+    },
+    {
+      "id": "ire1_rnase",
+      "label": "IRE1 RNase / regulated IRE1-dependent RNA decay",
+      "kind": "enzyme activity"
+    },
+    {
+      "id": "footprint_context",
+      "label": "Cell model, stress dose and culture context",
+      "kind": "jointly varying experimental context"
+    },
+    {
+      "id": "relative_footprints",
+      "label": "Pmp22 relative gene-level ribosome footprints",
+      "kind": "measurement endpoint, not translation efficiency"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "dosage",
+      "target": "rna",
+      "mechanism": "Dosage-dependent expression",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e2",
+      "source": "sox",
+      "target": "promoters",
+      "mechanism": "Promoter/enhancer activation",
+      "context": "Rat sciatic nerve binding context and rat S16 SOX10-loss TSS data",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "source": "egr",
+      "target": "promoters",
+      "mechanism": "Myelination transcription",
+      "context": "Rat Schwann enhancer/reporters; not complete endogenous human causality",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC3298281.html",
+          "locator": "Results EGR2/SOX10 enhancer assays",
+          "basis": "Full primary text recovered; motif/binding and reporter evidence supports cis route with context limits."
+        }
+      ]
+    },
+    {
+      "id": "e4",
+      "source": "axon",
+      "target": "egr",
+      "mechanism": "Signal-dependent differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e5",
+      "source": "camp",
+      "target": "egr",
+      "mechanism": "Differentiation-dependent induction",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e6",
+      "source": "chromatin",
+      "target": "promoters",
+      "mechanism": "Accessible cis elements",
+      "context": "Endogenous rodent Schwann enhancer deletion",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC7322568.html",
+          "locator": "Results and promoter-specific assays",
+          "basis": "Deletion supports enhancer requirement with preferential P1 effects; does not establish all human promoter behavior."
+        }
+      ]
+    },
+    {
+      "id": "e7",
+      "source": "promoters",
+      "target": "rna",
+      "mechanism": "Transcription",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e8",
+      "source": "mir",
+      "target": "rna",
+      "mechanism": "Post-transcriptional repression",
+      "context": "Newborn rat Schwann cultures; human fibroblast study separately",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC2713384.html; inputs/continuation/PMC6920087.xml",
+          "locator": "2009 Figures5-7; 2019 mimic RNA48h/protein72h",
+          "basis": "Seed deletion, anti-miR and AGO2 association support post-transcriptional control; neither RNA abundance nor unmatched timepoints alone estimates RNA decay versus translation."
+        }
+      ]
+    },
+    {
+      "id": "e9",
+      "source": "rna",
+      "target": "protein",
+      "mechanism": "Translation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e10",
+      "source": "qc",
+      "target": "protein",
+      "mechanism": "Folding trafficking and degradation",
+      "context": "HeLa mutant constructs and HEK293 glycosylation perturbations; variant-specific",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC4227013.xml; inputs/continuation/PMC8191293.xml",
+          "locator": "ERAD/RER1/calnexin experiments; glycosylation Figures1-6",
+          "basis": "Retention, trafficking and degradation control protein disposition; selected co-IP does not prove functional necessity."
+        }
+      ]
+    },
+    {
+      "id": "e11",
+      "source": "injury",
+      "target": "egr",
+      "mechanism": "Repair/myelination antagonism",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e12",
+      "source": "mechanical",
+      "target": "egr",
+      "mechanism": "Mechanosensitive differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e13",
+      "source": "as",
+      "target": "egr",
+      "mechanism": "Antisense modulation",
+      "context": "Mechanism supported in published nascent/chromatin experiments; simple prediction not reproduced in GSE201623 steady-state gene counts",
+      "status": "contested",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        },
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure5A/F and Discussion transcriptional buffering",
+          "basis": "Nascent repression and transient injury responses do not establish the direction of later steady-state rat RNA. Timing narrows the alternative but does not resolve GSE201623 discrepancy."
+        },
+        {
+          "source": "artifact_55b8f0b280341bb4f289f705f6809159d9f4209bd60967c273df257b27bb92ba",
+          "locator": "outputs/rna-audit-summary.json; outputs/rna-hemoglobin-summary.json",
+          "basis": "All pairwise Egr2 positive and Jun negative; no source-label inversion evidence; hemoglobin exclusion leaves effect directions."
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "source": "tead",
+      "target": "promoters",
+      "mechanism": "Direct enhancer regulation",
+      "context": "Human hg18 enhancer sequences tested in rodent reporter cells; rodent nerve genetics",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5181599.html",
+          "locator": "Results Figures5-8; P20 genotype experiment",
+          "basis": "TEAD motif and endogenous YAP/TAZ results support direct cis regulation; technical reporter repeats do not supply independent donors or mediation fraction."
+        }
+      ]
+    },
+    {
+      "id": "e15",
+      "source": "tead",
+      "target": "egr",
+      "mechanism": "Egr2 enhancer regulation provides indirect route to PMP22",
+      "context": "Rodent Schwann/nerve context",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5181599.html",
+          "locator": "Tead1 knockdown and Egr2 enhancer assays",
+          "basis": "Egr2 route is plausible/supported in this context; P20 Pmp22 Prom1 change without significant Egr2 RNA change supports an additional route, not zero mediation."
+        }
+      ]
+    },
+    {
+      "id": "e16",
+      "source": "mechanical",
+      "target": "tead",
+      "mechanism": "YAP/TAZ coactivation of TEAD, upstream mechanical dependency to resolve",
+      "context": "Activity/localization not inferred from gene counts",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5181599/",
+          "locator": "indexed primary-paper Results/Discussion excerpt",
+          "basis": "Tead1 binding, loss-of-function and motif mutation support PMP22 enhancer regulation; full-text open blocked by reCAPTCHA."
+        }
+      ]
+    },
+    {
+      "id": "e17",
+      "source": "camp",
+      "target": "promoters",
+      "mechanism": "cAMP-dependent Pmp22 TSS abundance increase",
+      "context": "Primary rat Schwann cells; does not identify sole mediator",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        }
+      ]
+    },
+    {
+      "id": "e18",
+      "source": "axon",
+      "target": "yy1",
+      "mechanism": "Neuregulin-ErbB2/3 signaling regulates YY1-associated antisense control",
+      "context": "2017 mouse DRG/injury and Schwann culture study; NRG isoform and time dependent",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure6 and NRG TypeI/III Results",
+          "basis": "NRG-ERK signaling and YY1 Ser184 state regulate antisense association/expression; phosphorylation activity cannot be inferred from YY1 RNA."
+        }
+      ]
+    },
+    {
+      "id": "e19",
+      "source": "yy1",
+      "target": "as",
+      "mechanism": "Signaling-dependent Egr2-AS regulation",
+      "context": "2017 mouse DRG/injury and Schwann culture study; NRG isoform and time dependent",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure6 and NRG TypeI/III Results",
+          "basis": "NRG-ERK signaling and YY1 Ser184 state regulate antisense association/expression; phosphorylation activity cannot be inferred from YY1 RNA."
+        }
+      ]
+    },
+    {
+      "id": "e20",
+      "source": "as",
+      "target": "ezh",
+      "mechanism": "Scaffold-associated recruitment to Egr2 promoter",
+      "context": "Rat Schwann cells; published biochemical/chromatin evidence",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e21",
+      "source": "ezh",
+      "target": "egr",
+      "mechanism": "H3K27me3-associated transcriptional repression",
+      "context": "Nascent/chromatin endpoint differs from current steady-state RNA",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e22",
+      "source": "as",
+      "target": "wdr",
+      "mechanism": "Scaffold-associated active chromatin regulation",
+      "context": "Rat Schwann cells",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e23",
+      "source": "wdr",
+      "target": "jun",
+      "mechanism": "H3K4me3 targeting at C-JUN promoter",
+      "context": "Published chromatin result; current Jun RNA direction is discordant",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        }
+      ]
+    },
+    {
+      "id": "e24",
+      "source": "as",
+      "target": "rna",
+      "mechanism": "Indirect effect through cell state versus direct cis change",
+      "context": "Pmp22 RNA lower descriptively; mediation unresolved",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        }
+      ]
+    },
+    {
+      "id": "e25",
+      "source": "protein",
+      "target": "lipid",
+      "mechanism": "PMP22 influences cholesterol trafficking and ABCA1-mediated efflux",
+      "context": "Mouse/rat Schwann and nerve perturbation; total and surface effects separated",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC6607759.html",
+          "locator": "Figures2,6,7",
+          "basis": "PMP22 loss impairs cholesterol efflux and ABCA1 surface localization despite greater totalABCA1; not evidence of reverse promoter causality."
+        }
+      ]
+    },
+    {
+      "id": "e26",
+      "source": "lipid",
+      "target": "promoters",
+      "mechanism": "Possible lipid feedback onto expression",
+      "context": "Reciprocal ABCA1-to-PMP22 protein effect exists; direct lipid-to-promoter feedback still unmeasured",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e27",
+      "source": "mir_up",
+      "target": "mir",
+      "mechanism": "miR-29 transcription processing and RISC loading",
+      "context": "Upstream controller unresolved in relevant Schwann states",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e28",
+      "source": "hormone",
+      "target": "promoters",
+      "mechanism": "Potential context-dependent transcriptional regulation",
+      "context": "Not audited within request budget",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e29",
+      "source": "glycan",
+      "target": "protein",
+      "mechanism": "N-glycosylation limits forward trafficking, variant-dependent",
+      "context": "Tagged PMP22 in HEK293 and primary rat Schwann cells; not endogenous human myelin abundance",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC8191293.xml",
+          "locator": "Results sec1.1; Figures 1 and 2",
+          "basis": "N41Q increases surface-trafficking efficiency; total protein and efficiency separated; quantified source text inspected."
+        }
+      ]
+    },
+    {
+      "id": "e30",
+      "source": "uggt",
+      "target": "protein",
+      "mechanism": "Reglucosylation/retention controls forward trafficking",
+      "context": "HEK293 CRISPR KO; variant specificity",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC8191293.xml",
+          "locator": "Results sec1.5; Figure 6",
+          "basis": "UGGT1 KO and CNX KO trafficking effects differ by variant; interactor list is not causal evidence alone."
+        }
+      ]
+    },
+    {
+      "id": "e31",
+      "source": "runx",
+      "target": "promoters",
+      "mechanism": "RUNX-site and alternative-promoter regulation",
+      "context": "Mouse NF1-deficient neurofibroma cells; not normal human myelination",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC6482019.xml",
+          "locator": "Results Pmp22 direct target; CRISPR deletion; Methods sec21",
+          "basis": "Binding-site deletion supports cis control; independent ATAC n=1/genotype cannot quantify causal effect."
+        },
+        {
+          "source": "artifact_150748bb898aa760ccab2afdc58f2e772053d1b1a4deea08a64149c6944f17eb",
+          "locator": "outputs/runx-rna-summary.json; runx-rna-sample-audit.tsv",
+          "basis": "Gene-level Pmp22 increase reproduced descriptively; no P1/P2 attribution from gene counts. Sample title swaps stay within genotype groups."
+        },
+        {
+          "source": "artifact_dd199a4eef0624d98fb58ce7522964fd54fc4870885d62b3864c7b348f1f3a86",
+          "locator": "outputs/runx-locus-summary.json",
+          "basis": "Lower local processed ATAC signal; source already describes lower P2 accessibility with higher P1RNA. No new contradiction or independent biological replication."
+        }
+      ]
+    },
+    {
+      "id": "e32",
+      "source": "g3bp",
+      "target": "rna",
+      "mechanism": "G3BP1 depletion raises PMP22 RNA; RNA half-life mechanism not demonstrated",
+      "context": "Human MCF-7 breast cancer cells, not Schwann cells",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC3866477.xml",
+          "locator": "PMP22 RNA stability section and Table1",
+          "basis": "Actinomycin-D half-life means 4.4h control and 4.2h siG3BP1; source reports no significant change despite RNA increase. RNA-binding annotation alone does not establish RNA stabilization."
+        }
+      ]
+    },
+    {
+      "id": "e33",
+      "source": "axon",
+      "target": "erk",
+      "mechanism": "NRG-dependent ERK signaling",
+      "context": "Schwann cultures; TypeIII acute versus TypeI delayed antisense effects",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure6; NRG Results",
+          "basis": "ERK inhibition and isoform timecourse support this route; not a universal monotonic differentiation effect."
+        }
+      ]
+    },
+    {
+      "id": "e34",
+      "source": "erk",
+      "target": "yy1",
+      "mechanism": "YY1 phosphorylation-associated antisense control",
+      "context": "YY1 Ser-Ala constructs and RNA-IP in Schwann cultures",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure6I",
+          "basis": "Ser184 mutation enhances YY1 association with Egr2-AS; RNA abundance is not a phosphorylation readout."
+        }
+      ]
+    },
+    {
+      "id": "e35",
+      "source": "as",
+      "target": "nascent_egr",
+      "mechanism": "Nascent transcription repression / temporal buffering",
+      "context": "2017 nuclear run-on in Schwann cells and mouse nerve injury timecourse",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC5800313.html",
+          "locator": "Figure5A/F and Discussion",
+          "basis": "Nuclear run-on differs from mature RNA endpoint; injury GapMer response is time-dependent. Does not resolve 2024 count discrepancy."
+        }
+      ]
+    },
+    {
+      "id": "e36",
+      "source": "mir_processing",
+      "target": "rna",
+      "mechanism": "Dicer-dependent and miR29-primed AGO2 repression",
+      "context": "Primary rat Schwann cultures; artificial AGO2/miRNA coexpression",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC2713384.html",
+          "locator": "Figures2,6,7",
+          "basis": "Dicer inhibition raises PMP22 and miR29 increases PMP22 RNA association with AGO2. Endogenous loading across injury was not measured."
+        }
+      ]
+    },
+    {
+      "id": "e37",
+      "source": "abca",
+      "target": "protein",
+      "mechanism": "ABCA1 loss changes total PMP22 and glycosylation processing",
+      "context": "10-month-old mouse sciatic nerve; not direct transcription or measured surface amount",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/continuation/PMC6607759.html",
+          "locator": "Figure4D-G; outputs/lipid-summary-analysis.json",
+          "basis": "KO totalPMP22 rises1.53x, endoH-resistant fraction falls81.9%to52.2%. Derived product of group summaries is illustrative only, not paired mature-protein abundance."
+        }
+      ]
+    },
+    {
+      "id": "e38",
+      "source": "candidate_predictor",
+      "target": "specific_residual",
+      "mechanism": "Candidate expression predicts Pmp22 residual after myelin-program adjustment",
+      "context": "Rat purified Schwann injury discovery; mouse Eed nerve perturbation transfer to be tested, not assumed",
+      "status": "contested",
+      "evidence": [
+        {
+          "source": "outputs/specific/validation-primary-results.tsv",
+          "locator": "all3 candidates",
+          "basis": "Frozen candidate transfer failed Zeb2 criteria; conditional signs reversed. Prediction not causal effect."
+        },
+        {
+          "source": "outputs/specific/alternate-myelin-targets.tsv",
+          "locator": "Mpz and Cnp targets",
+          "basis": "Candidates track broader residual myelin variation too."
+        }
+      ]
+    },
+    {
+      "id": "e39",
+      "source": "immune_composition",
+      "target": "candidate_predictor",
+      "mechanism": "Hck expression may reflect myeloid signal or shared activation rather than Schwann-intrinsic Pmp22 control",
+      "context": "Purified rat Schwann cells versus whole nerve; prospective confounder check",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e40",
+      "source": "egr",
+      "target": "hck_rna",
+      "mechanism": "Egr2/NAB-dependent repression-associated expression response",
+      "context": "Cultured Schwann cells and Egr2/NAB-deficient mouse nerve; not evidence that Hck directly regulates Pmp22",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/specific/PMC2440619.html",
+          "locator": "Table1; Results Activation of Egr2 Target Genes in Egr2-null Mice",
+          "basis": "Dominant-negative NAB2 and Egr2 loss raise Hck; direct promoter occupancy in that paper was shown for other genes, not asserted for Hck."
+        }
+      ]
+    },
+    {
+      "id": "isr-translation",
+      "source": "isr",
+      "target": "translation",
+      "mechanism": "Stress-dependent Pmp22 RNA and ribosome-associated output: direction is not transferable across measured contexts",
+      "context": "Mouse embryonic fibroblasts; transfer to Schwann cells untested",
+      "status": "contested",
+      "evidence": [
+        {
+          "source": "artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd",
+          "locator": "Pmp22 acute/chronic/PERKi fraction contrasts",
+          "basis": "MEF heavy-polysome/RNA response; relative loading, not absolute translation"
+        },
+        {
+          "source": "artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543",
+          "locator": "Pmp22WT1/2/5/8h TPM and normalization sensitivities",
+          "basis": "Opposite footprint direction in separate MEFs; n1/time/genotype and no matchedRNA"
+        },
+        {
+          "source": "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+          "locator": "TableS5 cross-representation audit and NIH3T3values",
+          "basis": "Source confirms opposite contexts; cannot isolate cell/dose/assay mechanism"
+        }
+      ]
+    },
+    {
+      "id": "dosage-pten",
+      "source": "dosage",
+      "target": "pten",
+      "mechanism": "Pmp22 dosage is associated with altered PTEN abundance and downstream growth signaling",
+      "context": "Rodent Pmp22haploinsufficient/transgenic nerve models; developmental context specified by source",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "inputs/iteration/PMC10940316.xml",
+          "locator": "Figure1 and EV2",
+          "basis": "Protein/RNA signaling measurements; direct PMP22\u2013PTEN binding not detected. Does not establish reverse regulation of PMP22 transcription."
+        }
+      ]
+    },
+    {
+      "id": "pten-state",
+      "source": "pten",
+      "target": "injury",
+      "mechanism": "Pten reduction is insufficient to restore measured differentiation markers in CMT1A context",
+      "context": "P18 mouse nerve selected qPCR panel;4\u20135 deposited values/group",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "artifact_1092edd510743d4761066019de032b42b42e11b5abab1f43a05436c0df661d59",
+          "locator": "7A doublemutant/CMT1A contrasts",
+          "basis": "Pten0.514x, Nrg1-I1.006x, Hmgcr1.217x. Sourceunits/count anomalies limit inference; no noveluncoupling mechanism."
+        }
+      ]
+    },
+    {
+      "id": "granule-translation",
+      "source": "granule",
+      "target": "translation",
+      "mechanism": "Granule sequestration as a proposed contributor to PMP22 translation repression",
+      "context": "NIH3T3 1uMTg90min; same-study RNAgranule and TEassays",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+          "locator": "Pmp22TE and relativegranule changes",
+          "basis": "TE decreases; relativeRG response inconsistent and absolutecalibration missing. Does not demonstrate granulecausality or absence of sequestration."
+        }
+      ]
+    },
+    {
+      "id": "ire1_pmp22_decay",
+      "source": "ire1_rnase",
+      "target": "rna",
+      "mechanism": "Source-supported stress-dependent reduction in Pmp22 RNA abundance and stability; direct cleavage site unresolved",
+      "context": "IRE1-reconstituted versus deficient mouse fibroblasts exposed to DTT; no demonstrated human Schwann-cell transfer.",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2728407/",
+          "locator": "TableIrow5;MethodsMicroarrayexperimentsandanalysis",
+          "basis": "Pmp22-.88versus-.07log2means;source reducedstabilityYes. Exactextraction artifact_e9281f4b56b3c3f0c6ad2a53cb823366dec7883b821da64b490e8973201696f3. Mainnuclease-mutantfiguredoesnottestPmp22."
+        }
+      ]
+    },
+    {
+      "id": "context-footprint-departure",
+      "source": "footprint_context",
+      "target": "relative_footprints",
+      "mechanism": "Observed context association beyond the baseline-matched broad response; no individual causal context factor isolated",
+      "context": "Mouse MEF 1 \u03bcM versus NIH3T3 200 nM thapsigargin at 2 hours; one library per condition; retrospective.",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08",
+          "locator": "primary",
+          "basis": "delta1.962;reference-relative1.740;99.843rdpercentile;programconditionweakensdistinctiveness"
+        },
+        {
+          "source": "artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114",
+          "locator": "results",
+          "basis": "Expectedcountdeparturepreserved;notTPMonly"
+        }
+      ]
+    },
+    {
+      "id": "ire1-footprint-hypothesis",
+      "source": "ire1_rnase",
+      "target": "relative_footprints",
+      "mechanism": "Differential RNA decay could alter relative footprints without changing translation efficiency",
+      "context": "Hypothesis for the GSE118660 difference; IRE1 activity and RNA half-life were not measured.",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "outputs/context-audit/novelty-audit.json",
+          "locator": "Hollien2009andMoore2015",
+          "basis": "Independentpriorbiology motivatesalternative,doesnotprovecontextassignment"
+        }
+      ]
+    }
+  ],
+  "frontier": [
+    {
+      "node": "as",
+      "question": "Why do steady-state Egr2 and Jun counts disagree with the simple repression/repair prediction?",
+      "priority": "Highest",
+      "reason": "Exact count bytes and sample labels verified; original nascent/timecourse endpoints audited; matched cultures/timecourse still absent.",
+      "status": "investigated",
+      "inherited_disposition": "analyzed_but_unresolved"
+    },
+    {
+      "node": "promoters",
+      "question": "Which human P1/P2 outputs change after Egr2-AS perturbation?",
+      "priority": "High",
+      "reason": "Human GSE7423 probes are not promoter-specific; rat Egr2-AS gene counts/peak lists and independent mouse RUNX gene counts cannot establish humanP1/P2 response.",
+      "status": "open",
+      "inherited_disposition": "blocked_in_available_data"
+    },
+    {
+      "node": "tead",
+      "question": "How much PMP22 response is direct versus mediated through EGR2?",
+      "priority": "High",
+      "reason": "No matched EGR2 rescue/clamp in inspected primary study; direct versus mediated fraction unidentifiable.",
+      "status": "open",
+      "inherited_disposition": "blocked"
+    },
+    {
+      "node": "qc",
+      "question": "Does functional myelin-localized protein track RNA under dosage or point mutation?",
+      "priority": "High",
+      "reason": "670 co-IP selected entries analyzed; trafficking functional sources inspected. Matched endogenous human RNA/protein/turnover under dosage not provided.",
+      "status": "investigated",
+      "inherited_disposition": "analyzed_but_unresolved"
+    },
+    {
+      "node": "mir_up",
+      "question": "What changes miR-29 production and AGO loading across injury and differentiation?",
+      "priority": "High",
+      "reason": "Growth-state Dicer/miR29 and engineered AGO2 association supported; endogenous time-resolved AGO loading/biogenesis drivers remain unresolved.",
+      "status": "investigated",
+      "inherited_disposition": "partially_source_supported"
+    },
+    {
+      "node": "lipid",
+      "question": "Is there feedback from cholesterol handling to PMP22 transcription?",
+      "priority": "Medium",
+      "reason": "Reciprocal ABCA1/PMP22 protein-processing effect inspected and summary arithmetic executed; direct promoter feedback remains unresolved.",
+      "status": "investigated",
+      "inherited_disposition": "analyzed_but_unresolved"
+    },
+    {
+      "node": "hormone",
+      "question": "Which hormonal/metabolic/drug effects are direct and reproducible in human Schwann cells?",
+      "priority": "Medium",
+      "reason": "New PTEN/metabolic qPCR analyzed, without distinct Hmgcr rescue or PMP22 feedback readout; primary hormone branch still unfinished.",
+      "status": "deferred"
+    },
+    {
+      "node": "dosage",
+      "question": "How do human copy number and cis variants alter promoter-resolved output?",
+      "priority": "High",
+      "reason": "GSE7423 all-probe and channel analysis; one donor per mutation class, two probe magnitudes, no promoter/allele specificity.",
+      "status": "investigated",
+      "inherited_disposition": "analyzed_but_unresolved"
+    },
+    {
+      "node": "globin",
+      "question": "Are extreme globin differences biological, compositional, vector-derived or mapping-related?",
+      "priority": "High: new broad-data QC finding",
+      "reason": "AS2-specific hemoglobin enrichment verified; excluding features does not change target ratios; origin requires read-level/vector provenance, not performed.",
+      "status": "investigated",
+      "inherited_disposition": "analyzed_but_unresolved"
+    },
+    {
+      "node": "specific_residual",
+      "question": "Do regulator predictors add out-of-context information beyond myelin RNA?",
+      "priority": "High",
+      "reason": "Three broad-screen candidates tested; none passes sealed independent Zeb2 criteria. Endpoint specificity weakened by Mpz/Cnp predictions, timing and assay-transfer limits. Direct causality remains untested.",
+      "status": "investigated"
+    },
+    {
+      "node": "hck_rna",
+      "question": "Does Hck perturbation change Pmp22 with Egr2/myelin state held comparable?",
+      "priority": "Future experiment",
+      "reason": "Known shared Egr2/NAB response is a competing cause; no direct Hck perturbation tested here. Negative transfer deprioritizes a new mechanism claim.",
+      "status": "open"
+    },
+    {
+      "node": "isr",
+      "question": "Does chronic stress or PERK inhibition alter Pmp22 RNA and relative polysome association differently?",
+      "priority": "High: orthogonal endpoint resolves an RNA-only blind spot",
+      "reason": "Matched fractions, frozen genetic prediction, orthogonal footprints, native control/quality audit and granule follow-up executed. Source/context reversal and control heterogeneity block a transferable sign or causal molecular assignment.",
+      "status": "investigated"
+    },
+    {
+      "node": "pten",
+      "question": "Does growth/lipid signaling feed back to endogenous PMP22RNA/protein in matched Schwann cells?",
+      "priority": "High biological consequence; new experiment needed",
+      "reason": "Available Figure7 lacks PMP22endpoint and contains count/duplicate-vector source anomalies. SourceData analyzed, no reversefeedback demonstrated.",
+      "status": "investigated"
+    },
+    {
+      "node": "granule",
+      "question": "Does absolutePMP22granule recruitment accompany or cause translation loss?",
+      "priority": "High endpoint distinction",
+      "reason": "Relative3replicate analysis executed; absolute calibration unavailable and directcausality untested.",
+      "status": "investigated"
+    },
+    {
+      "node": "isr",
+      "question": "Is the footprint discrepancy selective to Pmp22 after compatible assay/time and baseline matching?",
+      "priority": "High new audit uncertainty",
+      "reason": "Baseline/countdeparturepersists;publishedprogramreducesextremeness;genotypetrajectorydoesnotrequirePERKlate. ContextcauseandRNAversustranslationunresolved.",
+      "status": "investigated"
+    },
+    {
+      "node": "ire1_rnase",
+      "question": "Does differential RNA decay explain footprint-context response?",
+      "priority": "High consequential new alternative",
+      "reason": "KnownRNAdecayevidenceincorporated;targetsourceTableIrecomputed. ExactmatchedcontextRIDDandnumericS2replicatesunavailable;causalexplanationopen.",
+      "status": "investigated"
+    }
+  ],
+  "changes": [
+    {
+      "reason": "First collection establishes promoter-resolved SOX10/cAMP responses and broadens beyond transcription; retains Egr2-AS discrepancy rather than forcing a causal chain.",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        },
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "reason": "Blind-spot audit pursued direct versus state-mediated chromatin alternatives with four processed ATAC peak files; expanded upstream YY1/antisense and downstream lipid/proteostasis branches. Peak calls do not resolve the RNA discrepancy.",
+      "evidence": [
+        {
+          "source": "GSE201627",
+          "locator": "outputs/atac-promoter-summary.tsv; outputs/atac-method.json",
+          "basis": "rn6 RefSeq window overlaps: Egr2 and Jun peaks present all libraries; selected Pmp22 window no called peak. No differential-accessibility conclusion."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        },
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "reason": "Continuation kickoff: preserve inherited r003; audit excerpt-only support and prioritize Egr2-AS design/RNA discrepancy, quantitative ATAC and neglected post-transcriptional mechanisms before further collection.",
+      "evidence": [
+        {
+          "source": "LABBOOK.md",
+          "locator": "inherited stopping boundary",
+          "basis": "Inherited analyses retained, not claimed as new."
+        }
+      ]
+    },
+    {
+      "reason": "New full-transcriptome audit motivates globin/source-composition investigation. Newly acquired processed proteomics makes glycosylation and quality-control branch executable; preserve decision before follow-up collection.",
+      "evidence": [
+        {
+          "source": "outputs/rna-broad-extremes.tsv",
+          "locator": "top seven rows",
+          "basis": "Globin features dominate extreme positive changes, not a preselected panel."
+        },
+        {
+          "source": "inputs/continuation/PMC8191293-mmc2.xlsx",
+          "locator": "WT/N41Q/L16P sheets",
+          "basis": "Selected quantitative co-IP effects acquired; missing lists are not measured absence."
+        }
+      ]
+    },
+    {
+      "reason": "Post-analysis audit: protein-interactor data broaden quality-control candidates but cannot equate binding and function. Independent Runx ATAC and human dosage matrix introduce design and endpoint constraints; original 2017 Egr2-AS source now highest feasible unresolved provenance item.",
+      "evidence": [
+        {
+          "source": "outputs/protein-analysis-summary.json",
+          "locator": "candidate_contrasts and functional_followup",
+          "basis": "LMAN1/TMED9/ERGIC3/CANX enrichment contrasts; no direct functional attribution from co-IP."
+        },
+        {
+          "source": "outputs/human-dosage-summary.json",
+          "locator": "donor_mapping and PMP22_probes",
+          "basis": "One donor per mutation class and discordant probe magnitudes prohibit simple dosage coefficient."
+        }
+      ]
+    },
+    {
+      "reason": "Registered full quantitative accessibility, human-channel and protein/RNA analyses. Original 2017 source narrows Egr2-AS discrepancy to endpoint/time/context or unexplained experiment differences; no forced reconciliation. Save before final frontier audit.",
+      "evidence": [
+        {
+          "source": "artifact_dd199a4eef0624d98fb58ce7522964fd54fc4870885d62b3864c7b348f1f3a86",
+          "locator": "outputs/runx-locus-summary.json",
+          "basis": "Common-base integration at Pmp22 supports descriptive processed-track values only."
+        },
+        {
+          "source": "outputs/assay-endpoint-audit.tsv",
+          "locator": "all rows",
+          "basis": "Audit species, material, mapping, replication and endpoint before causal inference."
+        }
+      ]
+    },
+    {
+      "reason": "Final continuation checkpoint: RNA follow-up reproduces RUNX Pmp22 gene increase but exposes within-group title swaps. Lipid source adds reciprocal protein-processing edge without inventing promoter feedback. Full-system completion not claimed.",
+      "evidence": [
+        {
+          "source": "artifact_150748bb898aa760ccab2afdc58f2e772053d1b1a4deea08a64149c6944f17eb",
+          "locator": "all",
+          "basis": "New whole-matrix descriptive analysis with audited design."
+        },
+        {
+          "source": "artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703",
+          "locator": "rows and interpretation",
+          "basis": "Primary summary arithmetic; covariance/localization limitations explicit."
+        }
+      ]
+    },
+    {
+      "reason": "Specificity continuation kickoff before new measurement acquisition; preserve inherited r008 and correct current frontier vocabulary without changing historical bytes. Endpoint is steady-state RNA, not promoter/protein.",
+      "evidence": [
+        {
+          "source": "LABBOOK.md",
+          "locator": "inherited continuation",
+          "basis": "GSE201623 and GSE122774 outcomes already exposed; source studies reported Egr2-AS and RUNX mechanisms."
+        }
+      ]
+    },
+    {
+      "reason": "Ppp6r1/Gtf2f1/Hck emerged from broad discovery. Eed source truncated, requiring independent replacement validation. Preserve before Zeb2/HDAC3 outcome analysis and Hck composition analysis.",
+      "evidence": [
+        {
+          "source": "outputs/specific/discovery-summary.json",
+          "locator": "selected",
+          "basis": "Frozen discovery slopes and selected candidates"
+        },
+        {
+          "source": "outputs/specific/eed-source-integrity.json",
+          "locator": "all",
+          "basis": "Source defect confirmed through two routes"
+        }
+      ]
+    },
+    {
+      "reason": "Primary candidates fail; HDAC3 secondary full panel ineligible due HIDATA Mpz. Retrospective diagnostic now tests nonlinear myelin baseline and independent Zeb2 RNA-seq to separate assay compression from developmental context. No new prospective success claim.",
+      "evidence": [
+        {
+          "source": "outputs/specific/correction-r003.json",
+          "locator": "all",
+          "basis": "Corrects preliminary numeric-zero arithmetic; preserved historical artifacts are superseded."
+        }
+      ]
+    },
+    {
+      "reason": "Final scoped rejection, provenance correction and known upstream Hck alternative. No novel mechanism established. Preserve failed quantitative-source statuses and unmatched representations as limits, not zero expression.",
+      "evidence": [
+        {
+          "source": "artifact_abee146fb898851d7990ccc5bce8cd7853e6998cdf03f02523f02a63ec2a88ed",
+          "locator": "primary_results and secondary_results",
+          "basis": "All three fail primary; HDAC3 full panel ineligible."
+        },
+        {
+          "source": "artifact_b5e2633fe304bd87d0fe77f96784b580aca2ae0e777a2f050603bce97259afc1",
+          "locator": "discrepancy",
+          "basis": "Same source study opposing Pmp22 directions; no replication reconstruction."
+        }
+      ]
+    },
+    {
+      "reason": "New iteration prioritizes matched translation/RNA over additional residual expression predictors",
+      "evidence": [
+        {
+          "source": "outputs/iteration/decision-r001.md",
+          "locator": "candidate experiment comparison",
+          "basis": "Decision saved before measurement acquisition"
+        }
+      ]
+    },
+    {
+      "reason": "Orthogonal ISR/genetic/footprint/granule and PTEN analyses replace a convenient universal stress narrative with context-specific constraints; inherited maps retained.",
+      "evidence": [
+        {
+          "source": "outputs/iteration/REPORT.md",
+          "locator": "Executed new analyses and novelty",
+          "basis": "Current synthesis; no novel universal regulator established."
+        }
+      ]
+    },
+    {
+      "reason": "New decision before computation: prioritize broad shared-time footprint reference comparison over repeated target/fraction analysis.",
+      "evidence": [
+        {
+          "source": "outputs/context-audit/decision-r001.md",
+          "locator": "Experiment comparison and primary plan",
+          "basis": "Design/exposure audit; not a result"
+        }
+      ]
+    },
+    {
+      "reason": "Anomaly follow-up weakens PERK-required late induction; literature opens IRE1RNAdecay branch before acquisition/analysis.",
+      "evidence": [
+        {
+          "source": "outputs/context-audit/followup-summary.json",
+          "locator": "genotype_Pmp22 and late_cluster_checks",
+          "basis": "Executed retrospective comparison; no causal assignment"
+        },
+        {
+          "source": "outputs/context-audit/decision-r003.md",
+          "locator": "RIDD follow-up design",
+          "basis": "Checkpoint before new source analysis"
+        }
+      ]
+    },
+    {
+      "reason": "Completednewbroadmatchedfootprintanalysis,countrobustness,program/genotypequalificationandknownIRE1RNAdecaybranch. No newcausalmechanism.",
+      "evidence": [
+        {
+          "source": "outputs/context-audit/REPORT.md",
+          "locator": "ResultstableandRNAdecaysection",
+          "basis": "See26registeredcomputationsandnoveltyaudit"
+        }
+      ]
+    },
+    {
+      "reason": "Final wording and scope clarification; no new scientific evidence or changed effect estimates.",
+      "evidence": [
+        {
+          "source": "outputs/context-audit/REPORT.md",
+          "locator": "Full report",
+          "basis": "Plain-language synthesis of completed analyses and remaining limits"
+        }
+      ]
+    }
+  ]
+}

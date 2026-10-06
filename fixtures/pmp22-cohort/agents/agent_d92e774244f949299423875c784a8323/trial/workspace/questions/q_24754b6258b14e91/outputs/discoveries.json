@@ -1,0 +1,108 @@
+{
+  "revision": 2,
+  "scope": "Human PMP22 GTEx v11 regulatory associations and two independent-cohort validation attempts.",
+  "known_baseline": "Public cis-expression/splicing QTLs and source SuSiE results already exist. Human reporter/UTR mechanisms are prior work; see inputs/human-interval-annotations.json and LABBOOK.md.",
+  "budget_allocation": "Scientific effort covered all 50 GTEx tissues, source annotations, full GENCORD universe and independent TwinsUK export; no configured time/request cap or reserve breach. No endless resampling of selected hits.",
+  "stopping_reason": "The bounded summary-statistic questions are answered: first-exon-linked discovery, failed fibroblast significance prediction, untestable exact splice replication and explicit native coverage. Further causal/cell-type claims require new compatible data; public all-pairs and source-specific filtering gaps retained.",
+  "candidates": [
+    {
+      "id": "fibroblast-cis-transfer",
+      "claim": "The leading GTEx fibroblast eQTL direction transfers significantly to independent GENCORD fibroblasts.",
+      "context": "GTEx adult cultured fibroblast RNA versus186 GENCORD newborn cord-derived fibroblasts; exact rs2531950 A>G.",
+      "kind": "biological",
+      "status": "unresolved",
+      "alternatives": [
+        "Cis RNA processing/stability versus initiation",
+        "Context/composition or culture differences",
+        "LD-tagged regulatory or structural variation",
+        "Power/selection/annotation effects"
+      ],
+      "discovery_artifacts": [
+        "artifact_7b2ec6e61d1d8b5f945cdaa33932689240fa25bedd7081b2281d0943ba51a5ac",
+        "artifact_c3470bbfebdb867aa2c14649683afe2b9ec23dd3107e4f52713455df6b73bb53"
+      ],
+      "prediction_lock": "outputs/predictions/fibroblast-cis-transfer-r001.json",
+      "prediction_sha256": "f53db4f81a95559c1ad7692584a620903aef0d57fd48d0565c9d611639bcf360",
+      "validation_mode": "prospective",
+      "validation_artifacts": [
+        "artifact_09209b5062bf6b1f1eb89fbdcae01774dea2c11a80253c9a4b48cc6989f08c72"
+      ],
+      "validation_result": "The frozen p<.05 and positive-direction rule failed: beta+.0800765, SE.0908986, p.379585. Direction agrees, interval wide; no equivalence or biological heterogeneity established.",
+      "independence_assessment": "Cohorts distinct; current Catalogue primary paper describes unrelated TwinsUK subset. Different GTEx tissues/releases and Catalogue reanalysis not independent. Source counts not manufactured donors.",
+      "novelty": {
+        "status": "known",
+        "closest_prior_work": [
+          {
+            "source": "GTEx v11 official native QTL summary downloads",
+            "locator": "inputs/public/gtex-openfiles.json and README_eQTL_v11.txt",
+            "relationship": "Associations and fine mapping are source-produced public findings; this audit harmonizes and tests their transfer rather than discovering a causal mechanism."
+          }
+        ],
+        "searches": [
+          {
+            "query": "PMP22 AND (eQTL OR sQTL)",
+            "date": "2026-10-05",
+            "evidence": "inputs/public/novelty-focused.json"
+          },
+          {
+            "query": "rs231016",
+            "date": "2026-10-05",
+            "evidence": "inputs/public/novelty-rs231016.json"
+          }
+        ],
+        "limitation": "Scoped searches, not exhaustive novelty certification. No indexed SNP paper does not make a public GTEx row novel."
+      },
+      "limitations": "No promoter initiation, causal nucleotide, Schwann specificity or protein output. Source normalized scales differ; do not pool effects.",
+      "next_test": "Test the same allele in a well-powered independent adult-fibroblast cohort before endogenous regulatory-region perturbation."
+    },
+    {
+      "id": "adipose-first-exon-junction-transfer",
+      "claim": "The rs231016 alternative-first-exon-linked junction association transfers to independent adipose.",
+      "context": "GTEx bulk subcutaneous adipose; chr17:15260761:15265154 minus junction; independent TwinsUK exact-feature coverage insufficient.",
+      "kind": "biological",
+      "status": "candidate",
+      "alternatives": [
+        "Cis RNA processing/stability versus initiation",
+        "Context/composition or culture differences",
+        "LD-tagged regulatory or structural variation",
+        "Power/selection/annotation effects"
+      ],
+      "discovery_artifacts": [
+        "artifact_7b2ec6e61d1d8b5f945cdaa33932689240fa25bedd7081b2281d0943ba51a5ac",
+        "artifact_c3470bbfebdb867aa2c14649683afe2b9ec23dd3107e4f52713455df6b73bb53"
+      ],
+      "prediction_lock": "outputs/predictions/adipose-first-exon-junction-transfer-r001.json",
+      "prediction_sha256": "dc7f9958be1e257c4d8f6af1071384ebee099d75198afc2f3816234498d3077c",
+      "validation_mode": "not_tested",
+      "validation_artifacts": [],
+      "validation_result": "GTEx q=.00149858 and seven-variant source credible set support discovery; exact TwinsUK replication was untestable. Different acceptor15260757 is not substituted for15260761. Availability assessment, not validation: artifact_09209b5062bf6b1f1eb89fbdcae01774dea2c11a80253c9a4b48cc6989f08c72. Revision2 corrects the ledger field classification only; sealed prediction and scientific result unchanged.",
+      "independence_assessment": "Cohorts distinct; current Catalogue primary paper describes unrelated TwinsUK subset. Different GTEx tissues/releases and Catalogue reanalysis not independent. Source counts not manufactured donors.",
+      "novelty": {
+        "status": "known",
+        "closest_prior_work": [
+          {
+            "source": "GTEx v11 official native QTL summary downloads",
+            "locator": "inputs/public/gtex-openfiles.json and README_eQTL_v11.txt",
+            "relationship": "Associations and fine mapping are source-produced public findings; this audit harmonizes and tests their transfer rather than discovering a causal mechanism."
+          }
+        ],
+        "searches": [
+          {
+            "query": "PMP22 AND (eQTL OR sQTL)",
+            "date": "2026-10-05",
+            "evidence": "inputs/public/novelty-focused.json"
+          },
+          {
+            "query": "rs231016",
+            "date": "2026-10-05",
+            "evidence": "inputs/public/novelty-rs231016.json"
+          }
+        ],
+        "limitation": "Scoped searches, not exhaustive novelty certification. No indexed SNP paper does not make a public GTEx row novel."
+      },
+      "limitations": "No promoter initiation, causal nucleotide, Schwann specificity or protein output. Source normalized scales differ; do not pool effects.",
+      "next_test": "Recover independent all-tested exact-junction statistics; then separate nascent initiation from splicing/stability in allele-matched cells."
+    }
+  ],
+  "no_candidates_reason": ""
+}

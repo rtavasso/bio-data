@@ -1,0 +1,27 @@
+{
+  "source_blob": "14e61c21916566d50f627214811adb631ebc3ceb7abc89e7a73ed4ee2fe95be3",
+  "source_status": "Primary articleXML verified; exact TableI values extracted. 26 selected candidates, not full microarray universe.",
+  "Pmp22": {
+    "source_table": "TableI",
+    "source_row": 5,
+    "target": "Peripheral myelin protein (Pmp22)",
+    "unigene": "Mm.1237",
+    "source_localization": "ECM",
+    "hIre1R_log2_DTT_untreated": -0.88,
+    "Ire1KO_log2_DTT_untreated": -0.07,
+    "source_decreased_stability": "Yes",
+    "hIre1R_fold": 0.543367431263029,
+    "Ire1KO_fold": 0.9526379980439373,
+    "log2_stress_interaction": -0.81,
+    "ratio_of_stress_fold_changes": 0.5703818579342118
+  },
+  "stability_categories": {
+    "ND": 15,
+    "Yes": 7,
+    "No": 4
+  },
+  "independent_units": "Three independently repeated array experiments per source methods; no donor identity or per-replicate matrix available in inspected article/supplement.",
+  "design": "Ire1-deficientMEFs versus same-line humanIRE1reconstitution;2mMDTT6h;each stress value relative to own untreated cells. Table averages rounded2decimals.",
+  "known_result": true,
+  "limits": "No new biological discovery, error bars or replicate intervals derivable fromTableI. Selection already requiresIRE1-dependentdecrease. ECM localization retained as obsolete source annotation, not endorsed. Pmp22stabilityYes is source summary linked toS2;S2numeric timecourse not acquired. MainFigs1/3 do not displayPmp22, so nuclease-deadPmp22-specific test must not be inferred.2015Perk/structure mechanism tested otherRIDDtargets, notPmp22."
+}

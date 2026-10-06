@@ -1,0 +1,31 @@
+{
+  "valid": true,
+  "contrasts": [
+    "GSE115930_E21",
+    "GSE115930_P18",
+    "GSE115930_P6",
+    "GSE252209_5wk"
+  ],
+  "program_rows": 56,
+  "source_matrices": 2,
+  "all_gene_contrast_rows": 151738,
+  "sample_endpoint_rows": 2093,
+  "native_nonnegative_finite": true,
+  "fractional_counts_preserved": true,
+  "ineligible_program_members": [
+    {
+      "contrast": "GSE115930_E21",
+      "module": "fatty_acid_synthesis",
+      "symbol": "Elovl6",
+      "status": "below_control_floor",
+      "source_rows": 1,
+      "control_mean_normalized": 9.45063891628116
+    }
+  ],
+  "limits": [
+    "descriptive conditional library-level intervals; not proof of independence",
+    "RNA is not flux or promoter initiation",
+    "no biological replication claimed",
+    "module selection prespecified; source headline outcomes exposed"
+  ]
+}

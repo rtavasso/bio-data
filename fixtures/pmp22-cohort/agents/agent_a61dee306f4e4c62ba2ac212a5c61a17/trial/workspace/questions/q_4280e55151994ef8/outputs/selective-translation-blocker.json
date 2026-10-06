@@ -1,0 +1,34 @@
+{
+  "conclusion": "No valid calibrated selective-synthesis test in the audited source pairings; retrospective relative-assay diagnostics only.",
+  "missing_for_opposed_contexts": [
+    "Matched total RNA in GSE118660",
+    "Independent culture-level replication at matched time/dose",
+    "RPF recovery/per-cell global calibration",
+    "PMP22-specific completed nascent protein and residence-time control"
+  ],
+  "existing_partial_measurements": {
+    "GSE103667": "Split-lysate RNA/RPF supported; processed TE reduces in both labelled replicates but export transform and counts cannot be independently checked from TE.norm alone; normalization is not absolute.",
+    "GSE90070": "Paired input/heavy-polysome fractions and study-global 35S/half-transit assays; no target/sample calibration. Additional chronic polysome loss tracks RNA."
+  },
+  "identifiability": {
+    "occupancy_equation": "Under a steady-flow approximation O = J * tau, normalized footprint F = O/Z, so J_t/J_c = (F_t/F_c)*(Z_t/Z_c)*(tau_c/tau_t). This is a model identity, not fitted or measured rates.",
+    "implication": "A relative-footprint increase can coexist with absolute-synthesis decrease. Matched RNA permits relative occupancy-per-RNA analysis but still does not determine completion flux if calibration or residence time changes.",
+    "not_asserted": "No particular RNA, initiation, elongation or normalization mechanism is identified as the cause of the GSE118660 reversal. No human or Schwann transfer."
+  },
+  "next_discriminating_test": {
+    "context": "Within each MEF and NIH3T3 model separately, repeat control and 2h Tg at both 200nM and 1uM; explicitly independent culture preparations, dose-by-cell factorial design. Transfer to Schwann cells is a separate experiment.",
+    "measurements": [
+      "Split same cultures/time for per-cell calibrated total RNA and RPF",
+      "Record external standards, cell numbers, assay recovery and viability",
+      "PMP22 nascent completed protein via validated short pulse and targeted recovery, not total protein alone",
+      "Positional footprints and runoff/transit control for elongation/stalling",
+      "RNA pulse/chase or nascent transcription if assigning abundance change to decay",
+      "Primary predeclared background/control panel and full feature universe; preserve missing versus zero"
+    ],
+    "conditional_prediction": "Selective loading predicts a reproducible PMP22 condition-by-assay effect after verified global calibration and matched RNA, with a concordant nascent PMP22 rate change. RNA-only explanation predicts the calibrated RPF change is accounted for by RNA within a predeclared equivalence margin. Opposite relative but not absolute effects implicate normalization, not opposite synthesis. Occupancy increase without completed-protein increase and with longer residence supports elongation/stalling.",
+    "decision_rule": "Do not interpret nonsignificance as equivalence. Predeclare a scientifically justified equivalence margin and replication/power using real pilot variance before collecting independent data; these exploratory results cannot set a confirmatory success threshold post hoc."
+  },
+  "negative_result": "Tg16h/Tg1h relative-loading change near zero is not equivalence and not proof that translation never changes.",
+  "claim_revision": "Opposed relative RPF changes reject a same-direction relative-occupancy rule, not a universal reduction of absolute synthesis.",
+  "exposure": "All target directions were inherited/exposed; computation is native-source replication, not independent biological validation or novelty."
+}

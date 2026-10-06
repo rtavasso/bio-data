@@ -1,0 +1,536 @@
+{
+  "created": "2026-10-05T18:51:14.698288+00:00",
+  "derivation_key": "6e94761243cf6d344fbf3fbef734c8254c97b47f98ff3008b99cdac41e2c34d6",
+  "id": "artifact_55478eb757db0c021488d1a773fbd02f4593702cc879a5787a1b61703976d224",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "3afbe663fccd44afe3eefd405df9a24eb01dca71f70e107b8a9418b3d41e8c61"
+      ],
+      "command": [],
+      "environment": {
+        "lock": "67e5583f9564da5655a13fc5daad75d08768e48882ea13385efdaeaf89bd7349",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.3"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "anndata",
+            "0.12.19"
+          ],
+          [
+            "annotated-doc",
+            "0.0.5"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "anyio",
+            "4.15.1"
+          ],
+          [
+            "array-api-compat",
+            "1.15.0"
+          ],
+          [
+            "asciitree",
+            "0.3.3"
+          ],
+          [
+            "bioframe",
+            "0.8.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.1"
+          ],
+          [
+            "click",
+            "8.5.0"
+          ],
+          [
+            "coloredlogs",
+            "15.0.1"
+          ],
+          [
+            "contourpy",
+            "1.4.0"
+          ],
+          [
+            "cooler",
+            "0.10.4"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "cytoolz",
+            "1.1.0"
+          ],
+          [
+            "data-archaeology-workbench",
+            "0.3.0"
+          ],
+          [
+            "defusedxml",
+            "0.7.1"
+          ],
+          [
+            "dill",
+            "0.4.1"
+          ],
+          [
+            "donfig",
+            "0.8.1.post1"
+          ],
+          [
+            "duckdb",
+            "1.5.5"
+          ],
+          [
+            "et_xmlfile",
+            "2.0.0"
+          ],
+          [
+            "fonttools",
+            "4.66.0"
+          ],
+          [
+            "google-crc32c",
+            "1.9.0"
+          ],
+          [
+            "h11",
+            "0.16.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "httpcore",
+            "1.0.9"
+          ],
+          [
+            "httpx",
+            "0.28.1"
+          ],
+          [
+            "humanfriendly",
+            "10.0"
+          ],
+          [
+            "hypothesis",
+            "6.168.1"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "iniconfig",
+            "2.3.0"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "legacy-api-wrap",
+            "1.5"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "msgspec",
+            "0.21.1"
+          ],
+          [
+            "multiprocess",
+            "0.70.19"
+          ],
+          [
+            "natsort",
+            "8.4.0"
+          ],
+          [
+            "numcodecs",
+            "0.17.0"
+          ],
+          [
+            "numpy",
+            "2.5.3"
+          ],
+          [
+            "openpyxl",
+            "3.1.5"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pandas",
+            "2.3.3"
+          ],
+          [
+            "pephubclient",
+            "0.6.0"
+          ],
+          [
+            "peppy",
+            "0.40.8"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "pluggy",
+            "1.6.0"
+          ],
+          [
+            "pyBigWig",
+            "0.3.26"
+          ],
+          [
+            "pyarrow",
+            "23.0.1"
+          ],
+          [
+            "pydantic",
+            "2.13.5"
+          ],
+          [
+            "pydantic_core",
+            "2.46.5"
+          ],
+          [
+            "pyfaidx",
+            "0.9.0.4"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "pytest",
+            "9.1.1"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "pytz",
+            "2026.4"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "ruff",
+            "0.16.9"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "scverse-misc",
+            "0.1.6"
+          ],
+          [
+            "session-info2",
+            "0.4.2"
+          ],
+          [
+            "shellingham",
+            "1.5.4"
+          ],
+          [
+            "simplejson",
+            "4.1.2"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sortedcontainers",
+            "2.4.0"
+          ],
+          [
+            "toml",
+            "0.10.2"
+          ],
+          [
+            "toolz",
+            "1.1.0"
+          ],
+          [
+            "typer",
+            "0.27.2"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "tzdata",
+            "2026.4"
+          ],
+          [
+            "ubiquerg",
+            "0.9.3"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "zarr",
+            "3.4.0"
+          ]
+        ],
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "python": "3.12.8",
+        "source": "bfa1d4dfb10491811a958fb0d1e5071f8d3f691cb7eef35e77cd8f8e151c1e12"
+      },
+      "inputs": [
+        {
+          "blob": "f12818cbc5731e65d17e6c94718e6d0662f7cac9217cc36ffbc9c6d3c7d0f644",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "67b82e9e5ed2d1a53e5b5eb42ca7778ba20bd1ec9e55d6478a517125a784fefa",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "522273ef6e6c936c23560f67e97be252e77a7e6783e020cbccbbe82673cdc707",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "e3c5db97f751cf5772314eb541259991781141b059af37fc1d475c5ea7740aea",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "8f70d8ae1836a57ee1ab4251493a3463223bd2a157036451eaf99c3eb0c5177f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "dbe736093e2e493ccc36c21b281c6edab5d6316970f1693d595a0f996c5c847b",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "42aee9d8b87e429359c724a3efec6f151462d0a3b49ee5a86f03e6309b6dab98",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "7341bffa760bca4543408763dd86eb0cd22a7c785f1601da9d8c938a2ed823a9",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "a4ac2d5822c8613c8b7c145671030f767756c4cfec4e523096f51b39c827427c",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "9e055a837fe13d3af27cf70b5d1d2cb630028cfcee938535ef019dd0065d6030",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "6feef5a3a963b2970a63df8723f7fc1641d3729314f92443a0bb7acefbced3d8",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "043b8a66d39ab07ff0ad7ad179e3d13e36e6c88f5b480d4f3d25f6e43ebe287e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "045860a516a127d500d8767c8167ca070cedee0e2ca3e7c8d7f8a2017ad35d0f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "cbdae1bbad10309eb9d39356546892ee54b1480dc7f4ec0943efc1e3e51ba313",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "014d98fd853cdc96d720fadb63b138a7ee3737d215c07123dce37c25fa6ac577",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "00a66888d89cdeecb51e208e625f0660e837fcfb5401e0f0b5f3c086c0bc9979",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "9b55888f3b891882c84dcc5f47ecab3469fc0a46207e72a829e314e738f5c5f9",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b10aad0b3c2c7bf8144df00e0d77d938ce710f7d6f4cab43f89b4782b698436f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "878c21a6f0abe967021dbd998a1c614fcf5ee264fcae23b7cc6bddd7a221d3d7",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "31b4f447b30459362e659895b792a68a7f124b8a72c9642134606cde9c3f9ff8",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f1d9b1ba65c4336e3913585e60e764adae0391e951a596f09d603a99ff8c96e2",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "349b61025a62ae328df33cb9eaeaa741587c11b9fd373b193395e6b3d9b05e23",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "3f10485c5d5e312f6a87e09efdc58915751d4ed7ec922ae906f023911256148e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "0dacf3dac19327ddb1ca122716771cb4c60ea8d9db505fed9ff37835647041c3",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "a6398d32f665405dcc005a3e65c89d57eed13cad5e06f04dc4eb44bae4da8d4d",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "16bd79527a2232729aad3123ec2316610af787bc4dac2df19f9ad5f8970fbacf",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "363a80a5d271613898e89572d4f9203bc9ec0171be6574b4f74b7a5e3d43ccdb",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "analysis": "validated agent-curated endpoint evidence and native scalar audit",
+        "biological_replication": false,
+        "scope": "two primary trafficking papers plus export/peer applicability"
+      },
+      "references": [
+        "ef946c925440cece975a618211866cee6f4950151dd4d77d7b99c01e10f1b6f1"
+      ]
+    },
+    "derivation_key": "6e94761243cf6d344fbf3fbef734c8254c97b47f98ff3008b99cdac41e2c34d6",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "504b78723dc0dd05702fcbad6968c7b6c6e25cc29f08ce6328c7f37a30aeceda",
+      "bytes": 4333,
+      "name": "validation.json"
+    },
+    "output_role": "validation",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Primary-source endpoint audit and native selected co-IP eligibility; no independent biological replication or functional rescue established.",
+    "title": "PMP22 disposition audit: validation"
+  },
+  "manifest_blob": "83f561b5ec99226450e33961eb0bba2be78eeee81985e8b50821294e29ec37aa",
+  "output_blob": "504b78723dc0dd05702fcbad6968c7b6c6e25cc29f08ce6328c7f37a30aeceda",
+  "output_role": "validation",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_eb57cbb0fb1f4a3897a1cff4713332b8/trial/workspace/blobs/sha256/50/504b78723dc0dd05702fcbad6968c7b6c6e25cc29f08ce6328c7f37a30aeceda",
+  "questions": [
+    {
+      "question_id": "q_cfe0be2ab0e146a4",
+      "relationship": "produced"
+    }
+  ]
+}

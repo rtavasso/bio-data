@@ -1,0 +1,44 @@
+{
+  "status_counts": {
+    "cnp-ctrl": {
+      "OK": 24140,
+      "LOWDATA": 347,
+      "HIDATA": 1
+    },
+    "cnp-ko": {
+      "OK": 24138,
+      "LOWDATA": 347,
+      "FAIL": 2,
+      "HIDATA": 1
+    },
+    "dhh-ctrl": {
+      "OK": 24140,
+      "LOWDATA": 347,
+      "HIDATA": 1
+    },
+    "dhh-ko": {
+      "OK": 24141,
+      "LOWDATA": 347
+    }
+  },
+  "invalid_panel_rows": [
+    {
+      "sample": "cnp-ctrl",
+      "gene_short_name": "Mpz",
+      "FPKM": 0.0,
+      "FPKM_status": "HIDATA"
+    },
+    {
+      "sample": "cnp-ko",
+      "gene_short_name": "Mpz",
+      "FPKM": 0.0,
+      "FPKM_status": "HIDATA"
+    },
+    {
+      "sample": "dhh-ctrl",
+      "gene_short_name": "Mpz",
+      "FPKM": 0.0,
+      "FPKM_status": "HIDATA"
+    }
+  ]
+}

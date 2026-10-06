@@ -1,0 +1,291 @@
+{
+  "question": "q_ec00fef1019a4c6f",
+  "responding_to": "post_5038564d23c34f33bab9ab0aaf0fe46c",
+  "status": "source extraction and audit reuse; not new biological replication",
+  "sources": [
+    "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+    "c46936b00bd2abcc3b2cbc3971dfb190f6915aedbe9a7b15b88161198c819786"
+  ],
+  "excerpts": [
+    {
+      "key": "surgery_and_sham",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec4']/p[@id='Par18']",
+      "section_hierarchy": [
+        "Methods",
+        "Sciatic nerve crush injury"
+      ],
+      "text_verbatim_whitespace_normalized": "All surgical experiments were performed under 2.5% isoflurane on rats at postnatal day 18. Sciatic nerve crush injury was performed as previously described [30]. Briefly, rats were anesthetized using isoflurane. Upper thigh was shaved and sterilized using isopropanol. A 1-cm incision was made using a scalpel and nerve was visualized via blunt dissection using forceps. The left sciatic nerve was crushed at mid-thigh for 5 s using forceps marked with sterile graphite to mark the crush site. Carprofen (5 mg/kg subcutaneous) was administered for analgesia. No sham operation was performed prior to the collection of na\u00efve nerves."
+    },
+    {
+      "key": "pool_anatomy_selection_recovery",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec5']/p[@id='Par19']",
+      "section_hierarchy": [
+        "Methods",
+        "Purification of Schwann cells from the na\u00efve and injured sciatic nerve"
+      ],
+      "text_verbatim_whitespace_normalized": "10\u201320 sciatic nerves were used for the generation of each sample of purified cells. For injured nerves, sciatic nerve tissue was collected beginning proximally 1 mm distal to the graphite-marked crush site and extending distally along the tibial nerve branch as far as possible approaching the medial calcaneus. The proximal portion of the peroneal nerve branch was included when intact dissection was possible. Schwann cells were isolated from the entirety of the harvested nerve segment. For uninjured nerves, the anatomically equivalent nerve segment was isolated. Schwann cells were acutely purified using immunopanning from the injured or uninjured rat sciatic nerve according to Lutz [29]. Briefly, following enzymatic digestion using collagenase/dispase, nerves were mechanically dissociated to create a single cell suspension. Myelin debris was removed using a nitex filter and BSA cushion. Sequential immunopanning first depleted unwanted cell populations (CD45 and Thy1) and then selected for Schwann cells (O4). Performing depletion of other cell populations prior to positive selection of Schwann cells ensures optimal Schwann cell purity. Yields per nerve ranged from 10 to 20,000 cells for uncrushed nerves to approximately 100,000 cells per nerve after nerve crush injury."
+    },
+    {
+      "key": "culture_validation_not_rnaseq",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec6']/p[@id='Par20']",
+      "section_hierarchy": [
+        "Methods",
+        "Immunocytochemistry of immunopanned cells"
+      ],
+      "text_verbatim_whitespace_normalized": "Cultured cells were fixed with 4% paraformaldehyde for 10 min at room temperature 24 h after immunopanning and then permeabilized and blocked with 10% goat serum, 0.2% TritonX-100. Cells were labeled using antibodies to goat Iba1 (Abcam) and mouse S100 (Sigma s2532) as well as Cellmask (ThermoFisher H34558) and DAPI."
+    },
+    {
+      "key": "acutely_extracted_rna",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec8']/p[@id='Par22']",
+      "section_hierarchy": [
+        "Methods",
+        "RNA isolation from purified Schwann cells"
+      ],
+      "text_verbatim_whitespace_normalized": "RNA from purified Schwann cells was isolated at the end of the immunopanning procedure by scraping the O4-positive panning dish according to the instructions of the RNeasy MICRO kit. RNA quality was verified through Bionalyzer analysis. All samples submitted for RNASeq had a RIN of 8 or above."
+    },
+    {
+      "key": "naive_purity",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec15']/sec[@id='Sec16']/p[@id='Par30']",
+      "section_hierarchy": [
+        "Results",
+        "Schwann cell RNA purification and RNAseq transcriptional profiling"
+      ],
+      "text_verbatim_whitespace_normalized": "To assess the purity of our O4-immunopanned Schwann cells we used immunocytochemistry and expression of cell type-specific genes. Immunocytochemistry of cells purified from uncrushed nerves using the Schwann cell-specific marker S100 demonstrated a > 95% pure population of Schwann cells with typical spindle-like morphology 24 h after immunopanning (Fig. 1C). Both O4 and S100 are broadly expressed in the Schwann cell lineage [19]."
+    },
+    {
+      "key": "all_timepoint_contamination_checks",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec15']/sec[@id='Sec16']/p[@id='Par31']",
+      "section_hierarchy": [
+        "Results",
+        "Schwann cell RNA purification and RNAseq transcriptional profiling"
+      ],
+      "text_verbatim_whitespace_normalized": "Examination of FPKM values for known cell type-specific genes in our whole nerve and purified Schwann cell RNAseq data revealed high enrichment for Schwann cell-specific transcripts and depletion of transcripts from potential contaminating cell types. Specifically, we demonstrated the depletion of S100 expressing perineurial glia and satellite glial transcripts in our purified Schwann cell samples (Additional file 9) [13, 39] In addition, we were able to deplete macrophage, endothelial cell, and fibroblast cell type-specific markers at all timepoints examined (Fig. 2A). Given the large influx of myeloid cells into the nerve after injury, we wanted to more closely examine the possibility that our Schwann cell samples post-injury might be contaminated by infiltrating hematogenous myeloid cells. Based on absolute FPKM, we confirmed that while myeloid markers indeed increase significantly in the whole nerve transcriptome post-injury, these were near completely depleted in our purified Schwann cell samples (Fig. 2B).Fig. 2Purity of Schwann cell isolation. A Expression of typical Schwann cell, macrophage, fibroblast, and endothelial markers in whole nerve samples and purified Schwann cells at each day post-crush. B Expression of macrophage markers, CD45 and Cx3cr1, in purified Schwann cells as compared to whole nerve. Purified Schwann cells are almost completely devoid of myeloid markers. C Hierarchical clustering of all samples (top 2000 most variable genes; Linkage, average; ColumnPdistance, Spearman). D Schwann cell response to injury confirmed by expected upregulation of Sox10 and p75, and downregulation of myelin genes MBP and MPZ"
+    },
+    {
+      "key": "author_discussion_recovery_age_handling",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec21']/p[@id='Par41']",
+      "section_hierarchy": [
+        "Discussion"
+      ],
+      "text_verbatim_whitespace_normalized": "We used published immunopanning methods to purify Schwann cells away from other cell types in the nerve, including resident macrophages, hematogenous immune cells, and endoneurial fibroblasts at postnatal day 18. Several methodological points deserve brief discussion. First, O4 is highly expressed by all Schwann cells (both the myelinating and non-myelinating (Remak)) at rat postnatal day 18 [20]. While it is plausible that some Schwann cells may not bind to our O4 coated panning for technical reasons such as incomplete tissue digestion, we have no reason to believe that we have excluded a biologically meaningful Schwann cell sub-population. Secondly, purification of viable Schwann cells from uninjured whole sciatic nerves is increasingly difficult as the nerve ages. Connective tissue becomes increasingly difficult to digest and myelinating cell processes are increasingly difficult to dissociate from axons without causing Schwann cell death. We chose postnatal day 18 as our initial timepoint because it represents a temporal stage at which both myelinating and unmyelinating Schwann cells are reaching maturity and yet can still be dissociated from the nerve in sufficient numbers [19, 29]. Nonetheless, potential subsequent maturational changes should be taken into account when interpreting our data as representative of the adult nerve. Finally, given that immunopanning is performed at room temperature, we do not anticipate significant changes in cellular gene profiles during the cell purification process, with the exception of immediate early genes. We have confirmed this by comparing transcriptomes of whole nerve with dissociated nerve (without immunopanning)."
+    },
+    {
+      "key": "dual_processing_fpkm",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec10']/p[@id='Par24']",
+      "section_hierarchy": [
+        "Methods",
+        "Bioinformatic processing of RNAseq data"
+      ],
+      "text_verbatim_whitespace_normalized": "FASTQ files were first groomed using FASTQ groomer and then mapped using TopHat2, which invokes Bowtie as an internal read mapper. The paired end option was selected and rat genome Rnor_6.0 was used as the reference genome. We then ran Cufflinks to assemble transcripts and estimate expression level as fragments per kilobase of transcript sequence per million mapped fragments (FPKM). All subsequent data analysis was performed using R software (https://www.r-project.org/). We deposited all raw .fastq files from the RNA-seq data in the National Center for Biotechnology Information (NCBI) Gene Expression Omnibus (GEO, Accession number GSE177037). Unsupervised hierarchical clustering of FPKM data was performed in R using the top 2000 most variable genes with the following settings: Linkage; average, ColumnPdistance; Spearman, standardized across rows."
+    },
+    {
+      "key": "dual_processing_counts",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[@id='Sec2']/sec[@id='Sec11']/p[@id='Par25']",
+      "section_hierarchy": [
+        "Methods",
+        "Differential expression and pathway analysis"
+      ],
+      "text_verbatim_whitespace_normalized": "To assess the functional difference of genes post-nerve crush, we carried out pathway analysis on the top 2000 differentially expressed genes at each timepoint. FASTQ files were aligned using STAR [8] (v2.7.1) to the Rnor 6.0 reference genome and counts were generated using RSEM [26] (v1.3.1). Differentially expressed genes were determined using the DEseq2 [28] (v1.26) package within the R environment. Differences were visualized as volcano plots using the EnhancedVolcano package [4] (v1.80) from Bioconductor. Pathway analysis was carried out using Bioconductor package pathfindR [41] with p < 0.01 for both the Gene Ontology-Molecular Function and KEGG databases."
+    },
+    {
+      "key": "dissociation_control_caption",
+      "source": "PMC9063194",
+      "source_sha256": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+      "xpath": "/article/body[1]/sec[7]/sec[@id='Sec29']/p[1]/supplementary-material[@id='MOESM4']/media[1]/caption[1]/p[1]",
+      "section_hierarchy": [
+        "Supplementary Information"
+      ],
+      "text_verbatim_whitespace_normalized": "Additional file 4. All FPKM data for uncrushed (day 0) and crushed (days 3, 5, 7 post-crush) samples. This includes whole nerve and purified Schwann cells. Also included is dissociated sciatic nerve to help identify genes that change from the dissociation process, itself."
+    }
+  ],
+  "purified_libraries": [
+    {
+      "gsm": "GSM5370902",
+      "source_title": "Schwann Cell Uncrushed 1",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: Uncrushed"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 0,
+      "library_column": "IL6172",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": null,
+      "naive_age_caveat": "GEO labels P18; no separate harvest-age-matched naive arm verified"
+    },
+    {
+      "gsm": "GSM5370903",
+      "source_title": "Schwann Cell Uncrushed 2",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: Uncrushed"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 0,
+      "library_column": "IL6173",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": null,
+      "naive_age_caveat": "GEO labels P18; no separate harvest-age-matched naive arm verified"
+    },
+    {
+      "gsm": "GSM5370906",
+      "source_title": "Schwann Cell 3d post-crush 1",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 3d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 3,
+      "library_column": "IL6176",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 21,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    },
+    {
+      "gsm": "GSM5370907",
+      "source_title": "Schwann Cell 3d post-crush 2",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 3d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 3,
+      "library_column": "IL6177",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 21,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    },
+    {
+      "gsm": "GSM5370910",
+      "source_title": "Schwann Cell 5d post-crush 1",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 5d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 5,
+      "library_column": "IL6180",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 23,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    },
+    {
+      "gsm": "GSM5370911",
+      "source_title": "Schwann Cell 5d post-crush 2",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 5d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 5,
+      "library_column": "IL6181",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 23,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    },
+    {
+      "gsm": "GSM5370914",
+      "source_title": "Schwann Cell 7d post-crush 1",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 7d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 7,
+      "library_column": "IL6184",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 25,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    },
+    {
+      "gsm": "GSM5370915",
+      "source_title": "Schwann Cell 7d post-crush 2",
+      "source_characteristics": [
+        "cell type: Schwann Cell from Sciatic nerve",
+        "tissue: Sciatic Nerve",
+        "age: postnatal day 18",
+        "time point: 7d post-crush"
+      ],
+      "age_or_stage_source": "postnatal day 18",
+      "injury_day": 7,
+      "library_column": "IL6185",
+      "biological_unit": "pooled 10-20 nerves",
+      "individual_donor_ids": null,
+      "pairing": "no established matching of donors/pools across time or compartment; suffix 1/2 not a donor ID",
+      "metadata_export_sha256": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+      "postinjury_harvest_age_derived_from_P18_surgery": 25,
+      "naive_age_caveat": "GEO constant P18 label conflicts with elapsed post-surgery days; derived age not donor metadata"
+    }
+  ],
+  "validated": {
+    "xml_and_audit_hashes": true,
+    "selected_excerpts": 10,
+    "purified_library_rows": 8,
+    "library_counts_by_injury_day": {
+      "0": 2,
+      "3": 2,
+      "5": 2,
+      "7": 2
+    }
+  },
+  "interpretation_limits": [
+    "O4 recognition and purity do not establish equal subtype recovery",
+    "the naive-yield wording is retained exactly; no normalization of its ambiguous range",
+    "within-purified contrasts remain descriptive; age/surgery/selection not experimentally separated",
+    "same naive libraries serve multiple timepoints; timepoints are not independent replications",
+    "no Supplement4 target values acquired or inspected in this follow-up"
+  ]
+}

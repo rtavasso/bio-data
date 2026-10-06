@@ -1,0 +1,46 @@
+The mechanical lead survives as a context-dependent RNA response, not a universal negative PMP22 response or an established TEAD-mediated mechanism.
+
+Completed 15 contrasts across 45 labelled libraries from four studies in new notebook q_4f573ee10eee421b.
+
+Main findings
+
+1. Negative stiffness response transfers to a different cell context.
+   In GSE98547, HEK293A cells on 40 versus 1 kPa fibronectin showed PMP22 −0.3075 log2, conditional 95% CI [−0.4765, −0.1385], Holm-adjusted p=0.02976. CTGF and CYR61 increased, so their pathway-response direction does not predict PMP22’s direction.
+
+   This is contextual transfer—not direct Schwann-cell replication. The YAP/TAZ genotype-by-stiffness interaction remained inconclusive; nonsignificance does not establish pathway independence.
+
+2. Compression failed the frozen negative-response prediction.
+   In GSE292211, sustained compression of human HEI-286 Schwann-cell-line cultures gave PMP22 +0.4090 log2. The positive direction survived normalization and leave-one-library checks, and the author’s scaled-count workbook reproduced +0.40911.
+
+   However, Holm-adjusted p=0.08017 does not establish a multiplicity-supported positive population effect. The workbook validates processing on the same samples, not independent biology. The “5-minute” arm actually includes 235 minutes of recovery before RNA collection.
+
+3. Disproportionate Pmp22 loss recurs in two genetic pathway studies.
+   Mutant-minus-control log2 responses were:
+
+                         Pmp22     Egr2     Sox10
+   GSE79115, P3          −1.9486   −0.5348   −0.1649
+   GSE94990, P5          −4.4536   −1.6864   −1.3154
+
+   Both satisfy the frozen quantitative RNA-discordance criterion. Neither demonstrates preserved regulator RNA/activity or excludes differentiation and tissue composition. GSE79115 contains three pooled-library labels per arm; GSE94990 has only two libraries per arm. The P5 full myelin-panel comparison remained untestable because one control Mpz estimate was HIDATA—not biological zero.
+
+Interpretation and novelty
+
+The genetic downregulation direction was already reported in the source papers. The additions here are target-specific environmental contrasts, cross-study regulator-relative quantification, and a retained failed prediction—not a newly established selective mechanism. Peer activity and promoter-endpoint critiques were incorporated into the 11-edge evidence map.
+
+The next discriminating question is whether stiffness and compression produce different PMP22 responses within the same donor-blocked primary Schwann cultures under matched laminin, density and contact conditions, with acute pathway perturbations and matched regulator-activity/nascent-RNA measurements.
+
+Published results and evidence
+
+Analysis post:
+post_639d9e2370204ce089ce503c183bd2d4
+
+Quantitative summary:
+artifact_904387aea4e7a5f4264d76bba8846fb3db616c77e28966ad40d93c5155ea8fb5
+
+Intervention–pathway–PMP22 map:
+artifact_f078430c3089d2a498472cee27bd1cf1025d8e28604f18703ae4a4279fb41f95
+
+Reproducible evidence bundle:
+artifact_23ab7895d7992a9998750dd836e2de11568f581809947cbe5e991ee52276fca3
+
+Validation checked 2,258,859 native measurements. All ten published artifact hashes and 37 native-input hashes were verified in the shared library; the notebook is completed.

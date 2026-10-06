@@ -1,0 +1,43 @@
+from pathlib import Path
+import json,gzip,csv,re,io,hashlib
+import pandas as pd,numpy as np
+Q=Path(__file__).resolve().parents[1];O=Q/'outputs/iteration';W=Q.parents[1];inv=json.loads((O/'array-input-objects.json').read_text())
+def source(n):
+ h=inv[n]['blob'];p=W/'blobs/sha256'/h[:2]/h;assert hashlib.sha256(p.read_bytes()).hexdigest()==h;return p
+meta=source('GSE49598-samples-metadata.soft').read_text();sample=[]
+for b in meta.split('^SAMPLE = ')[1:]:
+ gsm=b.splitlines()[0];url=re.search(r'!Sample_supplementary_file.* = (.*)',b)[1].strip();sample.append({'gsm':gsm,'source_url':url,'file':url.rsplit('/',1)[1],'title':re.search(r'!Sample_title = (.*)',b)[1].strip()})
+s=pd.DataFrame(sample).set_index('gsm');s.to_csv(O/'array-file-provenance.tsv',sep='\t')
+rows=[];qc=[];signals={};target=['A_55_P2040168','A_55_P2040170'];flagbad=['gIsSaturated','gIsFeatNonUnifOL','gIsBGNonUnifOL','gIsFeatPopnOL','gIsBGPopnOL','IsManualFlag'];flagok=['gIsPosAndSignif','gIsWellAboveBG']
+for gsm in s.index:
+ n=0;bad=0;vals={}
+ with gzip.open(source(gsm+'-features.txt.gz'),'rt') as f:
+  for line in f:
+   if line.startswith('FEATURES\t'):cols=line.rstrip().split('\t');break
+  for row in csv.DictReader(f,fieldnames=cols,delimiter='\t'):
+   if row.get('FEATURES')!='DATA':continue
+   n+=1;eligible=all(row.get(x)=='0' for x in flagbad) and all(row.get(x)=='1' for x in flagok)
+   try:v=float(row['gProcessedSignal'])
+   except ValueError:v=np.nan
+   eligible=eligible and np.isfinite(v) and v>0
+   if not eligible:bad+=1
+   if row['ProbeName'] in target:rows.append({'gsm':gsm,**row,'eligible_conservative':eligible})
+   if eligible and row.get('ControlType')=='0':vals.setdefault(row['ProbeName'],[]).append(v)
+ signals[gsm]={k:np.median(v) for k,v in vals.items()}
+ qc.append({'gsm':gsm,'source_features':n,'ineligible_conservative':bad,'eligible_noncontrol_unique_probes':len(signals[gsm])})
+r=pd.DataFrame(rows);r.to_csv(O/'array-Pmp22-native-flags.tsv',sep='\t',index=False);pd.DataFrame(qc).to_csv(O/'array-broad-quality.tsv',sep='\t',index=False)
+m=pd.DataFrame(signals);log=np.log2(m);centered=log-log.median(axis=0);centered.loc[target].to_csv(O/'array-Pmp22-median-centered-native-log2.tsv',sep='\t')
+t=gzip.open(source('GSE49598_matrix.txt.gz'),'rt').read().split('!series_matrix_table_begin\n')[1].split('!series_matrix_table_end')[0];deposited=pd.read_csv(io.StringIO(t),sep='\t',index_col=0)
+# Source filename control groups; no assumption of donor pairing.
+def names(nums):return ['GSM'+str(x) for x in nums]
+contrasts=[('WT_ATF4_subset',range(1202404,1202406),range(1202400,1202402)),('WT_PERK_subset',range(1202406,1202408),range(1202402,1202404)),('PERKKO',range(1202410,1202412),range(1202408,1202410)),('PERKKO_without_Mock24_filename',range(1202410,1202412),[1202408]),('ATF4KO',range(1202414,1202416),range(1202412,1202414)),('Fv2E_PERK_AP',range(1202418,1202420),range(1202416,1202418)),('eIF2alpha_AA',range(1202422,1202424),range(1202420,1202422))]
+out=[]
+for method,table in [('deposited_log2',deposited),('native_median_centered_log2',centered)]:
+ for name,a,b in contrasts:
+  aa,bb=names(a),names(b)
+  for probe in target:
+   x,y=table.loc[probe,aa],table.loc[probe,bb]
+   out.append({'method':method,'contrast':name,'probe':probe,'n_a':len(aa),'n_b':len(bb),'log2_effect':float(x.mean()-y.mean()),'pairwise_min':float((x.to_numpy()[:,None]-y.to_numpy()[None,:]).min()),'pairwise_max':float((x.to_numpy()[:,None]-y.to_numpy()[None,:]).max())})
+out=pd.DataFrame(out);out.to_csv(O/'array-stratified-Pmp22-effects.tsv',sep='\t',index=False)
+summary={'target_rows':len(r),'target_all_quality_pass':bool(r.eligible_conservative.all()),'target_ineligible_rows':r.loc[~r.eligible_conservative,['gsm','ProbeName']].to_dict(orient='records'),'flag_eligibility':'Conservative: saturation/nonuniformity/population/manual flags0; positive-and-significant/well-above-background1; positive finite processed signal. Agilent flag definitions source audit retained.','control_provenance':'WT four arrays include2 ATF4WT and2 PERKWT filenames. PERKKO GSM1202409 filename Mock24h differs from12h treatment files. eIF2alphaAA has no source-labelled matchedWT set; donor/line independence and batch exchangeability unestablished.','interpretation':'Native flags test quantification failure; they cannot repair mixed control provenance. Initial frozen primary numerical rule remains failed; causal genetic interpretation additionally unresolved. Subset contrasts are exploratory sensitivity, not replacement validation.','median_centered_native_limit':'Median centering across eligible noncontrol probe signals is an alternative descriptive normalization, not reproduction of unspecified deposited centering/normalization.','no_promoter_assignment':True}
+(O/'array-quality-summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False));print(json.dumps(summary,indent=2));print(out.to_string(index=False))

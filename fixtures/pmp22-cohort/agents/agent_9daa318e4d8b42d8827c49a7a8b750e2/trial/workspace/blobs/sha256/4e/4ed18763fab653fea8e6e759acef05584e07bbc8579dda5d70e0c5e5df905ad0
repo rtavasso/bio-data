@@ -1,0 +1,75 @@
+{
+  "locus": "chr11:63095000-63175000",
+  "metadata": {
+    "GSM3484775": {
+      "track_line": "track type=bedGraph name=\"A2.4 Total Tags = 1.51e+07, normalized to 1.00e+07\" description=\"A2.4 Total Tags = 1.51e+07, normalized to 1.00e+07\" color=182,70,137 visibility=full yLineOnOff=on autoScale=on yLineMark=\"0.0\" alwaysZero=on graphType=bar maxHeightPixels=128:75:11 windowingFunction=maximum smoothingWindow=off                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ",
+      "raw_dataset_width": 100000.0,
+      "selected_intervals": 2192
+    },
+    "GSM3484776": {
+      "track_line": "track type=bedGraph name=\"A2.6 Total Tags = 7.50e+06, normalized to 1.00e+07\" description=\"A2.6 Total Tags = 7.50e+06, normalized to 1.00e+07\" color=209,249,118 visibility=full yLineOnOff=on autoScale=on yLineMark=\"0.0\" alwaysZero=on graphType=bar maxHeightPixels=128:75:11 windowingFunction=maximum smoothingWindow=off                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+      "raw_dataset_width": 100000.0,
+      "selected_intervals": 909
+    }
+  },
+  "common_base_promoter_estimates": [
+    {
+      "gene": "Pmp22",
+      "start": 63127481,
+      "end": 63129481,
+      "transcripts": "NM_001302257;NM_001302258;NM_001302261",
+      "common_covered_bases": 781.0,
+      "common_coverage_fraction": 0.3905,
+      "GSM3484775": 0.89221511298502,
+      "GSM3484776": 1.338527535354282,
+      "log2_tKO_over_sKO_common_bases": 0.5851833266638862
+    },
+    {
+      "gene": "Pmp22",
+      "start": 63131302,
+      "end": 63133302,
+      "transcripts": "NM_001302260",
+      "common_covered_bases": 2000.0,
+      "common_coverage_fraction": 1.0,
+      "GSM3484775": 6.392725018799305,
+      "GSM3484776": 4.68791003331542,
+      "log2_tKO_over_sKO_common_bases": -0.44748615511375583
+    },
+    {
+      "gene": "Pmp22",
+      "start": 63131068,
+      "end": 63133068,
+      "transcripts": "NM_001302259",
+      "common_covered_bases": 2000.0,
+      "common_coverage_fraction": 1.0,
+      "GSM3484775": 6.14430501061678,
+      "GSM3484776": 3.980395025759935,
+      "log2_tKO_over_sKO_common_bases": -0.6263382198898959
+    },
+    {
+      "gene": "Pmp22",
+      "start": 63129956,
+      "end": 63131956,
+      "transcripts": "NM_001302255;NM_008885",
+      "common_covered_bases": 1927.0,
+      "common_coverage_fraction": 0.9635,
+      "GSM3484775": 6.063736393467775,
+      "GSM3484776": 3.686933100007022,
+      "log2_tKO_over_sKO_common_bases": -0.7177857983970579
+    },
+    {
+      "gene": "Pmp22_RUNX_site",
+      "start": 63114879,
+      "end": 63115495,
+      "transcripts": "",
+      "common_covered_bases": 616.0,
+      "common_coverage_fraction": 1.0,
+      "GSM3484775": 27.74287348134177,
+      "GSM3484776": 25.689772582092843,
+      "log2_tKO_over_sKO_common_bases": -0.11092310434436381
+    }
+  ],
+  "validation": "All paired locus means integrated on identical common-covered base segments. Unrepresented bases excluded, never treated as measured zero. Zero-width TDF bed intervals contribute no bases.",
+  "context": "One library/genotype, distinct DRG/tumor annotations; not independent evidence about Egr2-AS. Lower promoter signal does not contradict RNA induction causally because confounded contexts and endpoints.",
+  "broad_context": "All-promoter mean-signal log2 median from >=90% coverage windows is about -0.45; local reductions are not uniquely PMP22-specific."
+}

@@ -1,0 +1,110 @@
+{
+  "results": [
+    {
+      "endpoint": "Krox20",
+      "log2_change": 2.2348535602496247,
+      "geometric_fold": 4.707149128747327,
+      "ci95_log2": [
+        1.7212009775823156,
+        2.7485061429169337
+      ],
+      "n_per_group": 3,
+      "source_values": {
+        "WT": [
+          0.832,
+          1.037,
+          1.131
+        ],
+        "cKO": [
+          3.905,
+          5.013,
+          5.199
+        ]
+      },
+      "source_file": "Krox20 prism file.pzfx",
+      "source_sha256": "bfacc432e3f1bb7fe08874ac2e65bc96322fa0186e052e448ac3ce16093c074e",
+      "assay": "source quantified Western protein, actin-normalized and relative WT; P50 nerve per Figure4A",
+      "unit_limit": "three source mice per genotype; no animal IDs for cross-protein pairing; no RNA/activity/half-life inference; not new densitometry"
+    },
+    {
+      "endpoint": "MPZ",
+      "log2_change": -2.964645481105576,
+      "geometric_fold": 0.12810107777277405,
+      "ci95_log2": [
+        -5.545246558734892,
+        -0.38404440347626023
+      ],
+      "n_per_group": 3,
+      "source_values": {
+        "WT": [
+          0.801,
+          0.692,
+          1.506
+        ],
+        "cKO": [
+          0.053,
+          0.113,
+          0.293
+        ]
+      },
+      "source_file": "MPZ prism file.pzfx",
+      "source_sha256": "b7ab35619280602f82af99ce49e51dfd49456f4f07676002fc1347a6a14f96f9",
+      "assay": "source quantified Western protein, actin-normalized and relative WT; P50 nerve per Figure4A",
+      "unit_limit": "three source mice per genotype; no animal IDs for cross-protein pairing; no RNA/activity/half-life inference; not new densitometry"
+    },
+    {
+      "endpoint": "MBP",
+      "log2_change": -2.4086531749731597,
+      "geometric_fold": 0.1883315779476093,
+      "ci95_log2": [
+        -4.531134264845084,
+        -0.2861720851012346
+      ],
+      "n_per_group": 3,
+      "source_values": {
+        "WT": [
+          0.988,
+          1.038,
+          0.975
+        ],
+        "cKO": [
+          0.095,
+          0.279,
+          0.252
+        ]
+      },
+      "source_file": "MBP prism file.pzfx",
+      "source_sha256": "5054c1c55cbd61adfc1e171c179348a6c6fdb9e716f325e1e5108efcb164808d",
+      "assay": "source quantified Western protein, actin-normalized and relative WT; P50 nerve per Figure4A",
+      "unit_limit": "three source mice per genotype; no animal IDs for cross-protein pairing; no RNA/activity/half-life inference; not new densitometry"
+    },
+    {
+      "endpoint": "Oct6",
+      "log2_change": 4.803217659790361,
+      "geometric_fold": 27.919818537488435,
+      "ci95_log2": [
+        2.2959342218777246,
+        7.310501097702998
+      ],
+      "n_per_group": 3,
+      "source_values": {
+        "WT": [
+          0.393,
+          1.106,
+          1.499
+        ],
+        "cKO": [
+          23.3,
+          24.57,
+          24.77
+        ]
+      },
+      "source_file": "Oct6 prism file.pzfx",
+      "source_sha256": "46efdfd2902ff65d58583070c71d959a43255e5406582d2ed46a8c2dadd5936e",
+      "assay": "source quantified Western protein, actin-normalized and relative WT; P50 nerve per Figure4A",
+      "unit_limit": "three source mice per genotype; no animal IDs for cross-protein pairing; no RNA/activity/half-life inference; not new densitometry"
+    }
+  ],
+  "safety": "Only XML Table numeric cells parsed; Template ignored",
+  "source": "PMC10959528 Figure4A source data1"
+}

@@ -1,0 +1,125 @@
+{
+  "revision": 1,
+  "scope": "Total RNA and antioxidant RNA contrast, not promoter output/protein",
+  "status": "in_progress",
+  "stopping_reason": "No time or transport cap; continue informative feasible work",
+  "items": [
+    {
+      "id": "inherited-baseline",
+      "priority": "high",
+      "question": "Do the exact inherited derivations support the contrast being explained?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Native cells, sample metadata and immutable artifacts",
+      "assets": [
+        "q_277f20df4b6b47cc",
+        "GSE241269",
+        "PMC5589416"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Not yet analyzed in this follow-up",
+      "next_action": "Audit source cells and attach fitting artifacts",
+      "blocker_evidence": []
+    },
+    {
+      "id": "purified-state-reference",
+      "priority": "high",
+      "question": "Can state changes within purified Schwann cells reproduce the antioxidant/myelin pattern?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Processed purified developmental or repair transcriptomes with known sample units",
+      "assets": [
+        "GSE177037"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Not yet analyzed in this follow-up",
+      "next_action": "Compare developmental and repair reference metadata before substantial acquisition",
+      "blocker_evidence": []
+    },
+    {
+      "id": "bulk-sensitivity",
+      "priority": "high",
+      "question": "Does the contrast remain under defensible state/composition sensitivities in the existing bulk matrices?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Sample scores, reference projections and broad effects",
+      "assets": [
+        "GSE241269",
+        "PRJEB20661"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Not yet analyzed in this follow-up",
+      "next_action": "Preserve sensitivity plan before new outcome inspection; then run per-study analyses",
+      "blocker_evidence": []
+    },
+    {
+      "id": "cell-composition",
+      "priority": "high",
+      "question": "Can measured cell-type reference profiles and plausible mixtures account for the contrast?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Annotated cell-type RNA profiles; biological replicate metadata; mixture bounds",
+      "assets": [],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Not yet analyzed in this follow-up",
+      "next_action": "Search assay/state/design terms and inspect processed references, not target-name-only sources",
+      "blocker_evidence": []
+    },
+    {
+      "id": "causal-identification",
+      "priority": "high",
+      "question": "What remains unidentifiable about NRF2 and PMP22 regulation?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Matched within-cell perturbation/rescue and calibrated RNA/protein readouts",
+      "assets": [
+        "PMC11014456",
+        "PMC5589416"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Not yet analyzed in this follow-up",
+      "next_action": "Inspect design limitations; do not substitute covariate adjustment for causal proof",
+      "blocker_evidence": []
+    }
+  ]
+}

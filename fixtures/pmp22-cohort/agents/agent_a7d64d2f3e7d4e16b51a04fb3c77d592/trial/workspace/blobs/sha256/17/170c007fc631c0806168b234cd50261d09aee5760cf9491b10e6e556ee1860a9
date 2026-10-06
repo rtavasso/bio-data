@@ -1,0 +1,1193 @@
+{
+  "source_rows": 912,
+  "distinct_perturbation_labels": 366,
+  "selected_followup_universe_not_genome": true,
+  "controls": [
+    {
+      "plate": "Plate_1",
+      "repeat": 1,
+      "no_cell_mean_CL_SN": [
+        1101.0,
+        13013.5
+      ],
+      "NT_values_CL_SN": [
+        [
+          3795,
+          256843
+        ],
+        [
+          3692,
+          230308
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        3952.25,
+        181721.25
+      ]
+    },
+    {
+      "plate": "Plate_2",
+      "repeat": 1,
+      "no_cell_mean_CL_SN": [
+        1075.5,
+        14449.875
+      ],
+      "NT_values_CL_SN": [
+        [
+          7915,
+          620418
+        ],
+        [
+          6191,
+          587248
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        7282.125,
+        552154.125
+      ]
+    },
+    {
+      "plate": "Plate_3",
+      "repeat": 1,
+      "no_cell_mean_CL_SN": [
+        1050.875,
+        12572.0
+      ],
+      "NT_values_CL_SN": [
+        [
+          9157,
+          542968
+        ],
+        [
+          9520,
+          628091
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        9402.125,
+        616231.875
+      ]
+    },
+    {
+      "plate": "Plate_4",
+      "repeat": 1,
+      "no_cell_mean_CL_SN": [
+        1551.75,
+        4224.75
+      ],
+      "NT_values_CL_SN": [
+        [
+          4221,
+          428004
+        ],
+        [
+          4779,
+          478255
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        19478.375,
+        379552.25
+      ]
+    },
+    {
+      "plate": "Plate_5",
+      "repeat": 1,
+      "no_cell_mean_CL_SN": [
+        1500.375,
+        13641.75
+      ],
+      "NT_values_CL_SN": [
+        [
+          4932,
+          458929
+        ],
+        [
+          5642,
+          526612
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        3933.875,
+        313956.25
+      ]
+    },
+    {
+      "plate": "Plate_1",
+      "repeat": 2,
+      "no_cell_mean_CL_SN": [
+        1270.5,
+        8159.0
+      ],
+      "NT_values_CL_SN": [
+        [
+          7083,
+          497725
+        ],
+        [
+          7871,
+          516641
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        8174.875,
+        479535.25
+      ]
+    },
+    {
+      "plate": "Plate_2",
+      "repeat": 2,
+      "no_cell_mean_CL_SN": [
+        1199.0,
+        4252.625
+      ],
+      "NT_values_CL_SN": [
+        [
+          4843,
+          366782
+        ],
+        [
+          6491,
+          364497
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        5707.625,
+        321198.625
+      ]
+    },
+    {
+      "plate": "Plate_3",
+      "repeat": 2,
+      "no_cell_mean_CL_SN": [
+        1427.5,
+        8454.0
+      ],
+      "NT_values_CL_SN": [
+        [
+          6554,
+          311896
+        ],
+        [
+          6317,
+          347982
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        5831.375,
+        353606.75
+      ]
+    },
+    {
+      "plate": "Plate_4",
+      "repeat": 2,
+      "no_cell_mean_CL_SN": [
+        1270.0,
+        7221.625
+      ],
+      "NT_values_CL_SN": [
+        [
+          3809,
+          490770
+        ],
+        [
+          4524,
+          485952
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        3798.125,
+        398039.5
+      ]
+    },
+    {
+      "plate": "Plate_5",
+      "repeat": 2,
+      "no_cell_mean_CL_SN": [
+        1243.375,
+        6240.625
+      ],
+      "NT_values_CL_SN": [
+        [
+          5989,
+          441831
+        ],
+        [
+          5832,
+          448097
+        ]
+      ],
+      "no_treatment_mean_CL_SN": [
+        4235.0,
+        357066.375
+      ]
+    }
+  ],
+  "gain_candidates": [
+    "ACSL5",
+    "ERVFRD-1",
+    "FCF1",
+    "PEX2"
+  ],
+  "robust_gain_candidates": [
+    "ACSL5",
+    "ERVFRD-1",
+    "FCF1"
+  ],
+  "loss_candidates": [
+    "ACP2",
+    "ARF3",
+    "ATP6V0D1",
+    "ATP6V0E1",
+    "BSPH1",
+    "C11orf21",
+    "C14orf177",
+    "C19orf44",
+    "C1QTNF2",
+    "C20orf27",
+    "C3orf70",
+    "CA10",
+    "CCT2",
+    "CCT8",
+    "CD2AP",
+    "CLCN1",
+    "CLIP3",
+    "COL14A1",
+    "COPA",
+    "COPG2",
+    "DCTN6",
+    "DPEP1",
+    "FAM25G",
+    "FLJ44635",
+    "FLOT1",
+    "FNDC5",
+    "GNB1L",
+    "GPR82",
+    "GRIP1",
+    "HRH4",
+    "IFNL2",
+    "IRS2",
+    "KIF12",
+    "LRRC58",
+    "LRRC75B",
+    "LYSMD2",
+    "MARCH2",
+    "MEP1B",
+    "MGAT1",
+    "MVD",
+    "NEDD8",
+    "NIPA2",
+    "NSF",
+    "OPA3",
+    "OSBPL8",
+    "PANK4",
+    "PIK3C3",
+    "PINLYP",
+    "PMVK",
+    "PTPRJ",
+    "RAB7A",
+    "RANGAP1",
+    "RFK",
+    "RICTOR",
+    "SCP2D1",
+    "SRRM3",
+    "SS18L2",
+    "TCIRG1",
+    "TMEM220",
+    "TMEM45B",
+    "TMEM87A",
+    "TRAT1",
+    "TTC24",
+    "TTC27",
+    "UBL5",
+    "USE1",
+    "WDR59",
+    "YRDC"
+  ],
+  "invalid_positive_genes": [
+    "ARCN1"
+  ],
+  "PMP22_cargo_measured": false,
+  "PMP22_target_present": false,
+  "RER1_UGGT1_LMAN1_target_coverage": {
+    "RER1": false,
+    "UGGT1": false,
+    "LMAN1": false
+  },
+  "golgi": {
+    "COL14A1": [
+      {
+        "well": "A01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 149,
+        "fragmented_fraction": 0.4899328859060403
+      }
+    ],
+    "CDH12": [
+      {
+        "well": "A02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 458,
+        "fragmented_fraction": 0.4912663755458515
+      }
+    ],
+    "SLC38A2": [
+      {
+        "well": "A03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1052,
+        "fragmented_fraction": 0.3070342205323194
+      }
+    ],
+    "ANXA2R": [
+      {
+        "well": "A04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 615,
+        "fragmented_fraction": 0.4878048780487805
+      }
+    ],
+    "TXK": [
+      {
+        "well": "A05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 550,
+        "fragmented_fraction": 0.24
+      }
+    ],
+    "CD2AP": [
+      {
+        "well": "A06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 343,
+        "fragmented_fraction": 0.6443148688046647
+      }
+    ],
+    "TAP1": [
+      {
+        "well": "A07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 498,
+        "fragmented_fraction": 0.5240963855421686
+      }
+    ],
+    "TMEM199": [
+      {
+        "well": "A08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 589,
+        "fragmented_fraction": 0.5178268251273345
+      }
+    ],
+    "ATP6V0D1": [
+      {
+        "well": "A09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 264,
+        "fragmented_fraction": 0.48863636363636365
+      }
+    ],
+    "ATP1B1": [
+      {
+        "well": "A10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 440,
+        "fragmented_fraction": 0.47954545454545455
+      }
+    ],
+    "ATP2B1": [
+      {
+        "well": "A11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 676,
+        "fragmented_fraction": 0.41272189349112426
+      }
+    ],
+    "ATP6V0E1": [
+      {
+        "well": "A12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 257,
+        "fragmented_fraction": 0.4085603112840467
+      }
+    ],
+    "ASNA1": [
+      {
+        "well": "B01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 266,
+        "fragmented_fraction": 0.6541353383458647
+      }
+    ],
+    "TCIRG1": [
+      {
+        "well": "B02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 197,
+        "fragmented_fraction": 0.6091370558375635
+      }
+    ],
+    "SRL": [
+      {
+        "well": "B03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 828,
+        "fragmented_fraction": 0.3502415458937198
+      }
+    ],
+    "CYSLTR2": [
+      {
+        "well": "B04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 613,
+        "fragmented_fraction": 0.4730831973898858
+      }
+    ],
+    "FAM98B": [
+      {
+        "well": "B05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 610,
+        "fragmented_fraction": 0.6131147540983607
+      }
+    ],
+    "LCMT1": [
+      {
+        "well": "B06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 810,
+        "fragmented_fraction": 0.5222222222222223
+      }
+    ],
+    "MAP3K6": [
+      {
+        "well": "B07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 374,
+        "fragmented_fraction": 0.9064171122994652
+      }
+    ],
+    "RANGAP1": [
+      {
+        "well": "B08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 533,
+        "fragmented_fraction": 0.7091932457786116
+      }
+    ],
+    "Control": [
+      {
+        "well": "B09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 818,
+        "fragmented_fraction": 0.4242053789731051
+      },
+      {
+        "well": "C10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1426,
+        "fragmented_fraction": 0.21107994389901824
+      }
+    ],
+    "EPHA4": [
+      {
+        "well": "B10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 390,
+        "fragmented_fraction": 0.44871794871794873
+      }
+    ],
+    "CLCN1": [
+      {
+        "well": "B11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 498,
+        "fragmented_fraction": 0.3453815261044177
+      }
+    ],
+    "KCNE1": [
+      {
+        "well": "B12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 178,
+        "fragmented_fraction": 0.5168539325842697
+      }
+    ],
+    "CLIP3": [
+      {
+        "well": "C01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 602,
+        "fragmented_fraction": 0.9601328903654485
+      }
+    ],
+    "GPR161": [
+      {
+        "well": "C02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 523,
+        "fragmented_fraction": 0.5449330783938815
+      }
+    ],
+    "MGAT1": [
+      {
+        "well": "C03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1412,
+        "fragmented_fraction": 0.37322946175637395
+      }
+    ],
+    "MVD": [
+      {
+        "well": "C04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 941,
+        "fragmented_fraction": 0.34537725823591925
+      }
+    ],
+    "RFK": [
+      {
+        "well": "C05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 933,
+        "fragmented_fraction": 0.30760986066452306
+      }
+    ],
+    "MARCH2": [
+      {
+        "well": "C06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 554,
+        "fragmented_fraction": 0.8140794223826715
+      }
+    ],
+    "A1BG": [
+      {
+        "well": "C07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 392,
+        "fragmented_fraction": 0.798469387755102
+      }
+    ],
+    "MRC2": [
+      {
+        "well": "C08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1010,
+        "fragmented_fraction": 0.22673267326732674
+      }
+    ],
+    "FLJ44635": [
+      {
+        "well": "C09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 712,
+        "fragmented_fraction": 0.273876404494382
+      }
+    ],
+    "FDX1L": [
+      {
+        "well": "C11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 539,
+        "fragmented_fraction": 0.44341372912801486
+      }
+    ],
+    "TRAT1": [
+      {
+        "well": "C12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 90,
+        "fragmented_fraction": 0.7666666666666667
+      }
+    ],
+    "HRH4": [
+      {
+        "well": "D01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 380,
+        "fragmented_fraction": 0.29473684210526313
+      }
+    ],
+    "IL17D": [
+      {
+        "well": "D02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 755,
+        "fragmented_fraction": 0.3536423841059603
+      }
+    ],
+    "DPEP1": [
+      {
+        "well": "D03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 817,
+        "fragmented_fraction": 0.6340269277845777
+      }
+    ],
+    "IFNL2": [
+      {
+        "well": "D04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1153,
+        "fragmented_fraction": 0.3183000867302689
+      }
+    ],
+    "C1QTNF2": [
+      {
+        "well": "D05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 804,
+        "fragmented_fraction": 0.5186567164179104
+      }
+    ],
+    "C1QTNF3": [
+      {
+        "well": "D06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1047,
+        "fragmented_fraction": 0.6217765042979942
+      }
+    ],
+    "MEP1B": [
+      {
+        "well": "D07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 754,
+        "fragmented_fraction": 0.5172413793103449
+      }
+    ],
+    "IRS2": [
+      {
+        "well": "D08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 712,
+        "fragmented_fraction": 0.8497191011235955
+      }
+    ],
+    "NIPA2": [
+      {
+        "well": "D09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 782,
+        "fragmented_fraction": 0.7135549872122762
+      }
+    ],
+    "GDPD3": [
+      {
+        "well": "D10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1356,
+        "fragmented_fraction": 0.23820058997050148
+      }
+    ],
+    "PANK4": [
+      {
+        "well": "D11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 276,
+        "fragmented_fraction": 0.4528985507246377
+      }
+    ],
+    "ACP2": [
+      {
+        "well": "D12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 486,
+        "fragmented_fraction": 0.4773662551440329
+      }
+    ],
+    "RILP": [
+      {
+        "well": "E01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 908,
+        "fragmented_fraction": 0.5
+      }
+    ],
+    "TRIM5": [
+      {
+        "well": "E02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1207,
+        "fragmented_fraction": 0.5973487986743994
+      }
+    ],
+    "PRKCZ": [
+      {
+        "well": "E03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1156,
+        "fragmented_fraction": 0.6557093425605537
+      }
+    ],
+    "PIK3C3": [
+      {
+        "well": "E04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1143,
+        "fragmented_fraction": 0.24671916010498687
+      }
+    ],
+    "MOB4": [
+      {
+        "well": "E05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 564,
+        "fragmented_fraction": 0.425531914893617
+      }
+    ],
+    "WDR59": [
+      {
+        "well": "E06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1287,
+        "fragmented_fraction": 0.42657342657342656
+      }
+    ],
+    "AP3B1": [
+      {
+        "well": "E07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 956,
+        "fragmented_fraction": 0.23430962343096234
+      }
+    ],
+    "FLOT1": [
+      {
+        "well": "E08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1024,
+        "fragmented_fraction": 0.44921875
+      }
+    ],
+    "TRAPPC13": [
+      {
+        "well": "E09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1271,
+        "fragmented_fraction": 0.5759244689221086
+      }
+    ],
+    "GRIP1": [
+      {
+        "well": "E10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1219,
+        "fragmented_fraction": 0.26004922067268255
+      }
+    ],
+    "SS18L2": [
+      {
+        "well": "E11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 335,
+        "fragmented_fraction": 0.31343283582089554
+      }
+    ],
+    "C15orf48": [
+      {
+        "well": "E12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 113,
+        "fragmented_fraction": 0.39823008849557523
+      }
+    ],
+    "ABHD17B": [
+      {
+        "well": "F01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1098,
+        "fragmented_fraction": 0.32877959927140255
+      }
+    ],
+    "GPR82": [
+      {
+        "well": "F02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 980,
+        "fragmented_fraction": 0.27040816326530615
+      }
+    ],
+    "C14orf177": [
+      {
+        "well": "F03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 188,
+        "fragmented_fraction": 0.5585106382978723
+      }
+    ],
+    "C20orf24": [
+      {
+        "well": "F04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 840,
+        "fragmented_fraction": 0.8369047619047619
+      }
+    ],
+    "DCTN6": [
+      {
+        "well": "F05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1072,
+        "fragmented_fraction": 0.4141791044776119
+      }
+    ],
+    "TBC1D3G": [
+      {
+        "well": "F06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1245,
+        "fragmented_fraction": 0.41445783132530123
+      }
+    ],
+    "MXRA7": [
+      {
+        "well": "F07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1095,
+        "fragmented_fraction": 0.5853881278538813
+      }
+    ],
+    "LRRC75B": [
+      {
+        "well": "F08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 606,
+        "fragmented_fraction": 0.5676567656765676
+      }
+    ],
+    "LOC100144595": [
+      {
+        "well": "F09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1367,
+        "fragmented_fraction": 0.24725676664228238
+      }
+    ],
+    "KIF12": [
+      {
+        "well": "F10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 614,
+        "fragmented_fraction": 0.6270358306188925
+      }
+    ],
+    "C11orf21": [
+      {
+        "well": "F11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 576,
+        "fragmented_fraction": 0.4704861111111111
+      }
+    ],
+    "LYSMD2": [
+      {
+        "well": "F12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 373,
+        "fragmented_fraction": 0.26273458445040215
+      }
+    ],
+    "OPA3": [
+      {
+        "well": "G01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 637,
+        "fragmented_fraction": 0.5196232339089482
+      }
+    ],
+    "PPP1R32": [
+      {
+        "well": "G02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 941,
+        "fragmented_fraction": 0.2412327311370882
+      }
+    ],
+    "SCP2D1": [
+      {
+        "well": "G03",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 836,
+        "fragmented_fraction": 0.3181818181818182
+      }
+    ],
+    "FAM102B": [
+      {
+        "well": "G04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1042,
+        "fragmented_fraction": 0.8464491362763915
+      }
+    ],
+    "HDHD3": [
+      {
+        "well": "G05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1152,
+        "fragmented_fraction": 0.3020833333333333
+      }
+    ],
+    "TMEM220": [
+      {
+        "well": "G06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 267,
+        "fragmented_fraction": 0.947565543071161
+      }
+    ],
+    "SOWAHD": [
+      {
+        "well": "G07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 569,
+        "fragmented_fraction": 0.5571177504393673
+      }
+    ],
+    "TMEM45B": [
+      {
+        "well": "G08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 612,
+        "fragmented_fraction": 0.3055555555555556
+      }
+    ],
+    "C19orf44": [
+      {
+        "well": "G09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 907,
+        "fragmented_fraction": 0.48732083792723263
+      }
+    ],
+    "FAM25G": [
+      {
+        "well": "G10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1008,
+        "fragmented_fraction": 0.5277777777777778
+      }
+    ],
+    "KIAA1958": [
+      {
+        "well": "G11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 827,
+        "fragmented_fraction": 0.4268440145102781
+      }
+    ],
+    "RSRC2": [
+      {
+        "well": "G12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 812,
+        "fragmented_fraction": 0.43596059113300495
+      }
+    ],
+    "PRELID3B": [
+      {
+        "well": "H01",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 523,
+        "fragmented_fraction": 0.5659655831739961
+      }
+    ],
+    "GNB1L": [
+      {
+        "well": "H02",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 519,
+        "fragmented_fraction": 0.74373795761079
+      }
+    ],
+    "FNDC5": [
+      {
+        "well": "H03",
+        "images": 8,
+        "missing_images": 1,
+        "cells": 435,
+        "fragmented_fraction": 0.6183908045977011
+      }
+    ],
+    "CCT2": [
+      {
+        "well": "H04",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 223,
+        "fragmented_fraction": 0.9596412556053812
+      }
+    ],
+    "CHMP2A": [
+      {
+        "well": "H05",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 418,
+        "fragmented_fraction": 0.854066985645933
+      }
+    ],
+    "CCT4": [
+      {
+        "well": "H06",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 335,
+        "fragmented_fraction": 0.8955223880597015
+      }
+    ],
+    "COPG2": [
+      {
+        "well": "H07",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 708,
+        "fragmented_fraction": 0.6299435028248588
+      }
+    ],
+    "ARCN1": [
+      {
+        "well": "H08",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 144,
+        "fragmented_fraction": 0.8333333333333334
+      }
+    ],
+    "NSF": [
+      {
+        "well": "H09",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1001,
+        "fragmented_fraction": 0.6433566433566433
+      }
+    ],
+    "Untransfected": [
+      {
+        "well": "H10",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1571,
+        "fragmented_fraction": 0.23042647994907703
+      },
+      {
+        "well": "H11",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1798,
+        "fragmented_fraction": 0.22580645161290322
+      },
+      {
+        "well": "H12",
+        "images": 9,
+        "missing_images": 0,
+        "cells": 1360,
+        "fragmented_fraction": 0.25735294117647056
+      }
+    ]
+  },
+  "golgi_unit": "well; images and cells are subsamples, typically one well/target",
+  "limitations": "No viable-cell count in HRP wells, no protein mass assay, two repeats, selected siRNA pools, no addback or independent-gene reagent replication; orthogonal same-study Golgi not independent biological validation.",
+  "golgi_missing_images": [
+    {
+      "source_row": 777,
+      "well": "H03",
+      "gene": "FNDC5",
+      "image": 776,
+      "tokens": [
+        "na",
+        "na",
+        "na"
+      ]
+    }
+  ]
+}

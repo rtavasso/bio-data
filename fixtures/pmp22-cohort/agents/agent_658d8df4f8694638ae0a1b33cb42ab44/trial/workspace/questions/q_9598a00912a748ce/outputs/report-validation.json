@@ -1,0 +1,61 @@
+{
+  "endpoint_rows": 69,
+  "hrp_targets": 366,
+  "threshold_grid": [
+    {
+      "cutoff": 1.1,
+      "main_n": 9,
+      "full_NT_background_n": 8,
+      "main_genes": [
+        "ACSL5",
+        "ERVFRD-1",
+        "FAM72D",
+        "FCF1",
+        "HSD17B11",
+        "KCTD10",
+        "PEX2",
+        "PIP5K1C",
+        "RHOBTB3"
+      ],
+      "full_NT_background_genes": [
+        "ACSL5",
+        "ERVFRD-1",
+        "FAM72D",
+        "FCF1",
+        "HSD17B11",
+        "PEX2",
+        "PIP5K1C",
+        "RHOBTB3"
+      ]
+    },
+    {
+      "cutoff": 1.25,
+      "main_n": 4,
+      "full_NT_background_n": 3,
+      "main_genes": [
+        "ACSL5",
+        "ERVFRD-1",
+        "FCF1",
+        "PEX2"
+      ],
+      "full_NT_background_genes": [
+        "ACSL5",
+        "ERVFRD-1",
+        "FCF1"
+      ]
+    },
+    {
+      "cutoff": 1.5,
+      "main_n": 1,
+      "full_NT_background_n": 0,
+      "main_genes": [
+        "FCF1"
+      ],
+      "full_NT_background_genes": []
+    }
+  ],
+  "native_measurement_records_including_reused_controls": 876,
+  "checks": 1479,
+  "published_milestone": "post_910fc4d8914a4a32ae441c8481e020c7",
+  "valid": true
+}

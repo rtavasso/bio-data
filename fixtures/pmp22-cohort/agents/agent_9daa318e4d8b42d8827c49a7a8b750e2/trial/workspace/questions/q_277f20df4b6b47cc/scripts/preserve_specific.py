@@ -1,0 +1,13 @@
+from pathlib import Path
+import json,subprocess,hashlib,sys,platform,importlib.metadata
+Q=Path(__file__).resolve().parents[1];ROOT=Q.parents[2];O=Q/'outputs/specific';env={'python':sys.version,'executable':sys.executable,'platform':platform.platform(),'packages':{k:importlib.metadata.version(k) for k in ['numpy','pandas','scipy','openpyxl','matplotlib']},'invocation':'./bin/python'};(O/'environment.json').write_text(json.dumps(env,indent=2));records={}
+paths=list((Q/'inputs/specific').glob('*'))+[Q/'inputs'/n for n in ['metadata-GSE177037-specific.json','metadata-GSE106969-specific.json','resolve-GSE177037-specific.json','resolve-GSE106969-specific.json','inventory-GSE177037-specific.json']]+[O/n for n in ['REPORT.md','REPRODUCE.md','budget-final.json','environment.json','verification.json','status-check.json','registrations.json','source-inventory.json']]+[Q/'outputs'/n for n in ['mechanisms.r009.json','mechanisms.r010.json','mechanisms.r011.json','mechanisms.r012.json','investigations.r007.json','investigations.r008.json','investigations.r009.json','investigations.r010.json','discoveries.r001.json','discoveries.r002.json','evidence-coverage.pre-specific.tsv','evidence-coverage.tsv']]
+for p in paths:
+ if not p.is_file() or p.name=='transport.lock':continue
+ classification='interpretation' if p.is_relative_to(Q/'outputs') else 'source'
+ cmd=[str(ROOT/'bin/bio'),'object','add',str(p),'--classification',classification];r=subprocess.run(cmd,text=True,capture_output=True,check=True);d=json.loads(r.stdout);records[str(p.relative_to(Q))]=d
+(O/'preservation.json').write_text(json.dumps(records,indent=2));summary=['\n### Final preserved specificity snapshot hashes\n']
+for f in ['outputs/mechanisms.r012.json','outputs/investigations.r010.json','outputs/discoveries.r002.json','outputs/evidence-coverage.tsv','outputs/specific/REPORT.md']:
+ summary.append('- '+f+': '+records[f]['blob']+'\n')
+summary.append('\nIntegrity audit: 53 new registered computations checked against immutable blobs and question links; both sealed predictions unchanged; primary errors independently recomputed from original matrix; corrected HIDATA fields unavailable. Current skill status checker passes. Retrieval accounted conservatively:77 requests and50,797,476 bytes, below150/1GiB limits. Remaining allowance was not exhausted; scoped high-priority work is covered and original broader question remains open.\n')
+(Q/'LABBOOK.md').open('a').writelines(summary);print(json.dumps({'preserved_objects':len(records),'final_hashes':{f:records[f]['blob'] for f in ['outputs/mechanisms.r012.json','outputs/investigations.r010.json','outputs/discoveries.r002.json','outputs/specific/REPORT.md']}},indent=2))

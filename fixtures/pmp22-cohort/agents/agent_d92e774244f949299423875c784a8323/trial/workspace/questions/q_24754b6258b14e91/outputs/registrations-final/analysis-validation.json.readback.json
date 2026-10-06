@@ -1,0 +1,1175 @@
+{
+  "created": "2026-10-05T23:59:59.341315+00:00",
+  "derivation_key": "bee2c67ab0fe7b80a2f78a094352ec4443788099ff22056988351866ffab99bb",
+  "id": "artifact_61918bad479de0d7422ebb40f28b04baa5e984cd1c8780044b518b080d2986e6",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "18fca9e5387b6223bb823fedceb636ae1727bd9c22ece8196d0b628d2c552129",
+        "cc6d2c6e16f7e822aa2d12300148bd20cb6a3ba428e3dbe3c900ca8fb6b0f94f",
+        "94411f153b9cb8352bfa951c43684110df546494cc4eb67ad6cccd7203b9e82c"
+      ],
+      "command": [
+        "./bin/python",
+        "workspace/questions/q_24754b6258b14e91/scripts/harmonize_qtl.py"
+      ],
+      "environment": {
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "pyarrow": "23.0.1",
+        "python": "3.12.8"
+      },
+      "inputs": [
+        {
+          "blob": "6783452eb108d94acc1630f366bc85e5d40803b8ee8655dfb63c034fff03f2da",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/inspection-v11.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "f3917763d0bf710a504c8746c8f429d4d0d0a377805af2ebfafc47b1fa3a1818",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/inspection-execution-r001.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "ea350bd96e84514af5757251c4997c1542d3599139572626b66e0b93ef4587d9",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/independent-execution-r002.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "f1c727c4e383dc9005cd7944bedab0351a7974b68b9558056425587eb02c99c0",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/independent-r002/extraction-validation.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1b0817c138a4743a77967f252a1ebfbf9a5ef858c6df79178c218868536de1d2",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/independent-r002/GENCORD-PMP22-native.tsv"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "bb7750ac4fd13a54913ea9d046f4022e3f4c9a711898a550a0b5ed00ab01b790",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "outputs/independent-r002/TwinsUK-PMP22-native.tsv"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "be1258c44359420c075bd23589f19a95882ebe3e54cfab466730f2fe88ba6ee4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/v11-eqtl-covariates.tar"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "0990b8416debba35dfacbb396d385b8ac73c34f9d733c0d95f74313c42f22263",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/public/v11-sqtl-covariates.tar"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "b84ff80de32b7a1cb6bbc3b82f52a68a46dfb72bfa9f5615ed5bd50581b67bd8",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/v11-sqtl-groups.tar"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "089bfa6c19c17d13c326664b38d0db98c906ca79c3b5928ad5b6ba057ebd28e4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/v11-eqtl-susie.tar"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e7ddd08fdcb9b4dd77eedf8214b828e26b36c972790087c694c3079d90f3bb15",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/public/v11-sqtl-susie.tar"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "9c4f127bae76c3330360e093f941c10e0ff810765a8118f95fb07314a9dca4fb",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Adipose_Subcutaneous.v11.sQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "c9ece06ff764fe8fa92e0c6b6b5e793d36ef50096a6aa2599b7aa95edc31c9fe",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Ovary.v11.sQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "2f744d0bdf68d2b7791ac51b23f50562fcd4facfde54e1691f31e97b5425b3a2",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/public/QTD000100.permuted.tsv.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "c9c023f6c5239ae940931f7f03c2662a0c8d03b3b4c5a730a82315d67420b1f2",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/text/twins-perm-target.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1d61dc58ea5b90a418dda3183519bec12deab3e1db927aafa3f60c25c493692d",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/ranges/QTD000538-15263668-cc/result.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "35774079a9834adb74672dd5c05f1e2befb9ded8ff5c5a9b77eb07fc83fddf29",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/human-interval-annotations.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "5dce497acbdaee42ba03e00726bec895e69c5f22a15b7f2522e87d04d852f9aa",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/public/hg18ToHg38.over.chain.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "df11938c66d2b39f8ebbdb5f1720919321f9cf9d58f02b019753f6a24ca3db24",
+          "role": "analysis_input",
+          "selector": {
+            "source_file": "inputs/public/gencode47.gtf.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "55bc16f1a6b9aa1a6fd5a2cbdbbff95027c190469efc4793b62ac9eb17e2b9e0",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/QTD000100.complete.all.tsv.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "ca8fdbe24c3bc7a30356309530ca7963df4945e518cba98cd214ef20709acb08",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/QTD000100.complete.all.tsv.gz.receipt.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1f49453a9a77ae4e2653e899c663afc5ab2cd679dd6b50ad8bd764db8287f1a7",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/QTD000538.cc.tsv.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "31d403f0e1e8f4d286ff236c09017c47b9b87df691d712fa4ff67e24c3b8580f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/QTD000538.cc.tsv.gz.receipt.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e93a884a924ec202a4b75c8ef56f26d4b0ec419f38ef3c957b1f8f78a722af83",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/README_eQTL_v11.txt"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e3e3bb851ae9f32f587643b2cef3210be8e6d5f4047d7c66abd17f9922027f1f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/gtex-openfiles.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "70b0b6eac8a607568d11b3f2d8ad6cf6e9bb430ffafa4883627797d8967785ea",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/catalogue-metadata-r7.tsv"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "93566c27f7748d87eaf041577b90e6937f3157b2fdfea5201f3ebc809bd7b273",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/catalogue-methods.html"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "4bff8a760616c57238ad00eb5ace76817cc367ab7c26449efdf96cbb067de994",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/catalogue-columns.md"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "777d148f1eb5d69cdf841c1f829bfad8f8543e0e6a0c5f165280034f8e284e89",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/PMC8423625.xml"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "8da632fc04ef5da45c9a71307971ef648b64502fe381f669309f129a7611b5d4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/PMC3673336.xml"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "0cbe637cb10bd02d5085dca80c7841012ee4269ce116bcc0b1db856bf8733b6e",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/public/PMC3100536-bioc.xml"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "88ad18a9f5b8c45e7d59ae183ff4c97d6348ca60b9cd460a6399c04ac03f650d",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/reused-cis/PMC3298281.html"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "7b0a5fe4f9c5cdee5f5c45046457dc74a9716945bb88f7aff0f982ce844280ac",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/reused-cis/PMC5181599.html"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "f53db4f81a95559c1ad7692584a620903aef0d57fd48d0565c9d611639bcf360",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "outputs/predictions/fibroblast-cis-transfer-r001.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "dc7f9958be1e257c4d8f6af1071384ebee099d75198afc2f3816234498d3077c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "outputs/predictions/adipose-first-exon-junction-transfer-r001.json"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "ea0ac69f37a265e5fb8462cf19472e77d20c23c6879bfc8f240bafdf239824a4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Adipose_Subcutaneous.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "30195a25e5ebca07d6489484f4d4ff682c24ae5d7d9785739a3f20bb2d135e68",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Adipose_Visceral_Omentum.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "45e95374cf240311669d663efcd1a4a57b7950ebab4f1fda0d380b70c85aa973",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Adrenal_Gland.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "72cb6d569d96a97e065f4d9672faf2d908f4b2eb44216fbfb5e4467aa59a8c77",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Artery_Aorta.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "0a0e4a156a96dbfe4a1a5752f7cf26cb6eeade9382882cf04a87d758f28602ef",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Artery_Coronary.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1aeca39f65d64d658a2831a101a2e53f02964387220a118a775003f8a83f8303",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Artery_Tibial.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "ff47d875401485f7950cbbf7551f8d78a513173a3c30bcf6ee870d4d3940fd9f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Bladder.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "6dbd034594f55ceb1842d2aa05820158da3f91a90979ac2d7435fe9bef125b54",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Amygdala.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "69633df63c229502e20b7aa519346b19f4b3920417852c98aa2f0e290c99b2ad",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Anterior_cingulate_cortex_BA24.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "c4c32c22df72f26101ec6f64b25eed3b1e6c770995b98a530feebedf0ed05917",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Caudate_basal_ganglia.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "2a62629b821419ac3583f537cd9ae9d4928b0c7e62bc938b67e3a1050685903d",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Cerebellar_Hemisphere.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d2b67cf7a575eba60f5070f2fd16bfc6a305e13b5b6b567cbf49f5a2c1d69041",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Cerebellum.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "42f5601565adb63edf56b11e4b65119411c18a5825ac1ad46d157c840ad24d08",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Cortex.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d313de4f3edae03326376f1bcf96f40dc9e2d5dac5f32223d31b6b3ec8913cd5",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Frontal_Cortex_BA9.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "fe7031765109e3c33e807637dad5692585693d8e07e69249f33ccab530d79b9f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Hippocampus.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "bd8e6e9c686b906426e41a8ea752a4e5b94f675277a845066f8dba96c2f5513c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Hypothalamus.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "33c031b29bf119a96db5d6b3a52979a15a48c59da4e1e34c0efc59a59636c207",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Nucleus_accumbens_basal_ganglia.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "3a79dba60c8a474fada3ec1d3b5381bb377e082af0ba34785809be06477e739e",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Putamen_basal_ganglia.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a7d2ddd7949e92c6638d01abba4ad0a6317f43362b3773ffea63b1e285e809c5",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Spinal_cord_cervical_c-1.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e28adefc23121ac8b91f366f6f5db5b8bd2073698e080095e9b860a098976f6b",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Brain_Substantia_nigra.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "33a239be01952484af22727c68430e35e96b46ab8ee973f8654fb9a5683508de",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Breast_Mammary_Tissue.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "3f0ccc355e44db4f86b8ff592553f04ae6034cb13c2958579fbe887e3161ef95",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Cells_Cultured_fibroblasts.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e2b9fcd994efa8d2048a9527a485dd022e2dc025eb188833502ca0d47a745178",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Cells_EBV-transformed_lymphocytes.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "7ee9f279a9c2eb9e7abb6d4c391040452455f6206c00e2819b98e68a4a71767e",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Colon_Sigmoid.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e5498b0a01dc259467b68b0a5e4d3e6c835771a563070665f56dca899daed550",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Colon_Transverse.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "5ae6428b30ed201fdb73eb2bcda42a02c7042449d3d941238780503658bf84c3",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Esophagus_Gastroesophageal_Junction.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "420cf7db62d971da9ab991c581453e97a4e143fbd3244b39b6921e1ea89c9f47",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Esophagus_Mucosa.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "129e22c3c59f1bc7531ca5504e4bdeceb7049bec4daa7207cfbc162dbe468f5e",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Esophagus_Muscularis.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "25753a70c085f8f8ef22dbbb86fcd035ee7dcb969952d44ef56495464e07aecb",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Heart_Atrial_Appendage.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "bf82224eae7f22a6643debd7177c46e65c6ba3f2df2e8b9b723598cca0dbc11c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Heart_Left_Ventricle.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "4e10a97746f824ce237a43f1116938c4d54b22e68b95a900e5657f28dd600203",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Kidney_Cortex.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "41892e50503a8413d5c8b7d5086d078001cf7d813477b73afd301088162ff5f4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Liver.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "67ec8b15eef8efec0bb59facbf4f49073811b4c4e83836d4ed52322d46aa8c34",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Lung.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d143f0f41ba5f35367193154ed6d48054299ffd291c5a6b43d2413a3ae04b812",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Minor_Salivary_Gland.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "aa593b5b6ee216ec7626b903e3997c55a026aa6309a353cf354f6ad0bfd7e7b7",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Muscle_Skeletal.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "5c7a8454ded79bde5597e36568d44de688ce2a958496fcd5ba47abb0d72b3774",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Nerve_Tibial.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e72fa98f8e61790b783032b184c20bac6c80c28ee7f4d448db4bd2211f6eb665",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Ovary.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "55c3863cafa3799090d6101cd5d495a1494864f7b016978e08cbc72df87af034",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Pancreas.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "bae6ec07853d0e58d9378b488fa5b82f20878930f4b44657420438897d5318e8",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Pituitary.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "aaecca161c82bd07bbaa20affee71e4e339c1b05aefef10d4c8baec88ae0cee7",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Prostate.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "aa972738e230298f578064248ab82d63d7301afd5447b7c1bb4835b3b89273e4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Skin_Not_Sun_Exposed_Suprapubic.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d9788a11625e9882a15bc8e607add76582456e053b37980c411a7f327a81e2ea",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Skin_Sun_Exposed_Lower_leg.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "0ed30b1231a73ebaacc0b96f3890a93f66deabc7b0783fad7f0ecf1e15c7bf40",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Small_Intestine_Terminal_Ileum.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "40e6ebf1623f5e70f1e106c3fb797c3de02fdef65e80e775f8882121d9c07dd8",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Spleen.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "cad01cc09c7c31d8aa59c64753d6f01b63ab2e67a786f960c2fbfbba6c209018",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Stomach.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "703d81df6df2b527b0ddbfccc65382f1a0488bd05fac2f49f9bb1dd7decba2c3",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Testis.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "18931fb2eec8df46e8f9e3ec49dcb2ae262fb9e6338cfde02e3c5fb18e22d8fe",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Thyroid.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "2f87ed405853b6f37a400d890373923110dd2e7abbc6e36fb74591fd00665af2",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Uterus.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "77f747841ae22405890f65397f0b3edda0cc9cfe7cb57732aa85e2482709e36c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Vagina.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "2b5824f866eacba815f0812b073b5b06f232467d0d9819961d1cb1e0ee82b729",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Whole_Blood.v11.eGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a11d9947b39770f4215efe8a1eb10476380607b8db610b8a48619fcfed8ac465",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Adipose_Subcutaneous.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "082142651d9f9e5e9035045026a158e8b0976a25315afbcd2717d089a0babed6",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Adipose_Visceral_Omentum.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "6574155ddca0523e29d56b057501669a89b0331ef478f6c3fa6daf6c061350eb",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Adrenal_Gland.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "fea99bd65536492eb4bc07a30009289a7df633459c5cf9d37b36bc0af2395cbd",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Artery_Aorta.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "027e2e9d01d3a2e54266cc62391c0ea81ac2d647d703594cd39670b1ce10d014",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Artery_Coronary.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "c44d3656840fb5bcaaa18dcb051d5f47660fa0bde6d3b54c6d4dc8f54e4f06ec",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Artery_Tibial.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "7f5416bbcc540d92ac7fcd47e8c50da8e91abde0a7993328abd463897354eae3",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Bladder.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "adb598d5f774bcde319e03cdd4c1e6d0d6a4d00c70f008705f6eceefc643d47c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Amygdala.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "11ebdb09a5434bcc59b7ce6b86e71fdb363f5c253b2191686a71bc4a99a2e0bb",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Anterior_cingulate_cortex_BA24.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1ea007af7ae2f27505bfa9d9731d0ea150500575b6632355f708be81b408622d",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Caudate_basal_ganglia.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "74398994e9091787d0c919d209b8d8a85b42f690456995e5e19073cd91d7787f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Cerebellar_Hemisphere.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "dcc8d17b61b4773e079c39e2b33ae91857adc6600005db9fac3d97eac1ca3244",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Cerebellum.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "5461d3b75d232b789b73b0a4bf6b180511aa1f84b526c31ea1b6d788ba47a684",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Cortex.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "cb824089736b81213db638b51c667b185f2962ff5cfd98883ed618aaa62a5ac3",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Frontal_Cortex_BA9.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e8154524683a6c374198bd9e02f955ede7f16183a82f3a4b9108b65810349e69",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Hippocampus.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d80fc3cbc4aa95ea80407f5ee798196f5a08e65f75f2681be3339fb64a2d1d40",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Hypothalamus.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a1179a6d202421b754c5beeb96071823f5a7eba7de33c9ba060b7b705543461f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Nucleus_accumbens_basal_ganglia.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "6527e4ac292547456e48c1ad2519a686356bd30e732c2a2483150240f93662a4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Putamen_basal_ganglia.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "dd31531304d75c9d6f782aa8e1e7e932de3b853aad2ece6610d2d840b34931b7",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Spinal_cord_cervical_c-1.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "ce616d98f1af29ab8b8c815dd5eff1dd95a9763b134950ef7ecfa270be316434",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Brain_Substantia_nigra.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "410095294e3cc4c57ed96d115e3a8199840e49cc9e8ccf523bb5584360b88cd2",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Breast_Mammary_Tissue.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "95ca402e0d9a84fc5507ac1cb6d954c33cc27405e416a079bfaf419283ced38b",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Cells_Cultured_fibroblasts.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "bb8c57fa7af8b801dbddf32ea6c302e50d44bf3786651c350281648a68b8991f",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Cells_EBV-transformed_lymphocytes.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "92374294a3317a272f696d13d0414627f6e9eaad0c78fa2f3fb4b65b0be0eb31",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Colon_Sigmoid.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "25ec713749874435e033a5ffb682cdf52e27cd9ffc0cecdb50be2faf53253787",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Colon_Transverse.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "24f3e09536100371c754d438190444f63300011d958998d5d78f89df58810a93",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Esophagus_Gastroesophageal_Junction.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "9ec7fb6979c3c0dba3fca61abc19487d73b7d062566cf110ed548c6651a4c43c",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Esophagus_Mucosa.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "88e00d0b9c2759a05740dc0c54aacb3b6472c3029eba7729ceb1ed64c3fa646a",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Esophagus_Muscularis.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "1e90a33d565c1243c5b762808623dedc3fe4645723c2a59022a55e4c419171c4",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Heart_Atrial_Appendage.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "56eac0aedcb14cfba070f792a60ac77d3c3dbeb784d6f56376b3faeea562efc5",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Heart_Left_Ventricle.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "06d2b1cb4c87e882a3cdc0c04319871c10e787671d73be49536f3273efa36611",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Kidney_Cortex.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a9fc47b260f92c264768a9314d499483e02b5793fb08eb5d0b7ec8fb0a061123",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Liver.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "97ca8359693a91e0292c58c73ecc82b4c28132a8a3fb3a295f273b7b15078425",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Lung.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "676e6ee60c06b6ecaa07d6a3a23166616a80548c749fce6b257702b5d6506135",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Minor_Salivary_Gland.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a337c24dc2974f68a8871d5ff7712b12d91595e4a9e8491dd9031309f7925740",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Muscle_Skeletal.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "cf76eb407d69bb7b5db28cde983a5db5ad057fe2cf6acd5a590195990ca34758",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Nerve_Tibial.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "39291ed7b4a0dfa238c77a022a42a26743a1a659c44b94ac0cada3179901ef50",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Ovary.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e95268af92302559b4df672ad81c4a09d2b741f770f677f5818777420afe4d07",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Pancreas.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a66f21a2c24bac24e1c3dec0cb8819f2b4513bb39d710b77764ed5072d662416",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Pituitary.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a4f0188abd121f49230713955fa3afe94a8cac201c5dc7dcfff98a7e429b9597",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Prostate.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "68e1741efa07feede3e904874f49c1bc2bc635cadb488fc7eac388d0ca6f4176",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Skin_Not_Sun_Exposed_Suprapubic.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "457bcc4d17d2405a0fe820866c65d25858bc3d6030a555ddadf6ed2e46532b19",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Skin_Sun_Exposed_Lower_leg.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "a6698e813151043de6831eff441399c63ccf99d0972333d4363c1aab5ba1a1bd",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Small_Intestine_Terminal_Ileum.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "b248cbd6ed5b6c0a89c37ec7ab2317348b7fc29789d9d0bf4b34e72fa367b0a7",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Spleen.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "873a9c9d648e4fc07d8b148892201f33d4a3b0e4e6b4dd98f1ad6101f4178d95",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Stomach.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "06c0a7f52471e77c573702bab0708e06959241bde6a7a3e3301282010cd3a252",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Testis.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "0d1767e539fa218c6ffda81ec94f7a67107a415b0da1257a7af1f80bee7674ee",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Thyroid.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "333c4013b8b44f72d76769eb5c75ce99a2598affa3fa5c24f3a66964eda2f41e",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Uterus.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "f8839afe912712d80c514b1253d205267a2b9f48def62d60ab2a3a78c1d32892",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Vagina.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "5ee9fa137534fbf32a2f1c9dcc85b337d78a8456edfb6bc2937be78bab579be3",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Whole_Blood.v11.sGenes.txt.gz"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "4544b688c18a307e62dbfd334961b2e3835e478e2f25fd0f962db4272ced39e6",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Cells_Cultured_fibroblasts.v11.eQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "d118b5a2dfa72cb6275caeb0783cd425155a4079fda01e332d9709ee6a9e46f2",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-eqtl/Nerve_Tibial.v11.eQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "6dff8a8c08d5746b067984ba780daf66dbc766f0b154a5835983fb849dc21f2d",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Cells_Cultured_fibroblasts.v11.sQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        },
+        {
+          "blob": "e407e219ea6e0606b42e7f760dd0adfe4ce8d6eee5f32c0d2507cf4943175e05",
+          "role": "source_evidence",
+          "selector": {
+            "source_file": "inputs/native/v11-sqtl/Nerve_Tibial.v11.sQTLs.signif_pairs.parquet"
+          },
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "inherited_artifact": "artifact_378dd1dde1005fd0e0d90e022df9e66367227636b3f092afd63a1abd31f6624a",
+        "new_LD_or_colocalization": false,
+        "revision": "r002",
+        "source_finemapping_reused": true
+      },
+      "references": [
+        "66af2b46eb02cd7fcdff1a371c085f98737b29da3839757d2ef3c351a1ea0af3",
+        "f3917763d0bf710a504c8746c8f429d4d0d0a377805af2ebfafc47b1fa3a1818",
+        "ea350bd96e84514af5757251c4997c1542d3599139572626b66e0b93ef4587d9"
+      ]
+    },
+    "derivation_key": "bee2c67ab0fe7b80a2f78a094352ec4443788099ff22056988351866ffab99bb",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [
+      "GTEx exact all-tested variant IDs not retrieved; num_var/feature coverage retained.",
+      "Cross-tissue/release estimates not independent replication. TwinsUK exact junction not testable in retrieved export.",
+      "Source gene/splice q-values and SuSiE sets reused; no new genotype-level model."
+    ],
+    "output": {
+      "blob": "6d9084f75e939f15229500ecb85e223dac865feb5b7e14ac00e818cf8f4b3009",
+      "bytes": 1642,
+      "name": "analysis-validation.json"
+    },
+    "output_role": "analysis-validation.json",
+    "scientific_applicability": "assessed at question time",
+    "summary": "GTEx v11 coverage and source effects; GENCORD independent test; human interval/transcript mapping; no causal or promoter-initiation claim.",
+    "title": "Human PMP22 regulatory QTL audit: analysis-validation.json"
+  },
+  "manifest_blob": "1b3cadd3b84ef72a9133522212cc06065839adc98511587bbc3aca17a4d26280",
+  "output_blob": "6d9084f75e939f15229500ecb85e223dac865feb5b7e14ac00e818cf8f4b3009",
+  "output_role": "analysis-validation.json",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_d92e774244f949299423875c784a8323/trial/workspace/blobs/sha256/6d/6d9084f75e939f15229500ecb85e223dac865feb5b7e14ac00e818cf8f4b3009",
+  "questions": [
+    {
+      "question_id": "q_24754b6258b14e91",
+      "relationship": "produced"
+    }
+  ]
+}

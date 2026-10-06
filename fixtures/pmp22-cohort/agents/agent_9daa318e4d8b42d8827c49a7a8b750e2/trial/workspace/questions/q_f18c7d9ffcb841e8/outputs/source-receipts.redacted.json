@@ -1,0 +1,91 @@
+{
+  "scope": "Selected inherited receipts, not current source acquisition; headers/session material omitted.",
+  "entries": [
+    {
+      "parent": "questions/q_277f20df4b6b47cc/inputs/continuation/transport.json",
+      "parent_sha256": "c47d8bf39b110f99b084e2f6935cdf5be03a85a3377fb715c83b51515605125a",
+      "pointer": "/entries/50",
+      "entry": {
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6607759/",
+        "path": "inputs/continuation/PMC6607759.html",
+        "started": "2026-09-28T01:37:14.614549+00:00",
+        "bytes": 297301,
+        "status": 200,
+        "sha256": "b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e"
+      },
+      "matching_saved_bytes": true
+    },
+    {
+      "parent": "questions/q_277f20df4b6b47cc/inputs/upstream/receipts/PMC6623163.xml.json",
+      "parent_sha256": "f2f21e5814c76ead6de4699e955581ba37cf748e4fb6b332be22e00ac18a845c",
+      "entry": {
+        "name": "PMC6623163.xml",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML",
+        "started": "2026-09-29T20:41:08.347744+00:00",
+        "bytes": 150,
+        "status": "failed",
+        "http_status": 500,
+        "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML",
+        "content_type": "application/json",
+        "sha256": "37669e33963e54daaade7891715c5b4d2b5cd2480b03289cb9eb8ca3e4054c3a",
+        "error": "500 Server Error:  for url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML",
+        "finished": "2026-09-29T20:41:09.625335+00:00"
+      },
+      "matching_saved_bytes": true,
+      "interpretation": "HTTP500 JSON error, not article XML"
+    },
+    {
+      "parent": "questions/q_277f20df4b6b47cc/inputs/upstream/receipts/PMC6623163.html.json",
+      "parent_sha256": "3297901ed5c7890064221f617b6b624dab33ec47651de1f86d86ecabd0e1ef92",
+      "entry": {
+        "name": "PMC6623163.html",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6623163/",
+        "started": "2026-09-29T20:42:09.207236+00:00",
+        "bytes": 21274,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6623163/",
+        "content_type": "text/html; charset=utf-8",
+        "sha256": "f409ca91a367a1795e1515be65c80cf3a0f6e9ca3c6c2c014d2583a025aac0f9",
+        "finished": "2026-09-29T20:42:09.558669+00:00"
+      },
+      "matching_saved_bytes": true,
+      "interpretation": "HTTP200 reCAPTCHA challenge, not primary article"
+    },
+    {
+      "parent": "questions/q_277f20df4b6b47cc/inputs/upstream/receipts/PMC6623163-biocc.json.json",
+      "parent_sha256": "61ba6721c747263e3df91a3bee14a134b00951f403d9440959bbe483d7814c57",
+      "entry": {
+        "name": "PMC6623163-biocc.json",
+        "url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6623163/unicode",
+        "started": "2026-09-29T20:43:35.633425+00:00",
+        "bytes": 6148,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6623163/unicode",
+        "content_type": "text/html",
+        "sha256": "3acc5f4c51ec704cd708d3379196db9f66442a96c9bf275773710e0de0196b52",
+        "finished": "2026-09-29T20:43:35.930028+00:00"
+      },
+      "matching_saved_bytes": true,
+      "interpretation": "HTTP200 non-JSON BioC no-result response"
+    },
+    {
+      "parent": "questions/q_277f20df4b6b47cc/inputs/upstream/receipts/FDFT1-supplements.zip.json",
+      "parent_sha256": "a62c14a2f9b2907d5f06e8fc24bc9d9f4fae51b5f65425718d37a432a29a04c3",
+      "entry": {
+        "name": "FDFT1-supplements.zip",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13042600/supplementaryFiles",
+        "started": "2026-09-29T20:43:35.911310+00:00",
+        "bytes": 71599407,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13042600/supplementaryFiles",
+        "content_type": "application/zip",
+        "sha256": "934fe99bbdccca00a285fc092bc03f26f1e72282fe35eadfc7ebb51b777b5738",
+        "finished": "2026-09-29T20:49:12.266205+00:00"
+      },
+      "interpretation": "inherited archive acquisition, verified locally; not a new HTTP request"
+    }
+  ]
+}

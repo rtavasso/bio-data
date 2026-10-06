@@ -1,0 +1,151 @@
+"""Reproducible processed-end and model-space analysis; no raw sequence processing."""
+import csv
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import statistics
+from collections import defaultdict
+q=Path(__file__).resolve().parents[1];o=q/'outputs';m=json.loads((q/'inputs/frozen-manifest-r001.json').read_text())
+blobs=Path(os.environ['BIO_WORKSPACE'])/'blobs/sha256'
+def src(label):
+    h=m[label]['blob'];p=blobs/h[:2]/h
+    assert hashlib.sha256(p.read_bytes()).hexdigest()==h
+    return p
+def load(label):return json.loads(src(label).read_text())
+def save(name,value): (o/name).write_text(json.dumps(value,indent=2,allow_nan=False))
+def table(name,rows):
+    assert rows
+    with (o/name).open('w') as f:
+        w=csv.DictWriter(f,fieldnames=list(rows[0]),delimiter='\t');w.writeheader();w.writerows(rows)
+seq=load('human-terminal-sequence')['seq'].upper(); rc=lambda x:x.translate(str.maketrans('ACGT','TGCA'))[::-1]
+seed0,seed1=15230232,15230240
+assert rc(seq[seed0-15228999:seed1-15228999])=='TGGTGCTA'
+cdna=load('canonical-cdna')['seq'];cds=load('canonical-cds')['seq'];assert len(cds)==483 and cds[-3:] in ['TAA','TAG','TGA']
+cds_offset=cdna.find(cds);assert cds_offset>=0
+annotation=load('ensembl-PMP22');canonical=next(t for t in annotation['Transcript'] if t.get('is_canonical'))
+assert annotation['strand']==-1 and annotation['assembly_name']=='GRCh38'
+exons=sorted([(e['start'],e['end']) for e in canonical['Exon']],reverse=True)
+pos=[p for a,b in exons for p in range(b,a-1,-1)]
+assert len(pos)==len(cdna)
+cds_positions=set(pos[cds_offset:cds_offset+len(cds)])
+utr_positions=pos[cds_offset+len(cds):]
+assert all(a>b for a,b in zip(utr_positions,utr_positions[1:]))
+stop_end=min(cds_positions);utr_start=max(utr_positions)
+site_cdna=next(i for i,p in enumerate(pos) if p==seed1)
+assert cdna[site_cdna:site_cdna+8]=='TGGTGCTA'
+# Native BED vs TSV convention verified row by row; do not treat TSV starts as BED starts.
+bed={}
+with gzip.open(src('polyasite-human-bed'),'rt') as f:
+    for line in f:
+        c=line.rstrip().split('\t')
+        if c[0]=='17' and 15166000<int(c[1])<15282300:bed[c[3]]=c
+with gzip.open(src('polyasite-human-tpm'),'rt') as f:
+    rd=csv.reader(f,delimiter='\t');header=next(rd);samples=header[13:];locus=[];controls=[];total_atlas=0
+    for c in rd:
+        total_atlas+=1
+        if c[0]=='17' and 15166000<int(c[1])<15282300:
+            assert c[3] in bed and int(c[1])-1==int(bed[c[3]][1]) and c[2]==bed[c[3]][2]
+            locus.append(c)
+        if c[10]=='SERPINE1' and c[9]=='TE':controls.append(c)
+terminal=[c for c in locus if c[10]=='PMP22' and c[9]=='TE' and int(c[8])>=2 and min(utr_positions)<=int(c[3].split(':')[1])<=utr_start]
+assert len(terminal)==3
+all_terminal=[c for c in locus if c[10]=='PMP22' and c[9]=='TE' and min(utr_positions)<=int(c[3].split(':')[1])<=utr_start]
+assert len(all_terminal)==6
+ends=[]
+for c in locus:
+    assert abs(statistics.mean(map(float,c[13:]))-float(c[4]))<1e-5
+    assert int(c[6])==int(c[3].split(':')[1])
+    rep=int(c[3].split(':')[1]);same=c[5]=='-';in_terminal=same and min(utr_positions)<=rep<=utr_start
+    ends.append({'assembly':'GRCh38.96','chrom':'chr17','strand':c[5],'cluster_id':c[3],'bed_start_0':int(bed[c[3]][1]),'bed_end_exclusive':int(c[2]),'tsv_start_native_1':int(c[1]),'representative_1':rep,'source_annotation':c[9],'source_gene':c[10],'score_native':float(c[4]),'n_protocols':int(c[8]),'fraction_samples_support_native':float(c[7]),'pooled_mean_tpm':float(c[4]),'polyA_signal_source':c[12],'primary_denominator':c in terminal,'miR29_8mer_retained_if_contiguous_terminal_exon':(rep<=seed0+1) if in_terminal else 'unassigned_path','classification':'canonical_terminal_UTR_cleavage_cluster' if in_terminal else ('antisense_or_other_gene' if not same or c[10] not in ['PMP22','NA'] else 'other_end_requires_transcript_linkage')})
+rows=[]
+for j,label in enumerate(samples):
+    vals={c[3]:float(c[13+j]) for c in terminal};den=sum(vals.values());ret=sum(v for k,v in vals.items() if int(k.split(':')[1])<=seed0+1)
+    all_den=sum(float(c[13+j]) for c in all_terminal)
+    all_ret=sum(float(c[13+j]) for c in all_terminal if int(c[6])<=seed0+1)
+    fields=label.split('|');assert len(fields)==5
+    sample,protocol,context,title,treatment=fields
+    gsm=re.search(r'GSM\d+',sample)
+    rows.append({'sample_label':label,'sample_id_native':sample,'gsm':gsm.group(0) if gsm else None,'protocol_label':protocol,'source_context':context,'source_title':title,'treatment_native':treatment,'terminal_tpm':den,'retaining_tpm':ret,'lacking_tpm':den-ret,'retaining_fraction':ret/den if den else None,'all6_terminal_tpm':all_den,'all6_retaining_fraction':all_ret/all_den if all_den else None,**vals})
+poly_summary={}
+for cutoff in [0.1,1,5]:
+    r=[r for r in rows if r['terminal_tpm']>=cutoff]
+    poly_summary[str(cutoff)]={'n_libraries':len(r),'n_gsm_known':len(set(x['gsm'] for x in r if x['gsm'])),'n_nonGSM_source_IDs':sum(x['gsm'] is None for x in r),'min_retaining_fraction':min(x['retaining_fraction'] for x in r),'median_retaining_fraction':statistics.median(x['retaining_fraction'] for x in r),'n_fraction_ge_0.95':sum(x['retaining_fraction']>=.95 for x in r),'fraction_libraries_ge_0.95':statistics.mean(x['retaining_fraction']>=.95 for x in r)}
+# PAPERCLIP perturbation: methods-justified retrospective endpoint check, not RBP-wide screen.
+# SERPINE1 is a source-paper validated APA control, chosen before its values are inspected.
+pc=[r for r in rows if 'PAPERCLIP' in r['sample_label']]
+pc_rows=[]
+for r in pc:
+    j=samples.index(r['sample_label']); cv=[(int(c[3].split(':')[1]),c[5],float(c[13+j])) for c in controls]
+    assert len(set(x[1] for x in cv))==1
+    distal=max(x[0] for x in cv) if cv[0][1]=='+' else min(x[0] for x in cv)
+    den=sum(x[2] for x in cv);dist=sum(x[2] for x in cv if x[0]==distal)
+    pc_rows.append({**r,'SERPINE1_TE_total_tpm':den,'SERPINE1_most_distal_cluster_fraction':dist/den if den else None,'SERPINE1_TE_sites_in_denominator':len(cv)})
+# Exact FLAIR gene_id + transcript_id are retained; count ID is explicitly constructed and verified.
+models={};gtf_locus=[];gtf_rows=0
+with gzip.open(src('gtex-flair-gtf'),'rt') as f:
+    for line in f:
+        if line.startswith('#'):continue
+        c=line.rstrip().split('\t');gtf_rows+=1
+        if 'ENSG00000109099.13' not in c[-1]:continue
+        a=dict(re.findall(r'(\w+) "([^"]+)"',c[-1])); tid=a['transcript_id']
+        assert c[0]=='chr17' and c[6]=='-' and a['gene_id']=='ENSG00000109099.13'
+        d=models.setdefault(tid,{'gene_id':a['gene_id'],'exons':[]})
+        if c[2]=='exon':d['exons'].append((int(c[3]),int(c[4])))
+        gtf_locus.append(line)
+count_to_model={t+'_'+v['gene_id']:t for t,v in models.items()};assert len(count_to_model)==len(models)
+counts={};count_rows=0
+with gzip.open(src('gtex-flair-counts'),'rt') as f:
+    rd=csv.reader(f,delimiter='\t');head=next(rd);lsamples=head[1:]
+    for c in rd:
+        count_rows+=1
+        if c[0] in count_to_model:
+            assert len(c)==len(head);vals=list(map(float,c[1:]));assert all(v>=0 and v.is_integer() for v in vals)
+            counts[count_to_model[c[0]]]=vals
+        elif 'ENSG00000109099' in c[0]:raise AssertionError('unjoined target count key '+c[0])
+assert set(counts)==set(models)
+modelrows=[]
+for tid,d in models.items():
+    ep=sorted(d['exons'],reverse=True)
+    covers=lambda lo,hi:any(a<=lo and b>=hi for a,b in ep)
+    present={p for a,b in ep for p in range(a,b+1)}
+    complete=cds_positions<=present
+    # Both literal GTF start and +1 start interpretation retain seed; endpoints are not exact cleavage observations.
+    retain=covers(seed0+1,seed1);retain_alt=any(a+1<=seed0+1 and b>=seed1 for a,b in ep)
+    assert retain==retain_alt
+    d.update(coding_compatible=complete,site_retained=retain)
+    modelrows.append({'assembly':'GRCh38','source':'GTEx_v9_FLAIR_filtered','transcript_id':tid,'gene_id':d['gene_id'],'count_id_exact':tid+'_'+d['gene_id'],'strand':'-','native_gtf_start_min':min(a for a,b in ep),'native_gtf_end_max':max(b for a,b in ep),'exon_path_native':json.dumps(ep),'canonical_CDS_bases_contained':complete,'miR29_8mer_contained':retain,'assigned_count_sum':sum(counts[tid]),'coordinate_caveat':'FLAIR native starts one base below contemporary Ensembl starts for shared exons; exact cleavage not inferred; retention invariant to +1 start'})
+# Donor/tissue from actual GTEx metadata; suffix annotations kept separate and never treated as donors.
+with src('gtex-v8-samples').open() as f:
+    meta={r['SAMPID']:r for r in csv.DictReader(f,delimiter='\t')}
+prefixmeta=defaultdict(list)
+for r in meta.values():prefixmeta[r['SAMPID'].split('-SM-')[0]].append(r)
+lrows=[]
+for j,label in enumerate(lsamples):
+    base=label.split('_')[0] if label.startswith('GTEX-') else None
+    mr=meta.get(base,{})
+    alternatives=prefixmeta.get(base.split('-SM-')[0],[]) if base else []
+    tissues=set(x['SMTSD'] for x in alternatives if x['SMTSD'])
+    compatible=bool(alternatives) and len(tissues)==1
+    subject='-'.join(base.split('-')[:2]) if compatible or mr else None
+    total=sum(v[j] for v in counts.values());den=sum(counts[t][j] for t,d in models.items() if d['coding_compatible']);ret=sum(counts[t][j] for t,d in models.items() if d['coding_compatible'] and d['site_retained'])
+    allret=sum(counts[t][j] for t,d in models.items() if d['site_retained'])
+    lrows.append({'sample_label':label,'base_sample_exact':base,'metadata_exact_match':bool(mr),'metadata_specimen_prefix_compatible':compatible,'metadata_candidate_SAMPIDs':';'.join(x['SAMPID'] for x in alternatives),'subject_from_GTEx_id':subject,'tissue':mr.get('SMTSD') or (next(iter(tissues)) if compatible else None),'suffix':label[len(base):] if base else label,'all_assigned_counts':total,'coding_compatible_counts':den,'retaining_coding_counts':ret,'coding_retaining_fraction':ret/den if den else None,'all_retaining_fraction':allret/total if total else None})
+lsummary={}
+for cutoff in [5,10,20]:
+    eligible=[r for r in lrows if r['coding_compatible_counts']>=cutoff]
+    known=[r for r in eligible if r['metadata_specimen_prefix_compatible']]
+    lsummary[str(cutoff)]={'n_eligible_libraries':len(eligible),'n_exact_metadata_match':sum(r['metadata_exact_match'] for r in eligible),'n_specimen_prefix_compatible':len(known),'n_known_subjects':len(set(r['subject_from_GTEx_id'] for r in known)),'n_known_base_samples':len(set(r['base_sample_exact'] for r in known)),'min_retaining_fraction':min((r['coding_retaining_fraction'] for r in eligible),default=None),'n_fraction_ge_0.95':sum(r['coding_retaining_fraction']>=.95 for r in eligible),'arithmetic_rule_passed':(statistics.mean(r['coding_retaining_fraction']>=.95 for r in eligible)>=.8) if eligible else None}
+by_subject=defaultdict(lambda:[0.,0.])
+for r in lrows:
+    if r['subject_from_GTEx_id']:
+        by_subject[r['subject_from_GTEx_id']][0]+=r['coding_compatible_counts'];by_subject[r['subject_from_GTEx_id']][1]+=r['retaining_coding_counts']
+subjectrows=[{'subject':k,'coding_counts_sum_repeated_contexts':v[0],'retaining_counts':v[1],'retaining_fraction':v[1]/v[0] if v[0] else None} for k,v in by_subject.items()]
+sites=[{'site_id':'human_miR29_seed8mer','assembly':'GRCh38','chrom':'chr17','start0':seed0,'end0':seed1,'strand':'-','sequence_RNA_orientation':'TGGTGCTA','canonical_transcript':canonical['id']+'.'+str(canonical['version']),'canonical_cdna_start1':site_cdna+1,'canonical_utr_start1':site_cdna-(cds_offset+len(cds))+1,'support':'Human sequence-compatible conserved seed; rat7nt deletion tests site specificity PMID19170179; human650bp deletion/reporters span region PMID37337674, not isolated human seed editing'}, {'site_id':'human_650bp_genomic_deletion_reported','assembly':'GRCh38.p13 WGS per methods; deletion boundaries not verified','chrom':'chr17','start0':None,'end0':None,'strand':'-','sequence_RNA_orientation':'not_an_RNA_end','canonical_transcript':'paper token ENST0000312280 retained as malformed; no automatic repair','canonical_cdna_start1':None,'canonical_utr_start1':None,'support':'PMID37337674 Figure3 caption names chr17:15230858 as SNP rs13422, NOT a deletion boundary. Exact deletion boundaries are not recoverable from inspected text. No invented boundary/coordinate conflict is claimed.'}]
+summary={'polyasite':{'atlas_rows':total_atlas,'n_libraries':len(samples),'locus_rows':len(locus),'primary_terminal_sites':[c[3] for c in terminal],'coverage_sensitivity':poly_summary,'largest_escape_adequate_coverage':sorted([r for r in rows if r['terminal_tpm']>=1],key=lambda x:x['retaining_fraction'])[:10]},'longread':{'gtf_feature_rows':gtf_rows,'count_feature_rows':count_rows,'models':len(models),'libraries':len(lsamples),'all_assigned_counts':sum(sum(v) for v in counts.values()),'model_ends_native':sorted(set(r['native_gtf_start_min'] for r in modelrows)),'n_coding_compatible_models':sum(d['coding_compatible'] for d in models.values()),'coverage_sensitivity':lsummary,'unmatched_metadata':[r['sample_label'] for r in lrows if not r['metadata_exact_match']],'locked_prediction_status':'arithmetic/model-space check only; source end collapsing/annotation dependence and sample units limit natural-APA validation'},'coordinate_checks':{'canonical_cds_length_including_stop':len(cds),'canonical_utr_length':len(utr_positions),'canonical_utr_highest_genomic_base':utr_start,'seed_utr_offset_1':site_cdna-(cds_offset+len(cds))+1,'TSV_start_minus1_equals_BED_start_all_locus':True,'human_deletion_exact_boundaries_verified':False},'no_claims':['No target half-life, loading or promoter-initiation estimate','No inference of zero natural APA from filtered longread models','No biological independence from read/library multiplicity','No source-paper novelty claim','No isolated human miR29-site proof from broad deletion']}
+table('end-site-map.tsv',ends);table('polyasite-usage.tsv',rows);table('paperclip-perturbation.tsv',pc_rows);table('transcript-site-map.tsv',modelrows);table('longread-usage.tsv',lrows);table('longread-subject-check.tsv',subjectrows);table('regulatory-site-map.tsv',sites)
+save('rna-ends-analysis.json',summary)
+(o/'flair-PMP22-native-final.gtf').write_text(''.join(gtf_locus))
+print(json.dumps(summary,indent=2));print('PAPERCLIP',json.dumps(pc_rows,indent=2))

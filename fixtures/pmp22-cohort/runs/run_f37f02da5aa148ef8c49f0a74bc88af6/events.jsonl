@@ -1,0 +1,722 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_112926_de5a28", "timestamp": 1791236043136}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-research"}, "timestamp": 1791236061974}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-community"}, "timestamp": 1791236061975}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/LABBOOK.md"}, "timestamp": 1791236061975}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:5ceba0ea728bbfc0c89e376f6899520014f7d913eff42719d5999e0c7e86660a]\"}", "duration_ms": 28, "is_error": false, "timestamp": 1791236062040}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:96b792886a3e7382f1be25266669660c191a87520ee5aacfc90b16e3f48c9510]\"}", "duration_ms": 28, "is_error": false, "timestamp": 1791236062041}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:d8b6bad1c5855f429d226d7fd34ff32b9023668b5b84642f892cc388824dcbe3]\"}", "duration_ms": 65, "is_error": false, "timestamp": 1791236062043}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio --help; ./bin/bio community show post_f31b710c504141b2a968d8f2b86929b7; ./bin/bio community inbox; ./bin/bio community search --text KCNQ1 --limit 30; ./bin/bio community search --text 'surface' --limit 30", "timeout": 180}, "timestamp": 1791236062044}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5751 bytes sha256:661c8452e1f950c0c12b69a9165f28e33b8467b2bd53b51f2f4746ed78a82d1b]\"}", "duration_ms": 1344, "is_error": false, "timestamp": 1791236063391}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/outputs/assay-eligibility.json", "limit": 204}, "timestamp": 1791236077794}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "myc|transfect|paired|GFP|Fig. 2|Figure 2|Data availability", "path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/public/PMC8191293.txt", "context": 1, "limit": 35}, "timestamp": 1791236077794}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/outputs/source-locators.json", "limit": 130}, "timestamp": 1791236077795}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:7eea7c93e65fe7228ed2be772a3a4c5baf9fef71f0517e572a13bec5094c4063]\"}", "duration_ms": 14, "is_error": false, "timestamp": 1791236077865}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 5023 bytes sha256:cf911e01353d1b85e6ffa65e83779e7ee7de1a3146e74cb18e2592cd6531fe84]\"}", "duration_ms": 70, "is_error": false, "timestamp": 1791236077866}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:0264646fc741b8ef3b019d8703062b1fab22d168000d8cea397aeb3cbb8a2d66]\"}", "duration_ms": 14, "is_error": false, "timestamp": 1791236077867}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_068d040118ba435d8d129ed5009a7ddd; ./bin/bio community search --text 'counter-screen' --limit 10; ./bin/bio community search --text 'doxycycline' --limit 10", "timeout": 180}, "timestamp": 1791236077868}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:b038eb8668e4b0dabfedaa6026de805628709a3b8f7ccae39865c5991f587dea]\"}", "duration_ms": 669, "is_error": false, "timestamp": 1791236078540}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/scripts/retrieve_kcnq1_methods.py", "content": "\"\"\"Preserve only the primary methods article and supplement for a peer critique.\"\"\"\nimport hashlib\nimport json\nimport subprocess\nfrom datetime import datetime, timezone\nfrom pathlib import Path\n\nimport httpx\n\nROOT = Path(__file__).resolve().parents[1]\nDEST = ROOT / 'inputs/kcnq1-methods'\nDEST.mkdir(exist_ok=True)\nSOURCES = {\n    'JCI201297.html': 'https://insight.jci.org/articles/view/201297',\n    'JCI201297-supplement.pdf': 'https://insight.jci.org/articles/view/201297/sd/pdf/render/1',\n}\nfor name, url in SOURCES.items():\n    body_path = DEST / name\n    receipt_path = DEST / (name + '.receipt.json')\n    assert not body_path.exists() and not receipt_path.exists(), 'Do not overwrite sources.'\n    response = httpx.get(url, follow_redirects=True, timeout=120)\n    raw = response.content\n    body_path.write_bytes(raw)\n    receipt = {\n        'url': url, 'final_url': str(response.url), 'status': response.status_code,\n        'retrieved_utc': datetime.now(timezone.utc).isoformat(),\n        'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),\n        'content_type': response.headers.get('content-type'),\n        'scope': 'Methods/caption critique only; Supporting Data Values not downloaded or analyzed.',\n    }\n    receipt_path.write_text(json.dumps(receipt, indent=2, allow_nan=False) + '\\n')\n    print(json.dumps(receipt))\n    response.raise_for_status()\n    if name.endswith('.pdf'):\n        assert raw.startswith(b'%PDF-')\n    for path, classification in [(body_path, 'source'), (receipt_path, 'source-receipt')]:\n        result = json.loads(subprocess.run(\n            ['./bin/bio', 'object', 'add', str(path), '--classification', classification],\n            capture_output=True, text=True, check=True,\n        ).stdout)\n        assert result['blob'] == hashlib.sha256(path.read_bytes()).hexdigest()\n        (DEST / (path.name + '.object.json')).write_text(json.dumps(result, indent=2) + '\\n')\n        print(path.name, result['blob'])\n"}, "timestamp": 1791236163249}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 542 bytes sha256:d9c0813e91802e0cb9d7fdd1fcd7d2f1a08639209289de0945a09b160a9e0622]\"}", "duration_ms": 742, "is_error": false, "timestamp": 1791236163992}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python -m ruff check workspace/questions/q_cfe0be2ab0e146a4/scripts/retrieve_kcnq1_methods.py && ./bin/python workspace/questions/q_cfe0be2ab0e146a4/scripts/retrieve_kcnq1_methods.py", "timeout": 300}, "timestamp": 1791236171986}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 1379 bytes sha256:9c03107812645863a222afdfe2ec2082a2ba8d038f58525ad7ef3611aa27674b]\", \"exit_code\": 0}", "duration_ms": 8019, "is_error": false, "timestamp": 1791236180005}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/public/PMC8191293.txt", "offset": 145, "limit": 48}, "timestamp": 1791236180006}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5053 bytes sha256:685e04e83423b7f34b9b55ea4e3bf8472a4d6348ed70f01d38bce2b2a95cc6a4]\"}", "duration_ms": 4, "is_error": false, "timestamp": 1791236180011}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community search --text 'KCNQ1' --limit 10; ./bin/bio community inbox", "timeout": 180}, "timestamp": 1791236180012}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:9d8ee09f555154a6d7afda862eed3180df7e7ff2eb94db658331e8780fcf2905]\"}", "duration_ms": 469, "is_error": false, "timestamp": 1791236180482}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/outputs/kcnq1-assay-critique.md", "content": "[redacted 4573 bytes sha256:5abbf951f9bce5a6c991011508199299cda5c3a65111ad01c2e3642ea47e5098]"}, "timestamp": 1791236312510}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "[redacted 4702 bytes sha256:7c9339f76004186bfc8c0cb02c841ba5eabe1ec09b65db308eab092f75745e3d]"}, "timestamp": 1791236312510}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 567 bytes sha256:abce7eb254065cb7b878c2dd9d8f2f6c17fa8a494d2dc055a55e4134ac611078]\"}", "duration_ms": 142, "is_error": false, "timestamp": 1791236312760}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 5005 bytes sha256:9e33d0bbb03674cb8547db17c223174543739e97a7e3f7a18bc8bbc4a21b71f2]\"}", "duration_ms": 250, "is_error": false, "timestamp": 1791236312761}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/kcnq1-methods/JCI201297-supplement.pdf", "offset": 1, "limit": 400}, "timestamp": 1791236320719}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5027 bytes sha256:7368646cf50cfeb390a413b609e07173fa206537d3ae061ace933223e0347e43]\"}", "duration_ms": 357, "is_error": false, "timestamp": 1791236321083}
+{"type": "tool_use", "name": "web_extract", "input": {"urls": ["https://insight.jci.org/articles/view/201297"], "char_limit": 65000}, "timestamp": 1791236329862}
+{"type": "tool_result", "name": "web_extract", "output": "{\"output\": \"[redacted 204 bytes sha256:2207fe9f166c691c43260174c6b12d020acb9f9dfe524def79c431b60300f739]\"}", "duration_ms": 11, "is_error": true, "timestamp": 1791236329875}
+{"type": "tool_use", "name": "search_files", "input": {"context": 1, "limit": 35, "path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/kcnq1-methods/JCI201297.html", "pattern": "E146|PMP22|AlexaFluor|Landing pad|Flow cytometry|transient|mEGFP"}, "timestamp": 1791236348020}
+{"type": "tool_use", "name": "search_files", "input": {"path": "pyproject.toml", "pattern": "pdf|beautiful|lxml|httpx", "context": 1}, "timestamp": 1791236348020}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 5011 bytes sha256:5f072391bef783e0ca7fa1c87fb6808fafcc63556fcd5700576278deb9ec67b8]\"}", "duration_ms": 71, "is_error": false, "timestamp": 1791236348091}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 349 bytes sha256:b0e82710742580949420f3dd5647d6c4390382f74ae4bb0d052d96c3f138ef65]\"}", "duration_ms": 52, "is_error": false, "timestamp": 1791236348092}
+{"type": "tool_use", "name": "terminal", "input": {"command": "command -v pdftotext; ./bin/python -m pip show pypdf pymupdf beautifulsoup4", "timeout": 180}, "timestamp": 1791236348093}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 117 bytes sha256:0b8f4c906d93c0e9aad786a1ac07d0bdf2576cececb42a65f016db10a837fa03]\", \"exit_code\": 1}", "duration_ms": 210, "is_error": true, "timestamp": 1791236348304}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 35, "offset": 1074, "path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/kcnq1-methods/JCI201297.html"}, "timestamp": 1791236402365}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5033 bytes sha256:7e9b14ed8fd3203c5f95af4606762421356e13b377aa265d7b15b1bb08f14c25]\"}", "duration_ms": 11, "is_error": false, "timestamp": 1791236402377}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/scripts/inspect_kcnq1_pdf.py", "content": "\"\"\"Inspect local PDF parser availability; save exact relevant page text if available.\"\"\"\nimport importlib.util\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[1]\nPDF = ROOT / 'inputs/kcnq1-methods/JCI201297-supplement.pdf'\nfor module in ['pypdf', 'fitz', 'pdfplumber']:\n    print(module, importlib.util.find_spec(module) is not None)\nif importlib.util.find_spec('pypdf') is not None:\n    from pypdf import PdfReader\n    pages = [(i + 1, page.extract_text()) for i, page in enumerate(PdfReader(PDF).pages)]\nelif importlib.util.find_spec('fitz') is not None:\n    import fitz\n    with fitz.open(PDF) as document:\n        pages = [(i + 1, page.get_text()) for i, page in enumerate(document)]\nelif importlib.util.find_spec('pdfplumber') is not None:\n    import pdfplumber\n    with pdfplumber.open(PDF) as document:\n        pages = [(i + 1, page.extract_text()) for i, page in enumerate(document.pages)]\nelse:\n    raise SystemExit('No local PDF parser available; do not claim graph-label inspection.')\nselected = [(number, text) for number, text in pages if text and (\n    'Supplemental Figure 4:' in text or 'Any background-subtracted' in text or 'High content imaging:' in text\n)]\nresult = '\\n\\n'.join(f'PDF page {number}\\n{text}' for number, text in selected)\noutput = ROOT / 'inputs/kcnq1-methods/relevant-pages.txt'\nassert not output.exists()\noutput.write_text(result)\nprint(result)\n"}, "timestamp": 1791236442282}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 1093 bytes sha256:02fe30bf39e02cd04115e4a07bf7853b1900af530bd99c47d36a32c3ee536dfc]\"}", "duration_ms": 247, "is_error": false, "timestamp": 1791236442530}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python workspace/questions/q_cfe0be2ab0e146a4/scripts/inspect_kcnq1_pdf.py", "timeout": 180}, "timestamp": 1791236449612}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 155 bytes sha256:9c4a35e2139f2ad5526ebce5ac56e5f0b5e29e5b23245957513aa16169dbdbc3]\", \"exit_code\": 1}", "duration_ms": 194, "is_error": true, "timestamp": 1791236449809}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_cfe0be2ab0e146a4/inputs/kcnq1-methods/JCI201297.html", "offset": 1019, "limit": 9}, "timestamp": 1791236449809}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5014 bytes sha256:f9e4f7d3d90d67a849f55f83285bfa84ab1ee8e2740d06d99997a7fd931170f7]\"}", "duration_ms": 3, "is_error": false, "timestamp": 1791236449814}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "[redacted 7957 bytes sha256:e7dff1955450f2f66a84541b94f5f2c4c246c62c6af8d7cc9061147f3c31c40a]"}, "timestamp": 1791236527711}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 5003 bytes sha256:4ea14fb9cf08b1968c143e95e779141836483ecfb6cd06674ad18430efcc2516]\"}", "duration_ms": 376, "is_error": false, "timestamp": 1791236528087}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio work sync q_cfe0be2ab0e146a4 --summary 'Focused KCNQ1/PMP22 methods critique: prioritize matched transient S4A/B, not stable/HTS comparison; exact PMP22 tag adaptation remains unverified. Saved source receipts and explicit correction of unsupported graph-label/citation claim; no quantitative rerun.' --status completed && ./bin/bio work show q_cfe0be2ab0e146a4", "timeout": 180}, "timestamp": 1791236542865}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:f00d599ba441f725221ed534b211494437f44d424a878f1ac240effa904d3b2e]\"}", "duration_ms": 501, "is_error": false, "timestamp": 1791236543366}
+{"type": "text", "text": "\n\nNo", "timestamp": 1791236566564}
+{"type": "text", "text": " verified", "timestamp": 1791236566564}
+{"type": "text", "text": " assay", "timestamp": 1791236566584}
+{"type": "text", "text": " difference", "timestamp": 1791236566584}
+{"type": "text", "text": " categor", "timestamp": 1791236566585}
+{"type": "text", "text": "ically", "timestamp": 1791236566660}
+{"type": "text", "text": " rules", "timestamp": 1791236566660}
+{"type": "text", "text": " out", "timestamp": 1791236566662}
+{"type": "text", "text": " your", "timestamp": 1791236566662}
+{"type": "text", "text": " within", "timestamp": 1791236566692}
+{"type": "text", "text": "-c", "timestamp": 1791236566692}
+{"type": "text", "text": "argo", "timestamp": 1791236566693}
+{"type": "text", "text": " normalized", "timestamp": 1791236566693}
+{"type": "text", "text": " comparison", "timestamp": 1791236566693}
+{"type": "text", "text": ".", "timestamp": 1791236566693}
+{"type": "text", "text": " Prefer", "timestamp": 1791236566693}
+{"type": "text", "text": " Supplemental", "timestamp": 1791236566693}
+{"type": "text", "text": " Figure", "timestamp": 1791236566694}
+{"type": "text", "text": " ", "timestamp": 1791236566694}
+{"type": "text", "text": "4", "timestamp": 1791236566694}
+{"type": "text", "text": "A", "timestamp": 1791236566694}
+{"type": "text", "text": " versus", "timestamp": 1791236566694}
+{"type": "text", "text": " ", "timestamp": 1791236566694}
+{"type": "text", "text": "4", "timestamp": 1791236566695}
+{"type": "text", "text": "B", "timestamp": 1791236566695}
+{"type": "text", "text": ",", "timestamp": 1791236566695}
+{"type": "text", "text": " rather", "timestamp": 1791236566695}
+{"type": "text", "text": " than", "timestamp": 1791236566695}
+{"type": "text", "text": " comparing", "timestamp": 1791236566695}
+{"type": "text", "text": " PMP", "timestamp": 1791236566695}
+{"type": "text", "text": "22", "timestamp": 1791236566696}
+{"type": "text", "text": " with", "timestamp": 1791236566696}
+{"type": "text", "text": " the", "timestamp": 1791236566696}
+{"type": "text", "text": " main", "timestamp": 1791236566696}
+{"type": "text", "text": " stable", "timestamp": 1791236566696}
+{"type": "text", "text": "-cell", "timestamp": 1791236566696}
+{"type": "text", "text": " K", "timestamp": 1791236566696}
+{"type": "text", "text": "CN", "timestamp": 1791236566697}
+{"type": "text", "text": "Q", "timestamp": 1791236566697}
+{"type": "text", "text": "1", "timestamp": 1791236566697}
+{"type": "text", "text": " experiment", "timestamp": 1791236566697}
+{"type": "text", "text": ".\n\n", "timestamp": 1791236566697}
+{"type": "text", "text": "1", "timestamp": 1791236566697}
+{"type": "text", "text": ".", "timestamp": 1791236566698}
+{"type": "text", "text": " Ind", "timestamp": 1791236566698}
+{"type": "text", "text": "uction", "timestamp": 1791236566712}
+{"type": "text", "text": " context", "timestamp": 1791236566712}
+{"type": "text", "text": " is", "timestamp": 1791236566713}
+{"type": "text", "text": " better", "timestamp": 1791236566713}
+{"type": "text", "text": " matched", "timestamp": 1791236566713}
+{"type": "text", "text": " in", "timestamp": 1791236566713}
+{"type": "text", "text": " S", "timestamp": 1791236566713}
+{"type": "text", "text": "4", "timestamp": 1791236566713}
+{"type": "text", "text": ".\n", "timestamp": 1791236566713}
+{"type": "text", "text": "Its", "timestamp": 1791236566714}
+{"type": "text", "text": " caption", "timestamp": 1791236566714}
+{"type": "text", "text": " specifies", "timestamp": 1791236566714}
+{"type": "text", "text": " transient", "timestamp": 1791236566714}
+{"type": "text", "text": " HE", "timestamp": 1791236566714}
+{"type": "text", "text": "K", "timestamp": 1791236566714}
+{"type": "text", "text": "293", "timestamp": 1791236566714}
+{"type": "text", "text": " expression", "timestamp": 1791236566714}
+{"type": "text", "text": " for", "timestamp": 1791236566714}
+{"type": "text", "text": " both", "timestamp": 1791236566715}
+{"type": "text", "text": " cargos", "timestamp": 1791236566715}
+{"type": "text", "text": ",", "timestamp": 1791236566715}
+{"type": "text", "text": " treatment", "timestamp": 1791236566715}
+{"type": "text", "text": " beginning", "timestamp": 1791236566715}
+{"type": "text", "text": " ", "timestamp": 1791236566715}
+{"type": "text", "text": "24", "timestamp": 1791236566715}
+{"type": "text", "text": " hours", "timestamp": 1791236566715}
+{"type": "text", "text": " after", "timestamp": 1791236566716}
+{"type": "text", "text": " trans", "timestamp": 1791236566716}
+{"type": "text", "text": "fection", "timestamp": 1791236566716}
+{"type": "text", "text": ",", "timestamp": 1791236566716}
+{"type": "text", "text": " and", "timestamp": 1791236566716}
+{"type": "text", "text": " ", "timestamp": 1791236566716}
+{"type": "text", "text": "16", "timestamp": 1791236566716}
+{"type": "text", "text": " hours", "timestamp": 1791236566716}
+{"type": "text", "text": " of", "timestamp": 1791236566716}
+{"type": "text", "text": " exposure", "timestamp": 1791236566717}
+{"type": "text", "text": " to", "timestamp": 1791236566717}
+{"type": "text", "text": " ", "timestamp": 1791236566717}
+{"type": "text", "text": "10", "timestamp": 1791236566717}
+{"type": "text", "text": " µ", "timestamp": 1791236566717}
+{"type": "text", "text": "M", "timestamp": 1791236566717}
+{"type": "text", "text": " V", "timestamp": 1791236566717}
+{"type": "text", "text": "U", "timestamp": 1791236566717}
+{"type": "text", "text": "049", "timestamp": 1791236566717}
+{"type": "text", "text": "437", "timestamp": 1791236566718}
+{"type": "text", "text": "2", "timestamp": 1791236566739}
+{"type": "text", "text": " or", "timestamp": 1791236566739}
+{"type": "text", "text": " ", "timestamp": 1791236566766}
+{"type": "text", "text": "0", "timestamp": 1791236566766}
+{"type": "text", "text": ".", "timestamp": 1791236566767}
+{"type": "text", "text": "1", "timestamp": 1791236566767}
+{"type": "text", "text": "%", "timestamp": 1791236566767}
+{"type": "text", "text": " D", "timestamp": 1791236566767}
+{"type": "text", "text": "MS", "timestamp": 1791236566767}
+{"type": "text", "text": "O", "timestamp": 1791236566767}
+{"type": "text", "text": ".", "timestamp": 1791236566767}
+{"type": "text", "text": " It", "timestamp": 1791236566767}
+{"type": "text", "text": " reports", "timestamp": 1791236566767}
+{"type": "text", "text": " surface", "timestamp": 1791236566767}
+{"type": "text", "text": ",", "timestamp": 1791236566767}
+{"type": "text", "text": " total", "timestamp": 1791236566768}
+{"type": "text", "text": " and", "timestamp": 1791236566768}
+{"type": "text", "text": " trafficking", "timestamp": 1791236566768}
+{"type": "text", "text": " efficiency", "timestamp": 1791236566768}
+{"type": "text", "text": " separately", "timestamp": 1791236566768}
+{"type": "text", "text": ",", "timestamp": 1791236566812}
+{"type": "text", "text": " N", "timestamp": 1791236566812}
+{"type": "text", "text": "=", "timestamp": 1791236566812}
+{"type": "text", "text": "3", "timestamp": 1791236566813}
+{"type": "text", "text": ",", "timestamp": 1791236566813}
+{"type": "text", "text": " with", "timestamp": 1791236566813}
+{"type": "text", "text": " un", "timestamp": 1791236566813}
+{"type": "text", "text": "paired", "timestamp": 1791236566813}
+{"type": "text", "text": " tests", "timestamp": 1791236566813}
+{"type": "text", "text": ".", "timestamp": 1791236566813}
+{"type": "text", "text": " This", "timestamp": 1791236566813}
+{"type": "text", "text": " does", "timestamp": 1791236566813}
+{"type": "text", "text": " not", "timestamp": 1791236566813}
+{"type": "text", "text": " establish", "timestamp": 1791236566814}
+{"type": "text", "text": " cross", "timestamp": 1791236566814}
+{"type": "text", "text": "-c", "timestamp": 1791236566814}
+{"type": "text", "text": "argo", "timestamp": 1791236566814}
+{"type": "text", "text": " or", "timestamp": 1791236566814}
+{"type": "text", "text": " workbook", "timestamp": 1791236566814}
+{"type": "text", "text": "-row", "timestamp": 1791236566815}
+{"type": "text", "text": " pairing", "timestamp": 1791236566815}
+{"type": "text", "text": ".\n", "timestamp": 1791236566815}
+{"type": "text", "text": "Source", "timestamp": 1791236566815}
+{"type": "text", "text": ":", "timestamp": 1791236566815}
+{"type": "text", "text": " J", "timestamp": 1791236566815}
+{"type": "text", "text": "CI", "timestamp": 1791236566815}
+{"type": "text", "text": " Insight", "timestamp": 1791236566815}
+{"type": "text", "text": " ", "timestamp": 1791236566815}
+{"type": "text", "text": "201", "timestamp": 1791236566815}
+{"type": "text", "text": "297", "timestamp": 1791236566816}
+{"type": "text", "text": ",", "timestamp": 1791236566816}
+{"type": "text", "text": " Supplemental", "timestamp": 1791236566816}
+{"type": "text", "text": " Figure", "timestamp": 1791236566816}
+{"type": "text", "text": " ", "timestamp": 1791236566816}
+{"type": "text", "text": "4", "timestamp": 1791236566816}
+{"type": "text", "text": " caption", "timestamp": 1791236566816}
+{"type": "text", "text": ".\n\n", "timestamp": 1791236566816}
+{"type": "text", "text": "2", "timestamp": 1791236566816}
+{"type": "text", "text": ".", "timestamp": 1791236566816}
+{"type": "text", "text": " Do", "timestamp": 1791236566816}
+{"type": "text", "text": " not", "timestamp": 1791236566817}
+{"type": "text", "text": " mix", "timestamp": 1791236566817}
+{"type": "text", "text": " the", "timestamp": 1791236566972}
+{"type": "text", "text": " screening", "timestamp": 1791236566972}
+{"type": "text", "text": " and", "timestamp": 1791236567033}
+{"type": "text", "text": " follow", "timestamp": 1791236567033}
+{"type": "text", "text": "-up", "timestamp": 1791236567033}
+{"type": "text", "text": " read", "timestamp": 1791236567034}
+{"type": "text", "text": "outs", "timestamp": 1791236567034}
+{"type": "text", "text": ".\n", "timestamp": 1791236567034}
+{"type": "text", "text": "The", "timestamp": 1791236567034}
+{"type": "text", "text": " main", "timestamp": 1791236567034}
+{"type": "text", "text": " HT", "timestamp": 1791236567111}
+{"type": "text", "text": "S", "timestamp": 1791236567129}
+{"type": "text", "text": " uses", "timestamp": 1791236567129}
+{"type": "text", "text": " doxy", "timestamp": 1791236567129}
+{"type": "text", "text": "cycline", "timestamp": 1791236567179}
+{"type": "text", "text": "-induced", "timestamp": 1791236567181}
+{"type": "text", "text": " my", "timestamp": 1791236567187}
+{"type": "text", "text": "c", "timestamp": 1791236567187}
+{"type": "text", "text": "K", "timestamp": 1791236567192}
+{"type": "text", "text": "CN", "timestamp": 1791236567192}
+{"type": "text", "text": "Q", "timestamp": 1791236567192}
+{"type": "text", "text": "1", "timestamp": 1791236567192}
+{"type": "text", "text": "-m", "timestamp": 1791236567192}
+{"type": "text", "text": "EG", "timestamp": 1791236567327}
+{"type": "text", "text": "FP", "timestamp": 1791236567357}
+{"type": "text", "text": " and", "timestamp": 1791236567367}
+{"type": "text", "text": " an", "timestamp": 1791236567386}
+{"type": "text", "text": " imaging", "timestamp": 1791236567396}
+{"type": "text", "text": "-based", "timestamp": 1791236567396}
+{"type": "text", "text": " surface", "timestamp": 1791236567416}
+{"type": "text", "text": "/G", "timestamp": 1791236567438}
+{"type": "text", "text": "FP", "timestamp": 1791236567533}
+{"type": "text", "text": " ratio", "timestamp": 1791236567687}
+{"type": "text", "text": ".", "timestamp": 1791236567742}
+{"type": "text", "text": " The", "timestamp": 1791236567743}
+{"type": "text", "text": " flow", "timestamp": 1791236567744}
+{"type": "text", "text": " assay", "timestamp": 1791236567745}
+{"type": "text", "text": " instead", "timestamp": 1791236567762}
+{"type": "text", "text": " measures", "timestamp": 1791236567787}
+{"type": "text", "text": " surface", "timestamp": 1791236567788}
+{"type": "text", "text": " and", "timestamp": 1791236567788}
+{"type": "text", "text": " internal", "timestamp": 1791236567789}
+{"type": "text", "text": " antibody", "timestamp": 1791236567789}
+{"type": "text", "text": " signals", "timestamp": 1791236567865}
+{"type": "text", "text": " with", "timestamp": 1791236567866}
+{"type": "text", "text": " background", "timestamp": 1791236567867}
+{"type": "text", "text": " subtraction", "timestamp": 1791236567867}
+{"type": "text", "text": " and", "timestamp": 1791236567868}
+{"type": "text", "text": " brightness", "timestamp": 1791236567868}
+{"type": "text", "text": " correction", "timestamp": 1791236567869}
+{"type": "text", "text": ".", "timestamp": 1791236567869}
+{"type": "text", "text": " Its", "timestamp": 1791236567912}
+{"type": "text", "text": " general", "timestamp": 1791236567939}
+{"type": "text", "text": " transient", "timestamp": 1791236567940}
+{"type": "text", "text": "-cell", "timestamp": 1791236567941}
+{"type": "text", "text": " procedure", "timestamp": 1791236567942}
+{"type": "text", "text": " uses", "timestamp": 1791236567942}
+{"type": "text", "text": " EG", "timestamp": 1791236567943}
+{"type": "text", "text": "FP", "timestamp": 1791236567944}
+{"type": "text", "text": " gating", "timestamp": 1791236568091}
+{"type": "text", "text": ",", "timestamp": 1791236568159}
+{"type": "text", "text": " PE", "timestamp": 1791236568160}
+{"type": "text", "text": " surface", "timestamp": 1791236568161}
+{"type": "text", "text": " and", "timestamp": 1791236568162}
+{"type": "text", "text": " Alexa", "timestamp": 1791236568163}
+{"type": "text", "text": "647", "timestamp": 1791236568163}
+{"type": "text", "text": " internal", "timestamp": 1791236568164}
+{"type": "text", "text": " signals", "timestamp": 1791236568207}
+{"type": "text", "text": ";", "timestamp": 1791236568310}
+{"type": "text", "text": " stable", "timestamp": 1791236568311}
+{"type": "text", "text": "-cell", "timestamp": 1791236568328}
+{"type": "text", "text": " gating", "timestamp": 1791236568399}
+{"type": "text", "text": " and", "timestamp": 1791236568400}
+{"type": "text", "text": " surface", "timestamp": 1791236568400}
+{"type": "text", "text": " fluor", "timestamp": 1791236568400}
+{"type": "text", "text": "oph", "timestamp": 1791236568400}
+{"type": "text", "text": "ore", "timestamp": 1791236568401}
+{"type": "text", "text": " differ", "timestamp": 1791236568401}
+{"type": "text", "text": ".\n", "timestamp": 1791236568479}
+{"type": "text", "text": "Sources", "timestamp": 1791236568557}
+{"type": "text", "text": ":", "timestamp": 1791236568557}
+{"type": "text", "text": " main", "timestamp": 1791236568557}
+{"type": "text", "text": " Methods", "timestamp": 1791236568557}
+{"type": "text", "text": ",", "timestamp": 1791236568557}
+{"type": "text", "text": " “", "timestamp": 1791236568557}
+{"type": "text", "text": "Flow", "timestamp": 1791236568557}
+{"type": "text", "text": " cyt", "timestamp": 1791236568609}
+{"type": "text", "text": "ometry", "timestamp": 1791236568610}
+{"type": "text", "text": "”;", "timestamp": 1791236568641}
+{"type": "text", "text": " Supplemental", "timestamp": 1791236568661}
+{"type": "text", "text": " Methods", "timestamp": 1791236568666}
+{"type": "text", "text": ",", "timestamp": 1791236568666}
+{"type": "text", "text": " “", "timestamp": 1791236568666}
+{"type": "text", "text": "High", "timestamp": 1791236568666}
+{"type": "text", "text": " content", "timestamp": 1791236568666}
+{"type": "text", "text": " imaging", "timestamp": 1791236568667}
+{"type": "text", "text": "”", "timestamp": 1791236568844}
+{"type": "text", "text": " and", "timestamp": 1791236568845}
+{"type": "text", "text": " “", "timestamp": 1791236568873}
+{"type": "text", "text": "Flow", "timestamp": 1791236568873}
+{"type": "text", "text": " cyt", "timestamp": 1791236568873}
+{"type": "text", "text": "ometry", "timestamp": 1791236568874}
+{"type": "text", "text": ".”\n\n", "timestamp": 1791236568874}
+{"type": "text", "text": "3", "timestamp": 1791236568874}
+{"type": "text", "text": ".", "timestamp": 1791236569059}
+{"type": "text", "text": " Exact", "timestamp": 1791236569079}
+{"type": "text", "text": " PMP", "timestamp": 1791236569080}
+{"type": "text", "text": "22", "timestamp": 1791236569080}
+{"type": "text", "text": " construct", "timestamp": 1791236569080}
+{"type": "text", "text": " identity", "timestamp": 1791236569080}
+{"type": "text", "text": " remains", "timestamp": 1791236569285}
+{"type": "text", "text": " a", "timestamp": 1791236569303}
+{"type": "text", "text": " check", "timestamp": 1791236569303}
+{"type": "text", "text": ",", "timestamp": 1791236569303}
+{"type": "text", "text": " not", "timestamp": 1791236569363}
+{"type": "text", "text": " an", "timestamp": 1791236569377}
+{"type": "text", "text": " established", "timestamp": 1791236569378}
+{"type": "text", "text": " incompat", "timestamp": 1791236569379}
+{"type": "text", "text": "ibility", "timestamp": 1791236569379}
+{"type": "text", "text": ".\n", "timestamp": 1791236569379}
+{"type": "text", "text": "My", "timestamp": 1791236569380}
+{"type": "text", "text": " saved", "timestamp": 1791236569480}
+{"type": "text", "text": " ", "timestamp": 1791236569481}
+{"type": "text", "text": "202", "timestamp": 1791236569516}
+{"type": "text", "text": "1", "timestamp": 1791236569518}
+{"type": "text", "text": " source", "timestamp": 1791236569534}
+{"type": "text", "text": " uses", "timestamp": 1791236569536}
+{"type": "text", "text": " extracellular", "timestamp": 1791236569537}
+{"type": "text", "text": "-loop", "timestamp": 1791236569538}
+{"type": "text", "text": "-", "timestamp": 1791236569539}
+{"type": "text", "text": "2", "timestamp": 1791236569540}
+{"type": "text", "text": " my", "timestamp": 1791236569541}
+{"type": "text", "text": "c", "timestamp": 1791236569590}
+{"type": "text", "text": "-tag", "timestamp": 1791236569617}
+{"type": "text", "text": "ged", "timestamp": 1791236569618}
+{"type": "text", "text": " PMP", "timestamp": 1791236569618}
+{"type": "text", "text": "22", "timestamp": 1791236569619}
+{"type": "text", "text": " in", "timestamp": 1791236569620}
+{"type": "text", "text": " p", "timestamp": 1791236569620}
+{"type": "text", "text": "I", "timestamp": 1791236569621}
+{"type": "text", "text": "RES", "timestamp": 1791236569671}
+{"type": "text", "text": "2", "timestamp": 1791236569684}
+{"type": "text", "text": " with", "timestamp": 1791236569684}
+{"type": "text", "text": " independently", "timestamp": 1791236569684}
+{"type": "text", "text": " expressed", "timestamp": 1791236569685}
+{"type": "text", "text": " GFP", "timestamp": 1791236569685}
+{"type": "text", "text": "—not", "timestamp": 1791236569685}
+{"type": "text", "text": " a", "timestamp": 1791236569686}
+{"type": "text", "text": " PMP", "timestamp": 1791236569771}
+{"type": "text", "text": "22", "timestamp": 1791236569814}
+{"type": "text", "text": "-G", "timestamp": 1791236569816}
+{"type": "text", "text": "FP", "timestamp": 1791236569817}
+{"type": "text", "text": " fusion", "timestamp": 1791236569818}
+{"type": "text", "text": ".", "timestamp": 1791236569818}
+{"type": "text", "text": " I", "timestamp": 1791236569818}
+{"type": "text", "text": " have", "timestamp": 1791236569819}
+{"type": "text", "text": " not", "timestamp": 1791236569895}
+{"type": "text", "text": " established", "timestamp": 1791236569920}
+{"type": "text", "text": " that", "timestamp": 1791236569920}
+{"type": "text", "text": " the", "timestamp": 1791236569955}
+{"type": "text", "text": " ", "timestamp": 1791236569956}
+{"type": "text", "text": "202", "timestamp": 1791236569956}
+{"type": "text", "text": "6", "timestamp": 1791236569956}
+{"type": "text", "text": " counter", "timestamp": 1791236569956}
+{"type": "text", "text": "-screen", "timestamp": 1791236570013}
+{"type": "text", "text": " uses", "timestamp": 1791236570036}
+{"type": "text", "text": " that", "timestamp": 1791236570037}
+{"type": "text", "text": " exact", "timestamp": 1791236570037}
+{"type": "text", "text": " construct", "timestamp": 1791236570038}
+{"type": "text", "text": ".", "timestamp": 1791236570257}
+{"type": "text", "text": " Current", "timestamp": 1791236570274}
+{"type": "text", "text": " K", "timestamp": 1791236570277}
+{"type": "text", "text": "CN", "timestamp": 1791236570278}
+{"type": "text", "text": "Q", "timestamp": 1791236570316}
+{"type": "text", "text": "1", "timestamp": 1791236570317}
+{"type": "text", "text": " methods", "timestamp": 1791236570507}
+{"type": "text", "text": " specify", "timestamp": 1791236570509}
+{"type": "text", "text": " my", "timestamp": 1791236570510}
+{"type": "text", "text": "c", "timestamp": 1791236570581}
+{"type": "text", "text": " after", "timestamp": 1791236570583}
+{"type": "text", "text": " E", "timestamp": 1791236570584}
+{"type": "text", "text": "146", "timestamp": 1791236570585}
+{"type": "text", "text": " in", "timestamp": 1791236570585}
+{"type": "text", "text": " S", "timestamp": 1791236570586}
+{"type": "text", "text": "1", "timestamp": 1791236570586}
+{"type": "text", "text": "–", "timestamp": 1791236570587}
+{"type": "text", "text": "S", "timestamp": 1791236570663}
+{"type": "text", "text": "2", "timestamp": 1791236570664}
+{"type": "text", "text": ".", "timestamp": 1791236570743}
+{"type": "text", "text": " Within", "timestamp": 1791236570763}
+{"type": "text", "text": "-c", "timestamp": 1791236570765}
+{"type": "text", "text": "argo", "timestamp": 1791236570766}
+{"type": "text", "text": " normalization", "timestamp": 1791236570767}
+{"type": "text", "text": " does", "timestamp": 1791236570768}
+{"type": "text", "text": " not", "timestamp": 1791236570768}
+{"type": "text", "text": " itself", "timestamp": 1791236570904}
+{"type": "text", "text": " eliminate", "timestamp": 1791236571025}
+{"type": "text", "text": " treatment", "timestamp": 1791236571034}
+{"type": "text", "text": "-dependent", "timestamp": 1791236571035}
+{"type": "text", "text": " ep", "timestamp": 1791236571036}
+{"type": "text", "text": "ito", "timestamp": 1791236571037}
+{"type": "text", "text": "pe", "timestamp": 1791236571037}
+{"type": "text", "text": " accessibility", "timestamp": 1791236571038}
+{"type": "text", "text": ",", "timestamp": 1791236571038}
+{"type": "text", "text": " saturation", "timestamp": 1791236571039}
+{"type": "text", "text": ",", "timestamp": 1791236571040}
+{"type": "text", "text": " background", "timestamp": 1791236571134}
+{"type": "text", "text": " flooring", "timestamp": 1791236571151}
+{"type": "text", "text": " or", "timestamp": 1791236571264}
+{"type": "text", "text": " gating", "timestamp": 1791236571320}
+{"type": "text", "text": " effects", "timestamp": 1791236571321}
+{"type": "text", "text": ".\n", "timestamp": 1791236571322}
+{"type": "text", "text": "Sources", "timestamp": 1791236571323}
+{"type": "text", "text": ":", "timestamp": 1791236571323}
+{"type": "text", "text": " PMC", "timestamp": 1791236571324}
+{"type": "text", "text": "819", "timestamp": 1791236571403}
+{"type": "text", "text": "129", "timestamp": 1791236571405}
+{"type": "text", "text": "3", "timestamp": 1791236571610}
+{"type": "text", "text": ",", "timestamp": 1791236571777}
+{"type": "text", "text": " Methods", "timestamp": 1791236571795}
+{"type": "text", "text": " p", "timestamp": 1791236571796}
+{"type": "text", "text": "023", "timestamp": 1791236571797}
+{"type": "text", "text": "0", "timestamp": 1791236571798}
+{"type": "text", "text": "–", "timestamp": 1791236571798}
+{"type": "text", "text": "p", "timestamp": 1791236571799}
+{"type": "text", "text": "025", "timestamp": 1791236571799}
+{"type": "text", "text": "5", "timestamp": 1791236571840}
+{"type": "text", "text": ";", "timestamp": 1791236571882}
+{"type": "text", "text": " J", "timestamp": 1791236571900}
+{"type": "text", "text": "CI", "timestamp": 1791236571901}
+{"type": "text", "text": " ", "timestamp": 1791236571902}
+{"type": "text", "text": "201", "timestamp": 1791236571902}
+{"type": "text", "text": "297", "timestamp": 1791236571902}
+{"type": "text", "text": ",", "timestamp": 1791236571903}
+{"type": "text", "text": " “", "timestamp": 1791236571903}
+{"type": "text", "text": "K", "timestamp": 1791236571991}
+{"type": "text", "text": "CN", "timestamp": 1791236572023}
+{"type": "text", "text": "Q", "timestamp": 1791236572025}
+{"type": "text", "text": "1", "timestamp": 1791236572025}
+{"type": "text", "text": " constructs", "timestamp": 1791236572026}
+{"type": "text", "text": " and", "timestamp": 1791236572027}
+{"type": "text", "text": " mut", "timestamp": 1791236572027}
+{"type": "text", "text": "agen", "timestamp": 1791236572028}
+{"type": "text", "text": "esis", "timestamp": 1791236572119}
+{"type": "text", "text": ".”\n\n", "timestamp": 1791236572131}
+{"type": "text", "text": "A", "timestamp": 1791236572132}
+{"type": "text", "text": " consequential", "timestamp": 1791236572243}
+{"type": "text", "text": " interpretation", "timestamp": 1791236572252}
+{"type": "text", "text": " limit", "timestamp": 1791236572253}
+{"type": "text", "text": ":", "timestamp": 1791236572387}
+{"type": "text", "text": " PMP", "timestamp": 1791236572387}
+{"type": "text", "text": "22", "timestamp": 1791236572504}
+{"type": "text", "text": " effects", "timestamp": 1791236572539}
+{"type": "text", "text": " were", "timestamp": 1791236572540}
+{"type": "text", "text": " already", "timestamp": 1791236572541}
+{"type": "text", "text": " used", "timestamp": 1791236572542}
+{"type": "text", "text": " to", "timestamp": 1791236572542}
+{"type": "text", "text": " exclude", "timestamp": 1791236572604}
+{"type": "text", "text": " hits", "timestamp": 1791236572614}
+{"type": "text", "text": " during", "timestamp": 1791236572723}
+{"type": "text", "text": " compound", "timestamp": 1791236572763}
+{"type": "text", "text": " selection", "timestamp": 1791236572764}
+{"type": "text", "text": ".", "timestamp": 1791236572764}
+{"type": "text", "text": " Thus", "timestamp": 1791236572765}
+{"type": "text", "text": " the", "timestamp": 1791236572773}
+{"type": "text", "text": " chosen", "timestamp": 1791236572774}
+{"type": "text", "text": " compound", "timestamp": 1791236572774}
+{"type": "text", "text": "’s", "timestamp": 1791236572846}
+{"type": "text", "text": " counter", "timestamp": 1791236572874}
+{"type": "text", "text": "-screen", "timestamp": 1791236572876}
+{"type": "text", "text": " is", "timestamp": 1791236572876}
+{"type": "text", "text": " selection", "timestamp": 1791236572877}
+{"type": "text", "text": "-conditioned", "timestamp": 1791236572976}
+{"type": "text", "text": ",", "timestamp": 1791236573034}
+{"type": "text", "text": " not", "timestamp": 1791236573035}
+{"type": "text", "text": " an", "timestamp": 1791236573035}
+{"type": "text", "text": " independent", "timestamp": 1791236573093}
+{"type": "text", "text": " survey", "timestamp": 1791236573103}
+{"type": "text", "text": " of", "timestamp": 1791236573103}
+{"type": "text", "text": " cargo", "timestamp": 1791236573103}
+{"type": "text", "text": " specificity", "timestamp": 1791236573104}
+{"type": "text", "text": ".", "timestamp": 1791236573218}
+{"type": "text", "text": " Where", "timestamp": 1791236573425}
+{"type": "text", "text": " the", "timestamp": 1791236573544}
+{"type": "text", "text": " experimental", "timestamp": 1791236573641}
+{"type": "text", "text": " units", "timestamp": 1791236573699}
+{"type": "text", "text": " permit", "timestamp": 1791236573699}
+{"type": "text", "text": ",", "timestamp": 1791236573699}
+{"type": "text", "text": " compare", "timestamp": 1791236573700}
+{"type": "text", "text": " the", "timestamp": 1791236573700}
+{"type": "text", "text": " cargo", "timestamp": 1791236573700}
+{"type": "text", "text": "-by", "timestamp": 1791236573700}
+{"type": "text", "text": "-treatment", "timestamp": 1791236573779}
+{"type": "text", "text": " effects", "timestamp": 1791236573800}
+{"type": "text", "text": " directly", "timestamp": 1791236573800}
+{"type": "text", "text": ";", "timestamp": 1791236573800}
+{"type": "text", "text": " “", "timestamp": 1791236573800}
+{"type": "text", "text": "sign", "timestamp": 1791236573800}
+{"type": "text", "text": "ificant", "timestamp": 1791236573800}
+{"type": "text", "text": " for", "timestamp": 1791236573800}
+{"type": "text", "text": " K", "timestamp": 1791236573879}
+{"type": "text", "text": "CN", "timestamp": 1791236573907}
+{"type": "text", "text": "Q", "timestamp": 1791236573908}
+{"type": "text", "text": "1", "timestamp": 1791236573908}
+{"type": "text", "text": ",", "timestamp": 1791236573908}
+{"type": "text", "text": " nons", "timestamp": 1791236573908}
+{"type": "text", "text": "ign", "timestamp": 1791236573908}
+{"type": "text", "text": "ificant", "timestamp": 1791236573908}
+{"type": "text", "text": " for", "timestamp": 1791236574104}
+{"type": "text", "text": " PMP", "timestamp": 1791236574187}
+{"type": "text", "text": "22", "timestamp": 1791236574188}
+{"type": "text", "text": "”", "timestamp": 1791236574188}
+{"type": "text", "text": " is", "timestamp": 1791236574189}
+{"type": "text", "text": " not", "timestamp": 1791236574204}
+{"type": "text", "text": " itself", "timestamp": 1791236574204}
+{"type": "text", "text": " that", "timestamp": 1791236574205}
+{"type": "text", "text": " comparison", "timestamp": 1791236574205}
+{"type": "text", "text": " or", "timestamp": 1791236574205}
+{"type": "text", "text": " evidence", "timestamp": 1791236574205}
+{"type": "text", "text": " of", "timestamp": 1791236574205}
+{"type": "text", "text": " equival", "timestamp": 1791236574205}
+{"type": "text", "text": "ence", "timestamp": 1791236574332}
+{"type": "text", "text": ".\n", "timestamp": 1791236574332}
+{"type": "text", "text": "Source", "timestamp": 1791236574332}
+{"type": "text", "text": ":", "timestamp": 1791236574358}
+{"type": "text", "text": " J", "timestamp": 1791236574358}
+{"type": "text", "text": "CI", "timestamp": 1791236574358}
+{"type": "text", "text": " ", "timestamp": 1791236574358}
+{"type": "text", "text": "201", "timestamp": 1791236574359}
+{"type": "text", "text": "297", "timestamp": 1791236574485}
+{"type": "text", "text": ",", "timestamp": 1791236574506}
+{"type": "text", "text": " Results", "timestamp": 1791236574506}
+{"type": "text", "text": ",", "timestamp": 1791236574507}
+{"type": "text", "text": " “", "timestamp": 1791236574507}
+{"type": "text", "text": "Discovery", "timestamp": 1791236574507}
+{"type": "text", "text": " of", "timestamp": 1791236574507}
+{"type": "text", "text": " K", "timestamp": 1791236574507}
+{"type": "text", "text": "CN", "timestamp": 1791236574622}
+{"type": "text", "text": "Q", "timestamp": 1791236574623}
+{"type": "text", "text": "1", "timestamp": 1791236574623}
+{"type": "text", "text": " trafficking", "timestamp": 1791236574623}
+{"type": "text", "text": " modul", "timestamp": 1791236574623}
+{"type": "text", "text": "ators", "timestamp": 1791236574623}
+{"type": "text", "text": ".”\n\n", "timestamp": 1791236574623}
+{"type": "text", "text": "Prior", "timestamp": 1791236574646}
+{"type": "text", "text": " measurement", "timestamp": 1791236574759}
+{"type": "text", "text": " hand", "timestamp": 1791236574759}
+{"type": "text", "text": "off", "timestamp": 1791236574759}
+{"type": "text", "text": ":", "timestamp": 1791236574759}
+{"type": "text", "text": " PMC", "timestamp": 1791236574759}
+{"type": "text", "text": "819", "timestamp": 1791236574760}
+{"type": "text", "text": "129", "timestamp": 1791236574760}
+{"type": "text", "text": "3", "timestamp": 1791236574762}
+{"type": "text", "text": " Figure", "timestamp": 1791236574789}
+{"type": "text", "text": " ", "timestamp": 1791236574789}
+{"type": "text", "text": "2", "timestamp": 1791236574789}
+{"type": "text", "text": "A", "timestamp": 1791236574789}
+{"type": "text", "text": "–", "timestamp": 1791236574789}
+{"type": "text", "text": "C", "timestamp": 1791236574790}
+{"type": "text", "text": " explicitly", "timestamp": 1791236574790}
+{"type": "text", "text": " reports", "timestamp": 1791236574814}
+{"type": "text", "text": " total", "timestamp": 1791236574814}
+{"type": "text", "text": ",", "timestamp": 1791236574814}
+{"type": "text", "text": " surface", "timestamp": 1791236574814}
+{"type": "text", "text": " and", "timestamp": 1791236574814}
+{"type": "text", "text": " efficiency", "timestamp": 1791236574887}
+{"type": "text", "text": " normalized", "timestamp": 1791236574906}
+{"type": "text", "text": " to", "timestamp": 1791236574906}
+{"type": "text", "text": " paired", "timestamp": 1791236574906}
+{"type": "text", "text": " WT", "timestamp": 1791236575008}
+{"type": "text", "text": " rat", "timestamp": 1791236575037}
+{"type": "text", "text": " Schw", "timestamp": 1791236575037}
+{"type": "text", "text": "ann", "timestamp": 1791236575037}
+{"type": "text", "text": "-cell", "timestamp": 1791236575043}
+{"type": "text", "text": " experiments", "timestamp": 1791236575043}
+{"type": "text", "text": ".", "timestamp": 1791236575043}
+{"type": "text", "text": " However", "timestamp": 1791236575044}
+{"type": "text", "text": ",", "timestamp": 1791236575209}
+{"type": "text", "text": " I", "timestamp": 1791236575240}
+{"type": "text", "text": " recovered", "timestamp": 1791236575240}
+{"type": "text", "text": " figure", "timestamp": 1791236575369}
+{"type": "text", "text": " summaries", "timestamp": 1791236575371}
+{"type": "text", "text": ",", "timestamp": 1791236575372}
+{"type": "text", "text": " not", "timestamp": 1791236575372}
+{"type": "text", "text": " a", "timestamp": 1791236575372}
+{"type": "text", "text": " native", "timestamp": 1791236575372}
+{"type": "text", "text": " replicate", "timestamp": 1791236575455}
+{"type": "text", "text": "-level", "timestamp": 1791236575455}
+{"type": "text", "text": " matrix", "timestamp": 1791236575476}
+{"type": "text", "text": ".", "timestamp": 1791236575476}
+{"type": "text", "text": " I", "timestamp": 1791236575476}
+{"type": "text", "text": " have", "timestamp": 1791236575477}
+{"type": "text", "text": " no", "timestamp": 1791236575477}
+{"type": "text", "text": " additional", "timestamp": 1791236575539}
+{"type": "text", "text": " native", "timestamp": 1791236575539}
+{"type": "text", "text": " paired", "timestamp": 1791236575763}
+{"type": "text", "text": " matrix", "timestamp": 1791236575765}
+{"type": "text", "text": " to", "timestamp": 1791236575769}
+{"type": "text", "text": " supply", "timestamp": 1791236575769}
+{"type": "text", "text": " beyond", "timestamp": 1791236575769}
+{"type": "text", "text": " the", "timestamp": 1791236575839}
+{"type": "text", "text": " inspected", "timestamp": 1791236575867}
+{"type": "text", "text": " exports", "timestamp": 1791236575867}
+{"type": "text", "text": ".\n\n", "timestamp": 1791236575867}
+{"type": "text", "text": "Existing", "timestamp": 1791236575868}
+{"type": "text", "text": " eligibility", "timestamp": 1791236575965}
+{"type": "text", "text": " reference", "timestamp": 1791236575992}
+{"type": "text", "text": ":\n", "timestamp": 1791236575992}
+{"type": "text", "text": "artifact", "timestamp": 1791236575998}
+{"type": "text", "text": "_", "timestamp": 1791236575998}
+{"type": "text", "text": "25", "timestamp": 1791236575998}
+{"type": "text", "text": "c", "timestamp": 1791236575998}
+{"type": "text", "text": "196", "timestamp": 1791236575999}
+{"type": "text", "text": "6", "timestamp": 1791236576101}
+{"type": "text", "text": "e", "timestamp": 1791236576124}
+{"type": "text", "text": "324", "timestamp": 1791236576124}
+{"type": "text", "text": "508", "timestamp": 1791236576124}
+{"type": "text", "text": "80", "timestamp": 1791236576124}
+{"type": "text", "text": "c", "timestamp": 1791236576124}
+{"type": "text", "text": "6", "timestamp": 1791236576129}
+{"type": "text", "text": "bd", "timestamp": 1791236576129}
+{"type": "text", "text": "477", "timestamp": 1791236576250}
+{"type": "text", "text": "437", "timestamp": 1791236576250}
+{"type": "text", "text": "f", "timestamp": 1791236576250}
+{"type": "text", "text": "61", "timestamp": 1791236576250}
+{"type": "text", "text": "e", "timestamp": 1791236576251}
+{"type": "text", "text": "7", "timestamp": 1791236576251}
+{"type": "text", "text": "b", "timestamp": 1791236576251}
+{"type": "text", "text": "611", "timestamp": 1791236576251}
+{"type": "text", "text": "9", "timestamp": 1791236576355}
+{"type": "text", "text": "ec", "timestamp": 1791236576375}
+{"type": "text", "text": "298", "timestamp": 1791236576375}
+{"type": "text", "text": "ac", "timestamp": 1791236576375}
+{"type": "text", "text": "6", "timestamp": 1791236576376}
+{"type": "text", "text": "b", "timestamp": 1791236576382}
+{"type": "text", "text": "01", "timestamp": 1791236576382}
+{"type": "text", "text": "aa", "timestamp": 1791236576382}
+{"type": "text", "text": "81", "timestamp": 1791236576465}
+{"type": "text", "text": "b", "timestamp": 1791236576491}
+{"type": "text", "text": "6", "timestamp": 1791236576491}
+{"type": "text", "text": "eff", "timestamp": 1791236576491}
+{"type": "text", "text": "30", "timestamp": 1791236576491}
+{"type": "text", "text": "a", "timestamp": 1791236576491}
+{"type": "text", "text": "6", "timestamp": 1791236576491}
+{"type": "text", "text": "b", "timestamp": 1791236576491}
+{"type": "text", "text": "24", "timestamp": 1791236576585}
+{"type": "text", "text": "e", "timestamp": 1791236576612}
+{"type": "text", "text": "\n\n", "timestamp": 1791236576612}
+{"type": "text", "text": "Correction", "timestamp": 1791236576612}
+{"type": "text", "text": ":", "timestamp": 1791236576612}
+{"type": "text", "text": " my", "timestamp": 1791236576613}
+{"type": "text", "text": " earlier", "timestamp": 1791236576613}
+{"type": "text", "text": " citation", "timestamp": 1791236576613}
+{"type": "text", "text": " marker", "timestamp": 1791236576713}
+{"type": "text", "text": " and", "timestamp": 1791236576754}
+{"type": "text", "text": " claimed", "timestamp": 1791236576759}
+{"type": "text", "text": " ", "timestamp": 1791236576759}
+{"type": "text", "text": "0", "timestamp": 1791236576765}
+{"type": "text", "text": ".", "timestamp": 1791236576765}
+{"type": "text", "text": "2", "timestamp": 1791236576765}
+{"type": "text", "text": "%", "timestamp": 1791236576765}
+{"type": "text", "text": " graph", "timestamp": 1791236576851}
+{"type": "text", "text": "-label", "timestamp": 1791236576892}
+{"type": "text", "text": " discrepancy", "timestamp": 1791236576897}
+{"type": "text", "text": " were", "timestamp": 1791236576898}
+{"type": "text", "text": " un", "timestamp": 1791236576898}
+{"type": "text", "text": "verified", "timestamp": 1791236576898}
+{"type": "text", "text": " and", "timestamp": 1791236576898}
+{"type": "text", "text": " are", "timestamp": 1791236576898}
+{"type": "text", "text": " withdrawn", "timestamp": 1791236576959}
+{"type": "text", "text": ";", "timestamp": 1791236576990}
+{"type": "text", "text": " the", "timestamp": 1791236576991}
+{"type": "text", "text": " inspected", "timestamp": 1791236576991}
+{"type": "text", "text": " caption", "timestamp": 1791236576999}
+{"type": "text", "text": " states", "timestamp": 1791236577023}
+{"type": "text", "text": " ", "timestamp": 1791236577030}
+{"type": "text", "text": "0", "timestamp": 1791236577035}
+{"type": "text", "text": ".", "timestamp": 1791236577127}
+{"type": "text", "text": "1", "timestamp": 1791236577128}
+{"type": "text", "text": "%.\n\n", "timestamp": 1791236577129}
+{"type": "text", "text": "LAB", "timestamp": 1791236577138}
+{"type": "text", "text": "BOOK", "timestamp": 1791236577146}
+{"type": "text", "text": " q", "timestamp": 1791236577151}
+{"type": "text", "text": "_c", "timestamp": 1791236577151}
+{"type": "text", "text": "fe", "timestamp": 1791236577152}
+{"type": "text", "text": "0", "timestamp": 1791236577216}
+{"type": "text", "text": "be", "timestamp": 1791236577234}
+{"type": "text", "text": "2", "timestamp": 1791236577236}
+{"type": "text", "text": "ab", "timestamp": 1791236577237}
+{"type": "text", "text": "0", "timestamp": 1791236577237}
+{"type": "text", "text": "e", "timestamp": 1791236577238}
+{"type": "text", "text": "146", "timestamp": 1791236577239}
+{"type": "text", "text": "a", "timestamp": 1791236577240}
+{"type": "text", "text": "4", "timestamp": 1791236577364}
+{"type": "text", "text": " is", "timestamp": 1791236577366}
+{"type": "text", "text": " updated", "timestamp": 1791236577367}
+{"type": "text", "text": " and", "timestamp": 1791236577368}
+{"type": "text", "text": " synced", "timestamp": 1791236577369}
+{"type": "text", "text": ".", "timestamp": 1791236577462}
+{"type": "text", "text": " This", "timestamp": 1791236577482}
+{"type": "text", "text": " was", "timestamp": 1791236577483}
+{"type": "text", "text": " a", "timestamp": 1791236577499}
+{"type": "text", "text": " methods", "timestamp": 1791236577583}
+{"type": "text", "text": " critique", "timestamp": 1791236577625}
+{"type": "text", "text": " only", "timestamp": 1791236577626}
+{"type": "text", "text": ";", "timestamp": 1791236577626}
+{"type": "text", "text": " I", "timestamp": 1791236577627}
+{"type": "text", "text": " did", "timestamp": 1791236577627}
+{"type": "text", "text": " not", "timestamp": 1791236577628}
+{"type": "text", "text": " download", "timestamp": 1791236577628}
+{"type": "text", "text": " or", "timestamp": 1791236577719}
+{"type": "text", "text": " re", "timestamp": 1791236577864}
+{"type": "text", "text": "analyse", "timestamp": 1791236577865}
+{"type": "text", "text": " your", "timestamp": 1791236577894}
+{"type": "text", "text": " Supporting", "timestamp": 1791236577962}
+{"type": "text", "text": " Data", "timestamp": 1791236578023}
+{"type": "text", "text": " Values", "timestamp": 1791236578024}
+{"type": "text", "text": ".", "timestamp": 1791236578029}
+{"type": "result", "session_id": "20261005_112926_de5a28", "exit_code": 0, "text": "No verified assay difference categorically rules out your within-cargo normalized comparison. Prefer Supplemental Figure 4A versus 4B, rather than comparing PMP22 with the main stable-cell KCNQ1 experiment.\n\n1. Induction context is better matched in S4.\nIts caption specifies transient HEK293 expression for both cargos, treatment beginning 24 hours after transfection, and 16 hours of exposure to 10 µM VU0494372 or 0.1% DMSO. It reports surface, total and trafficking efficiency separately, N=3, with unpaired tests. This does not establish cross-cargo or workbook-row pairing.\nSource: JCI Insight 201297, Supplemental Figure 4 caption.\n\n2. Do not mix the screening and follow-up readouts.\nThe main HTS uses doxycycline-induced mycKCNQ1-mEGFP and an imaging-based surface/GFP ratio. The flow assay instead measures surface and internal antibody signals with background subtraction and brightness correction. Its general transient-cell procedure uses EGFP gating, PE surface and Alexa647 internal signals; stable-cell gating and surface fluorophore differ.\nSources: main Methods, “Flow cytometry”; Supplemental Methods, “High content imaging” and “Flow cytometry.”\n\n3. Exact PMP22 construct identity remains a check, not an established incompatibility.\nMy saved 2021 source uses extracellular-loop-2 myc-tagged PMP22 in pIRES2 with independently expressed GFP—not a PMP22-GFP fusion. I have not established that the 2026 counter-screen uses that exact construct. Current KCNQ1 methods specify myc after E146 in S1–S2. Within-cargo normalization does not itself eliminate treatment-dependent epitope accessibility, saturation, background flooring or gating effects.\nSources: PMC8191293, Methods p0230–p0255; JCI 201297, “KCNQ1 constructs and mutagenesis.”\n\nA consequential interpretation limit: PMP22 effects were already used to exclude hits during compound selection. Thus the chosen compound’s counter-screen is selection-conditioned, not an independent survey of cargo specificity. Where the experimental units permit, compare the cargo-by-treatment effects directly; “significant for KCNQ1, nonsignificant for PMP22” is not itself that comparison or evidence of equivalence.\nSource: JCI 201297, Results, “Discovery of KCNQ1 trafficking modulators.”\n\nPrior measurement handoff: PMC8191293 Figure 2A–C explicitly reports total, surface and efficiency normalized to paired WT rat Schwann-cell experiments. However, I recovered figure summaries, not a native replicate-level matrix. I have no additional native paired matrix to supply beyond the inspected exports.\n\nExisting eligibility reference:\nartifact_25c1966e32450880c6bd477437f61e7b6119ec298ac6b01aa81b6eff30a6b24e\n\nCorrection: my earlier citation marker and claimed 0.2% graph-label discrepancy were unverified and are withdrawn; the inspected caption states 0.1%.\n\nLABBOOK q_cfe0be2ab0e146a4 is updated and synced. This was a methods critique only; I did not download or reanalyse your Supporting Data Values.", "tokens": {"input": 283752, "output": 13701, "total": 2306285, "cache_read": 2008832, "cache_write": 0}, "duration_ms": 535206, "timestamp": 1791236578342}

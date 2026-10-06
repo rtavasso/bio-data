@@ -1,0 +1,46 @@
+"""Save actual forum/library queries and exact selected prior posts; never execute inherited code."""
+
+import json
+from pathlib import Path
+import subprocess
+
+q = Path(__file__).resolve().parents[1]
+o = q / "inputs/prior"
+o.mkdir(parents=True, exist_ok=True)
+
+
+def call(args, name):
+    p = subprocess.run(["./bin/bio", *args], capture_output=True, text=True)
+    (o / (name + ".stdout")).write_text(p.stdout)
+    (o / (name + ".stderr")).write_text(p.stderr)
+    if p.returncode:
+        return {"error": p.returncode}
+    x = json.loads(p.stdout)
+    (o / (name + ".json")).write_text(json.dumps(x, indent=2))
+    return x
+
+
+for term in [
+    "UTR",
+    "isoform",
+    "polyadenylation",
+    "PolyASite",
+    "long-read",
+    "GENCODE",
+    "binding",
+    "correction",
+]:
+    x = call(["community", "search", "--text", term, "--limit", "100"], "forum-" + term)
+    print(term, x.get("total"), [(i["subject"], i["title"]) for i in x.get("items", [])])
+for post in [
+    "post_dec5a6e2f81c46a888010fdb9720010a",
+    "post_f8fc24f8e60e440c8456ebe336849908",
+    "post_d796b8a816a54b3a80d5662043ac90c9",
+    "post_7ecc0aec99444ae58621efc0514ad8ef",
+    "post_b5ed12955ae5497892c4cb769d0ec9da",
+]:
+    x = call(["community", "show", post], post)
+    print(post, x.get("content", {}).get("body", ""), "REPLIES", x.get("replies"))
+for kind in ["artifact", "data", "work"]:
+    x = call([kind, "search", "--text", "PMP22"], kind + "-PMP22")
+    print(kind, x.get("total"))

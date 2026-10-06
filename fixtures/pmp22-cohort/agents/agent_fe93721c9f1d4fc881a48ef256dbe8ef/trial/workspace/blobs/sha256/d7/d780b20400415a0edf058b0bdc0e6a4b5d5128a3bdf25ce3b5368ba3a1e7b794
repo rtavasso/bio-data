@@ -1,0 +1,193 @@
+{
+  "family_size": 14,
+  "method": "Bonferroni family of Egr2/Sox10 changes across seven inspected RNA contrasts; post-hoc sensitivity, library/pool independence assumptions unchanged",
+  "results": [
+    {
+      "contrast": "Nae1_cKO_P7",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -1.6373237933521125,
+            0.5463520301714724
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -1.7268004846785288,
+            0.2553349395526906
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "TSC1KO_P5",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -1.6225656822431445,
+            -0.17930474475628433
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -2.1039550455929685,
+            2.162748061805331
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "PTENKO_P5",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -1.4287282119695872,
+            -0.14151548525418634
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -2.044792892874893,
+            2.8402770400033694
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "RaptorKO_P5",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -0.1831290239991913,
+            1.1205613713453868
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -2.5960177059656444,
+            2.189054385251738
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "NRG1_6h",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -4.4160268609239495,
+            1.147894406751595
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -4.119964610468251,
+            4.372651660222856
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "Nedd4_cKO_P5",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -0.04218795778034784,
+            0.438205039058664
+          ],
+          "contained_pm0.5": true
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -0.46138940608550616,
+            0.27540218699578123
+          ],
+          "contained_pm0.5": true
+        }
+      },
+      "both_pm0.5_family14": true,
+      "both_pm0.5_all_normalizations_nominal": true,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [],
+        "stress6": []
+      }
+    },
+    {
+      "contrast": "Rnf40_cKO_P14",
+      "regulators": {
+        "Egr2": {
+          "family14_ci95": [
+            -0.6913058093582538,
+            1.408303782052825
+          ],
+          "contained_pm0.5": false
+        },
+        "Sox10": {
+          "family14_ci95": [
+            -1.2341710405864221,
+            -0.31713248728107757
+          ],
+          "contained_pm0.5": false
+        }
+      },
+      "both_pm0.5_family14": false,
+      "both_pm0.5_all_normalizations_nominal": false,
+      "secondary_panel_floor_failures": {
+        "identity_without_Sox10": [],
+        "cycle6": [
+          "Ccnb1"
+        ],
+        "stress6": [
+          "Ddit3",
+          "Nqo1"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "valid": true,
+  "scope": "Exact byte and archive-directory comparison only; no raw images processed",
+  "outer_sha256": "934fe99bbdccca00a285fc092bc03f26f1e72282fe35eadfc7ebb51b777b5738",
+  "outer_bytes": 71599407,
+  "outer_inventory_matches": true,
+  "docx_sha256": "de7858aa28dcacdef574de4606ad45491a1ae7b90bc4c77dd75b96da9253aa03",
+  "docx_bytes": 13734804,
+  "docx_member": "ADVS-13-e20323-s002.docx",
+  "docx_matches_local_extracted_copy": true,
+  "nested_sha256": "83b22d2be654b39e6a5d619975dcc86aefc0821d0759adfe6fe4a56fbc24f212",
+  "nested_bytes": 55527737,
+  "nested_member": "ADVS-13-e20323-s001.zip",
+  "nested_inventory_matches": true,
+  "nested_inventory": [
+    {
+      "name": "RAW DATA of blots.pdf",
+      "size": 4824874,
+      "compressed": 4600210
+    },
+    {
+      "name": "RAW DATA of Microscope Images.pdf",
+      "size": 51615713,
+      "compressed": 50480242
+    },
+    {
+      "name": "Cell Line Authentication STR Profiling.pdf",
+      "size": 484935,
+      "compressed": 446627
+    }
+  ],
+  "source_receipt_matches": true,
+  "excluded_payloads": "Outer ZIP and nested raw-image ZIP intentionally not exported; locators, exact inventories and hashes retained."
+}

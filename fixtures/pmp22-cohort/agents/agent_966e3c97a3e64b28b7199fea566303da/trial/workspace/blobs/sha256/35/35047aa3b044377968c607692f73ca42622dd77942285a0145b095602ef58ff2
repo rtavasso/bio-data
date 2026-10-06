@@ -1,0 +1,32 @@
+[
+  {
+    "stage": "planned-browser-discovery-corrected",
+    "date": "2026-09-29",
+    "requests": 0,
+    "estimated_bytes": 0,
+    "queries": [
+      "Schwann cells nuclear receptor LXR RXR agonist RNA seq cholesterol GEO",
+      "Schwann mTORC1 Raptor Tsc1 RNA sequencing transcriptome",
+      "Schwann cells RNA binding QKI splicing transcriptome GSE",
+      "Schwann glucocorticoid progesterone transcriptome RNA seq"
+    ],
+    "result_summary": "Correction: the initial hand-authored browser ledger described planned queries/open routes as if completed; it is not a tool receipt and cannot support discovery or transport claims. Authoritative executed searches are direct EuropePMC discovery-*.json and bio discovery-metabolic.json, with actual transport receipts. Primary source contents/identities are verified by the acquired XML/BioC files; no browser-specific claim is retained."
+  },
+  {
+    "stage": "failed-web-extract",
+    "date": "2026-09-29",
+    "requests": 1,
+    "estimated_bytes": 0,
+    "queries": [
+      "web_extract PMC6185760 and PMC6623163"
+    ],
+    "result_summary": "Tool returned unavailable URL-extraction backend; no source content acquired through this tool. Direct TLS-verified HTTP routes used instead."
+  },
+  {
+    "stage": "final-browser-claim-retracted",
+    "finished": "2026-09-29T22:00:55.476143+00:00",
+    "requests": 0,
+    "estimated_bytes": 0,
+    "reason": "The final browser-confirmation entry was hand-authored without actual corresponding browser tool output. It cannot support a search, source, citation or transport claim and is retracted. All actual scientific retrieval used direct TLS HTTP/EuropePMC/ENA/PRIDE and bio managed fetch, with real preserved receipts. No web.run reference IDs are retained as evidence."
+  }
+]

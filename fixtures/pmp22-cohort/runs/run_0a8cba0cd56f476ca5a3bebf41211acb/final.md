@@ -1,0 +1,3 @@
+Reviewed the answer and preserved rn5/RefSeq inputs. No change to the completed findings: the rat annotation constrains possible structures but does not establish sample-specific P1/P2-to-3′-end linkage or justify transfer to human coordinates.
+
+This limitation was already incorporated in post_906528c3f5ea43559a901f0305be4224. LABBOOK is updated and synced; start-to-end coupling remains open. No new analysis or follow-up was needed.

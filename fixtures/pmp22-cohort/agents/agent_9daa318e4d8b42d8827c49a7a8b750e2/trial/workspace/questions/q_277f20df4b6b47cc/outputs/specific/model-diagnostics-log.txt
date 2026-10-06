@@ -1,0 +1,16 @@
+                model  n_parameters  in_sample_R2  LOTO_SSE  LOTO_RMSE
+        linear_myelin             2      0.981248  1.524836   0.436583
+     quadratic_myelin             3      0.990552  6.067691   0.870897
+   linear_plus_Ppp6r1             3      0.998231  0.147012   0.135560
+   linear_plus_Gtf2f1             3      0.998453  0.218195   0.165150
+      linear_plus_Hck             3      0.998395  0.222817   0.166890
+quadratic_plus_Ppp6r1             4      0.998343  1.701405   0.461168
+quadratic_plus_Gtf2f1             4      0.998453  1.622171   0.450301
+   quadratic_plus_Hck             4      0.998598  1.361257   0.412501
+             dataset                  mode candidate  delta_Pmp22  delta_myelin  delta_candidate  Pmp22_minus_myelin_contrast  baseline_prediction  augmented_prediction   SSE_ratio
+inherited_Egr2AS_rat retrospective_exposed    Ppp6r1    -0.141378      0.278155         0.319463                    -0.419534             0.352576              0.153533    0.356460
+inherited_Egr2AS_rat retrospective_exposed    Gtf2f1    -0.141378      0.278155         0.049464                    -0.419534             0.352576              0.285729    0.747656
+inherited_Egr2AS_rat retrospective_exposed       Hck    -0.141378      0.278155         0.172827                    -0.419534             0.352576             -0.007470    0.073492
+inherited_Runx_mouse retrospective_exposed    Ppp6r1     1.128916      0.826689        -0.315940                     0.302227             1.047869              1.302029    4.562308
+inherited_Runx_mouse retrospective_exposed    Gtf2f1     1.128916      0.826689        -0.044766                     0.302227             1.047869              0.979833    3.383617
+inherited_Runx_mouse retrospective_exposed       Hck     1.128916      0.826689        -3.207764                     0.302227             1.047869              5.567671 2999.476443

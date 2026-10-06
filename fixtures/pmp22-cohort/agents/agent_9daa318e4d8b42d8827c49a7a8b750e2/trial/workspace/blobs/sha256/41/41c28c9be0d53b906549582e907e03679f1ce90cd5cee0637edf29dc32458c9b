@@ -1,0 +1,15 @@
+phase	branch	inspection_status	source	source_locator	limitation
+inherited	SOX10/cAMP cis	analyzed	GSE139321	outputs/tss-regulatory-panel.tsv	rn5 selected4993TSS; rat culture; no humanP1/P2 transfer
+inherited	Egr2-AS peak overlaps	analyzed	GSE201627	outputs/atac-promoter-summary.tsv	narrowPeak presence/absence only; selected-out is not zero
+continuation	Egr2-AS whole RNA and hemoglobin QC	analyzed	GSE201623	outputs/rna-all-features.tsv; outputs/rna-hemoglobin-summary.json	Exact bytes and labels checked; discrepancy remains; no donor-independentDE
+continuation	Egr2-AS endpoint/time audit	source_inspected	PMC5800313; PMC11592338	outputs/audited-source-passages.json; outputs/assay-endpoint-audit.tsv	2017 nascent/timecourse versus2024 RNA/protein; missing matched endpoint map
+continuation	Egr2-AS quantitativeATAC	blocked	GSE201624; PMC11592338; pinnedGitHub	inputs/continuation/GSE201624-series.soft; inputs/continuation/egr2-repo-tree.json	No promotercountmatrix; supplementIGV; HiC notATAC
+continuation	Independent RUNX accessibility	analyzed	GSE122776	outputs/runx-atac-all-promoters.tsv; outputs/runx-locus-summary.json	n1/genotype; tissue labels differ; unrepresentedbases notzeros
+continuation	RUNX geneRNA	analyzed	GSE122774	outputs/runx-rna-all-features.tsv; outputs/runx-rna-sample-audit.tsv	n3/sourcegroup; within-group title swaps; bulkvs sortedATAC
+continuation	Human genotype/probe/channel audit	analyzed	GSE7423/GPL1708	outputs/human-dosage-all-probes.tsv; outputs/human-channel-audit-summary.json	12arrays7donors; one duplication/oneL16P; log10; notpromoterdata
+continuation	TEAD direct versus EGR2 mediation	source_inspected_with_blocker	PMC5181599	inputs/continuation/PMC5181599.html	Direct route supported; no factorialrescue; Figure8technicalreplicates
+continuation	miR29/AGO control	source_inspected_with_blocker	PMC2713384; PMC6920087	outputs/audited-source-passages.json	EngineeredAGOassociation not endogenousinjuryloading; pools not donors
+continuation	Protein selectedinteractome	analyzed	PMC8191293/PXD023091	outputs/protein-analysis-summary.json	670selectedentries; no unfilteredreplicatematrix; >512MiBSEARCHfiles
+continuation	G3BP1 RNA stability alternative	analyzed	PMC3866477	outputs/g3bp-endpoint-summary.json	MCF7; source half-life summaries; RNA increase not provenstabilization
+continuation	Reciprocal lipid/protein relationship	analyzed_published_summaries	PMC6607759	outputs/lipid-summary-analysis.json	Illustrativeproduct of means not pairedmatureabundance or directpromoterfeedback
+continuation	Hormonal/metabolic direct human control	deferred		outputs/investigations.json	Unfinished broadercoverage; no absenceclaim

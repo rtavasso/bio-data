@@ -1,0 +1,34 @@
+import json,pathlib,csv,math
+import pandas as pd
+from defusedxml import ElementTree as ET
+from openpyxl import load_workbook
+q=pathlib.Path(__file__).resolve().parents[1]
+out={}
+for a in ['asset_f7b45493c97bcbf69f884f50fb111ee5','asset_cdf8b8e076f450328f72d80a5b95ff92','asset_5e0d2a886bec03b7d7670bd5d9197dc6']:
+ d=json.loads((q/'inputs'/f'{a}.json').read_text()); p=d['path']
+ if a=='asset_f7b45493c97bcbf69f884f50fb111ee5':
+  df=pd.read_csv(p,sep='\t'); df.insert(0,'source_row',range(2,len(df)+2))
+  sel=df[df['Gene Symbol'].isin(['Pmp22','Egr2','Sox10','Jun','Tead1','Yap1','Wwtr1','Pou3f1'])]
+  sel.to_csv(q/'outputs/tss-regulatory-panel.tsv',sep='\t',index=False)
+  print('Pmp22 TSS rows:',len(sel[sel['Gene Symbol']=='Pmp22']))
+  out[a]={'rows':len(df),'Pmp22':sel[sel['Gene Symbol']=='Pmp22'].to_dict('records')}
+ else:
+  w=load_workbook(open(p,"rb"),read_only=True,data_only=False)
+  found=[]
+  for s in w:
+   for row in s:
+    if any(c.value in ['PMP22','Pmp22'] for c in row):
+     found.append({'sheet':s.title,'row':row[0].row,'cells':{c.coordinate:c.value for c in row if hasattr(c,"coordinate")}})
+  out[a]=found; print(a,'matching rows:',len(found))
+def clean(v):
+ if isinstance(v,float) and not math.isfinite(v): return None
+ if isinstance(v,list): return [clean(x) for x in v]
+ if isinstance(v,dict): return {k:clean(x) for k,x in v.items()}
+ return v
+(q/'outputs/local-source-extraction.json').write_text(json.dumps(clean(out),indent=2,allow_nan=False))
+d=json.loads((q/'inputs/asset_df4a5bbba7882ab8aee56ef2591274bb.json').read_text())
+root=ET.parse(d['path'])
+texts=[' '.join(e.itertext()) for e in root.findall('.//p')]
+(q/'outputs/PMC7430845-paragraphs.txt').write_text('\n\n'.join(texts))
+for t in texts:
+ if any(x in t.lower() for x in ['pmp22','rn6','rn5','genome assembly','deseq']): print(t)

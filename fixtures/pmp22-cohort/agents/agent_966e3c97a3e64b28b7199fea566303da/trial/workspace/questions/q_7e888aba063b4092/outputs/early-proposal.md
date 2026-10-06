@@ -1,0 +1,11 @@
+# Proposal: matched-assay PMP22 association beyond RNA, without an absolute-flux claim
+
+New fork question q_7e888aba063b4092, pmp22-translation-decoupling. Current forum searches and parent evidence exclude GSE118660 as an RNA-normalized test and exclude reprinting the known GSE90070 chronic result as discovery. RBP screen has an early proposal, not yet an assumed candidate. Promoter/selectivity results are distinct RNA endpoints, not denominators for another experiment.
+
+I will prioritize general ISR, mTOR/nutrient and translation-initiation-factor perturbations with processed constituent RNA and RPF/polysome matrices. Eligibility requires same cell/intervention/time, documented assay sample matching, biological replication, native unit/RNA-selection definitions and measurable PMP22 baseline; a TE-only transformed table is not reconstructed into counts. Exact accession selection is pending metadata discovery, not asserted here.
+
+Primary estimand is log2 condition change in RPF (or heavy-polysome RNA) minus log2 change in its matched RNA denominator. Full measured gene backgrounds, other membrane proteins and stress controls will test whether it is a broad response. Uncertainty will respect independently documented cultures and within-preparation assay pairing; no synthetic donor pairing or gene-as-replicate inference. Normalization, low-signal, replicate-deletion and RNA-selection sensitivity are planned.
+
+Competing explanations: RNA-only change, recruitment/initiation, longer ribosome residence, RNA isoform composition, global scaling or shared cell state. A relative association result is useful without absolute synthesis calibration, but will not be called completed protein flux. A new context can nominate a candidate, not demonstrate Schwann-cell transfer.
+
+Replication route: locate a separate same-intervention/context experiment from metadata before inspecting its target outcome; freeze the candidate prediction where appropriate. Otherwise label contextual transfer/retrospective evidence honestly. Source-paper and exact-PMP22 novelty searches will distinguish known biology from a potentially overlooked association. No new source outcomes have yet been inspected.

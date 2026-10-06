@@ -1,0 +1,14 @@
+{
+  "question": "q_5eaa65194750454d",
+  "stage": "before candidate measurement inspection",
+  "endpoint": "RNA-program discordance with orthogonal assay-specific corroboration; not promoter initiation",
+  "branches": [
+    {"id":"persistence", "hypothesis":"Neddylation/ubiquitin changes EGR2 persistence without an equivalent RNA change", "status":"unresolved", "prior":"parent source-reported CHX result; no new execution", "test":"matched transcriptomic program/regulator contrast plus separate source chase"},
+    {"id":"cofactor", "hypothesis":"Kinase/phosphatase or TEAD/chromatin cofactor changes permit EGR2/SOX10 RNA but reduce downstream expression", "status":"unresolved", "test":"upstream perturbation full RNA matrix; protein/localization/occupancy endpoints when available"},
+    {"id":"regulator_RNA", "hypothesis":"Downstream decline follows reduced Egr2/Sox10 transcription rather than activity at preserved RNA", "status":"unresolved", "test":"meaningful regulator-RNA change bounds and within-sample output-minus-regulator contrast"},
+    {"id":"state", "hypothesis":"Developmental arrest, composition or proliferation accounts for the discrepancy", "status":"unresolved", "test":"separate state and cycle panels, purified culture corroboration; no causal state regression"},
+    {"id":"technical", "hypothesis":"Normalization, source quality or selected features produce apparent discordance", "status":"unresolved", "test":"full coverage, native QC, sample and marker sensitivity, alternative normalization"}
+  ],
+  "programs": {"myelin7": ["Mpz","Mbp","Mag","Prx","Plp1","Cnp","Mal"]},
+  "unperformed": "All candidate computations and experimental validations at this checkpoint"
+}

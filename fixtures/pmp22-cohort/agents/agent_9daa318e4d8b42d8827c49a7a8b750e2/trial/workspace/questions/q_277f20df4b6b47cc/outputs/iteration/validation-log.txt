@@ -1,0 +1,67 @@
+{
+  "primary_pass": false,
+  "primary_status": "inconclusive_threshold_failure",
+  "primary_medians": [
+    {
+      "genotype": "ATF4KO",
+      "log2_effect": 0.025736329999999974,
+      "interaction_vs_WT": 0.346179827875
+    },
+    {
+      "genotype": "Fv2E-PERK",
+      "log2_effect": -0.9623065125,
+      "interaction_vs_WT": -0.641863014625
+    },
+    {
+      "genotype": "PERKKO",
+      "log2_effect": 0.5304117475,
+      "interaction_vs_WT": 0.850855245375
+    },
+    {
+      "genotype": "Wild Type",
+      "log2_effect": -0.32044349787500004,
+      "interaction_vs_WT": 0.0
+    },
+    {
+      "genotype": "eIF2a A/A",
+      "log2_effect": 1.047350177,
+      "interaction_vs_WT": 1.367793674875
+    }
+  ],
+  "array_rows": 55821,
+  "array_finite_all_samples": 55821,
+  "Pmp22_eligible": true,
+  "Pmp22_probe_count": 2,
+  "array_semantics": "Deposited normalized log2 intensity, no relog. Source excludes nonuniform flagged features; per-cell flags and precise normalization/centering not in series matrix. Negative log2 values retained.",
+  "replication": "WT4 and mutants2 labelled replicates/group, no donor independence assumed; no inferential p-values. Probe variants are not independent experiments.",
+  "footprint_rows": 22406,
+  "footprint_eligible": 7776,
+  "footprint_Pmp22_eligible": true,
+  "footprint_min_Pmp22_count": 107.0,
+  "footprint_min_Pmp22_TPM": 66.11,
+  "footprint_limits": "One library/genotype/time. Source mentions TPM flooring4 but deposits values below4; eligibility excludes floor-sensitive values. Footprints conflate RNA abundance, ribosome occupancy and elongation. No matched RNA, no absolute synthesis, no independent validation of translation efficiency."
+}
+        probe  gene  genotype  eligible  n_treated  n_control  log2_effect  pairwise_min  pairwise_max  interaction_vs_WT
+A_55_P2040168 Pmp22 Wild Type      True          4          4     0.013773     -0.825818      1.140097           0.000000
+A_55_P2040170 Pmp22 Wild Type      True          4          4    -0.654660     -1.208267      0.163138           0.000000
+A_55_P2040168 Pmp22    PERKKO      True          2          2     0.171287      0.033571      0.309003           0.157514
+A_55_P2040170 Pmp22    PERKKO      True          2          2     0.889536      0.531434      1.247639           1.544196
+A_55_P2040168 Pmp22    ATF4KO      True          2          2     0.038149     -0.792566      0.868864           0.024376
+A_55_P2040170 Pmp22    ATF4KO      True          2          2     0.013324     -0.738432      0.765079           0.667984
+A_55_P2040168 Pmp22 Fv2E-PERK      True          2          2    -0.889356     -1.152701     -0.626011          -0.903129
+A_55_P2040170 Pmp22 Fv2E-PERK      True          2          2    -1.035257     -1.151042     -0.919472          -0.380597
+A_55_P2040168 Pmp22 eIF2a A/A      True          2          2     0.689260      0.473278      0.905243           0.675488
+A_55_P2040170 Pmp22 eIF2a A/A      True          2          2     1.405440      1.311961      1.498919           2.060100
+ gene       method  hour  eligible  WT_log2_effect  KO_log2_effect  KO_minus_WT  WT_percentile
+Pmp22          TPM     1      True        0.910305        0.146726    -0.763580       0.954475
+Pmp22          TPM     2      True        0.584017       -0.329450    -0.913466       0.856353
+Pmp22          TPM     5      True        1.239900        1.222695    -0.017204       0.971579
+Pmp22          TPM     8      True        1.238421        1.789821     0.551401       0.967207
+Pmp22 median_ratio     1      True        1.107040        0.299680    -0.807360       0.975823
+Pmp22 median_ratio     2      True        0.953269        0.014961    -0.938308       0.954090
+Pmp22 median_ratio     5      True        1.488972        1.317228    -0.171744       0.986497
+Pmp22 median_ratio     8      True        1.418970        1.572185     0.153214       0.983668
+Pmp22          CPM     1      True        1.145043        0.216910    -0.928133       0.975823
+Pmp22          CPM     2      True        1.018222       -0.100789    -1.119011       0.954090
+Pmp22          CPM     5      True        1.578440        1.328077    -0.250363       0.986497
+Pmp22          CPM     8      True        1.527022        1.651478     0.124455       0.983668

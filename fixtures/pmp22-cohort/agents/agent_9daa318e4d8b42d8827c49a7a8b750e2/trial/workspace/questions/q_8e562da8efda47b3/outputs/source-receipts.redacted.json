@@ -1,0 +1,84 @@
+{
+  "scope": "Inherited receipt excerpts, not new requests. Cookie/session headers omitted explicitly.",
+  "parent": "questions/q_277f20df4b6b47cc/inputs/continuation/transport.json",
+  "parent_sha256": "c47d8bf39b110f99b084e2f6935cdf5be03a85a3377fb715c83b51515605125a",
+  "entries": [
+    {
+      "article_id": "PMC3298281",
+      "selected_ledger_entries": [
+        {
+          "json_pointer": "/entries/13",
+          "entry": {
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3298281/?pdf=0",
+            "path": "inputs/continuation/PMC3298281.html",
+            "started": "2026-09-28T01:10:00.366664+00:00",
+            "bytes": 0
+          },
+          "recorded_hash_matches_saved_bytes": null
+        },
+        {
+          "json_pointer": "/entries/18",
+          "entry": {
+            "path": "inputs/continuation/PMC3298281.html",
+            "bytes": 239580,
+            "accounting_note": "Reconciled local bytes after concurrent receipt write; request counted conservatively, original successful tool log retained."
+          },
+          "recorded_hash_matches_saved_bytes": null
+        }
+      ]
+    },
+    {
+      "article_id": "PMC7322568",
+      "selected_ledger_entries": [
+        {
+          "json_pointer": "/entries/17",
+          "entry": {
+            "path": "inputs/continuation/PMC7322568.html",
+            "bytes": 224310,
+            "accounting_note": "Reconciled local bytes after concurrent receipt write; request counted conservatively, original successful tool log retained."
+          },
+          "recorded_hash_matches_saved_bytes": null
+        }
+      ]
+    },
+    {
+      "article_id": "PMC5181599",
+      "selected_ledger_entries": [
+        {
+          "json_pointer": "/entries/12",
+          "entry": {
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5181599/?pdf=0",
+            "path": "inputs/continuation/PMC5181599.html",
+            "started": "2026-09-28T01:09:59.832384+00:00",
+            "bytes": 266978,
+            "status": 200,
+            "sha256": "7b0a5fe4f9c5cdee5f5c45046457dc74a9716945bb88f7aff0f982ce844280ac",
+            "completed": true,
+            "headers": {
+              "Date": "Mon, 28 Sep 2026 01:10:00 GMT",
+              "content-type": "text/html; charset=utf-8",
+              "Content-Length": "266978"
+            },
+            "omitted_header_names": [
+              "Server",
+              "Strict-Transport-Security",
+              "vary",
+              "x-frame-options",
+              "x-content-type-options",
+              "referrer-policy",
+              "cross-origin-opener-policy",
+              "x-envoy-upstream-service-time",
+              "set-cookie",
+              "X-UA-Compatible",
+              "X-XSS-Protection",
+              "Via",
+              "Alt-Svc",
+              "Connection"
+            ]
+          },
+          "recorded_hash_matches_saved_bytes": true
+        }
+      ]
+    }
+  ]
+}

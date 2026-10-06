@@ -1,0 +1,206 @@
+{
+  "checks": [
+    {
+      "dataset": "development",
+      "source_rows": 41605,
+      "unique_rows": 41413,
+      "duplicate_or_missing_symbols": 192,
+      "columns": [
+        "E13_1",
+        "E13_2",
+        "E13_3",
+        "E13_4",
+        "E17_1",
+        "E17_2",
+        "E17_3",
+        "E17_4",
+        "P1_1",
+        "P1_2",
+        "P1_3",
+        "P1_4",
+        "P5_1",
+        "P5_2",
+        "P5_3",
+        "P5_4",
+        "P14_1",
+        "P14_2",
+        "P14_3",
+        "P14_4",
+        "P24_1",
+        "P24_2",
+        "P24_3",
+        "P24_4",
+        "P60_1",
+        "P60_2",
+        "P60_3",
+        "P60_4"
+      ],
+      "formula_cells": 0,
+      "error_cells": 0
+    },
+    {
+      "dataset": "sorted",
+      "source_rows": 25700,
+      "unique_rows": 25626,
+      "duplicate_or_missing_symbols": 74,
+      "columns": [
+        "1_all",
+        "2_all",
+        "3_all",
+        "4_all",
+        "1_mSC",
+        "2_mSC",
+        "3_mSC",
+        "4_mSC",
+        "1_nmSC",
+        "2_nmSC",
+        "3_nmSC",
+        "4_nmSC"
+      ],
+      "formula_cells": 0,
+      "error_cells": 0
+    },
+    {
+      "dataset": "Nae1",
+      "source_rows": 53090,
+      "unique_rows": 52637,
+      "source_cell_check": "all eight expected-count columns exactly equal inherited matrix",
+      "normalized_check": "all values agree within 1e-12",
+      "size_factors": {
+        "KO_K2": 0.9750663982128733,
+        "KO_L1": 1.0498534296378914,
+        "KO_L5": 1.070382556350694,
+        "KO_L8": 1.0501787272961907,
+        "WT_K1": 0.9966992566297345,
+        "WT_L3": 1.000003767047734,
+        "WT_L4": 1.0146328958440616,
+        "WT_L9": 0.904475325629516
+      },
+      "columns": [
+        "KO_K2",
+        "KO_L1",
+        "KO_L5",
+        "KO_L8",
+        "WT_K1",
+        "WT_L3",
+        "WT_L4",
+        "WT_L9"
+      ]
+    },
+    {
+      "dataset": "Figlia TSC1KO",
+      "unique_rows": 13788,
+      "source_present_true": 13788,
+      "source_statuses": {
+        "True": 13788
+      }
+    },
+    {
+      "dataset": "Figlia PTENKO",
+      "unique_rows": 13125,
+      "source_present_true": 13125,
+      "source_statuses": {
+        "True": 13125
+      }
+    },
+    {
+      "dataset": "Figlia RaptorKO",
+      "unique_rows": 13483,
+      "source_present_true": 13483,
+      "source_statuses": {
+        "True": 13483
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "source_rows": 31038,
+      "unique_rows": 31010,
+      "columns": [
+        "IL6172",
+        "IL6173",
+        "IL6174",
+        "IL6175",
+        "IL6176",
+        "IL6177",
+        "IL6178",
+        "IL6179",
+        "IL6180",
+        "IL6181",
+        "IL6182",
+        "IL6183",
+        "IL6184",
+        "IL6185",
+        "IL6186",
+        "IL6187"
+      ],
+      "unit": "two pooled preparations per compartment/time, not individual nerves"
+    }
+  ],
+  "inputs": [
+    {
+      "blob": "df860d3becea471f51ac8d52cbb770e014c9c826e64ec2758f9d8e977bda17ac",
+      "role": "SNAT supplement1 native RPKM"
+    },
+    {
+      "blob": "a87edeaf32110f77c70d0e07254ee771973718b6167fb18537b1215695586583",
+      "role": "Nae1 native KO_L5"
+    },
+    {
+      "blob": "dfb11dd3c12e8354f0bdde8f230ff2e117f0a623b94d89da152eed4e40e26473",
+      "role": "Nae1 native WT_L4"
+    },
+    {
+      "blob": "8e5695f911223deeafe42b96a1316a4cbf83049ac965805deff9f159eb7acdc4",
+      "role": "Nae1 native KO_L1"
+    },
+    {
+      "blob": "72e88c6e0a6e9198e4c81baa01cec75a0c03ef06332060e9d1e83efffcfe14ad",
+      "role": "Nae1 native WT_L3"
+    },
+    {
+      "blob": "bd3b267a01517d3030f9f025a7d64d4a7f7eeaebdeac6aebd22692399fd1ead5",
+      "role": "Nae1 native KO_L8"
+    },
+    {
+      "blob": "c45d82d4dde6e7800bb107696f7f2a939ccddb9a1742a5f74c2c99e2eba6fb62",
+      "role": "Nae1 native WT_K1"
+    },
+    {
+      "blob": "bb366b5cf400286cf8c22854c064cbdaf5a06085a85f96aa0e8d6c75498f7d9a",
+      "role": "Nae1 native KO_K2"
+    },
+    {
+      "blob": "ac2cdc30317647b371729891f74406b68e8a20e23a4af0649566654c800ef2ce",
+      "role": "Nae1 native WT_L9"
+    },
+    {
+      "blob": "2d6f0b558d32cd63d89f9799882ed9cb084400aca6cd3b000b5cfdd2cf91673a",
+      "role": "inherited complete expected-count matrix"
+    },
+    {
+      "blob": "6474b5abdfc1cddbc1c893b16115ec092382f9eb18555afc9bfe0245b1286525",
+      "role": "inherited log2 normalized matrix"
+    },
+    {
+      "blob": "3c1be01fc49ea6b7eb7b527352c032e8e9987e4db78ed2a0bcc79b53b902b5b6",
+      "role": "Figlia2017 Figure3 native XLSX"
+    },
+    {
+      "blob": "42feddf21682bbd15dcdd2a0d4c9c84f51e488c3447fb2f0279dad24a3f9025b",
+      "role": "GSE177037 full source count matrix"
+    },
+    {
+      "blob": "7b7a5bd5bd2ce4b749b584c3d1606c306992a438baedcbcae49c65690d9e4dc0",
+      "role": "GSE137868-gsm.soft"
+    },
+    {
+      "blob": "2a140eca2b4e989813698f643a94b16bf3f81a1edff4fd74ada655fc27cccc2e",
+      "role": "GSE137947-gsm.soft"
+    },
+    {
+      "blob": "00f833d4f6fe55463bf0061938d79c7b72ad9a2760e66d2d06c4600432ef977b",
+      "role": "GSE138577-family.soft"
+    }
+  ],
+  "limits": "Source values preserve relative units; missing/ambiguous genes excluded explicitly, never zero-filled. Fractions/states are not biological replicates."
+}

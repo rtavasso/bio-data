@@ -1,0 +1,117 @@
+{
+  "study": "PMC10684506",
+  "question": "q_6f7d08bc2d484e3f",
+  "analysis_status": "retrospective descriptive source verification, not independent replication",
+  "plan_sha256": "9ce82cb9c1dbba1f9d6330a16cdbb9a119f31480a58ed1776537de95a93d9347",
+  "workbook_sha256": "44128de8541d8c0d7e9b8bc089ead527af0fc90f3d49aac40ee2d1f509158add",
+  "comparison": "same CMT1A Schwann background AAV-gRNAedit / AAV-gRNAcont; common normal neuronal background",
+  "results": [
+    {
+      "outcome": "total_mature_RNA",
+      "sheet": "Figure 7d",
+      "units": "relative PMP22/GAPDH",
+      "source_label": "Day 47   PMP22 / GAPDH",
+      "n_control_values": 3,
+      "n_edit_values": 3,
+      "disease_donors": 1,
+      "control_mean": 0.8495434,
+      "edited_mean": 0.47597001,
+      "edited_over_control": 0.5602656791871964,
+      "log2_ratio": -0.8358169763741962,
+      "percent_change": -43.973432081280365,
+      "direction_rule": "ratio < 1",
+      "direction_met": true,
+      "unit_limit": "n values are not donors; batch and RNA/protein pairing IDs absent"
+    },
+    {
+      "outcome": "total_protein_WB",
+      "sheet": "Figure 7e",
+      "units": "relative PMP22/GAPDH",
+      "source_label": "Day 47   PMP22 / GAPDH",
+      "n_control_values": 3,
+      "n_edit_values": 3,
+      "disease_donors": 1,
+      "control_mean": 1.45631226,
+      "edited_mean": 1.17982406,
+      "edited_over_control": 0.8101449753640061,
+      "log2_ratio": -0.3037479936512956,
+      "percent_change": -18.985502463599392,
+      "direction_rule": "ratio < 1",
+      "direction_met": true,
+      "unit_limit": "n values are not donors; batch and RNA/protein pairing IDs absent"
+    },
+    {
+      "outcome": "MBP_MAP2_overlap",
+      "sheet": "Figure 6a",
+      "units": "percent",
+      "source_label": "Area% of MBP co-localized with MAP2",
+      "n_control_values": 4,
+      "n_edit_values": 4,
+      "disease_donors": 1,
+      "control_mean": 11.237499999999999,
+      "edited_mean": 31.567500000000003,
+      "edited_over_control": 2.809121245828699,
+      "log2_ratio": 1.490118894660402,
+      "percent_change": 180.9121245828699,
+      "direction_rule": "ratio > 1",
+      "direction_met": true,
+      "unit_limit": "structural overlap; paper also describes merged neurite length; no conversion between area and length or calibrated functional PMP22"
+    }
+  ],
+  "source_mean_checks": [
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 7d",
+      "group": "control",
+      "mean_cell": "E20",
+      "passed": true
+    },
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 7d",
+      "group": "edit",
+      "mean_cell": "E21",
+      "passed": true
+    },
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 7e",
+      "group": "control",
+      "mean_cell": "E20",
+      "passed": true
+    },
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 7e",
+      "group": "edit",
+      "mean_cell": "E21",
+      "passed": true
+    },
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 6a",
+      "group": "control",
+      "mean_cell": "E6",
+      "passed": true
+    },
+    {
+      "check": "mean_matches_source",
+      "sheet": "Figure 6a",
+      "group": "edit",
+      "mean_cell": "E7",
+      "passed": true
+    }
+  ],
+  "all_planned_directions_met": true,
+  "new_p_values": null,
+  "new_confidence_intervals": null,
+  "copy_number_slope": null,
+  "blockers": [
+    "mosaic editing without matched endpoint-sample absolute CN",
+    "one disease donor and no cross-assay replicate or batch mapping",
+    "PMP22/GAPDH ratios not calibrated molecules per viable matched-state Schwann cell",
+    "structural proxy not mature compact-myelin protein or conduction",
+    "maturation, survival, composition and co-deleted genes remain alternatives"
+  ],
+  "interpretation": "RNA and total protein decrease by different relative amounts. This does not identify saturation, translational compensation, folding failure, trafficking or degradation rates."
+}

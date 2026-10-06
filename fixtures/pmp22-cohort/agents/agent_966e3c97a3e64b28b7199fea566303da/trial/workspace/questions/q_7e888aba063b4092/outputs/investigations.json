@@ -1,0 +1,63 @@
+{
+  "revision": 3,
+  "scope": "Executed bounded investigation of PMP22 association beyond RNA in matched acute-stress count matrices; causal and protein-flux questions remain separate.",
+  "status": "bounded_complete",
+  "stopping_reason": "Two independently generated stress experiments analyzed, a calibrated context rejected on measured feature coverage, all planned available normalization/background checks executed, exact producer outputs registered and source-paper audit completed. No time/request cap forced stopping. Further useful work requires an independent same-condition experiment or RNA/flux information not represented by the inspected paired tables. Unrelated mTOR/translation-factor contexts can be screened separately but will not identify why this particular tunicamycin contrast occurs.",
+  "items": [
+    {
+      "id": "arsenite-matched-counts", "priority": "high",
+      "question": "Does acute arsenite change PMP22 relative RPF beyond its matched poly(A)+ RNA abundance?",
+      "alternatives": ["RNA-congruent response", "selective occupancy response", "broad membrane/stress program"],
+      "readout": "Matched coding-region RPF/RNA counts, 40 uM arsenite 30 min, two independent preparations per condition",
+      "assets": ["GSE55195", "GSM1331342-GSM1331349"],
+      "prerequisites": ["Source pairing and biological duplication", "PMP22 count coverage", "Full coding-background and representative transcript rule"],
+      "status": "analyzed",
+      "artifacts": ["artifact_ae793a39c8daa31f0cd7e7f9c005646ee81e3b4f6df7db69081fd44f1b0c2d3b", "artifact_83db64980639cc15a77221a01c96056250de88b39b553ab870c317bd00931b6f"],
+      "finding": "Small negative relative interaction (-0.2704 log2) with broad CI; membrane-relative effect -0.0721. CDS/total RNA and normalization sensitivities retain the modest result. No selective or equivalence claim.",
+      "limitation": "Two biological preparations per condition; no explicit cross-condition block matching, positional profiles or calibrated target protein output.",
+      "next_action": "Use as an independent context contrast, not exact-condition replication or a new selective mechanism.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "tunicamycin-isrib-context", "priority": "high",
+      "question": "Does the association response recur under tunicamycin, and is it attenuated with ISRIB?",
+      "alternatives": ["Generalized ISR-associated occupancy response", "RNA-population change", "ISRIB-responsive canonical initiation", "global composition"],
+      "readout": "Four conditions, two biological preparations each, matched source-paper mRNA/RPF constituent counts",
+      "assets": ["GSE65778", "PMC4341466 source data 1"],
+      "prerequisites": ["Self-contained source count table", "No version-stripping join across incompatible exports", "Matched conditions and source-replicate labels"],
+      "status": "analyzed",
+      "artifacts": ["artifact_e992a2405f8705ed77daf2643a3f0e299711e8a285dd6031d5a23c61c61057a5", "artifact_b00bd1787de7fb77fea5de3209d8e59206a9b6499eb3bdc6b3ee0e15e7052e9c", "artifact_54bbd79620b11a4fc62754d09ccfff4543b59a375434ef6b674a5b89a054efed"],
+      "finding": "Descriptive interaction -1.0247 log2, broad CI including zero; RNA +0.9048 versus RPF -0.1199. ISRIB cotreatment remains negative (-0.8126), with only modest uncertain attenuation. Point-estimate ranks remain low after count matching; control ISR genes respond as expected. Export equivalence failed and was not forced.",
+      "limitation": "RNA-selection chemistry unresolved, source all-expression table universe may be preselected; small n; no transcript-resolved RNA pool or transit/nascent-protein assay. Prediction was informal/unsealed, representation amended after count exposure.",
+      "next_action": "Independent same-condition paired experiment with isoform-resolved RNA and calibrated protein completion; retain descriptive candidate status until then.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "calibrated-hct116", "priority": "high",
+      "question": "Can the available spike-calibrated context distinguish relative scaling from absolute target translation?",
+      "alternatives": ["Relative-normalization effect", "calibrated occupancy change"],
+      "readout": "GSE256237 HCT116 native paired counts and calibration context",
+      "assets": ["GSE256237", "PMC12807861"],
+      "prerequisites": ["Measured PMP22 feature in the deposited native count universe"],
+      "status": "blocked",
+      "artifacts": ["artifact_c87925c2f4f9d3aba2a09fea088e4230c4e6daf1ed27d07aa5dd7958445cc021"],
+      "finding": "PMP22 coverage gate failed in the deposited 13,715-row count matrix and source ISR table; absence not zero. Identical RNA vectors in some arms are retained, not independent denominators.",
+      "limitation": "The inspected processed table cannot estimate this target; no automatic raw sequencing processing is authorized.",
+      "next_action": "Obtain an author-supplied complete target count/calibration representation or a new independently calibrated target experiment. Do not transfer this study's spike to HEK293T data.",
+      "blocker_evidence": ["outputs/design-inspection.json", "outputs/design-execution-r005.json"]
+    },
+    {
+      "id": "rna-features-protein-endpoints", "priority": "medium",
+      "question": "Does a changed RNA isoform/pool or elongation explain the descriptive tunicamycin contrast rather than altered completed protein production?",
+      "alternatives": ["RNA processing/selection", "RBP-dependent recruitment", "elongation", "protein disposal"],
+      "readout": "Context-matched RNA ends/RBP occupancy, positional footprints or run-off, nascent PMP22 and separately measured handling",
+      "assets": ["post_39c7e08ff5fa43498fe97be20590edf5", "post_e49267084fcc4a43b3d7677fa6c60d18", "post_4970c427c59c41bd941b27d7c5c4edbc"],
+      "prerequisites": ["No transfer of K562 contacts to HEK293T without evidence", "Total/surface protein alone cannot partition synthesis and clearance"],
+      "status": "deferred", "artifacts": [],
+      "finding": "Both RNA-ends and RBP answer dependencies reviewed with exact artifact hash/derivation checks. Basal HEK293 PAPERCLIP and GTEx model maps cannot validate acute HEK293T capture chemistry; region sensitivity cannot exclude shared selection bias. K562 PUM2 has four reproducible contacts but fails the joint RNA-response/depletion criteria; model-space retention does not establish stress occupancy. No binder can be assigned as mediator of the HEK293T RNA/RPF contrast, and a failed abundance screen does not exclude translation-only regulation. No context-matched protein-output result supplied.",
+      "limitation": "Available gene-level counts cannot distinguish these mechanisms; further arithmetic on the same matrices would not add the missing measurement.",
+      "next_action": "If mechanistic work is separately undertaken, verify RNA-feature occupancy/loading in the actual HEK293T stress context and validate perturbation efficacy alongside matched RNA/RPF and protein completion. Do not infer first-exon site escape, functional depletion or a translation mechanism from these peer proxies.",
+      "blocker_evidence": []
+    }
+  ]
+}

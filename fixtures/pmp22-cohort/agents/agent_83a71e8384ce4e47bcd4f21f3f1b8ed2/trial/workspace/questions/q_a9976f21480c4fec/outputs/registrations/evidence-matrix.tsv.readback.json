@@ -1,0 +1,595 @@
+{
+  "created": "2026-10-05T19:03:12.558125+00:00",
+  "derivation_key": "77838ec1df970722853f4a587e4ab07c75bf7910e21468239ec546ff5544ed88",
+  "id": "artifact_66e94911704b42062ef7572c87f27a3e3798c9442f2508f059b013e31d300298",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "e02a28959078d05d36dd947d9e02e1956715a61c7c853abde054b2d1a5350f2b"
+      ],
+      "command": [],
+      "environment": {
+        "lock": "67e5583f9564da5655a13fc5daad75d08768e48882ea13385efdaeaf89bd7349",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.3"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "anndata",
+            "0.12.19"
+          ],
+          [
+            "annotated-doc",
+            "0.0.5"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "anyio",
+            "4.15.1"
+          ],
+          [
+            "array-api-compat",
+            "1.15.0"
+          ],
+          [
+            "asciitree",
+            "0.3.3"
+          ],
+          [
+            "bioframe",
+            "0.8.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.1"
+          ],
+          [
+            "click",
+            "8.5.0"
+          ],
+          [
+            "coloredlogs",
+            "15.0.1"
+          ],
+          [
+            "contourpy",
+            "1.4.0"
+          ],
+          [
+            "cooler",
+            "0.10.4"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "cytoolz",
+            "1.1.0"
+          ],
+          [
+            "data-archaeology-workbench",
+            "0.3.0"
+          ],
+          [
+            "defusedxml",
+            "0.7.1"
+          ],
+          [
+            "dill",
+            "0.4.1"
+          ],
+          [
+            "donfig",
+            "0.8.1.post1"
+          ],
+          [
+            "duckdb",
+            "1.5.5"
+          ],
+          [
+            "et_xmlfile",
+            "2.0.0"
+          ],
+          [
+            "fonttools",
+            "4.66.0"
+          ],
+          [
+            "google-crc32c",
+            "1.9.0"
+          ],
+          [
+            "h11",
+            "0.16.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "httpcore",
+            "1.0.9"
+          ],
+          [
+            "httpx",
+            "0.28.1"
+          ],
+          [
+            "humanfriendly",
+            "10.0"
+          ],
+          [
+            "hypothesis",
+            "6.168.1"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "iniconfig",
+            "2.3.0"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "legacy-api-wrap",
+            "1.5"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "msgspec",
+            "0.21.1"
+          ],
+          [
+            "multiprocess",
+            "0.70.19"
+          ],
+          [
+            "natsort",
+            "8.4.0"
+          ],
+          [
+            "numcodecs",
+            "0.17.0"
+          ],
+          [
+            "numpy",
+            "2.5.3"
+          ],
+          [
+            "openpyxl",
+            "3.1.5"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pandas",
+            "2.3.3"
+          ],
+          [
+            "pephubclient",
+            "0.6.0"
+          ],
+          [
+            "peppy",
+            "0.40.8"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "pluggy",
+            "1.6.0"
+          ],
+          [
+            "pyBigWig",
+            "0.3.26"
+          ],
+          [
+            "pyarrow",
+            "23.0.1"
+          ],
+          [
+            "pydantic",
+            "2.13.5"
+          ],
+          [
+            "pydantic_core",
+            "2.46.5"
+          ],
+          [
+            "pyfaidx",
+            "0.9.0.4"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "pytest",
+            "9.1.1"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "pytz",
+            "2026.4"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "ruff",
+            "0.16.9"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "scverse-misc",
+            "0.1.6"
+          ],
+          [
+            "session-info2",
+            "0.4.2"
+          ],
+          [
+            "shellingham",
+            "1.5.4"
+          ],
+          [
+            "simplejson",
+            "4.1.2"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sortedcontainers",
+            "2.4.0"
+          ],
+          [
+            "toml",
+            "0.10.2"
+          ],
+          [
+            "toolz",
+            "1.1.0"
+          ],
+          [
+            "typer",
+            "0.27.2"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "tzdata",
+            "2026.4"
+          ],
+          [
+            "ubiquerg",
+            "0.9.3"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "zarr",
+            "3.4.0"
+          ]
+        ],
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "python": "3.12.8",
+        "source": "bfa1d4dfb10491811a958fb0d1e5071f8d3f691cb7eef35e77cd8f8e151c1e12"
+      },
+      "inputs": [
+        {
+          "blob": "080953b4cc37c29efe19d9eafc948bfb6add99ba69db3354c4fb8c693a0b9c57",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "47e2e1706346407943c4673452b34b3697db6decb25a9bf84353d2abf494a6c1",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "3b89a491fb4070299d1d7bfa4f2a59d3738ad6d8215c504745d5d64aa093defc",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "ba2221e72d7eab931e905ee2cdbabd42aecb6def4e72ebef8b0748147be92ae7",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "14e61c21916566d50f627214811adb631ebc3ceb7abc89e7a73ed4ee2fe95be3",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "8ef380613756eba0d7fdc070f8c93bbf47c5c21396f57613208063cb0f356548",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "10365c0a373460688e185c75c2c7014867957c28414e8445a40bef04ce8dac24",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c3f3498daeb8abda376422d2e458aed9a4d278c96cf228cf3b1ef4f05b8c243d",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "93be515ff6e6d84131248d7eabe727343b341d0fff611b567d4d156ff4945933",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c29ff25c8a5cb3e06a8a8d095b3a046b540031f474ed9075060d5b92a9013b06",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "2b07009cf68e3f57cabac1bb60c0844c52da5ba6332b007112d617c1dfe2f70b",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "7a557cd1e9d71fef2833cc5539b1370bd467c6a91b0b7710efa340a892acbe9b",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c481e12d0b213751e4285d0cd849033f95a9b176ebe5991cb047739f36133e51",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "7b1cb0125cdc4d9b2f4d0a0fa9361ddc0f256a7051416d5195d00d9982e63a17",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "d5fce74d7c4866ad2822934c1f6ee3b837172799ea7bd14e8816ef5999276b31",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f395a5e81fb435b4ecf1daecaa1f701bfabeb6572fb6647764b239dcf713c918",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "9fe8752aaca31c8f81fb14b8fbe2e1296d5a91414280b93ef3986c74eca830c4",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "1974bc9d02483038ff8aef428f712a180e5d6cfee205d3db377c8c829de6de36",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "bc4bab25dabe7871a7668924510cb9dd11f89e7c2b3e6e889e05b3e790132921",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "1d21c07ec385da175155ccd34286b10e225f26985cf377688d22c8f096241d10",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "ed480d8d80d7283a9606b2b09ef8c88c67f816c4beb0343be3077537e713eaa9",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f0ceb310899a1865866ffa382bf7a8ffadb05a596ef04113634b84a46910ff3a",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f42e50fb3f2eb34e5757cae5770ad64401c5850d7f58647fa565a233761f27ea",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "419b1c8c758a66628e348d96e3a13cce1f000db9c61fe17dc9af8fb3a866a86d",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "15c3a073da9725db92c39458b461e8d1b24e12108152f61de5fc6e270dbbfe76",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b8a8f0822746ff41dcfcb5dc6a0f65279cb30e06b731b166b8749a806b64f552",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4966e6237023d1c6e62297991b0897209293fbf896c857c7b16c262cc1b2804c",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "e4f18b2862a20a553e1d6065f97952c976663d9bad617405c665ec77bc95a527",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "1a77e2d66f06c77cd027adc35ea14f231f95c679193faa7354a619513edee3cb",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "91bee4866b4f87e70b34ac3fdea9c82bf8674f9d7bf572b5385dfd64245c347e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c1b47c88886e844b023746682c032f32978a894ee2c75f3d2880aad10f11fb37",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4538c8354021152109cc42cb2e45a1b2fae6ada2e0f31ed93933fd2496196db1",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "e1c47a6efe3731f6b56fe95031c862e7ec44a57f711b548727adc660547609cd",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "669143f24548be540eb9002023b9c02d02ea6c116de17dc2db23a021cb2b1028",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "0359bac95b528efd73f986773e91b475af8cf5bd0f6fac27f9a4bf2560bd90b1",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "78eeaf73be9d1576d1713c3a97b9988d386f713a21842f128eeb3f0a45f7d295",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "badfb4d9bfb1097e1b854954430e01fa6ffee657964405c2f9a7d2414a1156fd",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "rate_fit": false,
+        "scope": "bounded-source-audit"
+      },
+      "references": [
+        "858f1edbb147bb15082540a6512abe54ad4b84cc093b3481cc5ee5e54820bea3"
+      ]
+    },
+    "derivation_key": "77838ec1df970722853f4a587e4ab07c75bf7910e21468239ec546ff5544ed88",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "a53b838edb24db360e0eaeec53db8be1c4d811f699efe5961a80e7b01e6a25d7",
+      "bytes": 9851,
+      "name": "evidence-matrix.tsv"
+    },
+    "output_role": "evidence-matrix",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Source-audited mature RNA fate, human UTR evidence, route limits and falsifier; not independent biological replication",
+    "title": "PMP22 RNA fate: evidence-matrix"
+  },
+  "manifest_blob": "97c9d67dac2d28f6bcfca0fb1613eefa033a6c8d1b326b8da32a7f0a24929eb9",
+  "output_blob": "a53b838edb24db360e0eaeec53db8be1c4d811f699efe5961a80e7b01e6a25d7",
+  "output_role": "evidence-matrix",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_53839439c0344c80835201ae0e28eb5c/trial/workspace/blobs/sha256/a5/a53b838edb24db360e0eaeec53db8be1c4d811f699efe5961a80e7b01e6a25d7",
+  "questions": [
+    {
+      "question_id": "q_a9976f21480c4fec",
+      "relationship": "produced"
+    }
+  ]
+}

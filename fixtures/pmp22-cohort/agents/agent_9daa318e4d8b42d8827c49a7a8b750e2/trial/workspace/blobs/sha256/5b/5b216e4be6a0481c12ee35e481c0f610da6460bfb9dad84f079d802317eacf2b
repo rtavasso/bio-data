@@ -1,0 +1,60 @@
+{
+  "source": "GSE74381",
+  "QC": [
+    {
+      "source_file": "control",
+      "rows": 28107,
+      "nonunique_tracking_id_rows": 100,
+      "status_counts": {
+        "OK": 27812,
+        "LOWDATA": 294,
+        "HIDATA": 1
+      },
+      "aggregation": "Sum FPKM within panel gene only if all statuses OK and transcript IDs unique within gene; otherwise unavailable. This is not count summation or a promoter readout."
+    },
+    {
+      "source_file": "ko",
+      "rows": 28107,
+      "nonunique_tracking_id_rows": 100,
+      "status_counts": {
+        "OK": 27813,
+        "LOWDATA": 294
+      },
+      "aggregation": "Sum FPKM within panel gene only if all statuses OK and transcript IDs unique within gene; otherwise unavailable. This is not count summation or a promoter readout."
+    }
+  ],
+  "discrepancy": "Cuffdiff summary table Pmp22 rises (15.2952 to33.7436); deposited control/KO transcript-file Pmp22 falls (12152.8 to470.812). Metadata assigns the same two filenames to both replicate GSM records, so they cannot be reconstructed as four replicates or assumed identical to group summary. Preserve conflicting encodings without choosing the one that agrees with the paper.",
+  "limits": "Six-marker panel only; Mpz control HIDATA. No independent-replicate uncertainty and no prospective credit. Both representations are the same source study, not two validations. Cross-assay calibration versus age/Cre effects remains unresolved.",
+  "diagnostic_results": [
+    {
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": -4.688521879449415,
+      "delta_myelin": -4.083361868787613,
+      "delta_candidate": 0.3405876582716947,
+      "baseline_prediction": -5.056824228140593,
+      "augmented_prediction": -5.582031704334919,
+      "SSE_ratio": 5.8855856995491695,
+      "mode": "post_hoc_six_marker_single_file_pair_diagnostic"
+    },
+    {
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": -4.688521879449415,
+      "delta_myelin": -4.083361868787613,
+      "delta_candidate": -0.2528121191784236,
+      "baseline_prediction": -5.056824228140593,
+      "augmented_prediction": -4.327141455627356,
+      "SSE_ratio": 0.9627649452104894,
+      "mode": "post_hoc_six_marker_single_file_pair_diagnostic"
+    },
+    {
+      "candidate": "Hck",
+      "delta_Pmp22": -4.688521879449415,
+      "delta_myelin": -4.083361868787613,
+      "delta_candidate": 1.1573803830874192,
+      "baseline_prediction": -5.056824228140593,
+      "augmented_prediction": -5.404020873702116,
+      "SSE_ratio": 3.77406241734955,
+      "mode": "post_hoc_six_marker_single_file_pair_diagnostic"
+    }
+  ]
+}

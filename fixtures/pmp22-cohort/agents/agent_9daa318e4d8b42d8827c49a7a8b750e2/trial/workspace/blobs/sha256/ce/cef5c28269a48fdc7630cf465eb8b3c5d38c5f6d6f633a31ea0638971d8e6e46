@@ -1,0 +1,96 @@
+# PMP22 regulatory system
+
+Question: q_277f20df4b6b47cc
+Agent-authored bounded investigation, 2026-09-27. Primary scope: human Schwann-cell regulation, separating promoter, RNA and protein endpoints. Initial map contains only unverified hypotheses. No inputs/source-context.json present. Initial work-new failed because workspace/staging was absent; created directory and retried successfully. Budget: at most 20 external requests, 64 MiB/file, 128 MiB total.
+
+Initial searches: literal PMP22 and Pmp22; Schwann text; artifacts and prior work PMP22. Found source-preserving GSE201623 artifacts and promoter-oriented GSE139321 / PMC7430845 files. PBMC feature presence and refGene annotation do not test Schwann regulation.
+
+## Scope, first pass and reuse audit
+
+Initial snapshot: mechanisms.initial.json, blob b5c28da96149b0051eceface1a150c38e587a0541160459d3bbb0e489800c8ea. Created before substantive literature collection. All initial biological edges were explicitly unverified.
+
+Inspected source profiles and native paths for GSE139321, PMC7430845 supplements and XML, and GSE201623. Read exact artifact manifests and provenance for artifact_c220213c6e67030719a000d405d54566a5a5690e448fd7a4c950621ceabd13a2 and its parent artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a. Parent derivation preserves all input strings, original row locators, no normalization; original source blob b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580, prepared output a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4. Existing Pmp22 extraction uses exact #Geneid selector and preserves source row 6729. Both artifacts were attached via artifact use; normalization/panel extraction is NEW computation, not claimed as cached.
+
+GSE201623 source metadata describes primary rat Schwann cells, 48h lentivirus treatment, counts after featureCounts on rn6 RefSeq; AS overexpression versus GFP control. Cultures include forskolin and heregulin. Two labelled libraries per group are not assumed independent donors. GEO GSNAP versus paper HISAT2 alignment description remains unresolved.
+
+## Executed analyses and implementation notes
+
+Commands use supplied bin/python explicitly because shell python resolves to a pyenv environment without pandas. No install performed. inspect_local.py reads native immutable TSV/XLSX/XML. Workbook formulas are not evaluated. Initial attempts failed on extensionless blobs and EmptyCell coordinates; fixed by passing binary file objects and excluding empty coordinate-less cells. Successful run preserved outputs and stderr. Arrow sysctl warnings are environmental, not scientific data failures.
+
+analyze_rna.py reuses immutable prepared Parquet; 28-gene regulator/proteostasis/lipid panel. Numeric parsing exposed an embedded repeated header at source row 1472 (Geneid, LentiAS-1, longer sample labels); explicitly excluded that exact header pattern. 17,949 numeric feature rows; 13,610 positive in all four samples for median-ratio size factors. No raw sequencing processing and no significance testing. Size factors and raw source rows retained. Pmp22 AS/GFP=0.885, Egr2=1.258, Jun=0.820; this is discordant with a simple Egr2-silencing/Jun-induction model. Do not equate steady-state mRNA with nascent transcription or activity.
+
+GSE139321 rn5 assembly established from PMC7430845 Methods. TSS IDs 5439 and 5446 show cAMP induction and SOX10-loss reduction; source edgeR statistics extracted unchanged. 22 Pmp22 clusters in selected 4,993-TSS universe. No P1/P2 labels inferred. Alternate supplemental encodings are the same study. Uppercase human PMP22 in the workbook is annotation/list membership, not human measured expression. Paper and GEO clonal descriptions differ; source statistics reported without a new independence claim.
+
+## Blind-spot audit and second collection
+
+First pass could not distinguish direct PMP22 cis regulation from a broad repair/differentiation shift. Followed EGR2 upstream to NRG/ERBB/YY1 regulation of Egr2-AS and EZH2/WDR5 chromatin mechanisms, using PMC11592338 primary source and GEO context. Retained the RNA contradiction. Expanded panel to Mtor, AP-1, lipid and protein-quality-control genes; no inference of pathway activity from transcript alone.
+
+Selected three additional processed narrowPeak gzip files using bio fetch (GFP1 already local); total newly acquired measurement bytes 3,482,280. Acquired revisions: asset_5af4bd06c28c3f88d7b4cde500f161bd, asset_dbbd6e785b9997688f2be7d6ace37d76, asset_b59cf55f51237ff92b69d16a70bdb77d. Inspected each through bio. analyze_atac.py reads immutable gzip bytes, not author code. Reference asset_c3bc524f6b0d57c01d1709dec24cf801 is rn6 by parent UCSC URL; used strand-aware -1500/+500 windows, no rn5/rn6 mixing. Egr2 and Jun have called peaks in all libraries. The single selected RefSeq Pmp22 promoter has no called overlap; that is selected-list absence, not a measured zero or proof of no accessibility. Promoter completeness and source-reference version unresolved. This follow-up did not establish a direct cis mechanism.
+
+Broadened interpretation to miR-29, TEAD/YAP/TAZ and protein turnover, and distinguished PMP22-to-ABCA1 consequence from unproven feedback. No new causal biological discovery claimed; upstream antisense control is an established published mechanism newly incorporated in this question.
+
+## Retrieval and budget ledger
+
+No source-context.json existed. Public requests conservatively counted: four web search queries; two bio discover attempts (first failed before transport due to missing runs directory, second succeeded); seven XML retrieval attempts (TLS certificate verification failures, preserved in inputs/public-receipts.json); four web opens (one primary full text, three reCAPTCHA); three processed-file fetches. Total at most 20 top-level attempted requests, including the pre-transport discovery failure. No further public requests. Downloaded measurement files each <1.3 MiB and total ~3.32 MiB, below 64 MiB/file and 128 MiB overall; literature search results were bounded. Adapter discovery receipt and fetch receipts preserved. Web-tool source results are referenced by URL and summarized in REPORT.md; they are not falsely described as locally downloaded full texts.
+
+Retrieval gap event event_97465bb7ee754ddc99d013770944ad34 records full-text access failures and an actionable TLS/transport route. Do not disable TLS verification. Several primary-paper branches are supported only by indexed excerpts, explicitly marked in coverage. No raw sequences, external scripts, macros, serialized R or pickle objects executed.
+
+## Stopping boundary
+
+Useful bounded investigation complete; full biological system remains open. Outputs/REPORT.md summarizes source-backed layers, observed measurements, contradictory evidence and prioritized next steps. mechanisms.r002.json records first-pass revision; mechanisms.json is revision 3 after the ATAC blind-spot audit. evidence-coverage.tsv differentiates analyzed measurements, located literature, and deferred questions. Highest-priority next step: reconcile Egr2-AS sample/design and endpoint discrepancies with matched nascent RNA, protein and quantitative accessibility, then validate human promoter-specific control. Other unresolved branches include TEAD mediation, miR upstream control, turnover, lipid feedback, human dosage/cis variation, hormonal/metabolic control and non-Schwann contexts.
+
+## Preserved objects and registered computations
+
+- outputs/REPORT.md: afce7b9fcf3acef8410cb9cb08815054cfcb914d0754d1a7baa116ab255467e6
+- outputs/evidence-coverage.tsv: 74eeb15371ce1a446c994c36922e1f004f01a0e5eb176a6e6fe1d68e1da8ed51
+- outputs/mechanisms.initial.json: b5c28da96149b0051eceface1a150c38e587a0541160459d3bbb0e489800c8ea
+- outputs/mechanisms.json: 34c034ded05087051823be546f52546c5a731c751d986da783de9c1517d53f3f
+- outputs/mechanisms.r002.json: da109a466779d1a55c1f71074f240cf68b05150b003b37040e0c62644825a809
+
+All input metadata and output hashes plus registration receipts: outputs/preservation.json. Agent-authored prose/maps are immutable interpretation objects, not fabricated computational artifacts. Computed outputs registered with scripts, source IDs and metadata-file hashes.
+
+Validation: all 17,950 original data rows including the embedded header match reused Parquet cell-for-cell and row-for-row; output SHA256 verified. Network snapshots checked for unique IDs, valid endpoints and evidence on non-hypothesis edges. Missing TSS statistics serialized as JSON null in a new extraction artifact; earlier registered version remains immutable. Final preservation ledger blob: b4c0693b079bbc49ccf801e12898f32eddb26a8edebb69a39c863f2530187af6
+
+## Continuation kickoff (new session)
+Read inherited notebook, scripts, outputs and frontier. No source-context.json at checkout inputs. New budget: 150 requests, 512 MiB/file, 1 GiB cumulative newly downloaded; prior session usage kept distinct. Existing r003/report/coverage preserved. r004 corrects excerpt-only edges to hypotheses pending full-text audit. Initial continuation queue r001 saved before external collection. Reuse inspected again; source-preserving representation is applicable to broader descriptive RNA audit; new analysis not cached.
+
+## Checkpoint r005 / queue r002
+New full-transcriptome audit (17,949 numeric rows) retains Egr2↑ / Jun↓ under both median-ratio and CPM normalization and in all pairwise comparisons. No evidence to invert labels. 11,573 genes pass mean normalized count >=20; PC1 50.96%, PC2 37.56%; AS libraries less correlated with each other than GFP libraries. Seven globin features dominate strongest positive changes, motivating immediate source/composition audit. New protein branch selected: PMC8191293 TMT co-IP quantitative selected lists, not total protein abundance or complete feature universe. Before further acquisition, map r005 and queue r002 saved. r004 blob 42e56280faf5e4c811dd0fde980f7869d01ad94253e62ae9556beda81f87994b; queue r001 blob 3a6f732e7eb73b199e02eaec382e99ba9737f21c31adfaf64280b079cf6ce4c5.
+
+## Checkpoint r006 / queue r003
+Registered full RNA and protein analyses (continuation-registration.json). Independent Runx ATAC continuous tracks acquired, normalized to 1e7 tags per embedded track header; mm10 established in source metadata (TDF genome field itself is a local path). No new DE/DA significance because one library per genotype, with differing DRG/tumor source labels. Broad promoter mean shift will contextualize Pmp22. Human GSE7423 acquired; VALUE is log10, not log2. BAR duplication and JIM Leu16Pro each one donor; array duplicates are technical. Primary TEAD paper fully read; direct motif evidence strengthened but EGR2 mediation fraction is blocked by lack of factorial/rescue measurements. Continue next into 2017 Egr2-AS original source and human probe/channel-quality audit. r005 blob 1c46b79f0d5922512855fa311898b46c3c13307de9babe644603a205bdf33d60; queue r002 blob 1c6dc892cfaa468bca7f70d1be00af34916d74a01eaaa79ac49e475f1fde479e.
+
+Preserved mechanisms revision 7: a6bfcf85be02dc200967c29d41fae9c6e22228d1d8b98290482b963d2af2993c
+
+Preserved investigations revision 4: eebafdccd31dd46ffb2300453a27d4c195462c889ca5154775141558f3d3b25a
+
+Queue r005 before RUNX paired-study RNA acquisition: d1e14cdcdf3bc026798574217d51bb442277749e163b6374f137dfd550a85714; bulk RNA n3 distinct from sorted ATAC n1. Source already reports lower P2 accessibility with higher P1 RNA.
+
+
+## Continuation executed analyses and final checkpoint
+
+The new REPORT.md is the current synthesis; REPORT.inherited.md retains the prior result. All scientific scripts use ./bin/python on processed/native inputs. No application, skill or evaluator code was changed, no parent evaluation directory was inspected, and no other agents/evaluations were launched. The complete execution guide is outputs/REPRODUCE.md.
+
+The full GSE201623 RNA audit covers 17,949 numeric genes using the exact inherited source-preserving Parquet. The fresh gzip decompressed hash matches b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580. Egr2 rises and Jun falls in every pairwise AS/GFP comparison; Pmp22 is 0.885x. A broad ranking exposed AS2-specific hemoglobin enrichment. The refined ten-gene counts are 953, 259574, 620, 462; excluding those genes leaves the target ratios. The preliminary broad globin substring files include non-hemoglobin names; use the registered rna-hemoglobin outputs. No raw-read origin was inferred. GEO GSNAP versus paper HISAT2 remains a provenance discrepancy, and RNA libraries cannot be matched to the protein assay cultures.
+
+Primary full texts and native supplements were acquired with verified TLS. XML HTTP500 responses were handled through actual PMC HTML for TEAD, enhancer, miR29, original 2017 Egr2-AS and lipid papers. Exact selected passages and an assay table are preserved. The 2017 nuclear-run-on and transient injury effects narrow the interpretation but do not settle the later RNA discrepancy. The linked 2017 supplemental PDF returned HTML; EuropePMC returned a non-open-access error XML despite HTTP200. Those bytes are preserved as failures, not valid PDF/ZIP. The 2024 native nested PDFs were inspected through locally authored Swift/PDFKit extraction. The miR29 source has r-squared 0.78 in Results versus 0.078 in the caption; that discrepancy remains unresolved. Nerve pools and technical repeats were not treated as independent animals.
+
+Independent quantitative ATAC uses deposited unzoomed TDF tracks, not raw sequencing. read_tdf.py checks binary structure and tile consumption. An initial strict positive-width assertion exposed zero-width bed intervals; allowing them with zero integral preserves their meaning. Missing intervals are not zeros. The embedded track normalization is ten million tags; mm10 is sourced from GEO/paper, not the local-path genome field. Across 33,105 promoter/site windows, 3,288 pass 90% observed coverage in both tracks. Common-base Pmp22 log2 differences are -0.447, -0.626 and -0.718; the reported RUNX site is -0.111 and the broader promoter median about -0.450. With one library per genotype and differing DRG/tumor annotations, no causal differential-accessibility inference is made. Source Figure5 already describes lower P2 accessibility with higher P1 RNA. Contemporary RefSeq windows were not guessed to be P1/P2.
+
+The consequential RUNX RNA follow-up analyzed all 24,062 gene rows in six processed count files. Pmp22 is 2.308x, Mpz 2.820x, and Mbp 2.475x, with all nine cross-group pairwise increases. Nf803/Nf809 and Rx1692/Rx1698 GEO titles are swapped relative to filenames and internal headers, but stay within groups. GEO omits Nf1 from the Rx genotype field while the paper describes triple knockout. No cross-assay pairing or clean genotype causality is justified. The gene matrix cannot reproduce Kallisto transcript estimates. All-NaN pairwise warnings arise from zero denominators and are preserved as NA; Arrow sysctl warnings are environmental. No fresh DE p-values were made.
+
+The protein analysis used all 670 selected XLSX entries, 515 unique proteins and 40 shared by all three variant lists. No workbook formulas were executed, no unlisted values were zero-filled, and differences of enrichments were not assigned fresh p-values. LMAN1 binding versus knockout response, and functional UGGT1 despite screen absence, distinguish interaction from necessity. The PXD023091 SEARCH files exceed the per-file cap; no small replicate-channel matrix was listed and no raw processing was attempted. The G3BP analysis uses published half-life summaries and TableS2: 4.4 hours control versus 4.2 after siG3BP1, in MCF7 cells rather than Schwann cells.
+
+The human analysis covers 43,931 probes from 12 arrays representing seven donors. BAR duplication and JIM L16P are one donor each, with technical duplicates averaged within donor. Log10 test/reference semantics were verified in complete source sample tables. The two PMP22 probe contrasts are 25.6x/2.66x for BAR and 27.4x/4.86x for JIM. They were neither assigned P1/P2 labels nor combined into a dosage coefficient. The broad BAR/JIM contrast correlation is 0.812; state, tissue and donor effects remain confounded.
+
+The lipid primary source adds a reciprocal ABCA1-to-PMP22 protein-processing effect. The source total protein increase is 1.53x while the endo-H-resistant fraction falls from 81.9% to 52.2%. The executed product of group means gives an illustrative resistant index of 0.975, not a paired or functional-myelin measurement. No covariance, confidence interval or formal null claim is available. Direct promoter feedback remains unmeasured.
+
+Computational inputs, code, environment and 44 successful registration receipts are in continuation-registration.json. Integrity validation confirms every current registered output hash matches its immutable blob, with no conflicting output or registration warning; numeric TSV values contain no infinities. Network IDs/endpoints and queue artifact/blocker references pass checks. The current network is revision8 (31 nodes, 37 edges), the queue revision6 (seven analyzed, four blocked, one deferred). High priorities have executed analyses or source-specific blockers; this does not mean their causal alternatives were resolved or all public data exhausted. Hormonal/metabolic coverage is deferred and unfinished. The question remains open and queue in_progress.
+
+The most consequential restart is matched Egr2-AS nascent/mature RNA, protein/activity and quantitative promoter counts. Subsequent needs are independent human genotype-aware promoter/protein series, an unfiltered small TMT channel matrix, and endogenous miRNA/AGO measurements across state changes. All inherited snapshots remain. The new schematic is a layer overview; the JSON network retains the full evidence and uncertainty.
+
+Preserved final snapshot hashes:
+- outputs/mechanisms.r008.json: 04a0a373fc918697d9aad1de188babc4a4ba7c6ae1d2d382c878703ab2058fcb
+- outputs/investigations.r006.json: 6acffdc8f8f09edc2800358ccaab46f1235683f1eade91cb76714d1d21390dea
+
+Continuation transport: 66 counted requests (59 direct/7 search queries), 200886434 accounted bytes including partial transfers and a 112000-byte search-response reserve. Limits:150 requests,512MiB/file,1GiB new total. Archive extraction does not add network bytes. Prior-session usage is separate. Three conservatively reconstructed receipts after an early ledger-write collision remain labeled in transport.json.

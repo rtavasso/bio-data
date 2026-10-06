@@ -1,0 +1,145 @@
+{
+  "source": "PMC8191293 Table S1 (mmc2.xlsx), PXD023091",
+  "endpoint": "TMT co-immunoprecipitated protein enrichment over mock untagged PMP22, not cellular abundance, surface trafficking, direct binding or functional mediation.",
+  "material": "Myc-tagged human PMP22 WT/N41Q/L16P constructs in HEK293 cells. Six biological co-IP replicates per construct across four 6-plex TMT batches reported in Methods. Supplement lacks replicate-level intensities/channel map.",
+  "selection": "Storey Q<0.1 and mean log2 enrichment over mock >0.2; workbook contains selected hits only. Missing entry = not listed, not measured-zero/noninteraction.",
+  "counts": {
+    "WT": 56,
+    "N41Q": 485,
+    "L16P": 129
+  },
+  "union": 515,
+  "all_three": 40,
+  "shared_pairs": {
+    "WT_N41Q": 51,
+    "WT_L16P": 45,
+    "N41Q_L16P": 99
+  },
+  "formula_cells": 0,
+  "fresh_tests": "None. Source Q values retained, not recalculated. Difference of source mean log2 enrichments is descriptive and lacks SE/covariance.",
+  "batch_warning": "Primary Results sec1.4 explicitly attributes differing hit numbers partly to batch-to-batch MS power. Counts cannot establish broader true binding of N41Q.",
+  "candidate_contrasts": [
+    {
+      "accession": "P49257",
+      "gene": "LMAN1",
+      "WT": 0.7062937885946267,
+      "L16P": 1.6320668049685703,
+      "L16P_minus_WT_log2_selected": 0.9257730163739436,
+      "L16P_over_WT_enrichment_ratio": 1.8997018563292527
+    },
+    {
+      "accession": "Q9BVK6",
+      "gene": "TMED9",
+      "WT": 0.2686008882977669,
+      "L16P": 1.1925887244718776,
+      "L16P_minus_WT_log2_selected": 0.9239878361741107,
+      "L16P_over_WT_enrichment_ratio": 1.8973526330231933
+    },
+    {
+      "accession": "Q9Y282",
+      "gene": "ERGIC3",
+      "WT": 0.2378971726316769,
+      "L16P": 1.0873294825734712,
+      "L16P_minus_WT_log2_selected": 0.8494323099417943,
+      "L16P_over_WT_enrichment_ratio": 1.8017917936800003
+    },
+    {
+      "accession": "P27824",
+      "gene": "CANX",
+      "WT": 1.1743934447815991,
+      "L16P": 2.0101455393232626,
+      "L16P_minus_WT_log2_selected": 0.8357520945416634,
+      "L16P_over_WT_enrichment_ratio": 1.784787227735682
+    },
+    {
+      "accession": "P08195",
+      "gene": "SLC3A2",
+      "WT": 0.3555408735264529,
+      "L16P": 1.1747385263687322,
+      "L16P_minus_WT_log2_selected": 0.8191976528422793,
+      "L16P_over_WT_enrichment_ratio": 1.7644244444144788
+    },
+    {
+      "accession": "P51572",
+      "gene": "BCAP31",
+      "WT": 0.43578395937610725,
+      "L16P": 1.2435607533396393,
+      "L16P_minus_WT_log2_selected": 0.8077767939635321,
+      "L16P_over_WT_enrichment_ratio": 1.750511808641486
+    },
+    {
+      "accession": "Q8TCT9",
+      "gene": "HM13",
+      "WT": 0.6576012203140036,
+      "L16P": 1.4518095502191846,
+      "L16P_minus_WT_log2_selected": 0.794208329905181,
+      "L16P_over_WT_enrichment_ratio": 1.7341255223744483
+    },
+    {
+      "accession": "P16615",
+      "gene": "ATP2A2",
+      "WT": 0.503025401215632,
+      "L16P": 1.2579709748660637,
+      "L16P_minus_WT_log2_selected": 0.7549455736504317,
+      "L16P_over_WT_enrichment_ratio": 1.6875679267646757
+    },
+    {
+      "accession": "O75396",
+      "gene": "SEC22B",
+      "WT": 0.5090342960286348,
+      "L16P": 1.2566631585474044,
+      "L16P_minus_WT_log2_selected": 0.7476288625187696,
+      "L16P_over_WT_enrichment_ratio": 1.679030994734747
+    },
+    {
+      "accession": "Q15392",
+      "gene": "DHCR24",
+      "WT": 0.27444713671968257,
+      "L16P": 1.0121468713272777,
+      "L16P_minus_WT_log2_selected": 0.7376997346075951,
+      "L16P_over_WT_enrichment_ratio": 1.667514994786753
+    },
+    {
+      "accession": "P62979",
+      "gene": "RPS27A",
+      "WT": 0.882600630232945,
+      "L16P": 1.619516642058258,
+      "L16P_minus_WT_log2_selected": 0.7369160118253131,
+      "L16P_over_WT_enrichment_ratio": 1.6666093878846209
+    },
+    {
+      "accession": "Q15005",
+      "gene": "SPCS2",
+      "WT": 0.3341997956333369,
+      "L16P": 1.0586325034247612,
+      "L16P_minus_WT_log2_selected": 0.7244327077914243,
+      "L16P_over_WT_enrichment_ratio": 1.6522508154559743
+    },
+    {
+      "accession": "O15260",
+      "gene": "SURF4",
+      "WT": 0.8035654373414661,
+      "L16P": 1.5069110886686037,
+      "L16P_minus_WT_log2_selected": 0.7033456513271376,
+      "L16P_over_WT_enrichment_ratio": 1.6282764376737207
+    },
+    {
+      "accession": "P55072",
+      "gene": "VCP",
+      "WT": 0.577824320047637,
+      "L16P": 1.269803725354638,
+      "L16P_minus_WT_log2_selected": 0.691979405307001,
+      "L16P_over_WT_enrichment_ratio": 1.6154984935658205
+    },
+    {
+      "accession": "P39656",
+      "gene": "DDOST",
+      "WT": 0.33819931913483847,
+      "L16P": 0.9940286670180791,
+      "L16P_minus_WT_log2_selected": 0.6558293478832407,
+      "L16P_over_WT_enrichment_ratio": 1.5755213973236057
+    }
+  ],
+  "blocker": "All four deposited SEARCH .msf files exceed 1.18 GB, above 512 MiB/file limit. RAW spectra would require unauthorized raw processing. No small processed per-replicate/channel matrix in returned inventory. Selected XLSX used as lawful alternative.",
+  "functional_followup": "Source Figure 6 KO shows LMAN1 interaction does not imply trafficking requirement; UGGT1 not detected in screen yet affects trafficking. Surface transport not equal correctly myelinating function."
+}

@@ -1,0 +1,133 @@
+{
+  "revision": 1,
+  "scope": "Continuation of q_277f20df4b6b47cc; Egr2-AS discrepancy, quantitative accessibility and neglected RNA/protein regulation. Human Schwann scope preferred, species and endpoints separated.",
+  "status": "in_progress",
+  "stopping_reason": "Investigation continues within 3600-second, 150-request, 1-GiB new-download budget",
+  "items": [
+    {
+      "id": "egr2-as-discrepancy",
+      "priority": "high",
+      "question": "Why do deposited Egr2/Jun RNA directions oppose a simple antisense repair-state model?",
+      "alternatives": [
+        "sample/column mapping or processing error",
+        "endpoint/time/context dependence",
+        "published model not reproduced"
+      ],
+      "readout": "Sample-level metadata, full transcriptome QC, source supplementary measurements",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Retrieve full primary text, GEO sample metadata and supplementary RNA/protein/nascent assays; analyze all genes before inference",
+      "blocker_evidence": []
+    },
+    {
+      "id": "quantitative-accessibility",
+      "priority": "high",
+      "question": "Does Egr2-AS alter quantitative accessibility at Egr2/Jun/Pmp22 and genome-wide?",
+      "alternatives": [
+        "local chromatin response",
+        "global state change",
+        "peak-selection artifact"
+      ],
+      "readout": "Per-sample counts or continuous signal with sourced assembly",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Inventory linked ATAC files and paper supplements; do not treat Hi-C matrices or narrowPeak scores as fragment counts",
+      "blocker_evidence": []
+    },
+    {
+      "id": "rna-protein-branch",
+      "priority": "high",
+      "question": "Which post-transcriptional mechanisms explain RNA/protein divergence?",
+      "alternatives": [
+        "miRNA-dependent RNA decay or translation",
+        "protein retention/clearance",
+        "transcriptional change"
+      ],
+      "readout": "Processed perturbation or kinetic measurements with RNA/protein endpoints",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Retrieve miR-29, RNA-binding or proteostasis primary papers and exact measurement supplements; execute suitable analysis",
+      "blocker_evidence": []
+    },
+    {
+      "id": "tead-mediation",
+      "priority": "high",
+      "question": "Are direct TEAD and EGR2-mediated routes distinguishable?",
+      "alternatives": [
+        "direct cis regulation",
+        "EGR2 mediation",
+        "shared cell-state response"
+      ],
+      "readout": "TEAD perturbation and rescue readouts",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Audit primary full text and processed data availability",
+      "blocker_evidence": []
+    },
+    {
+      "id": "human-cis-dosage",
+      "priority": "high",
+      "question": "What human evidence transfers to promoter/copy-number regulation?",
+      "alternatives": [
+        "cis dosage effect",
+        "cell-state composition",
+        "species-specific regulation"
+      ],
+      "readout": "Human Schwann genotype-aware measurements",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Seek suitable human primary measurements; keep cross-species claims separate",
+      "blocker_evidence": []
+    },
+    {
+      "id": "lipid-hormonal-frontier",
+      "priority": "medium",
+      "question": "Does metabolic state feed back onto PMP22?",
+      "alternatives": [
+        "feedback",
+        "downstream consequence"
+      ],
+      "readout": "independent metabolic perturbation with PMP22 endpoint",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Retain frontier pending higher-priority analyses",
+      "blocker_evidence": []
+    }
+  ]
+}

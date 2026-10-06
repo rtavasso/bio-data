@@ -1,0 +1,1813 @@
+{
+  "inputs": [
+    {
+      "path": "outputs/matrices/development-rpkm.tsv.gz",
+      "sha256": "db3bd83d9df9ff2b4cacb66c5e626566684d66df81b0dbdf21a2f8865200cee9"
+    },
+    {
+      "path": "outputs/matrices/sorted-rpkm.tsv.gz",
+      "sha256": "1327d696aef274054f77adee2331a90dd2a0d88d7be3ba2bd119ea44598d4aba"
+    },
+    {
+      "path": "outputs/matrices/nae1-counts.tsv.gz",
+      "sha256": "9aff72451ebeca6cea295dcb9c054ea67e0e282770548814ae075b5ce11baa80"
+    },
+    {
+      "path": "outputs/matrices/nae1-log2.tsv.gz",
+      "sha256": "988cf9488b32e9ef814b22451bc379dbb8266c491aed5fd13f8e38a8a1403ee9"
+    },
+    {
+      "path": "outputs/matrices/figlia-counts.tsv.gz",
+      "sha256": "eb058905714b9effb84e8c076b4cc710b0638326533b7ac78321fa8f5976d7b9"
+    },
+    {
+      "path": "outputs/matrices/figlia-log2.tsv.gz",
+      "sha256": "115faf1784fdef877348ddde2a7aa21e9fb1ff64bc2d7fd9cb5e982d3a773217"
+    },
+    {
+      "path": "outputs/matrices/repair-log2cpm.tsv.gz",
+      "sha256": "930d0a397f8849bc3a24233c11e83e497e678d65aabdf41beeaefad5ff429afa"
+    },
+    {
+      "path": "outputs/matrices/repair-counts.tsv.gz",
+      "sha256": "7f8b8f20b3fd13166075450994acd62bf4bcbc610818f79e917a50856a4247fb"
+    }
+  ],
+  "panels": {
+    "antioxidant4": [
+      "Nqo1",
+      "Hmox1",
+      "Gclc",
+      "Gclm"
+    ],
+    "no_Nqo1": [
+      "Hmox1",
+      "Gclc",
+      "Gclm"
+    ],
+    "Pmp22": [
+      "Pmp22"
+    ],
+    "myelin7": [
+      "Mpz",
+      "Mbp",
+      "Mag",
+      "Prx",
+      "Plp1",
+      "Cnp",
+      "Mal"
+    ],
+    "immune": [
+      "Ptprc",
+      "Aif1",
+      "Csf1r",
+      "Tyrobp",
+      "Lyz2"
+    ],
+    "fibroblast": [
+      "Col1a1",
+      "Col1a2",
+      "Dcn",
+      "Lum"
+    ],
+    "endothelial": [
+      "Pecam1",
+      "Kdr",
+      "Cdh5"
+    ],
+    "proliferation": [
+      "Mki67",
+      "Top2a",
+      "Pcna",
+      "Cdk1"
+    ],
+    "immature": [
+      "Ngfr",
+      "Sox2",
+      "Jun",
+      "Gap43"
+    ],
+    "SC_identity": [
+      "Sox10",
+      "S100b",
+      "Erbb3"
+    ]
+  },
+  "bulk": [
+    {
+      "study": "Nae1KO",
+      "panel": "antioxidant4",
+      "effect": 2.368638808502191,
+      "ci_low": 2.03795552004964,
+      "ci_high": 2.6993220969547425
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "no_Nqo1",
+      "effect": 1.5268672389541518,
+      "ci_low": 1.2489365210036925,
+      "ci_high": 1.804797956904611
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "Pmp22",
+      "effect": -1.4958155959584243,
+      "ci_low": -1.9250443142289777,
+      "ci_high": -1.0665868776878709
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "myelin7",
+      "effect": -1.4592976509352944,
+      "ci_low": -1.7194125665842093,
+      "ci_high": -1.1991827352863795
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "immune",
+      "effect": 0.8189569733304225,
+      "ci_low": 0.6897915907588856,
+      "ci_high": 0.9481223559019594
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "fibroblast",
+      "effect": 0.4479631522506775,
+      "ci_low": 0.25259805582309974,
+      "ci_high": 0.6433282486782552
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "endothelial",
+      "effect": -0.31266412605941873,
+      "ci_low": -0.6447338741954647,
+      "ci_high": 0.01940562207662716
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "proliferation",
+      "effect": 0.9351404183661813,
+      "ci_low": 0.4149074388429357,
+      "ci_high": 1.455373397889427
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "immature",
+      "effect": 0.5244857471362483,
+      "ci_low": 0.26245587222196254,
+      "ci_high": 0.786515622050534
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "SC_identity",
+      "effect": -0.30800026352045684,
+      "ci_low": -0.49334599324434136,
+      "ci_high": -0.12265453379657232
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "Pmp22_relative",
+      "effect": -0.03651794502312988,
+      "ci_low": -0.2407471405595923,
+      "ci_high": 0.16771125051333252
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "antioxidant4",
+      "effect": -0.05376668873454449,
+      "ci_low": -0.24867183841854265,
+      "ci_high": 0.14113846094945368
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "no_Nqo1",
+      "effect": 0.0849099513162308,
+      "ci_low": -0.013960948210962165,
+      "ci_high": 0.18378085084342377
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "Pmp22",
+      "effect": -2.5568385598490124,
+      "ci_low": -3.0037220858011127,
+      "ci_high": -2.109955033896912
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "myelin7",
+      "effect": -1.491718085104603,
+      "ci_low": -1.6976448217123805,
+      "ci_high": -1.2857913484968255
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "immune",
+      "effect": -0.0764658016713966,
+      "ci_low": -0.4882062218639621,
+      "ci_high": 0.3352746185211689
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "fibroblast",
+      "effect": -0.7123798741793586,
+      "ci_low": -0.9644814974404359,
+      "ci_high": -0.4602782509182813
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "endothelial",
+      "effect": -1.015948130323176,
+      "ci_low": -1.6811162474096761,
+      "ci_high": -0.35078001323667607
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "proliferation",
+      "effect": 0.6102181874771944,
+      "ci_low": 0.010164645156098051,
+      "ci_high": 1.2102717297982908
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "immature",
+      "effect": 1.6440936572419265,
+      "ci_low": 1.1157849148067247,
+      "ci_high": 2.1724023996771282
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "SC_identity",
+      "effect": 0.1792579256794049,
+      "ci_low": -0.06531082221454779,
+      "ci_high": 0.42382667357335757
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "Pmp22_relative",
+      "effect": -1.0651204747444107,
+      "ci_low": -1.4712761739994198,
+      "ci_high": -0.6589647754894017
+    },
+    {
+      "study": "PTENKO",
+      "panel": "antioxidant4",
+      "effect": -0.1978557655352109,
+      "ci_low": -0.40880783700175316,
+      "ci_high": 0.013096305931331403
+    },
+    {
+      "study": "PTENKO",
+      "panel": "no_Nqo1",
+      "effect": -0.1847432143357821,
+      "ci_low": -0.31300664629165587,
+      "ci_high": -0.05647978237990833
+    },
+    {
+      "study": "PTENKO",
+      "panel": "Pmp22",
+      "effect": -1.9614494664344164,
+      "ci_low": -2.283987937005217,
+      "ci_high": -1.6389109958636157
+    },
+    {
+      "study": "PTENKO",
+      "panel": "myelin7",
+      "effect": -1.1341149202623502,
+      "ci_low": -1.3091451900609667,
+      "ci_high": -0.9590846504637336
+    },
+    {
+      "study": "PTENKO",
+      "panel": "immune",
+      "effect": -0.37558886288262716,
+      "ci_low": -0.6552801458788028,
+      "ci_high": -0.09589757988645153
+    },
+    {
+      "study": "PTENKO",
+      "panel": "fibroblast",
+      "effect": -0.3070875309845036,
+      "ci_low": -0.4331955678329845,
+      "ci_high": -0.18097949413602266
+    },
+    {
+      "study": "PTENKO",
+      "panel": "endothelial",
+      "effect": -1.0300591991476011,
+      "ci_low": -1.4974704021787033,
+      "ci_high": -0.562647996116499
+    },
+    {
+      "study": "PTENKO",
+      "panel": "proliferation",
+      "effect": 0.9880385295851024,
+      "ci_low": 0.7108425377071215,
+      "ci_high": 1.2652345214630834
+    },
+    {
+      "study": "PTENKO",
+      "panel": "immature",
+      "effect": 1.1918458498467661,
+      "ci_low": 0.8815193061980292,
+      "ci_high": 1.5021723934955031
+    },
+    {
+      "study": "PTENKO",
+      "panel": "SC_identity",
+      "effect": 0.07680984116277934,
+      "ci_low": -0.12121126432218754,
+      "ci_high": 0.2748309466477462
+    },
+    {
+      "study": "PTENKO",
+      "panel": "Pmp22_relative",
+      "effect": -0.8273345461720645,
+      "ci_low": -1.2752170645287,
+      "ci_high": -0.37945202781542897
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "antioxidant4",
+      "effect": -0.04759003870063516,
+      "ci_low": -0.27662602021624505,
+      "ci_high": 0.18144594281497475
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "no_Nqo1",
+      "effect": -0.060305758925380815,
+      "ci_low": -0.14009132195703167,
+      "ci_high": 0.01947980410627005
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "Pmp22",
+      "effect": -0.4988340450387234,
+      "ci_low": -0.851934429483497,
+      "ci_high": -0.14573366059394982
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "myelin7",
+      "effect": -0.6792808274753419,
+      "ci_low": -0.8376021254094481,
+      "ci_high": -0.5209595295412357
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "immune",
+      "effect": -0.22593495693362176,
+      "ci_low": -0.5429635238534105,
+      "ci_high": 0.09109360998616706
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "fibroblast",
+      "effect": 0.3582356641977036,
+      "ci_low": 0.04281474247472994,
+      "ci_high": 0.6736565859206772
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "endothelial",
+      "effect": 0.11878306423188434,
+      "ci_low": -0.06435458911128317,
+      "ci_high": 0.30192071757505184
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "proliferation",
+      "effect": 0.3717866419437055,
+      "ci_low": 0.08929489931944584,
+      "ci_high": 0.6542783845679652
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "immature",
+      "effect": 0.08602712986974659,
+      "ci_low": -0.42095012635283624,
+      "ci_high": 0.5930043860923294
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "SC_identity",
+      "effect": -0.5546029379344226,
+      "ci_low": -0.9505794273436825,
+      "ci_high": -0.15862644852516272
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "Pmp22_relative",
+      "effect": 0.18044678243661627,
+      "ci_low": -0.23726054513648664,
+      "ci_high": 0.5981541100097192
+    }
+  ],
+  "reference_primary": [
+    {
+      "reference": "sorted_nm_vs_m",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": -0.10210257591680794,
+      "ci_low": -0.30491185760398853,
+      "ci_high": 0.10070670577037266,
+      "paired": true,
+      "mean_rpkm_control": 35.82310625,
+      "mean_rpkm_alternative": 20.731125,
+      "ratio_arithmetic_mean": -0.1030964213589973
+    },
+    {
+      "reference": "sorted_nm_vs_m",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": -0.49765655523263685,
+      "ci_low": -0.6727683943017131,
+      "ci_high": -0.32254471616356056,
+      "paired": true,
+      "mean_rpkm_control": 47.36116666666666,
+      "mean_rpkm_alternative": 26.75316666666667,
+      "ratio_arithmetic_mean": -0.49709424370820443
+    },
+    {
+      "reference": "sorted_nm_vs_m",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": -3.039318170578774,
+      "ci_low": -3.135484615576967,
+      "ci_high": -2.943151725580581,
+      "paired": true,
+      "mean_rpkm_control": 58275.0,
+      "mean_rpkm_alternative": 7103.5,
+      "ratio_arithmetic_mean": -3.0362573233344516
+    },
+    {
+      "reference": "sorted_nm_vs_m",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": -1.511297034708127,
+      "ci_low": -1.6637698520219453,
+      "ci_high": -1.3588242173943086,
+      "paired": true,
+      "mean_rpkm_control": 9112.464285714286,
+      "mean_rpkm_alternative": 2060.8964285714283,
+      "ratio_arithmetic_mean": -1.519150413628029
+    },
+    {
+      "reference": "P1_vs_P5",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": 0.2028777748323276,
+      "ci_low": 0.10535031158357792,
+      "ci_high": 0.3004052380810773,
+      "paired": false,
+      "mean_rpkm_control": 29.851125,
+      "mean_rpkm_alternative": 33.9404375,
+      "ratio_arithmetic_mean": 0.21467029778980676
+    },
+    {
+      "reference": "P1_vs_P5",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": 0.15226947956232895,
+      "ci_low": 0.03750001627587818,
+      "ci_high": 0.2670389428487797,
+      "paired": false,
+      "mean_rpkm_control": 39.174166666666665,
+      "mean_rpkm_alternative": 44.439166666666665,
+      "ratio_arithmetic_mean": 0.16613257191673228
+    },
+    {
+      "reference": "P1_vs_P5",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": -1.6298648633811936,
+      "ci_low": -2.021202252994014,
+      "ci_high": -1.2385274737683734,
+      "paired": false,
+      "mean_rpkm_control": 22775.0,
+      "mean_rpkm_alternative": 7439.5,
+      "ratio_arithmetic_mean": -1.6141604284577333
+    },
+    {
+      "reference": "P1_vs_P5",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": -0.8979136213436458,
+      "ci_low": -1.2863517794474055,
+      "ci_high": -0.5094754632398861,
+      "paired": false,
+      "mean_rpkm_control": 12327.142857142859,
+      "mean_rpkm_alternative": 4042.0249999999996,
+      "ratio_arithmetic_mean": -0.8728946065104827
+    },
+    {
+      "reference": "P5_vs_P14",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": -0.06675443799828829,
+      "ci_low": -0.17648676367679428,
+      "ci_high": 0.04297788768021771,
+      "paired": false,
+      "mean_rpkm_control": 22.5435625,
+      "mean_rpkm_alternative": 29.851125,
+      "ratio_arithmetic_mean": -0.0693566450443288
+    },
+    {
+      "reference": "P5_vs_P14",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": 0.3013296770777405,
+      "ci_low": 0.167225381078355,
+      "ci_high": 0.435433973077126,
+      "paired": false,
+      "mean_rpkm_control": 28.599166666666665,
+      "mean_rpkm_alternative": 39.174166666666665,
+      "ratio_arithmetic_mean": 0.2993560706023853
+    },
+    {
+      "reference": "P5_vs_P14",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": -0.7693866108413161,
+      "ci_low": -0.8760052251722907,
+      "ci_high": -0.6627679965103415,
+      "paired": false,
+      "mean_rpkm_control": 38852.5,
+      "mean_rpkm_alternative": 22775.0,
+      "ratio_arithmetic_mean": -0.7705537578527711
+    },
+    {
+      "reference": "P5_vs_P14",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": -0.22335747656663862,
+      "ci_low": -0.32850180014784414,
+      "ci_high": -0.11821315298543308,
+      "paired": false,
+      "mean_rpkm_control": 16121.717857142856,
+      "mean_rpkm_alternative": 12327.142857142859,
+      "ratio_arithmetic_mean": -0.2230379577479727
+    },
+    {
+      "reference": "E17_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": -1.4917357624421461,
+      "ci_low": -1.6429370416090725,
+      "ci_high": -1.3405344832752197,
+      "paired": false,
+      "mean_rpkm_control": 32.97375,
+      "mean_rpkm_alternative": 12.268875,
+      "ratio_arithmetic_mean": -1.4890106133967715
+    },
+    {
+      "reference": "E17_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": -1.1751243124041495,
+      "ci_low": -1.362271426797658,
+      "ci_high": -0.9879771980106411,
+      "paired": false,
+      "mean_rpkm_control": 39.04166666666667,
+      "mean_rpkm_alternative": 15.477500000000001,
+      "ratio_arithmetic_mean": -1.1724881111651941
+    },
+    {
+      "reference": "E17_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": -4.98472917346842,
+      "ci_low": -5.14751417524831,
+      "ci_high": -4.821944171688529,
+      "paired": false,
+      "mean_rpkm_control": 30457.5,
+      "mean_rpkm_alternative": 960.125,
+      "ratio_arithmetic_mean": -4.987285956633015
+    },
+    {
+      "reference": "E17_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": -2.418905700357522,
+      "ci_low": -2.577039268912205,
+      "ci_high": -2.2607721318028386,
+      "paired": false,
+      "mean_rpkm_control": 8630.557142857144,
+      "mean_rpkm_alternative": 632.1128571428573,
+      "ratio_arithmetic_mean": -2.42217248536338
+    },
+    {
+      "reference": "P14_vs_P24",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": -0.4196750615601106,
+      "ci_low": -0.5345075526022514,
+      "ci_high": -0.30484257051796976,
+      "paired": false,
+      "mean_rpkm_control": 27.4944375,
+      "mean_rpkm_alternative": 22.5435625,
+      "ratio_arithmetic_mean": -0.4197504192918835
+    },
+    {
+      "reference": "P14_vs_P24",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": -0.22058739604162714,
+      "ci_low": -0.35132554941889815,
+      "ci_high": -0.0898492426643561,
+      "paired": false,
+      "mean_rpkm_control": 33.66916666666667,
+      "mean_rpkm_alternative": 28.599166666666665,
+      "ratio_arithmetic_mean": -0.22010370529873
+    },
+    {
+      "reference": "P14_vs_P24",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": -0.1286780150448763,
+      "ci_low": -0.3415350949367473,
+      "ci_high": 0.08417906484699467,
+      "paired": false,
+      "mean_rpkm_control": 42600.0,
+      "mean_rpkm_alternative": 38852.5,
+      "ratio_arithmetic_mean": -0.13284567063341235
+    },
+    {
+      "reference": "P14_vs_P24",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": 0.25338127161744595,
+      "ci_low": 0.11065933237856898,
+      "ci_high": 0.39610321085632294,
+      "paired": false,
+      "mean_rpkm_control": 14183.392857142859,
+      "mean_rpkm_alternative": 16121.717857142856,
+      "ratio_arithmetic_mean": 0.25215777153922647
+    },
+    {
+      "reference": "P24_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "antioxidant4",
+      "effect": -0.37249115196614824,
+      "ci_low": -0.4712892820533757,
+      "ci_high": -0.27369302187892075,
+      "paired": false,
+      "mean_rpkm_control": 32.97375,
+      "mean_rpkm_alternative": 27.4944375,
+      "ratio_arithmetic_mean": -0.37004969356161305
+    },
+    {
+      "reference": "P24_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "no_Nqo1",
+      "effect": -0.25706676317533006,
+      "ci_low": -0.3657563819448147,
+      "ci_high": -0.14837714440584543,
+      "paired": false,
+      "mean_rpkm_control": 39.04166666666667,
+      "mean_rpkm_alternative": 33.66916666666667,
+      "ratio_arithmetic_mean": -0.25566944924965823
+    },
+    {
+      "reference": "P24_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "Pmp22",
+      "effect": 0.48179403398155607,
+      "ci_low": 0.25921507717436587,
+      "ci_high": 0.7043729907887463,
+      "paired": false,
+      "mean_rpkm_control": 30457.5,
+      "mean_rpkm_alternative": 42600.0,
+      "ratio_arithmetic_mean": 0.4840545523315355
+    },
+    {
+      "reference": "P24_vs_P60",
+      "pseudocount": 0.1,
+      "panel": "myelin7",
+      "effect": 0.398970369176757,
+      "ci_low": 0.2274579294688944,
+      "ci_high": 0.5704828088846196,
+      "paired": false,
+      "mean_rpkm_control": 8630.557142857144,
+      "mean_rpkm_alternative": 14183.392857142859,
+      "ratio_arithmetic_mean": 0.3977720977501694
+    }
+  ],
+  "projections": [
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "antioxidant4",
+      "observed": 2.3686388085021894,
+      "predicted": -0.16649850205444638,
+      "residual": 2.535137310556636,
+      "reference_bootstrap_lo": 2.499841471721007,
+      "reference_bootstrap_hi": 2.540167974845041,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "no_Nqo1",
+      "observed": 1.526867238954151,
+      "predicted": -0.2664558475962739,
+      "residual": 1.7933230865504253,
+      "reference_bootstrap_lo": 1.7496791624129184,
+      "reference_bootstrap_hi": 1.8034336805498814,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "Pmp22",
+      "observed": -1.4958155959584243,
+      "predicted": -0.9087392314595459,
+      "residual": -0.5870763644988783,
+      "reference_bootstrap_lo": -0.7630396938125515,
+      "reference_bootstrap_hi": -0.5825381030224337,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "myelin7",
+      "observed": -1.4592976509352944,
+      "predicted": -0.522604987689277,
+      "residual": -0.9366926632460173,
+      "reference_bootstrap_lo": -1.0330468123242038,
+      "reference_bootstrap_hi": -0.92314866228306,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": 2.3686388085021894,
+      "predicted": 0.016485348129011618,
+      "residual": 2.352153460373178,
+      "reference_bootstrap_lo": 2.3203601715794098,
+      "reference_bootstrap_hi": 2.3865802440054287,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": 1.526867238954151,
+      "predicted": -0.003536794308850344,
+      "residual": 1.5304040332630013,
+      "reference_bootstrap_lo": 1.499257919901143,
+      "reference_bootstrap_hi": 1.5617280245240714,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -1.4958155959584243,
+      "predicted": -0.7086019909817253,
+      "residual": -0.787213604976699,
+      "reference_bootstrap_lo": -0.9973581890124367,
+      "reference_bootstrap_hi": -0.7219433044574126,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.4592976509352944,
+      "predicted": -0.4190203730382837,
+      "residual": -1.0402772778970106,
+      "reference_bootstrap_lo": -1.164209007159029,
+      "reference_bootstrap_hi": -1.0017421371277484,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P5_vs_P14",
+      "panel": "antioxidant4",
+      "observed": 2.3686388085021894,
+      "predicted": -0.047110744879416765,
+      "residual": 2.4157495533816062,
+      "reference_bootstrap_lo": 2.3988900244990976,
+      "reference_bootstrap_hi": 2.428869739123081,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P5_vs_P14",
+      "panel": "no_Nqo1",
+      "observed": 1.526867238954151,
+      "predicted": 0.018911841056554645,
+      "residual": 1.5079553978975966,
+      "reference_bootstrap_lo": 1.492026550335559,
+      "reference_bootstrap_hi": 1.5233955173465756,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P5_vs_P14",
+      "panel": "Pmp22",
+      "observed": -1.4958155959584243,
+      "predicted": -0.17314061444693496,
+      "residual": -1.3226749815114893,
+      "reference_bootstrap_lo": -1.3673852113700433,
+      "reference_bootstrap_hi": -1.2936007972142793,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P5_vs_P14",
+      "panel": "myelin7",
+      "observed": -1.4592976509352944,
+      "predicted": -0.07520035034793181,
+      "residual": -1.3840973005873625,
+      "reference_bootstrap_lo": -1.40802672006238,
+      "reference_bootstrap_hi": -1.3671684105903856,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": 2.3686388085021894,
+      "predicted": -0.12098763336919627,
+      "residual": 2.489626441871386,
+      "reference_bootstrap_lo": 2.4556214163364065,
+      "reference_bootstrap_hi": 2.5100362070800357,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": 1.526867238954151,
+      "predicted": -0.20805165158523384,
+      "residual": 1.7349188905393849,
+      "reference_bootstrap_lo": 1.682413360151165,
+      "reference_bootstrap_hi": 1.7632465380420916,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -1.4958155959584243,
+      "predicted": -1.045702532510994,
+      "residual": -0.4501130634474302,
+      "reference_bootstrap_lo": -0.5654129188704793,
+      "reference_bootstrap_hi": -0.42900069958511033,
+      "resamples": 250
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.4592976509352944,
+      "predicted": -0.6069357260106459,
+      "residual": -0.8523619249246485,
+      "reference_bootstrap_lo": -0.9344342538450856,
+      "reference_bootstrap_hi": -0.8228570443856299,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "antioxidant4",
+      "observed": -0.053766688734545376,
+      "predicted": -0.1117326834743892,
+      "residual": 0.05796599473984382,
+      "reference_bootstrap_lo": 0.03553291774024148,
+      "reference_bootstrap_hi": 0.0641216238918261,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "no_Nqo1",
+      "observed": 0.0849099513162314,
+      "predicted": -0.206481438196893,
+      "residual": 0.2913913895131243,
+      "reference_bootstrap_lo": 0.25103484479368915,
+      "reference_bootstrap_hi": 0.30102719658272586,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "Pmp22",
+      "observed": -2.5568385598490124,
+      "predicted": -0.8152966330195257,
+      "residual": -1.7415419268294867,
+      "reference_bootstrap_lo": -1.8707127835754545,
+      "reference_bootstrap_hi": -1.733386852704395,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "myelin7",
+      "observed": -1.4917180851046017,
+      "predicted": -0.4492831244111036,
+      "residual": -1.0424349606934982,
+      "reference_bootstrap_lo": -1.1246325448250245,
+      "reference_bootstrap_hi": -1.0311693358772274,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.053766688734545376,
+      "predicted": 0.034827164389104256,
+      "residual": -0.08859385312364963,
+      "reference_bootstrap_lo": -0.11352424717851044,
+      "reference_bootstrap_hi": -0.05306405558902625,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": 0.0849099513162314,
+      "predicted": 0.013620557722692161,
+      "residual": 0.07128939359353921,
+      "reference_bootstrap_lo": 0.038657126822998836,
+      "reference_bootstrap_hi": 0.10925152419169,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -2.5568385598490124,
+      "predicted": -0.7331546860566021,
+      "residual": -1.8236838737924104,
+      "reference_bootstrap_lo": -2.0260543638100725,
+      "reference_bootstrap_hi": -1.7643634603859142,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.4917180851046017,
+      "predicted": -0.4264420808192607,
+      "residual": -1.065276004285341,
+      "reference_bootstrap_lo": -1.1570939947146384,
+      "reference_bootstrap_hi": -1.0379779137061482,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P5_vs_P14",
+      "panel": "antioxidant4",
+      "observed": -0.053766688734545376,
+      "predicted": -0.0481445765379879,
+      "residual": -0.005622112196557477,
+      "reference_bootstrap_lo": -0.028272957179199074,
+      "reference_bootstrap_hi": 0.013415686705459715,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P5_vs_P14",
+      "panel": "no_Nqo1",
+      "observed": 0.0849099513162314,
+      "predicted": 0.046146155839562365,
+      "residual": 0.03876379547666903,
+      "reference_bootstrap_lo": 0.021924619773374485,
+      "reference_bootstrap_hi": 0.06262063962755215,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P5_vs_P14",
+      "panel": "Pmp22",
+      "observed": -2.5568385598490124,
+      "predicted": -0.22813523480291797,
+      "residual": -2.3287033250460945,
+      "reference_bootstrap_lo": -2.367737107117853,
+      "reference_bootstrap_hi": -2.3088582514677816,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P5_vs_P14",
+      "panel": "myelin7",
+      "observed": -1.4917180851046017,
+      "predicted": -0.0882609917658211,
+      "residual": -1.4034570933387804,
+      "reference_bootstrap_lo": -1.4278939676575286,
+      "reference_bootstrap_hi": -1.3919841191416338,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.053766688734545376,
+      "predicted": -0.06411023302544452,
+      "residual": 0.010343544290899134,
+      "reference_bootstrap_lo": -0.02407875184263649,
+      "reference_bootstrap_hi": 0.030447966851078263,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": 0.0849099513162314,
+      "predicted": -0.1431283673915924,
+      "residual": 0.2280383187078238,
+      "reference_bootstrap_lo": 0.17288247237388796,
+      "reference_bootstrap_hi": 0.2541078524184458,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -2.5568385598490124,
+      "predicted": -0.9779600168095166,
+      "residual": -1.5788785430394958,
+      "reference_bootstrap_lo": -1.6963073404598106,
+      "reference_bootstrap_hi": -1.5502636186331995,
+      "resamples": 250
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.4917180851046017,
+      "predicted": -0.552276557586917,
+      "residual": -0.939441527517685,
+      "reference_bootstrap_lo": -1.0029236773864925,
+      "reference_bootstrap_hi": -0.926694110316129,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "antioxidant4",
+      "observed": -0.19785576553521134,
+      "predicted": -0.19440035116835314,
+      "residual": -0.0034554143668581866,
+      "reference_bootstrap_lo": -0.03647336388467667,
+      "reference_bootstrap_hi": 0.01035337391987081,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "no_Nqo1",
+      "observed": -0.1847432143357821,
+      "predicted": -0.32245866156128805,
+      "residual": 0.1377154472255059,
+      "reference_bootstrap_lo": 0.07472102284132455,
+      "reference_bootstrap_hi": 0.14341659305436422,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "Pmp22",
+      "observed": -1.9614494664344164,
+      "predicted": -1.1453068923255771,
+      "residual": -0.8161425741088393,
+      "reference_bootstrap_lo": -1.0531113065891748,
+      "reference_bootstrap_hi": -0.8097920523481283,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "myelin7",
+      "observed": -1.1341149202623482,
+      "predicted": -0.6506188974209632,
+      "residual": -0.4834960228413849,
+      "reference_bootstrap_lo": -0.6137114709941445,
+      "reference_bootstrap_hi": -0.481781725858847,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.19785576553521134,
+      "predicted": 0.006625352142510504,
+      "residual": -0.20448111767772184,
+      "reference_bootstrap_lo": -0.2535357831744365,
+      "reference_bootstrap_hi": -0.15164777543406158,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": -0.1847432143357821,
+      "predicted": -0.02215087625161333,
+      "residual": -0.16259233808416879,
+      "reference_bootstrap_lo": -0.21348439070484163,
+      "reference_bootstrap_hi": -0.1169800259270221,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -1.9614494664344164,
+      "predicted": -1.0354848486360897,
+      "residual": -0.9259646177983267,
+      "reference_bootstrap_lo": -1.208027541740775,
+      "reference_bootstrap_hi": -0.8183338838577923,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.1341149202623482,
+      "predicted": -0.6192922857002421,
+      "residual": -0.5148226345621062,
+      "reference_bootstrap_lo": -0.6480826620487409,
+      "reference_bootstrap_hi": -0.4771769066141074,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P5_vs_P14",
+      "panel": "antioxidant4",
+      "observed": -0.19785576553521134,
+      "predicted": -0.1166301341962287,
+      "residual": -0.08122563133898264,
+      "reference_bootstrap_lo": -0.11766057051951566,
+      "reference_bootstrap_hi": -0.04540901187227161,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P5_vs_P14",
+      "panel": "no_Nqo1",
+      "observed": -0.1847432143357821,
+      "predicted": 0.02571941264076294,
+      "residual": -0.21046262697654505,
+      "reference_bootstrap_lo": -0.23814518805291945,
+      "reference_bootstrap_hi": -0.17106689198825523,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P5_vs_P14",
+      "panel": "Pmp22",
+      "observed": -1.9614494664344164,
+      "predicted": -0.38835979407746746,
+      "residual": -1.573089672356949,
+      "reference_bootstrap_lo": -1.6231350830710944,
+      "reference_bootstrap_hi": -1.5555337532579185,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P5_vs_P14",
+      "panel": "myelin7",
+      "observed": -1.1341149202623482,
+      "predicted": -0.1771933877039114,
+      "residual": -0.9569215325584367,
+      "reference_bootstrap_lo": -0.9933372960729625,
+      "reference_bootstrap_hi": -0.9394222229364269,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.19785576553521134,
+      "predicted": -0.13514981653974906,
+      "residual": -0.06270594899546228,
+      "reference_bootstrap_lo": -0.11881611751265712,
+      "reference_bootstrap_hi": -0.03133560487327102,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": -0.1847432143357821,
+      "predicted": -0.24407862416572437,
+      "residual": 0.05933540982994225,
+      "reference_bootstrap_lo": -0.02679190760353451,
+      "reference_bootstrap_hi": 0.09316125413358632,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -1.9614494664344164,
+      "predicted": -1.3202323329212389,
+      "residual": -0.6412171335131776,
+      "reference_bootstrap_lo": -0.8206887689398096,
+      "reference_bootstrap_hi": -0.5914422396351041,
+      "resamples": 250
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -1.1341149202623482,
+      "predicted": -0.7609148784453696,
+      "residual": -0.3732000418169784,
+      "reference_bootstrap_lo": -0.4665708761060025,
+      "reference_bootstrap_hi": -0.3589146748689195,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "antioxidant4",
+      "observed": -0.04759003870063627,
+      "predicted": -0.13573943542975725,
+      "residual": 0.088149396729121,
+      "reference_bootstrap_lo": 0.07070795174940561,
+      "reference_bootstrap_hi": 0.0903010109504754,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "no_Nqo1",
+      "observed": -0.060305758925382,
+      "predicted": -0.19502599885655178,
+      "residual": 0.13472023993116977,
+      "reference_bootstrap_lo": 0.10404642125839267,
+      "reference_bootstrap_hi": 0.14280921211399547,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "Pmp22",
+      "observed": -0.4988340450387234,
+      "predicted": -0.5759762368703444,
+      "residual": 0.07714219183162097,
+      "reference_bootstrap_lo": -0.044903804577521717,
+      "reference_bootstrap_hi": 0.09301202390303231,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m",
+      "panel": "myelin7",
+      "observed": -0.6792808274753407,
+      "predicted": -0.34695282482941625,
+      "residual": -0.3323280026459243,
+      "reference_bootstrap_lo": -0.39966265080100055,
+      "reference_bootstrap_hi": -0.32064517344873067,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.04759003870063627,
+      "predicted": -0.01032502977500388,
+      "residual": -0.037265008925632385,
+      "reference_bootstrap_lo": -0.06263626195560837,
+      "reference_bootstrap_hi": -0.008402707036077895,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": -0.060305758925382,
+      "predicted": -0.02811645684992284,
+      "residual": -0.03218930207545916,
+      "reference_bootstrap_lo": -0.0608533042446575,
+      "reference_bootstrap_hi": -0.002299036733437716,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -0.4988340450387234,
+      "predicted": -0.6546286329868708,
+      "residual": 0.15579458794814738,
+      "reference_bootstrap_lo": -0.06652017010614023,
+      "reference_bootstrap_hi": 0.2506917378202923,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -0.6792808274753407,
+      "predicted": -0.39731000418043555,
+      "residual": -0.2819708232949051,
+      "reference_bootstrap_lo": -0.39555611563765036,
+      "reference_bootstrap_hi": -0.24102991130356913,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P5_vs_P14",
+      "panel": "antioxidant4",
+      "observed": -0.04759003870063627,
+      "predicted": -0.08464471534041644,
+      "residual": 0.03705467663978017,
+      "reference_bootstrap_lo": 0.016256305765457342,
+      "reference_bootstrap_hi": 0.059701227903506154,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P5_vs_P14",
+      "panel": "no_Nqo1",
+      "observed": -0.060305758925382,
+      "predicted": 0.0013409624765681565,
+      "residual": -0.061646721401950155,
+      "reference_bootstrap_lo": -0.07889816445296842,
+      "reference_bootstrap_hi": -0.03892278096486657,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P5_vs_P14",
+      "panel": "Pmp22",
+      "observed": -0.4988340450387234,
+      "predicted": -0.2487819360554408,
+      "residual": -0.2500521089832826,
+      "reference_bootstrap_lo": -0.29669643901497716,
+      "reference_bootstrap_hi": -0.22093467230605016,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P5_vs_P14",
+      "panel": "myelin7",
+      "observed": -0.6792808274753407,
+      "predicted": -0.1212277078358074,
+      "residual": -0.5580531196395333,
+      "reference_bootstrap_lo": -0.5822158023805214,
+      "reference_bootstrap_hi": -0.5416728597414393,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "antioxidant4",
+      "observed": -0.04759003870063627,
+      "predicted": -0.05789972097120599,
+      "residual": 0.01030968227056972,
+      "reference_bootstrap_lo": -0.017948564529537327,
+      "reference_bootstrap_hi": 0.044995599052188175,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "no_Nqo1",
+      "observed": -0.060305758925382,
+      "predicted": -0.09234904641326248,
+      "residual": 0.03204328748788049,
+      "reference_bootstrap_lo": -0.0045668497677600565,
+      "reference_bootstrap_hi": 0.08126844097560477,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "Pmp22",
+      "observed": -0.4988340450387234,
+      "predicted": -0.7949201984235936,
+      "residual": 0.2960861533848702,
+      "reference_bootstrap_lo": 0.18017771575259084,
+      "reference_bootstrap_hi": 0.3439243243287247,
+      "resamples": 250
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "panel": "myelin7",
+      "observed": -0.6792808274753407,
+      "predicted": -0.48465830726179393,
+      "residual": -0.1946225202135467,
+      "reference_bootstrap_lo": -0.2544905184751324,
+      "reference_bootstrap_hi": -0.17604824710896458,
+      "resamples": 250
+    }
+  ],
+  "projection_fit": [
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m",
+      "fit_genes": 11733,
+      "r2": 0.22215426063756438,
+      "coefficients": [
+        -0.14069696043102572,
+        0.25270216144638213
+      ],
+      "spearman": [
+        0.4877240921865869
+      ],
+      "rmse": 0.4610593278404588
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P1_vs_P5",
+      "fit_genes": 12231,
+      "r2": 0.13889245906240988,
+      "coefficients": [
+        -0.06377911609563805,
+        0.39562965579145426
+      ],
+      "spearman": [
+        0.40281047341666293
+      ],
+      "rmse": 0.48254809343450233
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "P5_vs_P14",
+      "fit_genes": 12234,
+      "r2": 0.049666578104145875,
+      "coefficients": [
+        -0.03513712135469846,
+        0.17936820208156606
+      ],
+      "spearman": [
+        0.2772100493879588
+      ],
+      "rmse": 0.5045270423950536
+    },
+    {
+      "study": "Nae1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "fit_genes": 11078,
+      "r2": 0.2656141559076547,
+      "coefficients": [
+        -0.1397496932495769,
+        0.19567493481950224,
+        0.19095721450919775
+      ],
+      "spearman": [
+        0.5063138211452314,
+        0.44543790435041536
+      ],
+      "rmse": 0.43212655775724446
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m",
+      "fit_genes": 11149,
+      "r2": 0.12285587148368016,
+      "coefficients": [
+        -0.08727561205569107,
+        0.23953432319499426
+      ],
+      "spearman": [
+        0.3565202194448493
+      ],
+      "rmse": 0.6328406088449992
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P1_vs_P5",
+      "fit_genes": 11492,
+      "r2": 0.0961993900604563,
+      "coefficients": [
+        -0.05018556226514729,
+        0.4190342028569283
+      ],
+      "spearman": [
+        0.3021023864096866
+      ],
+      "rmse": 0.6247045627965722
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "P5_vs_P14",
+      "fit_genes": 11488,
+      "r2": 0.058323000328160735,
+      "coefficients": [
+        -0.031044341590304166,
+        0.2561662634044244
+      ],
+      "spearman": [
+        0.26520098026825567
+      ],
+      "rmse": 0.6384362668568135
+    },
+    {
+      "study": "TSC1KO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "fit_genes": 10810,
+      "r2": 0.15249522085211797,
+      "coefficients": [
+        -0.09219390806991364,
+        0.1710416871732361,
+        0.22450695711571725
+      ],
+      "spearman": [
+        0.366572971526577,
+        0.3110899371842142
+      ],
+      "rmse": 0.5944625017200049
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m",
+      "fit_genes": 11149,
+      "r2": 0.3459844360354468,
+      "coefficients": [
+        -0.1613452334287006,
+        0.32374420961313893
+      ],
+      "spearman": [
+        0.5573535426603676
+      ],
+      "rmse": 0.44010553952089904
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P1_vs_P5",
+      "fit_genes": 11492,
+      "r2": 0.261033140171396,
+      "coefficients": [
+        -0.10873236053127558,
+        0.568606949524787
+      ],
+      "spearman": [
+        0.4826699272510002
+      ],
+      "rmse": 0.4653201611639665
+    },
+    {
+      "study": "PTENKO",
+      "axes": "P5_vs_P14",
+      "fit_genes": 11488,
+      "r2": 0.19286244055284307,
+      "coefficients": [
+        -0.09081412201528578,
+        0.38673102425946637
+      ],
+      "spearman": [
+        0.41919952915208225
+      ],
+      "rmse": 0.4907084382233513
+    },
+    {
+      "study": "PTENKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "fit_genes": 10810,
+      "r2": 0.3992704746413519,
+      "coefficients": [
+        -0.16279439701561832,
+        0.24234457909161397,
+        0.258227330735934
+      ],
+      "spearman": [
+        0.573325783500643,
+        0.4868514119218051
+      ],
+      "rmse": 0.40862531729386403
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m",
+      "fit_genes": 11149,
+      "r2": 0.09822302480012246,
+      "coefficients": [
+        -0.12043606051844663,
+        0.14988235873480457
+      ],
+      "spearman": [
+        0.3715413444359073
+      ],
+      "rmse": 0.44903738821986433
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P1_vs_P5",
+      "fit_genes": 11492,
+      "r2": 0.13625309531566443,
+      "coefficients": [
+        -0.08164703571877863,
+        0.35155159801373237
+      ],
+      "spearman": [
+        0.4013272436869832
+      ],
+      "rmse": 0.43051093716994143
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "P5_vs_P14",
+      "fit_genes": 11488,
+      "r2": 0.09809749662940415,
+      "coefficients": [
+        -0.06905065582119739,
+        0.2336033376480378
+      ],
+      "spearman": [
+        0.34528515388067393
+      ],
+      "rmse": 0.43933362176135704
+    },
+    {
+      "study": "RaptorKO",
+      "axes": "sorted_nm_vs_m+P1_vs_P5",
+      "fit_genes": 10810,
+      "r2": 0.17123298539728227,
+      "coefficients": [
+        -0.12033056122795492,
+        0.044833151516743476,
+        0.33028960697374377
+      ],
+      "spearman": [
+        0.37942946467600785,
+        0.433143310875338
+      ],
+      "rmse": 0.41366710419192526
+    }
+  ],
+  "repair": [
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "antioxidant4",
+      "effect": -0.3526910205523479,
+      "min_count": 59.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "no_Nqo1",
+      "effect": -0.16701260588143807,
+      "min_count": 101.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "Pmp22",
+      "effect": -3.8576159520858546,
+      "min_count": 15779.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 3,
+      "panel": "myelin7",
+      "effect": -3.1172708112003686,
+      "min_count": 37.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "antioxidant4",
+      "effect": -0.4525212957164002,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "no_Nqo1",
+      "effect": -0.3009292592173747,
+      "min_count": 108.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "Pmp22",
+      "effect": -2.965173757952231,
+      "min_count": 29680.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 5,
+      "panel": "myelin7",
+      "effect": -2.0055069595120756,
+      "min_count": 282.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "antioxidant4",
+      "effect": -0.569887225796716,
+      "min_count": 23.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "no_Nqo1",
+      "effect": -0.21501177662484094,
+      "min_count": 111.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "Pmp22",
+      "effect": -1.5189935220164958,
+      "min_count": 54812.0
+    },
+    {
+      "compartment": "purified_SC",
+      "day": 7,
+      "panel": "myelin7",
+      "effect": -1.1506912240239675,
+      "min_count": 475.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "antioxidant4",
+      "effect": 0.8008258685716267,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "no_Nqo1",
+      "effect": 1.226562914880978,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "Pmp22",
+      "effect": -5.379375263584036,
+      "min_count": 13670.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 3,
+      "panel": "myelin7",
+      "effect": -3.954910046306198,
+      "min_count": 11.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "antioxidant4",
+      "effect": 0.25038202284363065,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "no_Nqo1",
+      "effect": 0.726324930860168,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "Pmp22",
+      "effect": -4.827160220873997,
+      "min_count": 16332.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 5,
+      "panel": "myelin7",
+      "effect": -3.052883850658209,
+      "min_count": 107.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "antioxidant4",
+      "effect": 0.14284316890220516,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "no_Nqo1",
+      "effect": 0.5626278101227364,
+      "min_count": 44.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "Pmp22",
+      "effect": -2.99862280922059,
+      "min_count": 47428.0
+    },
+    {
+      "compartment": "whole_nerve",
+      "day": 7,
+      "panel": "myelin7",
+      "effect": -1.680715140207532,
+      "min_count": 349.0
+    }
+  ],
+  "limitations": [
+    "Retrospective bulk; new reference axes checkpointed before outcomes",
+    "Genes and cell states are not biological replicates",
+    "Reference bootstrap quantifies reference-subject sampling only, not causal or cross-study uncertainty",
+    "Same Figlia controls reused once; cohorts not pooled",
+    "RPKM/normalized counts/CPM are relative; no promoter or absolute RNA inference"
+  ]
+}

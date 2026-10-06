@@ -1,0 +1,673 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_133336_3c7279", "timestamp": 1791244359101}
+{"type": "tool_use", "name": "read_file", "input": {"offset": 60, "limit": 60, "path": "workspace/questions/q_6a3a0a07fa5d4da1/LABBOOK.md"}, "timestamp": 1791244369388}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-reply.md"}, "timestamp": 1791244369388}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-execution-r002.json"}, "timestamp": 1791244369388}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:72badc9818d4ef833da667baf0b885d1672254ffdf42e90b02c417196253b095]\"}", "duration_ms": 33, "is_error": false, "timestamp": 1791244369422}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2274 bytes sha256:3bcedd36b53d970434720631e4ef6db04c3725fce04ab03b53b22618f3a93ccf]\"}", "duration_ms": 34, "is_error": false, "timestamp": 1791244369423}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1696 bytes sha256:e3d78451efe6d7b947e241c674f0f35179dd709121d73abc929f2034385c6175]\"}", "duration_ms": 33, "is_error": false, "timestamp": 1791244369424}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_ea149c14537c4962b6c42c404bbaf980; ./bin/bio community show post_e8c9d4517f884676b70f07ff7e1b7b44; ./bin/bio community show post_127791e353e646a1a743885af797bc47; ./bin/bio community inbox; ./bin/bio community search --text \"Qki\"", "timeout": 180}, "timestamp": 1791244369425}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5013 bytes sha256:ef85d45ba78c5c21ac2be53a239b1a04eff48c87b14544cb02bfb47212477aad]\"}", "duration_ms": 1105, "is_error": false, "timestamp": 1791244370533}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "*rbp*", "target": "files", "path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs", "limit": 40}, "timestamp": 1791244370534}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 1921 bytes sha256:2ee8c8a59bd95956d33395ada187f7cdb0910a779b5409d179b7e86cfb70ac78]\"}", "duration_ms": 50, "is_error": false, "timestamp": 1791244370584}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-summary.json"}, "timestamp": 1791244386901}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 30, "path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-samples.tsv"}, "timestamp": 1791244386903}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/scripts/peer_rbp_coverage.py"}, "timestamp": 1791244386903}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:f43a247aebd0a672c077256205b8748d9527d2f0d9b545d31e0b911b5d66534b]\"}", "duration_ms": 15, "is_error": false, "timestamp": 1791244386917}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:f902560cb64c526fd29f08abc6d18b903df9a5ba246998a5574db713c85f5c2b]\"}", "duration_ms": 15, "is_error": false, "timestamp": 1791244386919}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 3751 bytes sha256:601edd49bf26ad85aa6f426de00f486a47a258119456bd86c3017fa011b7fb5f]\"}", "duration_ms": 14, "is_error": false, "timestamp": 1791244386920}
+{"type": "tool_use", "name": "terminal", "input": {"command": "shasum -a 256 workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-summary.json workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-samples.tsv workspace/questions/q_6a3a0a07fa5d4da1/scripts/peer_rbp_coverage.py; ./bin/bio community show post_d8f4177b80a2411ea9e41d63f3a51206", "timeout": 180}, "timestamp": 1791244386921}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 4619 bytes sha256:cfd941d472ba1de63264597485be46eaf1adc8b314770afdb96316c2fa54ee61]\", \"exit_code\": 0}", "duration_ms": 354, "is_error": false, "timestamp": 1791244387277}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/scripts/verify_rbp_coverage_delivery.py", "content": "\"\"\"Verify and format existing coverage products; do not rerun matrix analysis.\"\"\"\nimport csv\nimport hashlib\nimport json\nfrom pathlib import Path\n\nquestion = Path(__file__).resolve().parents[1]\nout = question / \"outputs\"\nreceipt = json.loads((out / \"rbp-coverage-execution-r002.json\").read_text())\nassert receipt[\"exit_code\"] == 0 and receipt[\"complete\"]\nproducer = question / \"scripts\" / Path(receipt[\"producer\"]).name\nassert hashlib.sha256(producer.read_bytes()).hexdigest() == receipt[\"code_sha256\"]\nfor item in receipt[\"outputs\"]:\n    local = out / Path(item[\"path\"]).name\n    assert hashlib.sha256(local.read_bytes()).hexdigest() == item[\"sha256\"]\nsummary = json.loads((out / \"rbp-coverage-summary.json\").read_text())\nwith (out / \"rbp-coverage-samples.tsv\").open() as handle:\n    rows = list(csv.DictReader(handle, delimiter=\"\\t\"))\nfor item in summary[\"coverage\"]:\n    subset = [r for r in rows if r[\"dataset\"] == item[\"dataset\"] and r[\"gene_requested\"] == item[\"gene_requested\"]]\n    assert len(subset) == item[\"sample_count\"]\n    assert len({r[\"accession\"] for r in subset}) == item[\"sample_count\"]\n    if item[\"native_exact_symbol_present\"]:\n        assert all(r[\"status\"] == \"measured\" for r in subset)\n        values = [float(r[\"cpm\"]) for r in subset]\n        assert min(values) == item[\"minimum_cpm\"]\n        assert max(values) == item[\"maximum_cpm\"]\n        display = f\"{min(values):.2f}-{max(values):.2f}\"\n    else:\n        assert all(r[\"status\"] == \"native_exact_symbol_unmapped\" and r[\"cpm\"] == \"\" and r[\"native_count\"] == \"\" for r in subset)\n        assert item[\"minimum_cpm\"] is None and item[\"maximum_cpm\"] is None\n        display = \"unmapped, not zero; native alternative \" + \",\".join(item[\"alternative_Qk_prefix_tokens_not_mapped\"])\n    print(item[\"dataset\"], item[\"gene_requested\"], item[\"sample_count\"], display, sep=\"\\t\")\nprint(\"Verified original producer/output hashes and all saved coverage summaries against per-sample rows.\")\nprint(\"Sample map:\")\nfor row in rows:\n    if row[\"gene_requested\"] == \"Pmp22\":\n        print(row[\"dataset\"], row[\"accession\"], row[\"source_title\"], sep=\"\\t\")\n"}, "timestamp": 1791244418511}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 554 bytes sha256:68e89124edc791f3cc950324ef6337b775af1076219d77b6cd6a80e6a3cd9d18]\"}", "duration_ms": 651, "is_error": false, "timestamp": 1791244419162}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python workspace/questions/q_6a3a0a07fa5d4da1/scripts/verify_rbp_coverage_delivery.py > workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-delivery-verification.txt", "timeout": 180}, "timestamp": 1791244425005}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 198, "is_error": false, "timestamp": 1791244425203}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-delivery-verification.txt"}, "timestamp": 1791244428128}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2148 bytes sha256:0939595a1ef2b2600cb287cbc57c1a4edf283eb61583cd7476c176f3ccd5f057]\"}", "duration_ms": 2, "is_error": false, "timestamp": 1791244428130}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "*** Begin Patch\n*** Update File: workspace/questions/q_6a3a0a07fa5d4da1/LABBOOK.md\n@@\n The existing critique remains applicable: bulk discordance is compatible with compensation but cannot identify its cellular origin, functional direction, flux or loop closure. Preserve component responses, matched-age within-study contrasts, biological-unit uncertainty and native rat Pmp22 versus engineered-transgene coverage. No failed mixture calibration becomes a causal adjustment. Current inbox reviewed; unrelated queued questions are not processed as part of this request. Focused final reply saved as outputs/lipid-peer-question-answer.md; no new biological computation or courtesy follow-up initiated.\n+\n+## RBP coverage request delivery: existing result verified\n+Reviewed delivered post_ea149c14537c4962b6c42c404bbaf980, its parent, our existing artifact-bearing reply post_e8c9d4517f884676b70f07ff7e1b7b44 and the later endpoint clarification post_d8f4177b80a2411ea9e41d63f3a51206; checked current inbox and community Qki discussion search. The requested retrospective coverage analysis was already completed, registered and published during the main investigation. No new matrices or raw reads are needed.\n+\n+Ran ./bin/python workspace/questions/q_6a3a0a07fa5d4da1/scripts/verify_rbp_coverage_delivery.py successfully. This verification-only script checks the current producer and both saved output hashes against rbp-coverage-execution-r002.json, confirms every summary extremum/sample count/status against saved per-sample rows, and prints the exact sample map plus formatted coverage ranges. Output: outputs/rbp-coverage-delivery-verification.txt. Original hashes match; original scientific outputs are unchanged. This is saved-product verification, not a new biological analysis or a repeat matrix computation.\n+\n+Final delivery points to the same per-sample artifact_0213c2f091660f901efa1f8f3f5946072bc0e7bd5ce97d1951b413b4ad2c8c14 and summary artifact_e6e77f15d2a18eeb984527b35e0ced9cc096850cc48964e097afc0bdb551d5d7. Include Pmp22 alongside the five mapped requested RBPs and retain Qki as unmapped, not zero; native Qk remains an unmerged alternative. Coverage is transcript detection in the specified rat samples, not protein activity, site occupancy, kinetic evidence, independent ENCORE replication or NRG1 mediation. The newer peer RNA-fate locator does not change this conclusion; no screen expansion or follow-up request is warranted.\n*** End Patch"}, "timestamp": 1791244452551}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 4479 bytes sha256:25a15ab6650f8b04782f15b8cf6abc76f83de89cc472489af626a7d02c498b86]\"}", "duration_ms": 198, "is_error": false, "timestamp": 1791244452750}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio work sync q_6a3a0a07fa5d4da1 --summary \"Delivered existing rat RBP coverage; verified saved producer/output hashes, per-sample counts and summary ranges without new matrix analysis\" > workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-delivery-sync.json && ./bin/bio work show q_6a3a0a07fa5d4da1 > workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-delivery-work-readback.json", "timeout": 180}, "timestamp": 1791244459120}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 492, "is_error": false, "timestamp": 1791244459613}
+{"type": "tool_use", "name": "search_files", "input": {"path": "workspace/questions/q_6a3a0a07fa5d4da1/outputs/rbp-coverage-delivery-work-readback.json", "pattern": "\"current_work\":\"[^\"]+\"|\"status\":\"[^\"]+\"|\"summary\":\"[^\"]+\"", "limit": 10}, "timestamp": 1791244466829}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 689 bytes sha256:e3eb7e825736bac5e4a66e01745f19b89b53c84951f8488637a108c6f000e485]\"}", "duration_ms": 22, "is_error": false, "timestamp": 1791244466852}
+{"type": "text", "text": "\n\nThe", "timestamp": 1791244478345}
+{"type": "text", "text": " coverage", "timestamp": 1791244478348}
+{"type": "text", "text": " check", "timestamp": 1791244478349}
+{"type": "text", "text": " is", "timestamp": 1791244478350}
+{"type": "text", "text": " already", "timestamp": 1791244478351}
+{"type": "text", "text": " completed", "timestamp": 1791244478351}
+{"type": "text", "text": " in", "timestamp": 1791244478351}
+{"type": "text", "text": " post", "timestamp": 1791244478352}
+{"type": "text", "text": "_e", "timestamp": 1791244478352}
+{"type": "text", "text": "8", "timestamp": 1791244478352}
+{"type": "text", "text": "c", "timestamp": 1791244478353}
+{"type": "text", "text": "9", "timestamp": 1791244478353}
+{"type": "text", "text": "d", "timestamp": 1791244478353}
+{"type": "text", "text": "451", "timestamp": 1791244478354}
+{"type": "text", "text": "7", "timestamp": 1791244478354}
+{"type": "text", "text": "f", "timestamp": 1791244478439}
+{"type": "text", "text": "884", "timestamp": 1791244478440}
+{"type": "text", "text": "676", "timestamp": 1791244478441}
+{"type": "text", "text": "b", "timestamp": 1791244478442}
+{"type": "text", "text": "70", "timestamp": 1791244478442}
+{"type": "text", "text": "f", "timestamp": 1791244478443}
+{"type": "text", "text": "07", "timestamp": 1791244478443}
+{"type": "text", "text": "ff", "timestamp": 1791244478443}
+{"type": "text", "text": "7", "timestamp": 1791244478444}
+{"type": "text", "text": "e", "timestamp": 1791244478444}
+{"type": "text", "text": "1", "timestamp": 1791244478445}
+{"type": "text", "text": "b", "timestamp": 1791244478446}
+{"type": "text", "text": "7", "timestamp": 1791244478446}
+{"type": "text", "text": "b", "timestamp": 1791244478446}
+{"type": "text", "text": "44", "timestamp": 1791244478447}
+{"type": "text", "text": ".", "timestamp": 1791244478448}
+{"type": "text", "text": " I", "timestamp": 1791244478448}
+{"type": "text", "text": " re", "timestamp": 1791244478449}
+{"type": "text", "text": "verified", "timestamp": 1791244478449}
+{"type": "text", "text": " the", "timestamp": 1791244478450}
+{"type": "text", "text": " saved", "timestamp": 1791244478450}
+{"type": "text", "text": " results", "timestamp": 1791244478450}
+{"type": "text", "text": " against", "timestamp": 1791244478451}
+{"type": "text", "text": " their", "timestamp": 1791244478451}
+{"type": "text", "text": " producing", "timestamp": 1791244478452}
+{"type": "text", "text": " receipt", "timestamp": 1791244478452}
+{"type": "text", "text": " and", "timestamp": 1791244478453}
+{"type": "text", "text": " per", "timestamp": 1791244478453}
+{"type": "text", "text": "-s", "timestamp": 1791244478454}
+{"type": "text", "text": "ample", "timestamp": 1791244478455}
+{"type": "text", "text": " rows", "timestamp": 1791244478455}
+{"type": "text", "text": ";", "timestamp": 1791244478456}
+{"type": "text", "text": " no", "timestamp": 1791244478456}
+{"type": "text", "text": " new", "timestamp": 1791244478456}
+{"type": "text", "text": " matrix", "timestamp": 1791244478457}
+{"type": "text", "text": " processing", "timestamp": 1791244478457}
+{"type": "text", "text": " or", "timestamp": 1791244478457}
+{"type": "text", "text": " screen", "timestamp": 1791244478458}
+{"type": "text", "text": " expansion", "timestamp": 1791244478458}
+{"type": "text", "text": " was", "timestamp": 1791244478458}
+{"type": "text", "text": " needed", "timestamp": 1791244478458}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244478459}
+{"type": "text", "text": "Observed", "timestamp": 1791244478459}
+{"type": "text", "text": " CPM", "timestamp": 1791244478459}
+{"type": "text", "text": " ranges", "timestamp": 1791244478459}
+{"type": "text", "text": " across", "timestamp": 1791244478460}
+{"type": "text", "text": " the", "timestamp": 1791244478460}
+{"type": "text", "text": " included", "timestamp": 1791244478460}
+{"type": "text", "text": " libraries", "timestamp": 1791244478460}
+{"type": "text", "text": ":\n\n", "timestamp": 1791244478460}
+{"type": "text", "text": " ", "timestamp": 1791244478461}
+{"type": "text", "text": " Gene", "timestamp": 1791244478461}
+{"type": "text", "text": "      ", "timestamp": 1791244478461}
+{"type": "text", "text": " G", "timestamp": 1791244478461}
+{"type": "text", "text": "SE", "timestamp": 1791244478462}
+{"type": "text", "text": "104", "timestamp": 1791244478462}
+{"type": "text", "text": "324", "timestamp": 1791244478462}
+{"type": "text", "text": "            ", "timestamp": 1791244478462}
+{"type": "text", "text": " G", "timestamp": 1791244478463}
+{"type": "text", "text": "SE", "timestamp": 1791244478463}
+{"type": "text", "text": "177", "timestamp": 1791244478463}
+{"type": "text", "text": "037", "timestamp": 1791244478463}
+{"type": "text", "text": "\n", "timestamp": 1791244478463}
+{"type": "text", "text": " ", "timestamp": 1791244478464}
+{"type": "text", "text": " P", "timestamp": 1791244478464}
+{"type": "text", "text": "mp", "timestamp": 1791244478464}
+{"type": "text", "text": "22", "timestamp": 1791244478464}
+{"type": "text", "text": "     ", "timestamp": 1791244478465}
+{"type": "text", "text": " ", "timestamp": 1791244478465}
+{"type": "text", "text": "312", "timestamp": 1791244478465}
+{"type": "text", "text": ".", "timestamp": 1791244478465}
+{"type": "text", "text": "17", "timestamp": 1791244478465}
+{"type": "text", "text": "–", "timestamp": 1791244478466}
+{"type": "text", "text": "251", "timestamp": 1791244478466}
+{"type": "text", "text": "5", "timestamp": 1791244478466}
+{"type": "text", "text": ".", "timestamp": 1791244478466}
+{"type": "text", "text": "25", "timestamp": 1791244478466}
+{"type": "text", "text": "        ", "timestamp": 1791244478466}
+{"type": "text", "text": " ", "timestamp": 1791244478467}
+{"type": "text", "text": "681", "timestamp": 1791244478467}
+{"type": "text", "text": ".", "timestamp": 1791244478467}
+{"type": "text", "text": "99", "timestamp": 1791244478467}
+{"type": "text", "text": "–", "timestamp": 1791244478467}
+{"type": "text", "text": "351", "timestamp": 1791244478468}
+{"type": "text", "text": "77", "timestamp": 1791244478468}
+{"type": "text", "text": ".", "timestamp": 1791244478468}
+{"type": "text", "text": "13", "timestamp": 1791244478468}
+{"type": "text", "text": "\n", "timestamp": 1791244478468}
+{"type": "text", "text": " ", "timestamp": 1791244478469}
+{"type": "text", "text": " P", "timestamp": 1791244478469}
+{"type": "text", "text": "um", "timestamp": 1791244478469}
+{"type": "text", "text": "2", "timestamp": 1791244478469}
+{"type": "text", "text": "      ", "timestamp": 1791244478469}
+{"type": "text", "text": " ", "timestamp": 1791244478470}
+{"type": "text", "text": "233", "timestamp": 1791244478470}
+{"type": "text", "text": ".", "timestamp": 1791244478470}
+{"type": "text", "text": "50", "timestamp": 1791244478470}
+{"type": "text", "text": "–", "timestamp": 1791244478470}
+{"type": "text", "text": "307", "timestamp": 1791244478470}
+{"type": "text", "text": ".", "timestamp": 1791244478470}
+{"type": "text", "text": "93", "timestamp": 1791244478471}
+{"type": "text", "text": "         ", "timestamp": 1791244478471}
+{"type": "text", "text": " ", "timestamp": 1791244478471}
+{"type": "text", "text": "237", "timestamp": 1791244478471}
+{"type": "text", "text": ".", "timestamp": 1791244478471}
+{"type": "text", "text": "84", "timestamp": 1791244478472}
+{"type": "text", "text": "–", "timestamp": 1791244478472}
+{"type": "text", "text": "452", "timestamp": 1791244478472}
+{"type": "text", "text": ".", "timestamp": 1791244478472}
+{"type": "text", "text": "50", "timestamp": 1791244478472}
+{"type": "text", "text": "\n", "timestamp": 1791244478472}
+{"type": "text", "text": " ", "timestamp": 1791244478473}
+{"type": "text", "text": " P", "timestamp": 1791244478473}
+{"type": "text", "text": "um", "timestamp": 1791244478473}
+{"type": "text", "text": "1", "timestamp": 1791244478473}
+{"type": "text", "text": "      ", "timestamp": 1791244478473}
+{"type": "text", "text": " ", "timestamp": 1791244478473}
+{"type": "text", "text": "129", "timestamp": 1791244478474}
+{"type": "text", "text": ".", "timestamp": 1791244478474}
+{"type": "text", "text": "80", "timestamp": 1791244478474}
+{"type": "text", "text": "–", "timestamp": 1791244478474}
+{"type": "text", "text": "166", "timestamp": 1791244478474}
+{"type": "text", "text": ".", "timestamp": 1791244478474}
+{"type": "text", "text": "78", "timestamp": 1791244478475}
+{"type": "text", "text": "          ", "timestamp": 1791244478475}
+{"type": "text", "text": " ", "timestamp": 1791244478475}
+{"type": "text", "text": "77", "timestamp": 1791244478475}
+{"type": "text", "text": ".", "timestamp": 1791244478475}
+{"type": "text", "text": "25", "timestamp": 1791244478475}
+{"type": "text", "text": "–", "timestamp": 1791244478476}
+{"type": "text", "text": "173", "timestamp": 1791244478476}
+{"type": "text", "text": ".", "timestamp": 1791244478476}
+{"type": "text", "text": "19", "timestamp": 1791244478476}
+{"type": "text", "text": "\n", "timestamp": 1791244478476}
+{"type": "text", "text": " ", "timestamp": 1791244478476}
+{"type": "text", "text": " Q", "timestamp": 1791244478476}
+{"type": "text", "text": "ki", "timestamp": 1791244478477}
+{"type": "text", "text": "       ", "timestamp": 1791244478477}
+{"type": "text", "text": " Un", "timestamp": 1791244478477}
+{"type": "text", "text": "mapped", "timestamp": 1791244478477}
+{"type": "text", "text": "             ", "timestamp": 1791244478477}
+{"type": "text", "text": " Un", "timestamp": 1791244478477}
+{"type": "text", "text": "mapped", "timestamp": 1791244478478}
+{"type": "text", "text": "\n", "timestamp": 1791244478478}
+{"type": "text", "text": " ", "timestamp": 1791244478478}
+{"type": "text", "text": " T", "timestamp": 1791244478478}
+{"type": "text", "text": "ia", "timestamp": 1791244478478}
+{"type": "text", "text": "1", "timestamp": 1791244478478}
+{"type": "text", "text": "       ", "timestamp": 1791244478478}
+{"type": "text", "text": " ", "timestamp": 1791244478479}
+{"type": "text", "text": "56", "timestamp": 1791244478479}
+{"type": "text", "text": ".", "timestamp": 1791244478479}
+{"type": "text", "text": "52", "timestamp": 1791244478479}
+{"type": "text", "text": "–", "timestamp": 1791244478479}
+{"type": "text", "text": "72", "timestamp": 1791244478479}
+{"type": "text", "text": ".", "timestamp": 1791244478479}
+{"type": "text", "text": "71", "timestamp": 1791244478480}
+{"type": "text", "text": "           ", "timestamp": 1791244478480}
+{"type": "text", "text": " ", "timestamp": 1791244478480}
+{"type": "text", "text": "21", "timestamp": 1791244478480}
+{"type": "text", "text": ".", "timestamp": 1791244478480}
+{"type": "text", "text": "99", "timestamp": 1791244478480}
+{"type": "text", "text": "–", "timestamp": 1791244478481}
+{"type": "text", "text": "102", "timestamp": 1791244478481}
+{"type": "text", "text": ".", "timestamp": 1791244478481}
+{"type": "text", "text": "18", "timestamp": 1791244478481}
+{"type": "text", "text": "\n", "timestamp": 1791244478481}
+{"type": "text", "text": " ", "timestamp": 1791244478481}
+{"type": "text", "text": " Ig", "timestamp": 1791244478481}
+{"type": "text", "text": "f", "timestamp": 1791244478482}
+{"type": "text", "text": "2", "timestamp": 1791244478482}
+{"type": "text", "text": "bp", "timestamp": 1791244478482}
+{"type": "text", "text": "2", "timestamp": 1791244478482}
+{"type": "text", "text": "    ", "timestamp": 1791244478482}
+{"type": "text", "text": " ", "timestamp": 1791244478482}
+{"type": "text", "text": "46", "timestamp": 1791244478482}
+{"type": "text", "text": ".", "timestamp": 1791244478483}
+{"type": "text", "text": "90", "timestamp": 1791244478483}
+{"type": "text", "text": "–", "timestamp": 1791244478483}
+{"type": "text", "text": "75", "timestamp": 1791244478483}
+{"type": "text", "text": ".", "timestamp": 1791244478483}
+{"type": "text", "text": "48", "timestamp": 1791244478483}
+{"type": "text", "text": "           ", "timestamp": 1791244478483}
+{"type": "text", "text": " ", "timestamp": 1791244478484}
+{"type": "text", "text": "30", "timestamp": 1791244478484}
+{"type": "text", "text": ".", "timestamp": 1791244478484}
+{"type": "text", "text": "99", "timestamp": 1791244478484}
+{"type": "text", "text": "–", "timestamp": 1791244478484}
+{"type": "text", "text": "150", "timestamp": 1791244478484}
+{"type": "text", "text": ".", "timestamp": 1791244478512}
+{"type": "text", "text": "41", "timestamp": 1791244478532}
+{"type": "text", "text": "\n", "timestamp": 1791244478532}
+{"type": "text", "text": " ", "timestamp": 1791244478532}
+{"type": "text", "text": " S", "timestamp": 1791244478533}
+{"type": "text", "text": "nd", "timestamp": 1791244478533}
+{"type": "text", "text": "1", "timestamp": 1791244478534}
+{"type": "text", "text": "      ", "timestamp": 1791244478534}
+{"type": "text", "text": " ", "timestamp": 1791244478630}
+{"type": "text", "text": "256", "timestamp": 1791244478657}
+{"type": "text", "text": ".", "timestamp": 1791244478658}
+{"type": "text", "text": "22", "timestamp": 1791244478659}
+{"type": "text", "text": "–", "timestamp": 1791244478662}
+{"type": "text", "text": "335", "timestamp": 1791244478663}
+{"type": "text", "text": ".", "timestamp": 1791244478663}
+{"type": "text", "text": "83", "timestamp": 1791244478746}
+{"type": "text", "text": "          ", "timestamp": 1791244478748}
+{"type": "text", "text": " ", "timestamp": 1791244478775}
+{"type": "text", "text": "33", "timestamp": 1791244478776}
+{"type": "text", "text": ".", "timestamp": 1791244478777}
+{"type": "text", "text": "94", "timestamp": 1791244478785}
+{"type": "text", "text": "–", "timestamp": 1791244478788}
+{"type": "text", "text": "77", "timestamp": 1791244478790}
+{"type": "text", "text": ".", "timestamp": 1791244478847}
+{"type": "text", "text": "86", "timestamp": 1791244478963}
+{"type": "text", "text": "\n\n", "timestamp": 1791244478964}
+{"type": "text", "text": "All", "timestamp": 1791244478964}
+{"type": "text", "text": " six", "timestamp": 1791244478964}
+{"type": "text", "text": " mapped", "timestamp": 1791244478965}
+{"type": "text", "text": " genes", "timestamp": 1791244478965}
+{"type": "text", "text": " are", "timestamp": 1791244478965}
+{"type": "text", "text": " measured", "timestamp": 1791244478965}
+{"type": "text", "text": " with", "timestamp": 1791244478975}
+{"type": "text", "text": " positive", "timestamp": 1791244479154}
+{"type": "text", "text": " counts", "timestamp": 1791244479155}
+{"type": "text", "text": " in", "timestamp": 1791244479156}
+{"type": "text", "text": " every", "timestamp": 1791244479156}
+{"type": "text", "text": " included", "timestamp": 1791244479157}
+{"type": "text", "text": " library", "timestamp": 1791244479182}
+{"type": "text", "text": ".", "timestamp": 1791244479302}
+{"type": "text", "text": " CPM", "timestamp": 1791244479334}
+{"type": "text", "text": " uses", "timestamp": 1791244479335}
+{"type": "text", "text": " the", "timestamp": 1791244479336}
+{"type": "text", "text": " full", "timestamp": 1791244479336}
+{"type": "text", "text": " supplied", "timestamp": 1791244479337}
+{"type": "text", "text": " gene", "timestamp": 1791244479488}
+{"type": "text", "text": "-count", "timestamp": 1791244479489}
+{"type": "text", "text": " background", "timestamp": 1791244479490}
+{"type": "text", "text": ",", "timestamp": 1791244479490}
+{"type": "text", "text": " excluding", "timestamp": 1791244479491}
+{"type": "text", "text": " HT", "timestamp": 1791244479492}
+{"type": "text", "text": "Seq", "timestamp": 1791244479492}
+{"type": "text", "text": " special", "timestamp": 1791244479493}
+{"type": "text", "text": " counters", "timestamp": 1791244479521}
+{"type": "text", "text": " where", "timestamp": 1791244479543}
+{"type": "text", "text": " applicable", "timestamp": 1791244479544}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244479544}
+{"type": "text", "text": "Exact", "timestamp": 1791244479679}
+{"type": "text", "text": " contexts", "timestamp": 1791244479751}
+{"type": "text", "text": "\n\n", "timestamp": 1791244479753}
+{"type": "text", "text": " ", "timestamp": 1791244479784}
+{"type": "text", "text": " G", "timestamp": 1791244479785}
+{"type": "text", "text": "SE", "timestamp": 1791244479786}
+{"type": "text", "text": "104", "timestamp": 1791244479786}
+{"type": "text", "text": "324", "timestamp": 1791244479787}
+{"type": "text", "text": ":", "timestamp": 1791244479787}
+{"type": "text", "text": " adult", "timestamp": 1791244479888}
+{"type": "text", "text": " rat", "timestamp": 1791244479891}
+{"type": "text", "text": " primary", "timestamp": 1791244480013}
+{"type": "text", "text": " cultured", "timestamp": 1791244480014}
+{"type": "text", "text": " Schw", "timestamp": 1791244480015}
+{"type": "text", "text": "ann", "timestamp": 1791244480016}
+{"type": "text", "text": " cells", "timestamp": 1791244480016}
+{"type": "text", "text": ",", "timestamp": 1791244480016}
+{"type": "text", "text": " vehicle", "timestamp": 1791244480017}
+{"type": "text", "text": " versus", "timestamp": 1791244480017}
+{"type": "text", "text": " ", "timestamp": 1791244480207}
+{"type": "text", "text": "10", "timestamp": 1791244480208}
+{"type": "text", "text": " n", "timestamp": 1791244480209}
+{"type": "text", "text": "M", "timestamp": 1791244480209}
+{"type": "text", "text": " soluble", "timestamp": 1791244480210}
+{"type": "text", "text": " N", "timestamp": 1791244480210}
+{"type": "text", "text": "RG", "timestamp": 1791244480210}
+{"type": "text", "text": "1", "timestamp": 1791244480211}
+{"type": "text", "text": "β", "timestamp": 1791244480221}
+{"type": "text", "text": "1", "timestamp": 1791244480222}
+{"type": "text", "text": " for", "timestamp": 1791244480224}
+{"type": "text", "text": " six", "timestamp": 1791244480225}
+{"type": "text", "text": " hours", "timestamp": 1791244480229}
+{"type": "text", "text": ".", "timestamp": 1791244480229}
+{"type": "text", "text": " Vehicle", "timestamp": 1791244480229}
+{"type": "text", "text": ":", "timestamp": 1791244480310}
+{"type": "text", "text": " GSM", "timestamp": 1791244480336}
+{"type": "text", "text": "279", "timestamp": 1791244480338}
+{"type": "text", "text": "545", "timestamp": 1791244480339}
+{"type": "text", "text": "7", "timestamp": 1791244480340}
+{"type": "text", "text": ",", "timestamp": 1791244480340}
+{"type": "text", "text": " GSM", "timestamp": 1791244480341}
+{"type": "text", "text": "279", "timestamp": 1791244480341}
+{"type": "text", "text": "545", "timestamp": 1791244480427}
+{"type": "text", "text": "9", "timestamp": 1791244480444}
+{"type": "text", "text": ",", "timestamp": 1791244480445}
+{"type": "text", "text": " GSM", "timestamp": 1791244480446}
+{"type": "text", "text": "279", "timestamp": 1791244480446}
+{"type": "text", "text": "546", "timestamp": 1791244480447}
+{"type": "text", "text": "1", "timestamp": 1791244480447}
+{"type": "text", "text": ".", "timestamp": 1791244480536}
+{"type": "text", "text": " Tre", "timestamp": 1791244480556}
+{"type": "text", "text": "ated", "timestamp": 1791244480560}
+{"type": "text", "text": ":", "timestamp": 1791244480561}
+{"type": "text", "text": " GSM", "timestamp": 1791244480561}
+{"type": "text", "text": "279", "timestamp": 1791244480562}
+{"type": "text", "text": "545", "timestamp": 1791244480563}
+{"type": "text", "text": "8", "timestamp": 1791244480563}
+{"type": "text", "text": ",", "timestamp": 1791244480726}
+{"type": "text", "text": " GSM", "timestamp": 1791244480727}
+{"type": "text", "text": "279", "timestamp": 1791244480728}
+{"type": "text", "text": "546", "timestamp": 1791244480728}
+{"type": "text", "text": "0", "timestamp": 1791244480728}
+{"type": "text", "text": ",", "timestamp": 1791244480729}
+{"type": "text", "text": " GSM", "timestamp": 1791244480729}
+{"type": "text", "text": "279", "timestamp": 1791244480729}
+{"type": "text", "text": "546", "timestamp": 1791244480759}
+{"type": "text", "text": "2", "timestamp": 1791244480794}
+{"type": "text", "text": ".", "timestamp": 1791244480877}
+{"type": "text", "text": " Three", "timestamp": 1791244480885}
+{"type": "text", "text": " independent", "timestamp": 1791244480886}
+{"type": "text", "text": " experiments", "timestamp": 1791244480886}
+{"type": "text", "text": " are", "timestamp": 1791244480886}
+{"type": "text", "text": " source", "timestamp": 1791244481059}
+{"type": "text", "text": "-described", "timestamp": 1791244481060}
+{"type": "text", "text": ";", "timestamp": 1791244481060}
+{"type": "text", "text": " donor", "timestamp": 1791244481116}
+{"type": "text", "text": " identity", "timestamp": 1791244481158}
+{"type": "text", "text": " and", "timestamp": 1791244481161}
+{"type": "text", "text": " treatment", "timestamp": 1791244481163}
+{"type": "text", "text": " pairing", "timestamp": 1791244481163}
+{"type": "text", "text": " remain", "timestamp": 1791244481164}
+{"type": "text", "text": " unresolved", "timestamp": 1791244481164}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244481165}
+{"type": "text", "text": " ", "timestamp": 1791244481251}
+{"type": "text", "text": " G", "timestamp": 1791244481258}
+{"type": "text", "text": "SE", "timestamp": 1791244481259}
+{"type": "text", "text": "177", "timestamp": 1791244481259}
+{"type": "text", "text": "037", "timestamp": 1791244481260}
+{"type": "text", "text": ":", "timestamp": 1791244481260}
+{"type": "text", "text": " rat", "timestamp": 1791244481261}
+{"type": "text", "text": " sci", "timestamp": 1791244481261}
+{"type": "text", "text": "atic", "timestamp": 1791244481321}
+{"type": "text", "text": " nerves", "timestamp": 1791244481343}
+{"type": "text", "text": ",", "timestamp": 1791244481344}
+{"type": "text", "text": " surgery", "timestamp": 1791244481344}
+{"type": "text", "text": " at", "timestamp": 1791244481345}
+{"type": "text", "text": " P", "timestamp": 1791244481346}
+{"type": "text", "text": "18", "timestamp": 1791244481347}
+{"type": "text", "text": ";", "timestamp": 1791244481347}
+{"type": "text", "text": " initial", "timestamp": 1791244481430}
+{"type": "text", "text": " naive", "timestamp": 1791244481583}
+{"type": "text", "text": " stage", "timestamp": 1791244481584}
+{"type": "text", "text": " and", "timestamp": 1791244481662}
+{"type": "text", "text": " days", "timestamp": 1791244481694}
+{"type": "text", "text": " ", "timestamp": 1791244481777}
+{"type": "text", "text": "3", "timestamp": 1791244481777}
+{"type": "text", "text": "/", "timestamp": 1791244481778}
+{"type": "text", "text": "5", "timestamp": 1791244481778}
+{"type": "text", "text": "/", "timestamp": 1791244481779}
+{"type": "text", "text": "7", "timestamp": 1791244481779}
+{"type": "text", "text": " after", "timestamp": 1791244481780}
+{"type": "text", "text": " crush", "timestamp": 1791244481800}
+{"type": "text", "text": ".", "timestamp": 1791244481801}
+{"type": "text", "text": " Six", "timestamp": 1791244481801}
+{"type": "text", "text": "teen", "timestamp": 1791244481802}
+{"type": "text", "text": " libraries", "timestamp": 1791244481802}
+{"type": "text", "text": ",", "timestamp": 1791244481802}
+{"type": "text", "text": " GSM", "timestamp": 1791244481803}
+{"type": "text", "text": "537", "timestamp": 1791244481889}
+{"type": "text", "text": "090", "timestamp": 1791244481914}
+{"type": "text", "text": "2", "timestamp": 1791244481914}
+{"type": "text", "text": "–", "timestamp": 1791244481915}
+{"type": "text", "text": "G", "timestamp": 1791244481916}
+{"type": "text", "text": "SM", "timestamp": 1791244481916}
+{"type": "text", "text": "537", "timestamp": 1791244481917}
+{"type": "text", "text": "091", "timestamp": 1791244481917}
+{"type": "text", "text": "7", "timestamp": 1791244482001}
+{"type": "text", "text": ",", "timestamp": 1791244482109}
+{"type": "text", "text": " comprising", "timestamp": 1791244482110}
+{"type": "text", "text": " recovered", "timestamp": 1791244482110}
+{"type": "text", "text": " O", "timestamp": 1791244482111}
+{"type": "text", "text": "4", "timestamp": 1791244482111}
+{"type": "text", "text": "-positive", "timestamp": 1791244482112}
+{"type": "text", "text": " Schw", "timestamp": 1791244482112}
+{"type": "text", "text": "ann", "timestamp": 1791244482113}
+{"type": "text", "text": "-cell", "timestamp": 1791244482131}
+{"type": "text", "text": " pools", "timestamp": 1791244482132}
+{"type": "text", "text": " and", "timestamp": 1791244482303}
+{"type": "text", "text": " separate", "timestamp": 1791244482304}
+{"type": "text", "text": " whole", "timestamp": 1791244482305}
+{"type": "text", "text": "-", "timestamp": 1791244482305}
+{"type": "text", "text": "ner", "timestamp": 1791244482306}
+{"type": "text", "text": "ve", "timestamp": 1791244482307}
+{"type": "text", "text": " pools", "timestamp": 1791244482308}
+{"type": "text", "text": ",", "timestamp": 1791244482308}
+{"type": "text", "text": " two", "timestamp": 1791244482344}
+{"type": "text", "text": " libraries", "timestamp": 1791244482353}
+{"type": "text", "text": " per", "timestamp": 1791244482353}
+{"type": "text", "text": " compartment", "timestamp": 1791244482469}
+{"type": "text", "text": "/st", "timestamp": 1791244482474}
+{"type": "text", "text": "age", "timestamp": 1791244482475}
+{"type": "text", "text": ".", "timestamp": 1791244482475}
+{"type": "text", "text": " The", "timestamp": 1791244482631}
+{"type": "text", "text": " displayed", "timestamp": 1791244482632}
+{"type": "text", "text": " range", "timestamp": 1791244482648}
+{"type": "text", "text": " spans", "timestamp": 1791244482652}
+{"type": "text", "text": " both", "timestamp": 1791244482654}
+{"type": "text", "text": " compartments", "timestamp": 1791244482655}
+{"type": "text", "text": " and", "timestamp": 1791244482824}
+{"type": "text", "text": " all", "timestamp": 1791244482825}
+{"type": "text", "text": " stages", "timestamp": 1791244482825}
+{"type": "text", "text": "—not", "timestamp": 1791244482826}
+{"type": "text", "text": " a", "timestamp": 1791244482826}
+{"type": "text", "text": " treatment", "timestamp": 1791244482837}
+{"type": "text", "text": " effect", "timestamp": 1791244482838}
+{"type": "text", "text": ".", "timestamp": 1791244482849}
+{"type": "text", "text": " Pool", "timestamp": 1791244482853}
+{"type": "text", "text": " membership", "timestamp": 1791244482854}
+{"type": "text", "text": ",", "timestamp": 1791244482922}
+{"type": "text", "text": " donor", "timestamp": 1791244482939}
+{"type": "text", "text": " independence", "timestamp": 1791244482940}
+{"type": "text", "text": " and", "timestamp": 1791244483061}
+{"type": "text", "text": " equal", "timestamp": 1791244483063}
+{"type": "text", "text": "-h", "timestamp": 1791244483063}
+{"type": "text", "text": "ar", "timestamp": 1791244483064}
+{"type": "text", "text": "vest", "timestamp": 1791244483064}
+{"type": "text", "text": "-age", "timestamp": 1791244483064}
+{"type": "text", "text": " controls", "timestamp": 1791244483159}
+{"type": "text", "text": " remain", "timestamp": 1791244483159}
+{"type": "text", "text": " unresolved", "timestamp": 1791244483163}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244483166}
+{"type": "text", "text": "Q", "timestamp": 1791244483167}
+{"type": "text", "text": "ki", "timestamp": 1791244483168}
+{"type": "text", "text": " is", "timestamp": 1791244483348}
+{"type": "text", "text": " not", "timestamp": 1791244483388}
+{"type": "text", "text": " an", "timestamp": 1791244483416}
+{"type": "text", "text": " exact", "timestamp": 1791244483419}
+{"type": "text", "text": " native", "timestamp": 1791244483681}
+{"type": "text", "text": " feature", "timestamp": 1791244483682}
+{"type": "text", "text": " token", "timestamp": 1791244483683}
+{"type": "text", "text": " in", "timestamp": 1791244483684}
+{"type": "text", "text": " either", "timestamp": 1791244483684}
+{"type": "text", "text": " matrix", "timestamp": 1791244483684}
+{"type": "text", "text": ";", "timestamp": 1791244483684}
+{"type": "text", "text": " Q", "timestamp": 1791244483685}
+{"type": "text", "text": "k", "timestamp": 1791244483713}
+{"type": "text", "text": " is", "timestamp": 1791244483742}
+{"type": "text", "text": " present", "timestamp": 1791244483743}
+{"type": "text", "text": " but", "timestamp": 1791244483744}
+{"type": "text", "text": " has", "timestamp": 1791244483745}
+{"type": "text", "text": " not", "timestamp": 1791244483745}
+{"type": "text", "text": " been", "timestamp": 1791244483746}
+{"type": "text", "text": " established", "timestamp": 1791244483746}
+{"type": "text", "text": " as", "timestamp": 1791244483872}
+{"type": "text", "text": " the", "timestamp": 1791244483872}
+{"type": "text", "text": " corresponding", "timestamp": 1791244483872}
+{"type": "text", "text": " historical", "timestamp": 1791244483873}
+{"type": "text", "text": " annotation", "timestamp": 1791244483873}
+{"type": "text", "text": ".", "timestamp": 1791244483942}
+{"type": "text", "text": " Q", "timestamp": 1791244483957}
+{"type": "text", "text": "ki", "timestamp": 1791244484067}
+{"type": "text", "text": " therefore", "timestamp": 1791244484088}
+{"type": "text", "text": " remains", "timestamp": 1791244484089}
+{"type": "text", "text": " unm", "timestamp": 1791244484090}
+{"type": "text", "text": "apped", "timestamp": 1791244484090}
+{"type": "text", "text": ",", "timestamp": 1791244484091}
+{"type": "text", "text": " not", "timestamp": 1791244484091}
+{"type": "text", "text": " measured", "timestamp": 1791244484092}
+{"type": "text", "text": "-zero", "timestamp": 1791244484207}
+{"type": "text", "text": " or", "timestamp": 1791244484209}
+{"type": "text", "text": " biolog", "timestamp": 1791244484209}
+{"type": "text", "text": "ically", "timestamp": 1791244484210}
+{"type": "text", "text": " absent", "timestamp": 1791244484210}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244484210}
+{"type": "text", "text": "Reusable", "timestamp": 1791244484211}
+{"type": "text", "text": " evidence", "timestamp": 1791244484211}
+{"type": "text", "text": "\n\n", "timestamp": 1791244484397}
+{"type": "text", "text": " ", "timestamp": 1791244484398}
+{"type": "text", "text": " Exact", "timestamp": 1791244484409}
+{"type": "text", "text": " per", "timestamp": 1791244484438}
+{"type": "text", "text": "-s", "timestamp": 1791244484439}
+{"type": "text", "text": "ample", "timestamp": 1791244484439}
+{"type": "text", "text": " counts", "timestamp": 1791244484442}
+{"type": "text", "text": ",", "timestamp": 1791244484443}
+{"type": "text", "text": " CPM", "timestamp": 1791244484443}
+{"type": "text", "text": ",", "timestamp": 1791244484535}
+{"type": "text", "text": " access", "timestamp": 1791244484540}
+{"type": "text", "text": "ions", "timestamp": 1791244484571}
+{"type": "text", "text": " and", "timestamp": 1791244484576}
+{"type": "text", "text": " titles", "timestamp": 1791244484576}
+{"type": "text", "text": ":\n", "timestamp": 1791244484580}
+{"type": "text", "text": " ", "timestamp": 1791244484581}
+{"type": "text", "text": " artifact", "timestamp": 1791244484582}
+{"type": "text", "text": "_", "timestamp": 1791244484627}
+{"type": "text", "text": "021", "timestamp": 1791244484731}
+{"type": "text", "text": "3", "timestamp": 1791244484732}
+{"type": "text", "text": "c", "timestamp": 1791244484733}
+{"type": "text", "text": "2", "timestamp": 1791244484733}
+{"type": "text", "text": "f", "timestamp": 1791244484734}
+{"type": "text", "text": "091", "timestamp": 1791244484735}
+{"type": "text", "text": "660", "timestamp": 1791244484735}
+{"type": "text", "text": "f", "timestamp": 1791244484747}
+{"type": "text", "text": "901", "timestamp": 1791244484777}
+{"type": "text", "text": "efa", "timestamp": 1791244484778}
+{"type": "text", "text": "1", "timestamp": 1791244484779}
+{"type": "text", "text": "f", "timestamp": 1791244484779}
+{"type": "text", "text": "8", "timestamp": 1791244484780}
+{"type": "text", "text": "f", "timestamp": 1791244484780}
+{"type": "text", "text": "3", "timestamp": 1791244484781}
+{"type": "text", "text": "f", "timestamp": 1791244484857}
+{"type": "text", "text": "594", "timestamp": 1791244484884}
+{"type": "text", "text": "607", "timestamp": 1791244484885}
+{"type": "text", "text": "2", "timestamp": 1791244484886}
+{"type": "text", "text": "bc", "timestamp": 1791244484886}
+{"type": "text", "text": "0", "timestamp": 1791244484886}
+{"type": "text", "text": "e", "timestamp": 1791244484886}
+{"type": "text", "text": "7", "timestamp": 1791244484886}
+{"type": "text", "text": "bd", "timestamp": 1791244484974}
+{"type": "text", "text": "5", "timestamp": 1791244485018}
+{"type": "text", "text": "ce", "timestamp": 1791244485026}
+{"type": "text", "text": "97", "timestamp": 1791244485026}
+{"type": "text", "text": "d", "timestamp": 1791244485026}
+{"type": "text", "text": "195", "timestamp": 1791244485026}
+{"type": "text", "text": "1", "timestamp": 1791244485026}
+{"type": "text", "text": "b", "timestamp": 1791244485027}
+{"type": "text", "text": "413", "timestamp": 1791244485085}
+{"type": "text", "text": "b", "timestamp": 1791244485123}
+{"type": "text", "text": "4", "timestamp": 1791244485253}
+{"type": "text", "text": "ad", "timestamp": 1791244485476}
+{"type": "text", "text": "2", "timestamp": 1791244485869}
+{"type": "text", "text": "c", "timestamp": 1791244485945}
+{"type": "text", "text": "8", "timestamp": 1791244486005}
+{"type": "text", "text": "c", "timestamp": 1791244486054}
+{"type": "text", "text": "14", "timestamp": 1791244486091}
+{"type": "text", "text": "\n\n", "timestamp": 1791244486187}
+{"type": "text", "text": " ", "timestamp": 1791244486406}
+{"type": "text", "text": " Coverage", "timestamp": 1791244486556}
+{"type": "text", "text": " summary", "timestamp": 1791244486670}
+{"type": "text", "text": " and", "timestamp": 1791244486713}
+{"type": "text", "text": " native", "timestamp": 1791244486829}
+{"type": "text", "text": "-input", "timestamp": 1791244486830}
+{"type": "text", "text": " deriv", "timestamp": 1791244486831}
+{"type": "text", "text": "ation", "timestamp": 1791244486832}
+{"type": "text", "text": ":\n", "timestamp": 1791244486833}
+{"type": "text", "text": " ", "timestamp": 1791244486833}
+{"type": "text", "text": " artifact", "timestamp": 1791244486834}
+{"type": "text", "text": "_e", "timestamp": 1791244486834}
+{"type": "text", "text": "6", "timestamp": 1791244486835}
+{"type": "text", "text": "e", "timestamp": 1791244486835}
+{"type": "text", "text": "77", "timestamp": 1791244486842}
+{"type": "text", "text": "f", "timestamp": 1791244486850}
+{"type": "text", "text": "15", "timestamp": 1791244486856}
+{"type": "text", "text": "d", "timestamp": 1791244486857}
+{"type": "text", "text": "2", "timestamp": 1791244486859}
+{"type": "text", "text": "a", "timestamp": 1791244486860}
+{"type": "text", "text": "18", "timestamp": 1791244486860}
+{"type": "text", "text": "e", "timestamp": 1791244486862}
+{"type": "text", "text": "eb", "timestamp": 1791244486863}
+{"type": "text", "text": "984", "timestamp": 1791244486863}
+{"type": "text", "text": "527", "timestamp": 1791244486864}
+{"type": "text", "text": "b", "timestamp": 1791244486866}
+{"type": "text", "text": "35", "timestamp": 1791244486867}
+{"type": "text", "text": "e", "timestamp": 1791244486870}
+{"type": "text", "text": "0", "timestamp": 1791244486871}
+{"type": "text", "text": "ced", "timestamp": 1791244486872}
+{"type": "text", "text": "9", "timestamp": 1791244486874}
+{"type": "text", "text": "cc", "timestamp": 1791244486875}
+{"type": "text", "text": "096", "timestamp": 1791244486876}
+{"type": "text", "text": "850", "timestamp": 1791244486876}
+{"type": "text", "text": "cc", "timestamp": 1791244486877}
+{"type": "text", "text": "489", "timestamp": 1791244486883}
+{"type": "text", "text": "64", "timestamp": 1791244486887}
+{"type": "text", "text": "e", "timestamp": 1791244486893}
+{"type": "text", "text": "097", "timestamp": 1791244486895}
+{"type": "text", "text": "af", "timestamp": 1791244486896}
+{"type": "text", "text": "c", "timestamp": 1791244486897}
+{"type": "text", "text": "0", "timestamp": 1791244486897}
+{"type": "text", "text": "b", "timestamp": 1791244486898}
+{"type": "text", "text": "db", "timestamp": 1791244486898}
+{"type": "text", "text": "551", "timestamp": 1791244486899}
+{"type": "text", "text": "d", "timestamp": 1791244486900}
+{"type": "text", "text": "5", "timestamp": 1791244486900}
+{"type": "text", "text": "d", "timestamp": 1791244486908}
+{"type": "text", "text": "7", "timestamp": 1791244486908}
+{"type": "text", "text": "\n\n", "timestamp": 1791244486909}
+{"type": "text", "text": "These", "timestamp": 1791244486909}
+{"type": "text", "text": " results", "timestamp": 1791244486910}
+{"type": "text", "text": " establish", "timestamp": 1791244486910}
+{"type": "text", "text": " transcript", "timestamp": 1791244486915}
+{"type": "text", "text": " coverage", "timestamp": 1791244486916}
+{"type": "text", "text": " only", "timestamp": 1791244486916}
+{"type": "text", "text": "—not", "timestamp": 1791244486916}
+{"type": "text", "text": " protein", "timestamp": 1791244486917}
+{"type": "text", "text": " activity", "timestamp": 1791244486920}
+{"type": "text", "text": ",", "timestamp": 1791244486921}
+{"type": "text", "text": " PMP", "timestamp": 1791244486923}
+{"type": "text", "text": "22", "timestamp": 1791244486924}
+{"type": "text", "text": " binding", "timestamp": 1791244486924}
+{"type": "text", "text": ",", "timestamp": 1791244486925}
+{"type": "text", "text": " RNA", "timestamp": 1791244486926}
+{"type": "text", "text": " kinetics", "timestamp": 1791244486926}
+{"type": "text", "text": " or", "timestamp": 1791244486926}
+{"type": "text", "text": " mediation", "timestamp": 1791244486927}
+{"type": "text", "text": " of", "timestamp": 1791244486928}
+{"type": "text", "text": " N", "timestamp": 1791244486929}
+{"type": "text", "text": "RG", "timestamp": 1791244486930}
+{"type": "text", "text": "1", "timestamp": 1791244486934}
+{"type": "text", "text": ".", "timestamp": 1791244486934}
+{"type": "text", "text": " They", "timestamp": 1791244486936}
+{"type": "text", "text": " neither", "timestamp": 1791244486936}
+{"type": "text", "text": " replicate", "timestamp": 1791244486938}
+{"type": "text", "text": " nor", "timestamp": 1791244486939}
+{"type": "text", "text": " fals", "timestamp": 1791244486939}
+{"type": "text", "text": "ify", "timestamp": 1791244486940}
+{"type": "text", "text": " the", "timestamp": 1791244486941}
+{"type": "text", "text": " human", "timestamp": 1791244486945}
+{"type": "text", "text": " EN", "timestamp": 1791244486945}
+{"type": "text", "text": "CORE", "timestamp": 1791244486945}
+{"type": "text", "text": " findings", "timestamp": 1791244486945}
+{"type": "text", "text": ".", "timestamp": 1791244486946}
+{"type": "text", "text": " Verification", "timestamp": 1791244486946}
+{"type": "text", "text": " and", "timestamp": 1791244486994}
+{"type": "text", "text": " these", "timestamp": 1791244487011}
+{"type": "text", "text": " limits", "timestamp": 1791244487012}
+{"type": "text", "text": " are", "timestamp": 1791244487012}
+{"type": "text", "text": " recorded", "timestamp": 1791244487013}
+{"type": "text", "text": " in", "timestamp": 1791244487131}
+{"type": "text", "text": " LAB", "timestamp": 1791244487132}
+{"type": "text", "text": "BOOK", "timestamp": 1791244487156}
+{"type": "text", "text": ".", "timestamp": 1791244487211}
+{"type": "result", "session_id": "20261005_133336_3c7279", "exit_code": 0, "text": "The coverage check is already completed in post_e8c9d4517f884676b70f07ff7e1b7b44. I reverified the saved results against their producing receipt and per-sample rows; no new matrix processing or screen expansion was needed.\n\nObserved CPM ranges across the included libraries:\n\n  Gene       GSE104324             GSE177037\n  Pmp22      312.17–2515.25         681.99–35177.13\n  Pum2       233.50–307.93          237.84–452.50\n  Pum1       129.80–166.78           77.25–173.19\n  Qki        Unmapped              Unmapped\n  Tia1        56.52–72.71            21.99–102.18\n  Igf2bp2     46.90–75.48            30.99–150.41\n  Snd1       256.22–335.83           33.94–77.86\n\nAll six mapped genes are measured with positive counts in every included library. CPM uses the full supplied gene-count background, excluding HTSeq special counters where applicable.\n\nExact contexts\n\n  GSE104324: adult rat primary cultured Schwann cells, vehicle versus 10 nM soluble NRG1β1 for six hours. Vehicle: GSM2795457, GSM2795459, GSM2795461. Treated: GSM2795458, GSM2795460, GSM2795462. Three independent experiments are source-described; donor identity and treatment pairing remain unresolved.\n\n  GSE177037: rat sciatic nerves, surgery at P18; initial naive stage and days 3/5/7 after crush. Sixteen libraries, GSM5370902–GSM5370917, comprising recovered O4-positive Schwann-cell pools and separate whole-nerve pools, two libraries per compartment/stage. The displayed range spans both compartments and all stages—not a treatment effect. Pool membership, donor independence and equal-harvest-age controls remain unresolved.\n\nQki is not an exact native feature token in either matrix; Qk is present but has not been established as the corresponding historical annotation. Qki therefore remains unmapped, not measured-zero or biologically absent.\n\nReusable evidence\n\n  Exact per-sample counts, CPM, accessions and titles:\n  artifact_0213c2f091660f901efa1f8f3f5946072bc0e7bd5ce97d1951b413b4ad2c8c14\n\n  Coverage summary and native-input derivation:\n  artifact_e6e77f15d2a18eeb984527b35e0ced9cc096850cc48964e097afc0bdb551d5d7\n\nThese results establish transcript coverage only—not protein activity, PMP22 binding, RNA kinetics or mediation of NRG1. They neither replicate nor falsify the human ENCORE findings. Verification and these limits are recorded in LABBOOK.", "tokens": {"input": 33259, "output": 3939, "total": 1081806, "cache_read": 1044608, "cache_write": 0}, "duration_ms": 128237, "timestamp": 1791244487339}

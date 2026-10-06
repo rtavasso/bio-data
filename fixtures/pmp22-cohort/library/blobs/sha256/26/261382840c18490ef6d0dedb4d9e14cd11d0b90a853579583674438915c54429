@@ -1,0 +1,32 @@
+# Research notebook: PMP22 incidental RBP binding and perturbation screen
+
+## Investigation
+New round-two question q_8ea071eaafa54b62, agent_767c114cdfa64235a581fb1c7b5e86b9. Own checkout/environment confirmed by pwd/BIO_WORKSPACE/BIO_AGENT. Prior completed q_a9976f21480c4fec is inherited context, not this assignment. Endpoint: credible PMP22 RNA binding plus abundance/splicing response to RBP perturbation in matched cell context; not a requirement that a dataset identify decay. No inherited scientific code will be executed.
+
+Pre-outcome branching map:
+1. Direct RNA-associated regulation: reproducible enriched eCLIP at compatible PMP22 transcript features plus adequate target knockdown and RNA change. Mature exonic/UTR versus intronic association will change the mechanism prioritized.
+2. Indirect response: knockdown alters a broad transcriptional/state program; eCLIP may be incidental. Compare complete measured backgrounds and orthogonal/independent perturbations.
+3. Processing rather than abundance: intronic binding, splicing response, isoform ambiguity or nascent-RNA contamination. Preserve endpoint distinctions.
+4. Technical untestability: low PMP22 coverage, missing control, low knockdown, incompatible assembly/annotation or selected-out feature. Retain distinct statuses; no absent-row zero imputation.
+5. Transfer: cell-line nomination may or may not survive Schwann expression and transcript-site compatibility. A cross-species expression match is not functional replication.
+
+Before acquisition checkpoint: ENCORE is preferred to isolated target papers because it combines transcriptome-wide binding and perturbations collected for other questions. Verify the supplied aggregate accessions and read the source-paper eligibility/normalization first. Start with processed data only. Plan a full paired-RBP/cell-context table, multiplicity across the tested PMP22 contrasts, and reported all-gene differential-expression uncertainty. Ranking will emphasize reproducible/input-enriched binding, effect size/uncertainty and knockdown adequacy rather than p-value alone. No candidate outcomes have been inspected. Reserve substantial effort for a second perturbation/context and novelty/source audit rather than exhausting it on initial ranking. If ENCODE coverage is poor, inspect alternative processed binding/perturbation resources, not automatic raw sequencing.
+
+## Data and prior work
+Read inherited LABBOOK and published post_1b2c4f75fb614dd7931820b681db11d7 with current replies (none at initial check), operator audit post_f8fc24f8e60e440c8456ebe336849908, round-two parent and current agent roster. Saved forum searches for PMP22 (87 results), RBP, RNA binding, HNRNP, IGF2BP, G3BP, GSE118660, ENCSR456FVU, K562 and HepG2 under inputs/community. ENCODE/eCLIP searches only returned this assignment; library RBP/ENCODE artifact/work/data searches returned no hits, while Schwann artifact search located reusable expression tables. Synthetic validation posts excluded. The actual initial search script failed with limit150; rerun limit100 succeeded and confirmed no next page for the saved queries. No scientific inference came from the failed command.
+
+Read translation-stress post_d7633ba470b24b15b2c0af4712f2edcf and final post_a42be4e232a54f5bb12a8f837d351455. This supersedes the inherited notebook's mistaken total-RNA label for GSE118660: its inspected matrices are footprint-only, with no matched total RNA. Therefore it is not a RNA-abundance validation source for this screen. Retain source-specific correction rather than editing the parent's notebook.
+
+Selectively fetched artifact_73ccbb50388d90cef6493aeb0bf8116f27035f9d5d89e211e41e55fdf7f5a6fa as a baseline to inspect; no inherited counts rerun and no claim that retrieval is replication. miR29/IRE1 and G3BP1 abundance-without-significant-half-life-change are known baselines, not candidate novelty. The provenance audit rules out inheriting browser-execution claims; only this session's tool output and actually executed direct-HTTP receipts establish my retrievals. Existing old gaps are inherited and will not be re-described as this session's failures.
+
+## Findings
+No new candidate result yet; eligibility and source discovery precede quantitative screening.
+
+## Failed routes
+Initial community-audit command with --limit150 exited1; no unsupported diagnosis or web-access claim. Corrected local search succeeded with limit100.
+
+## Assumptions and limitations
+ENCODE HepG2/K562 are not Schwann cells. Candidate inference will require actual target coverage and source-compatible transcript mapping. Independent files/replicates are not automatically independent studies/donors. Downloaded code, R/pickle serializations, formulas and macros are not executed. Configured minimum disk reserve is 5,368,709,120 bytes, established with bio doctor; acquisition will enforce it.
+
+## Open questions
+Which paired RBP contexts have informative PMP22 coverage? Are peaks reproducible and enriched over input? Is the same target adequately depleted? Is there abundance, splicing, or neither? Does an independent perturbation corroborate direction? Do Schwann contexts express the RBP and compatible target transcript sites?

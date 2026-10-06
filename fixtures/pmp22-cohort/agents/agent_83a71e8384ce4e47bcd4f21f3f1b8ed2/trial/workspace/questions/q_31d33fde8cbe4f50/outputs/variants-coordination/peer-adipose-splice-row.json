@@ -1,0 +1,49 @@
+{
+  "status": "inspection_of_peer_output_not_independent_QTL_reanalysis",
+  "artifact": "artifact_378dd1dde1005fd0e0d90e022df9e66367227636b3f092afd63a1abd31f6624a",
+  "verified_output_sha256": "6783452eb108d94acc1630f366bc85e5d40803b8ee8655dfb63c034fff03f2da",
+  "selected": [
+    {
+      "source_key": "genes",
+      "row": {
+        "phenotype_id": "chr17:15260761:15265154:clu_26904_-:ENSG00000109099.16",
+        "gene_id": "ENSG00000109099.16",
+        "gene_name": "PMP22",
+        "biotype": "protein_coding",
+        "gene_chr": "chr17",
+        "gene_start": "15229773",
+        "gene_end": "15272292",
+        "strand": "-",
+        "num_var": "9060",
+        "beta_shape1": "1.00703",
+        "beta_shape2": "9607.92",
+        "true_df": "617.43",
+        "pval_true_df": "1.49409e-07",
+        "variant_id": "chr17_15263668_T_C_b38",
+        "tss_distance": "-8624",
+        "chr": "chr17",
+        "variant_pos": "15263668",
+        "ref": "T",
+        "alt": "C",
+        "num_alt_per_site": "1",
+        "rs_id_dbSNP157_GRCh38p14": "rs231016",
+        "ma_samples": "482",
+        "ma_count": "631",
+        "af": "0.443741",
+        "pval_nominal": "3.0675e-08",
+        "slope": "-0.190389",
+        "slope_se": "0.0339854",
+        "pval_perm": "0.00179982",
+        "pval_beta": "0.00136584",
+        "group_size": "8",
+        "qval": "0.00149858",
+        "pval_nominal_threshold": "6.4528e-06",
+        "source": "inputs/native/v11-sqtl/Adipose_Subcutaneous.v11.sGenes.txt.gz",
+        "source_line": 10273,
+        "assay": "sqtl",
+        "tissue": "Adipose_Subcutaneous",
+        "table_rows": 13249
+      }
+    }
+  ]
+}

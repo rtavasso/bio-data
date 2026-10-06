@@ -1,0 +1,52 @@
+{
+  "allowance": "Unlimited requests, file size, bytes, time for current continuation",
+  "direct_attempts": 49,
+  "direct_requests_including_recorded_redirects": 49,
+  "direct_payload_bytes": 431593273,
+  "managed_RNA_fetches": 8,
+  "managed_RNA_payload_bytes": 14955728,
+  "known_new_payload_bytes": 446549001,
+  "browser_confirmation_queries_and_opens": 10,
+  "failed_web_extract_calls": 1,
+  "unknown_bytes": "Browser responses, adapter discovery metadata and transport overhead not fully measurable; total is a known payload lower bound, not an exact all-route byte total.",
+  "inherited_ledgers": [
+    "inputs/context-audit/transport.json",
+    "inputs/iteration/transport.json",
+    "inputs/continuation/transport.json",
+    "inputs/specific/transport.json"
+  ],
+  "inherited_cost": "Retained, not charged as newly downloaded or silently reset; historical route completeness differs.",
+  "receipts": "inputs/upstream/receipts",
+  "source_failures": [
+    {
+      "name": "PMC13396973.xml",
+      "status": "failed",
+      "bytes": 151
+    },
+    {
+      "name": "PMC6944556.xml",
+      "status": "failed",
+      "bytes": 150
+    },
+    {
+      "name": "QKI-supplements.zip",
+      "status": "failed",
+      "bytes": 10135
+    },
+    {
+      "name": "PMC6623163.xml",
+      "status": "failed",
+      "bytes": 150
+    },
+    {
+      "name": "PMC6185760.xml",
+      "status": "failed",
+      "bytes": 150
+    },
+    {
+      "name": "QKI-supplement.pdf",
+      "status": "failed",
+      "bytes": 0
+    }
+  ]
+}

@@ -1,0 +1,429 @@
+{
+  "question": "q_488429beed204371",
+  "source_sha256": "fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5",
+  "source_rows": 4993,
+  "Pmp22_rows": 22,
+  "library_counts": {
+    "S16_SOX10_KO": 4,
+    "S16_parental": 2,
+    "adult_nerve": 2,
+    "primary_cAMP": 3,
+    "primary_control": 3
+  },
+  "sets": {
+    "focal": {
+      "P1": [
+        "5439"
+      ],
+      "P2": [
+        "5446"
+      ]
+    },
+    "midpoint_100": {
+      "P1": [
+        "5438",
+        "5439",
+        "5440"
+      ],
+      "P2": [
+        "5443",
+        "5444",
+        "5445",
+        "5446"
+      ]
+    },
+    "midpoint_250": {
+      "P1": [
+        "5437",
+        "5438",
+        "5439",
+        "5440",
+        "5441",
+        "5442"
+      ],
+      "P2": [
+        "5443",
+        "5444",
+        "5445",
+        "5446"
+      ]
+    },
+    "midpoint_500": {
+      "P1": [
+        "5436",
+        "5437",
+        "5438",
+        "5439",
+        "5440",
+        "5441",
+        "5442"
+      ],
+      "P2": [
+        "5443",
+        "5444",
+        "5445",
+        "5446",
+        "5447",
+        "5448",
+        "5449"
+      ]
+    }
+  },
+  "primary_contrasts": [
+    {
+      "contrast": "cAMP_vs_vehicle",
+      "set": "focal",
+      "method": "none",
+      "constant_RPM": 0,
+      "control_n_libraries": 3,
+      "treated_n_libraries": 3,
+      "P1_control_mean_RPM": 1.2866468323333333,
+      "P1_treated_mean_RPM": 19.52100474,
+      "P2_control_mean_RPM": 411.7674209666667,
+      "P2_treated_mean_RPM": 3492.6182456666666,
+      "P1_RPM_difference": 18.234357907666666,
+      "P2_RPM_difference": 3080.8508247,
+      "P1_fold_of_means": 15.171999222660554,
+      "P2_fold_of_means": 8.482016953811895,
+      "P1_log2_fold_of_means": 3.9233392977154753,
+      "P2_log2_fold_of_means": 3.0844073665886627,
+      "P1_minus_P2_log2_fold_of_means": 0.8389319311268126,
+      "control_mean_log2_P1_P2": null,
+      "treated_mean_log2_P1_P2": -7.505982930229376,
+      "change_mean_log2_P1_P2": null,
+      "control_mean_P1_fraction": 0.003264998604190567,
+      "treated_mean_P1_fraction": 0.0055386635650375715,
+      "P1_fraction_pp_change": 0.22736649608470047,
+      "interpretation": "descriptive; no independent-donor CI or interaction p-value"
+    },
+    {
+      "contrast": "SOX10_KO_vs_parental",
+      "set": "focal",
+      "method": "none",
+      "constant_RPM": 0,
+      "control_n_libraries": 2,
+      "treated_n_libraries": 4,
+      "P1_control_mean_RPM": 523.80083985,
+      "P1_treated_mean_RPM": 0.74348993725,
+      "P2_control_mean_RPM": 5855.0,
+      "P2_treated_mean_RPM": 194.909100825,
+      "P1_RPM_difference": -523.0573499127499,
+      "P2_RPM_difference": -5660.090899175,
+      "P1_fold_of_means": 0.0014194134119046315,
+      "P2_fold_of_means": 0.03328934258326217,
+      "P1_log2_fold_of_means": -9.460489441253848,
+      "P2_log2_fold_of_means": -4.908795810171667,
+      "P1_minus_P2_log2_fold_of_means": -4.551693631082181,
+      "control_mean_log2_P1_P2": -3.4828279354363607,
+      "treated_mean_log2_P1_P2": -8.745450407143187,
+      "change_mean_log2_P1_P2": -5.262622471706826,
+      "control_mean_P1_fraction": 0.08211112944958804,
+      "treated_mean_P1_fraction": 0.003005912057083505,
+      "P1_fraction_pp_change": -7.910521739250454,
+      "interpretation": "descriptive; no independent-donor CI or interaction p-value"
+    }
+  ],
+  "robustness": {
+    "cAMP_vs_vehicle": {
+      "window_low_signal_specifications_n": 28,
+      "window_low_signal_mean_logratio_defined_n": 24,
+      "window_low_signal_mean_logratio_undefined_n": 4,
+      "all_window_low_signal_mean_logratio_range": [
+        0.22146310394276458,
+        1.7201447921823236
+      ],
+      "all_window_low_signal_fold_of_means_difference_range": [
+        0.08447494237743003,
+        0.9050807187053449
+      ],
+      "focal_leave_one_mean_logratio_range": [
+        0.1633574927068011,
+        0.1633574927068011
+      ],
+      "focal_leave_one_mean_logratio_defined_n": 1,
+      "focal_leave_one_total_n": 6,
+      "all_window_low_signal_leave_one_mean_logratio_range": [
+        -0.3619980332236654,
+        2.5002277542167013
+      ],
+      "all_window_low_signal_leave_one_fold_difference_range": [
+        -0.3431638631311893,
+        1.43326856522105
+      ],
+      "focal_leave_one_fold_of_means_difference_range": [
+        0.18380891206938887,
+        1.3759079169827864
+      ],
+      "focal_cross_library_logratio_difference_range": [
+        -0.24976489578697159,
+        0.4539254600159284
+      ],
+      "focal_cross_library_defined_n": 6,
+      "focal_cross_library_total_n": 9,
+      "focal_cross_library_positive_n": 4,
+      "focal_cross_library_negative_n": 2,
+      "range_type": "Observed or specification sensitivity range; NOT a confidence interval"
+    },
+    "SOX10_KO_vs_parental": {
+      "window_low_signal_specifications_n": 28,
+      "window_low_signal_mean_logratio_defined_n": 28,
+      "window_low_signal_mean_logratio_undefined_n": 0,
+      "all_window_low_signal_mean_logratio_range": [
+        -5.285888690355735,
+        -3.3350332433484313
+      ],
+      "all_window_low_signal_fold_of_means_difference_range": [
+        -4.613756617408144,
+        -3.331988951124666
+      ],
+      "focal_leave_one_mean_logratio_range": [
+        -5.754350816490432,
+        -4.817881711819692
+      ],
+      "focal_leave_one_mean_logratio_defined_n": 6,
+      "focal_leave_one_total_n": 6,
+      "all_window_low_signal_leave_one_mean_logratio_range": [
+        -5.767598208706914,
+        -3.1524367116829968
+      ],
+      "all_window_low_signal_leave_one_fold_difference_range": [
+        -5.717837884667238,
+        -3.188647751532838
+      ],
+      "focal_leave_one_fold_of_means_difference_range": [
+        -5.700372934727932,
+        -4.230580991890789
+      ],
+      "focal_cross_library_logratio_difference_range": [
+        -6.620209526060375,
+        -3.7640726626638537
+      ],
+      "focal_cross_library_defined_n": 8,
+      "focal_cross_library_total_n": 8,
+      "focal_cross_library_positive_n": 0,
+      "focal_cross_library_negative_n": 8,
+      "range_type": "Observed or specification sensitivity range; NOT a confidence interval"
+    }
+  },
+  "unsupported": [
+    "RPM count likelihood",
+    "donor significance",
+    "factorial cAMP by SOX10",
+    "treatment-paired subjects",
+    "P2 invariant",
+    "nascent initiation",
+    "direct cis mechanism",
+    "full transcript composition",
+    "whole transcriptome universe"
+  ],
+  "comparator_coverage": [
+    {
+      "gene": "Pmp22",
+      "panel": "target",
+      "selected_cluster_count": 22,
+      "ids": "5436,5437,5438,5439,5440,5441,5442,5443,5444,5445,5446,5447,5448,5449,5450,5451,5452,5453,5454,5455,5456,5457",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Mpz",
+      "panel": "myelin",
+      "selected_cluster_count": 46,
+      "ids": "10817,10818,10819,10820,10821,10822,10823,10824,10825,10826,10827,10828,10829,10830,10831,10832,10833,10834,10835,10836,10837,10838,10839,10840,10841,10842,10843,10844,10845,10846,10847,10848,10849,10850,10851,10852,10853,10854,10855,10856,10857,10858,10859,10860,10861,10862",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Mbp",
+      "panel": "myelin",
+      "selected_cluster_count": 8,
+      "ids": "17400,17401,17402,17403,17404,17405,17406,17407",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Mag",
+      "panel": "myelin",
+      "selected_cluster_count": 2,
+      "ids": "2884,2885",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Prx",
+      "panel": "myelin",
+      "selected_cluster_count": 2,
+      "ids": "508,509",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Plp1",
+      "panel": "myelin",
+      "selected_cluster_count": 0,
+      "ids": "",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "absent from selected table; unmeasured versus selected-out unresolved, NOT zero"
+    },
+    {
+      "gene": "Cnp",
+      "panel": "myelin",
+      "selected_cluster_count": 30,
+      "ids": "6141,6142,6143,6144,6145,6146,6147,6148,6149,6150,6151,6152,6153,6154,6155,6156,6157,6158,6159,6160,6161,6162,6163,6164,6165,6166,6167,6168,6169,6170",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Mal",
+      "panel": "myelin",
+      "selected_cluster_count": 3,
+      "ids": "23479,23480,23481",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Sox10",
+      "panel": "context",
+      "selected_cluster_count": 1,
+      "ids": "34198",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Egr2",
+      "panel": "context",
+      "selected_cluster_count": 2,
+      "ids": "22400,22401",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Jun",
+      "panel": "context",
+      "selected_cluster_count": 2,
+      "ids": "29680,29681",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "S100b",
+      "panel": "context",
+      "selected_cluster_count": 2,
+      "ids": "22373,22374",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Actb",
+      "panel": "reference_candidates",
+      "selected_cluster_count": 22,
+      "ids": "9497,9498,9499,9500,9501,9502,9503,9504,9505,9506,9507,9508,9509,9510,9511,9512,9513,9514,9515,9516,9517,9518",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Gapdh",
+      "panel": "reference_candidates",
+      "selected_cluster_count": 13,
+      "ids": "27804,27805,27806,27807,27808,27809,27810,27811,27812,27813,27814,27815,27816",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Iars",
+      "panel": "reference_candidates",
+      "selected_cluster_count": 0,
+      "ids": "",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "absent from selected table; unmeasured versus selected-out unresolved, NOT zero"
+    },
+    {
+      "gene": "Arpc1a",
+      "panel": "promoter_diversity",
+      "selected_cluster_count": 3,
+      "ids": "10080,10081,10082",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Chn2",
+      "panel": "promoter_diversity",
+      "selected_cluster_count": 1,
+      "ids": "26055",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Ddr1",
+      "panel": "promoter_diversity",
+      "selected_cluster_count": 1,
+      "ids": "21529",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    },
+    {
+      "gene": "Gas7",
+      "panel": "promoter_diversity",
+      "selected_cluster_count": 3,
+      "ids": "5486,5487,5488",
+      "interval_overlap_pairs": "[]",
+      "eligibility": "measured in selected universe"
+    }
+  ],
+  "focal_clone_family_contrasts": [
+    {
+      "clone_label_family": "1",
+      "guide_assignment": "label-inferred, not separately verified",
+      "set": "focal",
+      "method": "none",
+      "constant_RPM": 0,
+      "control_n_libraries": 2,
+      "treated_n_libraries": 2,
+      "P1_control_mean_RPM": 523.80083985,
+      "P1_treated_mean_RPM": 0.2798326175,
+      "P2_control_mean_RPM": 5855.0,
+      "P2_treated_mean_RPM": 158.5,
+      "P1_RPM_difference": -523.5210072325,
+      "P2_RPM_difference": -5696.5,
+      "P1_fold_of_means": 0.0005342347629303825,
+      "P2_fold_of_means": 0.027070879590093938,
+      "P1_log2_fold_of_means": -10.870238523614772,
+      "P2_log2_fold_of_means": -5.20711442524917,
+      "P1_minus_P2_log2_fold_of_means": -5.663124098365602,
+      "control_mean_log2_P1_P2": -3.4828279354363607,
+      "treated_mean_log2_P1_P2": -9.212406746886977,
+      "change_mean_log2_P1_P2": -5.729578811450616,
+      "control_mean_P1_fraction": 0.08211112944958804,
+      "treated_mean_P1_fraction": 0.001994467572380362,
+      "P1_fraction_pp_change": -8.011666187720767,
+      "interpretation": "descriptive; no independent-donor CI or interaction p-value"
+    },
+    {
+      "clone_label_family": "2",
+      "guide_assignment": "label-inferred, not separately verified",
+      "set": "focal",
+      "method": "none",
+      "constant_RPM": 0,
+      "control_n_libraries": 2,
+      "treated_n_libraries": 2,
+      "P1_control_mean_RPM": 523.80083985,
+      "P1_treated_mean_RPM": 1.207147257,
+      "P2_control_mean_RPM": 5855.0,
+      "P2_treated_mean_RPM": 231.31820165,
+      "P1_RPM_difference": -522.593692593,
+      "P2_RPM_difference": -5623.6817983500005,
+      "P1_fold_of_means": 0.0023045920608788803,
+      "P2_fold_of_means": 0.0395078055764304,
+      "P1_log2_fold_of_means": -8.76127288491089,
+      "P2_log2_fold_of_means": -4.661718474360757,
+      "P1_minus_P2_log2_fold_of_means": -4.099554410550132,
+      "control_mean_log2_P1_P2": -3.4828279354363607,
+      "treated_mean_log2_P1_P2": -8.278494067399395,
+      "change_mean_log2_P1_P2": -4.795666131963034,
+      "control_mean_P1_fraction": 0.08211112944958804,
+      "treated_mean_P1_fraction": 0.004017356541786648,
+      "P1_fraction_pp_change": -7.809377290780139,
+      "interpretation": "descriptive; no independent-donor CI or interaction p-value"
+    }
+  ]
+}

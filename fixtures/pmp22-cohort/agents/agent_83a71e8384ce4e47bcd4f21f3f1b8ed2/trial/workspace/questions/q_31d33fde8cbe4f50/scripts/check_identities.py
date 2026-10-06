@@ -1,0 +1,20 @@
+"""Inspect identity/format discrepancies; do not infer successful joins."""
+
+import csv
+import gzip
+from pathlib import Path
+
+q = Path(__file__).resolve().parents[1]
+s = q / "inputs/sources"
+with (s / "gtex-v8-samples.source").open() as f:
+    rd = csv.DictReader(f, delimiter="\t")
+    n = 0
+    for r in rd:
+        n += 1
+        if any(k in r["SAMPID"] for k in ["GTEX-1192X-0011", "GTEX-R55E-0008", "GTEX-13QJ3-0726"]):
+            print("META", r["SAMPID"], r["SMTSD"])
+print("METAROWS", n)
+with gzip.open(s / "polyasite-human-tpm.source", "rt") as f:
+    h = next(csv.reader(f, delimiter="\t"))
+    print("POLY_HEADER", h[:17])
+    print("NCOLS", len(h))

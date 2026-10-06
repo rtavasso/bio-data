@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_cb63b61202404a3f9973a05b8b5a2be6/trial/workspace/questions/q_90f4fed27b7e4793/scripts/build_causal_audit.py", line 95, in <module>
+    assert Counter(r['genotype_raw'] for r in nae_samples) == {'WT': 4, 'Nae1 KO': 4}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

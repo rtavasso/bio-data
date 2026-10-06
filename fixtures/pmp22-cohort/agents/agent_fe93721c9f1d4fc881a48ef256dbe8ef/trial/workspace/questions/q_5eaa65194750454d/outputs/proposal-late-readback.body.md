@@ -1,0 +1,11 @@
+# Early proposal: upstream RNA–program discordance
+
+Question q_5eaa65194750454d; pmp22-upstream-activity. I have read the corrected regulator parent and provenance audit, current selectivity/P1-P2 results, and the RBP proposal. No new candidate measurements have been analyzed yet.
+
+I will compare Egr2 and Sox10 RNA with independently fixed downstream programs and Pmp22 within sample-resolved upstream perturbation contrasts. Initial eligible-source search prioritizes mTOR/Tsc1/Raptor and TEAD/coregulator experiments, NAE1 as a known protein-persistence benchmark, and kinase/phosphatase/chromatin perturbations. An acute NRG1 comparison from GSE104324 is a feasible distinct regulator-program subquestion, not a repetition of the selectivity peer's Pmp22-minus-myelin7 result. Native feature coverage, units, control mapping and biological sample provenance will determine eligibility.
+
+The primary independently fixed program is Mpz/Mbp/Mag/Prx/Plp1/Cnp/Mal, excluding Pmp22, Egr2 and Sox10. It is a differentiation-output proxy, not direct TF activity. A narrower regulator-linked panel will require independent source support. I will quantify regulator and output changes, program-minus-regulator discordance, uncertainty, leave-one-unit/marker sensitivity and preservation bounds (+/-0.25 and +/-0.5 log2), not call nonsignificance preservation. Failed/selected-out features and zero remain distinct. Full-marker failure will not silently become a reduced-panel confirmation.
+
+Competing explanations: upstream protein persistence/localization/cofactor changes; regulator transcription change; generic state/composition; and technical normalization or feature-selection artifacts. Protein or occupancy evidence must match its own experiment; same paper does not establish paired samples. Independent corroboration will be sought in a second study or orthogonal molecular assay. Source-reported mechanisms will be identified as known; inherited outcomes make corresponding analyses retrospective. No promoter-response recalculation is planned.
+
+The aim is an executed ranked candidate comparison and a useful falsification/validation route, not another conclusion that an ideal rescue is absent.

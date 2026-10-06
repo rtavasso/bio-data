@@ -1,0 +1,43 @@
+"""Inspect official API schema, sequence mapping, and source coordinate convention."""
+
+import gzip
+import json
+from pathlib import Path
+
+q = Path(__file__).resolve().parents[1]
+s = q / "inputs/sources"
+a = json.loads((s / "gtex-openapi.source").read_text())
+for key, value in a["paths"].items():
+    if any(x in key.lower() for x in ["file", "download", "dataset"]):
+        print(key, json.dumps(value)[:5500])
+gen = json.loads((s / "human-terminal-sequence.source").read_text())
+cdna = json.loads((s / "canonical-cdna.source").read_text())
+cds = json.loads((s / "canonical-cds.source").read_text())
+print(
+    "SEQUENCE METADATA",
+    {k: v for k, v in gen.items() if k != "seq"},
+    {k: v for k, v in cdna.items() if k != "seq"},
+)
+print("CDS", len(cds["seq"]), cds["seq"][-12:], "CDNA_MATCH", cdna["seq"].find(cds["seq"]))
+comp = str.maketrans("ACGT", "TGCA")
+seq = gen["seq"].upper()
+rc = seq.translate(comp)[::-1]
+for motif in ["TGGTGCT", "TGGTGCTA"]:
+    start = 0
+    while (i := rc.find(motif, start)) >= 0:
+        print(
+            "SEED_MOTIF",
+            motif,
+            "genomic_1inclusive",
+            15231500 - i - len(motif) + 1,
+            15231500 - i,
+            "rc_index",
+            i,
+        )
+        print("SEED_CONTEXT", rc[max(0, i - 30) : i + len(motif) + 30])
+        start = i + 1
+with gzip.open(s / "polyasite-human-bed.source", "rt") as f:
+    for line in f:
+        c = line.split("\t")
+        if c[0] == "17" and 15229000 < int(c[1]) < 15232000:
+            print("BED", line.rstrip())

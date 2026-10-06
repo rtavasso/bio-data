@@ -1,0 +1,80 @@
+{
+  "source": "GSE177037",
+  "input_blob": "42feddf21682bbd15dcdd2a0d4c9c84f51e488c3447fb2f0279dad24a3f9025b",
+  "raw_feature_count": 31038,
+  "unambiguous_symbol_features": 31010,
+  "ambiguous_features_excluded": 28,
+  "n_purified_samples": 8,
+  "sample_unit": "two pooled nerve preparations per state; minimum 10 nerves/sample per GEO; individual nerves not replicates",
+  "units": "RSEM expected counts, fractional values retained; CPM with +0.5 before log2",
+  "markers": [
+    "Mpz",
+    "Mbp",
+    "Mag",
+    "Prx",
+    "Plp1",
+    "Cnp",
+    "Mal"
+  ],
+  "baseline_coefficients": [
+    0.6901321116987836,
+    1.2675487969414871
+  ],
+  "baseline_R2": 0.9812484448993707,
+  "baseline_LOTO_SSE": 1.5248357560066417,
+  "eligible_all_genes": 7761,
+  "eligible_regulatory_annotation": 1119,
+  "passing_regulatory_candidates": 106,
+  "selected": [
+    {
+      "gene": "Ppp6r1",
+      "description": "protein phosphatase 6, regulatory subunit 1",
+      "min_CPM": 31.03883610063382,
+      "sd_log2CPM": 0.3202803401913641,
+      "partial_r": -0.9516544550799575,
+      "gene_beta": -0.6683461909038091,
+      "intercept": 3.8481905046141835,
+      "myelin_beta": 1.319567750952153,
+      "LOTO_SSE": 0.14701202746964895,
+      "LOTO_SSE_over_baseline": 0.09641171312420917,
+      "LOTO_sign_consistent": true,
+      "regulatory_annotation": true,
+      "eligible": true,
+      "selection_pass": true
+    },
+    {
+      "gene": "Gtf2f1",
+      "description": "general transcription factor IIF subunit 1",
+      "min_CPM": 29.543179699533948,
+      "sd_log2CPM": 0.3703279488200408,
+      "partial_r": -0.9578504520951632,
+      "gene_beta": -0.6811796767696309,
+      "intercept": 5.445714451645069,
+      "myelin_beta": 1.1483628684165947,
+      "LOTO_SSE": 0.21819503523593395,
+      "LOTO_SSE_over_baseline": 0.14309412300729363,
+      "LOTO_sign_consistent": true,
+      "regulatory_annotation": true,
+      "eligible": true,
+      "selection_pass": true
+    },
+    {
+      "gene": "Hck",
+      "description": "HCK proto-oncogene, Src family tyrosine kinase",
+      "min_CPM": 2.711692822662536,
+      "sd_log2CPM": 0.3247749200223786,
+      "partial_r": -0.9562512077764578,
+      "gene_beta": -1.5020833373524562,
+      "intercept": 7.096256085737321,
+      "myelin_beta": 0.9064373949258959,
+      "LOTO_SSE": 0.22281718308861273,
+      "LOTO_SSE_over_baseline": 0.14612536609985044,
+      "LOTO_sign_consistent": true,
+      "regulatory_annotation": true,
+      "eligible": true,
+      "selection_pass": true
+    }
+  ],
+  "selection": "Top 3 regulatory-description genes by leave-one-timepoint-out SSE; CPM>=1 in all8; SD>=0.25; consistent slope sign in all4 folds; SSE<0.8*baseline. This CV is used for selection and is NOT unbiased validation. Whole feature screen preserved.",
+  "limits": "Small n and four states; observational predictors are not causal regulators. Matched-symbol transfer to mouse is a hypothesis. No discovery p-values used to claim significance."
+}

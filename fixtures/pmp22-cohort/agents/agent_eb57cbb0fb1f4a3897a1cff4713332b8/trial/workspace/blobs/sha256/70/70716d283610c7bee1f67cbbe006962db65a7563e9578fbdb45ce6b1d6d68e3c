@@ -1,0 +1,17 @@
+"""Inspect published pointer records for specific source/measurement files."""
+import json
+import re
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
+for name in ['seed-evidence-manifest.json','verification-r003.json']:
+    data=json.loads((ROOT/'inputs/prior'/name).read_text())
+    def walk(v,loc='',label=name):
+        if isinstance(v,dict):
+            for k,x in v.items():
+                walk(x,loc+'/'+k)
+        elif isinstance(v,list):
+            for i,x in enumerate(v):
+                walk(x,loc+'/'+str(i))
+        elif isinstance(v,str) and re.search('8191293|4227013|protein-analysis|co.?ip|protein-quant|PXD043917',v,re.I):
+            print(label,loc,v[:1500])
+    walk(data)

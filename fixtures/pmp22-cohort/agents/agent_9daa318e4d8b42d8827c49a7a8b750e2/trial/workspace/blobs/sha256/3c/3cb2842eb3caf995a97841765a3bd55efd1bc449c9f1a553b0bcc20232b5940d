@@ -1,0 +1,81 @@
+{
+  "scope": "Prespecified alternative checks; sensitivity coefficients refitted only to discovery. Does not replace frozen primary validation.",
+  "excluded_discovery_feature_fraction_of_library": {
+    "IL6172": 0.0014638230512915263,
+    "IL6173": 0.0023454238873826245,
+    "IL6174": 0.007303961175924703,
+    "IL6175": 0.008933376906719338,
+    "IL6176": 0.0021854251704726464,
+    "IL6177": 0.002180282320324422,
+    "IL6178": 0.007654076973000247,
+    "IL6179": 0.007896469764711611,
+    "IL6180": 0.0022641076584630397,
+    "IL6181": 0.001994854655854603,
+    "IL6182": 0.008476180198723444,
+    "IL6183": 0.008878331981673477,
+    "IL6184": 0.002922705831917278,
+    "IL6185": 0.002675745110325782,
+    "IL6186": 0.007919311622719818,
+    "IL6187": 0.009230989668635765
+  },
+  "max_discovery_logCPM_difference_full_vs_mapped_denominator": 0.004222698790503188,
+  "Hck_whole_nerve_minus_SC": [
+    {
+      "gene": "Hck",
+      "day": 0,
+      "SC_mean_log2CPM": 1.7143931002913546,
+      "whole_nerve_mean_log2CPM": 1.2757306269912831,
+      "whole_nerve_minus_SC": -0.43866247330007146
+    },
+    {
+      "gene": "Hck",
+      "day": 3,
+      "SC_mean_log2CPM": 2.4226116247638076,
+      "whole_nerve_mean_log2CPM": 3.3126312035597882,
+      "whole_nerve_minus_SC": 0.8900195787959806
+    },
+    {
+      "gene": "Hck",
+      "day": 5,
+      "SC_mean_log2CPM": 2.4672132609534407,
+      "whole_nerve_mean_log2CPM": 3.1139409142889933,
+      "whole_nerve_minus_SC": 0.6467276533355526
+    },
+    {
+      "gene": "Hck",
+      "day": 7,
+      "SC_mean_log2CPM": 2.093975207698672,
+      "whole_nerve_mean_log2CPM": 3.0840970810364015,
+      "whole_nerve_minus_SC": 0.9901218733377295
+    }
+  ],
+  "candidate_time_adjustment": [
+    {
+      "dataset": "discovery",
+      "controls": "myelin+state",
+      "candidate": "Ppp6r1",
+      "partial_r": 0.46722061925321257,
+      "slope": 0.14813023262235575,
+      "residual_df": 2
+    },
+    {
+      "dataset": "discovery",
+      "controls": "myelin+state",
+      "candidate": "Gtf2f1",
+      "partial_r": -0.613397368658388,
+      "slope": -0.14116758471026986,
+      "residual_df": 2
+    },
+    {
+      "dataset": "discovery",
+      "controls": "myelin+state",
+      "candidate": "Hck",
+      "partial_r": -0.2808590720250766,
+      "slope": -0.1914368949995354,
+      "residual_df": 2
+    }
+  ],
+  "HDAC3_Mpz_zero_caution": "Native Mpz=0 in Cnp control, Cnp KO, Dhh control; 21157.6 FPKM Dhh KO, status OK. Full-panel Dhh score is dominated by this source anomaly; do not infer huge generalized myelination. Omit-Mpz sensitivity required. Gene-level zero not promoter output.",
+  "primary_conclusion": "No selected candidate passes sealed primary test; secondary context fits cannot rescue.",
+  "source_units": "Rat RSEM expected counts, mouse log2RMA, mouse Cufflinks FPKM; gene-level steady-state measures."
+}

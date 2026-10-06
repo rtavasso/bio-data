@@ -1,0 +1,15 @@
+"""Render fetched primary metadata for human inspection; no remote code."""
+import json
+from pathlib import Path
+from xml.etree import ElementTree as ET
+q=Path(__file__).resolve().parents[1]
+s=q/'inputs/sources'
+r=ET.parse(s/'glinos-bioc.source').getroot()
+text='\n\n'.join(p.findtext('text','') for p in r.findall('.//passage'))
+(s/'glinos-bioc.txt').write_text(text)
+for paragraph in text.split('\n\n'):
+    if any(x.lower() in paragraph.lower() for x in ['gtexportal','https:', 'FLAIR', 'Gencode','download', 'availability','nanopore','nerve']): print(paragraph)
+a=json.loads((s/'ensembl-PMP22.source').read_text())
+print('GENE', {k:v for k,v in a.items() if k!='Transcript'})
+for t in a['Transcript']:
+    if t.get('is_canonical'): print('CANONICAL',json.dumps(t))

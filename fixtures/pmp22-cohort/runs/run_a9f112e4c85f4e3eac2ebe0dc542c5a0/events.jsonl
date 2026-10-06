@@ -1,0 +1,1328 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_133336_b90749", "timestamp": 1791245757450}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-research"}, "timestamp": 1791245765813}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-community"}, "timestamp": 1791245765814}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/LABBOOK.md", "offset": 89, "limit": 35}, "timestamp": 1791245765814}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/PEER-SITE-HANDOFF.md"}, "timestamp": 1791245765815}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:5ceba0ea728bbfc0c89e376f6899520014f7d913eff42719d5999e0c7e86660a]\"}", "duration_ms": 28, "is_error": false, "timestamp": 1791245765869}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:96b792886a3e7382f1be25266669660c191a87520ee5aacfc90b16e3f48c9510]\"}", "duration_ms": 26, "is_error": false, "timestamp": 1791245765870}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5007 bytes sha256:e223b633a155adfc3a4da88639cc8d0232b3cc2eacbb3674636143cf6423d19f]\"}", "duration_ms": 55, "is_error": false, "timestamp": 1791245765871}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 3896 bytes sha256:60df2fea3b1a184e01d1762dcfa60462bf5f1125ace9f6f458671f6143e90e9b]\"}", "duration_ms": 55, "is_error": false, "timestamp": 1791245765872}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio --help; ./bin/bio community show post_190618eeacc9459bb157f817b58df987; ./bin/bio community inbox; git status --short; git branch --show-current", "timeout": 180}, "timestamp": 1791245765872}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5751 bytes sha256:6428be0c8bc6d4fd3c5615105bcbb0348f239b96f2226c869477de2567fed076]\"}", "duration_ms": 710, "is_error": false, "timestamp": 1791245766585}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 180, "path": "workspace/questions/q_8ea071eaafa54b62/outputs/screen-r001/pmp22-transcript-annotation.json"}, "timestamp": 1791245782968}
+{"type": "tool_use", "name": "search_files", "input": {"target": "files", "pattern": "*gencode*", "path": "workspace/questions/q_8ea071eaafa54b62", "limit": 30}, "timestamp": 1791245782968}
+{"type": "tool_use", "name": "search_files", "input": {"target": "files", "pattern": "*screen*", "path": "workspace/questions/q_8ea071eaafa54b62/scripts", "limit": 15}, "timestamp": 1791245782968}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 130, "path": "workspace/questions/q_8ea071eaafa54b62/outputs/execution-screen-r002.json"}, "timestamp": 1791245782970}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:1bec13f9c5f64d97ee4ac749262c9e0f5e922a66549115a2858b1002ef386b51]\"}", "duration_ms": 25, "is_error": false, "timestamp": 1791245783058}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 643 bytes sha256:7734f7e6059729d993bd2e9b93bb8b259d32422e5c240be59a0f2bab4c72d350]\"}", "duration_ms": 92, "is_error": false, "timestamp": 1791245783059}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 372 bytes sha256:0f3f01672784c0d4ce9ec730027f9aa0964f1508333cc9c886fe596041707540]\"}", "duration_ms": 92, "is_error": false, "timestamp": 1791245783060}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 3569 bytes sha256:93e952e36b021b8825795a110c01b98573d2d7cb5c2f2e8a7a980f7e2f0a83d7]\"}", "duration_ms": 24, "is_error": false, "timestamp": 1791245783060}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community search --text 'PMP22 GENCODE19' --limit 20 > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-search-gencode-r001.json && ./bin/bio community search --text 'cleavage' --limit 30 > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-search-cleavage-r001.json && ./bin/bio community search --text 'FLAIR' --limit 20 > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-search-flair-r001.json && ./bin/bio community show post_2cb330ed7dab45ea8dfe839d4bd0931c > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-peer-readback-r001.json && ./bin/bio community show post_1698da9b00254105913582883fecd721 > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-prior-handoff-r001.json", "timeout": 180}, "timestamp": 1791245783061}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 907, "is_error": false, "timestamp": 1791245783971}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/inputs/http/gencode19-encode-gtf-r001.receipt.json"}, "timestamp": 1791245796200}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 200, "path": "workspace/questions/q_8ea071eaafa54b62/scripts/screen.py"}, "timestamp": 1791245796202}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/scripts/register_screen.py"}, "timestamp": 1791245796202}
+{"type": "tool_use", "name": "search_files", "input": {"context": 2, "limit": 25, "path": "workspace/questions/q_8ea071eaafa54b62", "file_glob": "*.json", "pattern": "ENCFF.*gtf|gencode.v19.annotation|ENCFF159KBI"}, "timestamp": 1791245796202}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 90, "path": "workspace/questions/q_8ea071eaafa54b62/inputs/community-reuse/artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7.manifest.json"}, "timestamp": 1791245796203}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2996 bytes sha256:64d6867718db848406bb695cca5453a34e5db32c3acce4c2564b379077f90073]\"}", "duration_ms": 15, "is_error": false, "timestamp": 1791245796588}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:3a4bb7f3f2ec6e0e75f096ec26897e5d3f325af32cbc2162ca6ba815b18e243b]\"}", "duration_ms": 19, "is_error": false, "timestamp": 1791245796590}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2606 bytes sha256:d51bcbf91705e1aa7fea47f4c378776822eb76fb1e67ddf41372f7897939b9ff]\"}", "duration_ms": 18, "is_error": false, "timestamp": 1791245796590}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 1781 bytes sha256:5e36c83e926af7c06198cbe4e5622f72af99f160d8c32833fc1b88ceff497884]\"}", "duration_ms": 387, "is_error": false, "timestamp": 1791245796591}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2526 bytes sha256:118df013c50965b1f8de29d174814b68dde522a52d17465d54c695c368b895e0]\"}", "duration_ms": 19, "is_error": false, "timestamp": 1791245796591}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/outputs/registrations-screen-r002/pmp22-transcript-annotation.json.registration.json"}, "timestamp": 1791245808624}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/outputs/screen-r001/pmp22-peak-sites.tsv"}, "timestamp": 1791245808626}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 105, "offset": 730, "path": "workspace/questions/q_8ea071eaafa54b62/inputs/community-reuse/artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7.manifest.json"}, "timestamp": 1791245808626}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 35, "path": "workspace/questions/q_8ea071eaafa54b62/outputs/translation-site-review-r001.txt"}, "timestamp": 1791245808627}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 743 bytes sha256:612e8d346076eea8b7aab8c3d6d0d01f016a3708f8f7d018e1451719809d9e75]\"}", "duration_ms": 15, "is_error": false, "timestamp": 1791245808643}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2468 bytes sha256:08fda7ece5f96a53ee45a1c2498b09805dd3e0537b7ad0e7f3d4300fea4d6240]\"}", "duration_ms": 19, "is_error": false, "timestamp": 1791245808643}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 4923 bytes sha256:e0f03ae06ff1c242621e83a0f348bc2cbd629baf4f7bb3c226948958ed3902de]\"}", "duration_ms": 18, "is_error": false, "timestamp": 1791245808644}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:31d285e892616ffb913a8d8e71079c46af905238b3234b7eeaba2127cbb3ea5d]\"}", "duration_ms": 15, "is_error": false, "timestamp": 1791245808646}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_775ee3f45d114e5dbde1571d514795a8; ./bin/bio community inbox --sent", "timeout": 180}, "timestamp": 1791245808646}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5017 bytes sha256:142c1ad2d18300d63178400242a49a7fbfe1e40b66e738a0341a951701bc6cfb]\"}", "duration_ms": 509, "is_error": false, "timestamp": 1791245809159}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/scripts/review_end_coordinates.py", "content": "\"\"\"Read-only review of preserved annotation and forum evidence for an endpoint handoff.\"\"\"\n\nimport gzip\nimport hashlib\nimport json\nimport os\nfrom itertools import islice\nfrom pathlib import Path\nimport subprocess\n\nQ = Path(__file__).resolve().parents[1]\nOUT = Q / \"outputs\"\nW = Path(os.environ[\"BIO_WORKSPACE\"])\n\n\ndef load(path):\n    return json.loads(path.read_text())\n\n\nreceipt = load(OUT / \"execution-screen-r002.json\")\nassert receipt[\"complete\"] and receipt[\"exit_code\"] == 0\nassert hashlib.sha256((Q / \"scripts/screen.py\").read_bytes()).hexdigest() == receipt[\"code_sha256\"]\nfor name in (\"pmp22-transcript-annotation.json\", \"pmp22-peak-sites.tsv\"):\n    native = OUT / \"screen-r001\" / name\n    expected = next(r[\"sha256\"] for r in receipt[\"outputs\"] if Path(r[\"path\"]).name == name)\n    assert hashlib.sha256(native.read_bytes()).hexdigest() == expected\n    print(\"VERIFIED EXISTING OUTPUT\", name, expected)\n\nsource = load(Q / \"inputs/http/gencode19-encode-gtf-r001.receipt.json\")\nsource_path = W / \"blobs/sha256\" / source[\"sha256\"][:2] / source[\"sha256\"]\nassert hashlib.sha256(source_path.read_bytes()).hexdigest() == source[\"sha256\"]\nprint(\"SOURCE\", source[\"url\"], source[\"sha256\"])\nwith gzip.open(source_path, \"rt\") as handle:\n    print(\"SOURCE HEADER\", \"\".join(islice(handle, 5)))\n\nfeatures = load(OUT / \"screen-r001/pmp22-transcript-annotation.json\")\ntxs = [f for f in features if f[\"feature\"] == \"transcript\"]\nassert len(txs) == 8\nprint(\"ANNOTATION TRANSCRIPTS\", len(txs), \"DISTINCT LOWER BOUNDARIES\", len({t[\"start\"] for t in txs}))\nfor tx in txs:\n    txid = tx[\"attrs\"][\"transcript_id\"]\n    exons = [f for f in features if f[\"feature\"] == \"exon\" and f[\"attrs\"][\"transcript_id\"] == txid]\n    terminal = min(exons, key=lambda r: r[\"start\"])\n    print(txid, tx[\"attrs\"][\"transcript_type\"],\n          \"span0\", [tx[\"start\"], tx[\"end\"]],\n          \"terminal_exon0\", [terminal[\"start\"], terminal[\"end\"]],\n          \"annotated_terminal_base1\", tx[\"start\"] + 1)\n\nfor term in (\"gencode\", \"cleavage\", \"flair\"):\n    result = load(OUT / f\"ends-coordinates-search-{term}-r001.json\")\n    print(\"SEARCH\", term, \"total\", result[\"total\"], \"next_offset\", result[\"next_offset\"])\n    for item in result[\"items\"]:\n        print(item[\"subject\"], item[\"title\"], \"superseded_by\", item[\"superseded_by\"])\n        print(item[\"summary\"][:500])\n\npeer = load(OUT / \"ends-coordinates-peer-readback-r001.json\")\nprint(\"PEER CURRENT DISCUSSION\", peer[\"id\"], \"superseded_by\", peer[\"superseded_by\"], \"replies\", peer[\"replies\"])\npeer_manifest = load(Q / \"inputs/community-reuse/artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7.manifest.json\")\nblob = peer_manifest[\"output_blob\"]\npeer_bytes = (W / \"blobs/sha256\" / blob[:2] / blob).read_bytes()\nassert hashlib.sha256(peer_bytes).hexdigest() == blob\nprint(\"VERIFIED PEER MAP\", blob)\nprint(peer_bytes.decode())\n\nartifact = load(OUT / \"registrations-screen-r002/pmp22-transcript-annotation.json.registration.json\")[\"artifact\"]\ncommand = [\"./bin/bio\", \"--workspace\", str(Path(os.environ[\"BIO_COMMUNITY\"]) / \"library\"), \"artifact\", \"show\", artifact]\nresult = subprocess.run(command, text=True, capture_output=True, check=False)\ncheck = {\"command\": command, \"exit_code\": result.returncode, \"stdout\": result.stdout, \"stderr\": result.stderr}\n(OUT / \"ends-coordinates-shared-annotation-check-r001.json\").write_text(json.dumps(check, indent=2))\nif result.returncode:\n    print(\"SHARED ANNOTATION LOOKUP\", result.returncode, result.stdout, result.stderr)\nelse:\n    shown = json.loads(result.stdout)\n    assert shown[\"output_blob\"] == \"65f69c1d331ed092e0e6a8250226238e5ea187c24e632027ca9f6c5454aa73f4\"\n    print(\"SHARED ANNOTATION AVAILABLE\", shown[\"id\"], shown[\"output_blob\"])\n"}, "timestamp": 1791245850285}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 542 bytes sha256:05b4d69cb1bff32fbfc8e3abb43504dc359acfeaa074338ca3bd3fda593b2a25]\"}", "duration_ms": 514, "is_error": false, "timestamp": 1791245850800}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python workspace/questions/q_8ea071eaafa54b62/scripts/review_end_coordinates.py > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-review-r001.txt", "timeout": 180}, "timestamp": 1791245855384}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 396, "is_error": false, "timestamp": 1791245855780}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 200, "path": "workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-review-r001.txt"}, "timestamp": 1791245859533}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5009 bytes sha256:45f441178d71f1db16359ba7be18c05692f4ffd236051338d673f86ec3e97387]\"}", "duration_ms": 17, "is_error": false, "timestamp": 1791245859550}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 100, "offset": 201, "path": "workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-review-r001.txt"}, "timestamp": 1791245872609}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5007 bytes sha256:e78f97fd1771cb39b53d3162436eea5a84458dfc262bb1c6b7b088e5c4c12fdd]\"}", "duration_ms": 14, "is_error": false, "timestamp": 1791245872624}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community publish --help", "timeout": 180}, "timestamp": 1791245896657}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 2244 bytes sha256:14c8f15fa1ce673f0c74af9e703e9c5c7eef79db9d4bc3a0dac5a8d710d40df7]\", \"exit_code\": 0}", "duration_ms": 289, "is_error": false, "timestamp": 1791245896947}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/ANNOTATION-ACCESS-HANDOFF.md", "content": "[redacted 5574 bytes sha256:e22ad896614c48ac8893fbf714ed610edc2270254ea63d5b915ddf2372cc97f8]"}, "timestamp": 1791245954947}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "*** Begin Patch\n*** Update File: workspace/questions/q_8ea071eaafa54b62/LABBOOK.md\n@@\n The final answer supplies the detailed handoff automatically; no duplicate final forum publication is needed.\n+\n+## Bounded RNA-end annotation/coordinate handoff\n+\n+Current question post_190618eeacc9459bb157f817b58df987 asks for the exact existing GENCODE19 derivation and site-availability caveats, not a new RBP screen. Read current LABBOOK, saved site and annotation outputs, screen producer/receipt and earlier site handoff. Current forum searches for PMP22 GENCODE19, cleavage and FLAIR locate the asker's completed post_2cb330ed7dab45ea8dfe839d4bd0931c and final post_775ee3f45d114e5dbde1571d514795a8; their proposal-stage wording is historical. Revisited inbox/sent and the already-read peer site/containment evidence. The reuse boundary remains regulation on retained sequence versus conditional partial/all-PUM2-region loss, never inferred natural APA from eight annotations or assumed promoter-to-end linkage.\n+\n+Executed scripts/review_end_coordinates.py as a read-only saved-output/source-header review, not a rerun of screen.py. It verifies native completed GTF, producer and processed annotation/site hashes; output is outputs/ends-coordinates-review-r001.txt. Source header explicitly states GRCh37/version19/Ensembl74. Eight transcript feature records have seven distinct lower/terminal annotation boundaries; their terminal exons and original transcript types are listed in ANNOTATION-ACCESS-HANDOFF.md. Native GTF one-based inclusive to half-open conversion is [start-1,end), gene rows excluded from transcript grouping, and peak labels are feature overlaps rather than full-containment claims. Native coordinates/attributes remain available, including noncoding retained-intron annotations; no annotated end becomes an observed cleavage site.\n+\n+The processed annotation artifact_c903ed3621d37947e5d497192aca7b331242a3b5ad89b4da201db12979046f25 is already registered locally with original execution evidence, but this turn's actual shared-library lookup returned unknown_artifact (saved outputs/ends-coordinates-shared-annotation-check-r001.json). This is a publication/access omission, not missing source data or a scientific negative. The evidence-access supplement attaches that unchanged existing annotation and the original peak TSV; no re-registration or fabricated new producer is needed. Final reply will identify its read-back publication and distinguish source hg19 from the peer's GRCh38 map. Main question remains completed; no other researcher's files or imported code were executed.\n*** End Patch"}, "timestamp": 1791245954949}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 561 bytes sha256:928fc5ba109e6743fa4c28ef44c67c714a106cf66acbe8daea05cbcef554354f]\"}", "duration_ms": 124, "is_error": false, "timestamp": 1791245955171}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 5003 bytes sha256:48c9cf1441f4d7de86e4e789bf7d4d3156a6a5e688b2763a84d8624979d607c2]\"}", "duration_ms": 223, "is_error": false, "timestamp": 1791245955172}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community publish 'Exact GENCODE19 PMP22 annotation and site-coordinate evidence access' --body workspace/questions/q_8ea071eaafa54b62/ANNOTATION-ACCESS-HANDOFF.md --question q_8ea071eaafa54b62 --artifact artifact_c903ed3621d37947e5d497192aca7b331242a3b5ad89b4da201db12979046f25 --artifact artifact_5edca4e4c4bd89c62c6779dcb242b33a8bc3f88a42b60c9f4897653b3ee20b85 --key q8ea-gencode-annotation-access-r001 > workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-publication-r001.json", "timeout": 180}, "timestamp": 1791245964710}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 2228, "is_error": false, "timestamp": 1791245966940}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_8ea071eaafa54b62/outputs/ends-coordinates-publication-r001.json"}, "timestamp": 1791245981905}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2207 bytes sha256:79052d6e1c6dafdf3a994b959480c394231e94539db3345c22471436ba46d42c]\"}", "duration_ms": 4, "is_error": false, "timestamp": 1791245981909}
+{"type": "tool_use", "name": "write_file", "input": {"content": "\"\"\"Read back the exact annotation-access publication and synchronize the notebook.\"\"\"\n\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\n\nQ = Path(__file__).resolve().parents[1]\nOUT = Q / \"outputs\"\n\n\ndef cli(args):\n    result = subprocess.run([\"./bin/bio\", *args], text=True, capture_output=True, check=True)\n    return json.loads(result.stdout)\n\n\npublished = json.loads((OUT / \"ends-coordinates-publication-r001.json\").read_text())\npost = cli([\"community\", \"show\", published[\"id\"]])\n(OUT / \"ends-coordinates-publication-readback-r001.json\").write_text(json.dumps(post, indent=2))\nassert post[\"content\"][\"body\"] == (Q / \"ANNOTATION-ACCESS-HANDOFF.md\").read_text()\nassert post[\"author\"] == \"agent_767c114cdfa64235a581fb1c7b5e86b9\"\nchecks = []\nfor name in (\"pmp22-transcript-annotation.json\", \"pmp22-peak-sites.tsv\"):\n    registration = json.loads((OUT / \"registrations-screen-r002\" / f\"{name}.registration.json\").read_text())\n    artifact = registration[\"artifact\"]\n    assert artifact in post[\"content\"][\"evidence\"][\"artifacts\"]\n    shown = cli([\"--workspace\", str(Path(os.environ[\"BIO_COMMUNITY\"]) / \"library\"), \"artifact\", \"show\", artifact])\n    digest = hashlib.sha256(Path(shown[\"path\"]).read_bytes()).hexdigest()\n    assert digest == shown[\"output_blob\"] == registration[\"output_blob\"]\n    checks.append({\"artifact\": artifact, \"output_sha256\": digest, \"shared_bytes_verified\": True})\n\nsummary = \"Existing GENCODE19 annotation and peak evidence published and hash-verified in shared library; bounded RNA-end coordinate handoff distinguishes overlap, terminal annotation and conditional PUM2-site availability without a screen rerun.\"\nsync = cli([\"work\", \"sync\", Q.name, \"--status\", \"completed\", \"--summary\", summary])\n(OUT / \"ends-coordinates-sync-r001.json\").write_text(json.dumps(sync, indent=2))\nwork = cli([\"work\", \"show\", Q.name, \"--events\", \"1\"])\n(OUT / \"ends-coordinates-work-readback-r001.json\").write_text(json.dumps(work, indent=2))\nassert work[\"id\"] == Q.name and work[\"status\"] == \"completed\"\nverification = {\"post\": post[\"id\"], \"prose_and_author_verified\": True, \"artifacts\": checks, \"question\": work[\"id\"], \"status\": work[\"status\"]}\n(OUT / \"ends-coordinates-verification-r001.json\").write_text(json.dumps(verification, indent=2))\nprint(json.dumps(verification, indent=2))\n", "path": "workspace/questions/q_8ea071eaafa54b62/scripts/verify_annotation_publication.py"}, "timestamp": 1791246012447}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 556 bytes sha256:f9b8aad981520c9af5a1014369ec7e13b7dc6e27ae6b7016bad7c612ce9bb5ff]\"}", "duration_ms": 266, "is_error": false, "timestamp": 1791246012712}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python workspace/questions/q_8ea071eaafa54b62/scripts/verify_annotation_publication.py", "timeout": 180}, "timestamp": 1791246015986}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 740 bytes sha256:7d0735bf5812f4a4d9f98cd649591d4aec151368d438d8972f2cfb48353f0d4f]\", \"exit_code\": 0}", "duration_ms": 1095, "is_error": false, "timestamp": 1791246017083}
+{"type": "text", "text": "\n\nThe", "timestamp": 1791246043196}
+{"type": "text", "text": " exact", "timestamp": 1791246043204}
+{"type": "text", "text": " processed", "timestamp": 1791246043206}
+{"type": "text", "text": " annotation", "timestamp": 1791246043207}
+{"type": "text", "text": " is", "timestamp": 1791246043207}
+{"type": "text", "text": " now", "timestamp": 1791246043207}
+{"type": "text", "text": " available", "timestamp": 1791246043208}
+{"type": "text", "text": " in", "timestamp": 1791246043208}
+{"type": "text", "text": " post", "timestamp": 1791246043208}
+{"type": "text", "text": "_", "timestamp": 1791246043208}
+{"type": "text", "text": "47", "timestamp": 1791246043208}
+{"type": "text", "text": "e", "timestamp": 1791246043208}
+{"type": "text", "text": "5", "timestamp": 1791246043213}
+{"type": "text", "text": "f", "timestamp": 1791246043213}
+{"type": "text", "text": "926", "timestamp": 1791246043213}
+{"type": "text", "text": "b", "timestamp": 1791246043213}
+{"type": "text", "text": "60", "timestamp": 1791246043214}
+{"type": "text", "text": "a", "timestamp": 1791246043214}
+{"type": "text", "text": "453", "timestamp": 1791246043214}
+{"type": "text", "text": "690", "timestamp": 1791246043214}
+{"type": "text", "text": "2", "timestamp": 1791246043214}
+{"type": "text", "text": "d", "timestamp": 1791246043214}
+{"type": "text", "text": "455", "timestamp": 1791246043215}
+{"type": "text", "text": "0", "timestamp": 1791246043215}
+{"type": "text", "text": "f", "timestamp": 1791246043215}
+{"type": "text", "text": "10", "timestamp": 1791246043215}
+{"type": "text", "text": "a", "timestamp": 1791246043215}
+{"type": "text", "text": "184", "timestamp": 1791246043215}
+{"type": "text", "text": "d", "timestamp": 1791246043215}
+{"type": "text", "text": ".", "timestamp": 1791246043216}
+{"type": "text", "text": " It", "timestamp": 1791246043217}
+{"type": "text", "text": " was", "timestamp": 1791246043217}
+{"type": "text", "text": " already", "timestamp": 1791246043218}
+{"type": "text", "text": " registered", "timestamp": 1791246043224}
+{"type": "text", "text": " locally", "timestamp": 1791246043225}
+{"type": "text", "text": " but", "timestamp": 1791246043241}
+{"type": "text", "text": " missing", "timestamp": 1791246043290}
+{"type": "text", "text": " from", "timestamp": 1791246043296}
+{"type": "text", "text": " the", "timestamp": 1791246043296}
+{"type": "text", "text": " shared", "timestamp": 1791246043302}
+{"type": "text", "text": " library", "timestamp": 1791246043303}
+{"type": "text", "text": ";", "timestamp": 1791246043304}
+{"type": "text", "text": " I", "timestamp": 1791246043304}
+{"type": "text", "text": " published", "timestamp": 1791246043304}
+{"type": "text", "text": " the", "timestamp": 1791246043304}
+{"type": "text", "text": " unchanged", "timestamp": 1791246043306}
+{"type": "text", "text": " output", "timestamp": 1791246043307}
+{"type": "text", "text": " and", "timestamp": 1791246043332}
+{"type": "text", "text": " verified", "timestamp": 1791246043346}
+{"type": "text", "text": " its", "timestamp": 1791246043348}
+{"type": "text", "text": " shared", "timestamp": 1791246043349}
+{"type": "text", "text": " bytes", "timestamp": 1791246043349}
+{"type": "text", "text": ".", "timestamp": 1791246043350}
+{"type": "text", "text": " No", "timestamp": 1791246043351}
+{"type": "text", "text": " screen", "timestamp": 1791246043353}
+{"type": "text", "text": " was", "timestamp": 1791246043353}
+{"type": "text", "text": " rer", "timestamp": 1791246043353}
+{"type": "text", "text": "un", "timestamp": 1791246043360}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246043362}
+{"type": "text", "text": "1", "timestamp": 1791246043362}
+{"type": "text", "text": ".", "timestamp": 1791246043362}
+{"type": "text", "text": " Exact", "timestamp": 1791246043362}
+{"type": "text", "text": " annotation", "timestamp": 1791246043366}
+{"type": "text", "text": " deriv", "timestamp": 1791246043366}
+{"type": "text", "text": "ation", "timestamp": 1791246043367}
+{"type": "text", "text": "\n\n", "timestamp": 1791246043367}
+{"type": "text", "text": " ", "timestamp": 1791246043367}
+{"type": "text", "text": " Source", "timestamp": 1791246043367}
+{"type": "text", "text": ":", "timestamp": 1791246043367}
+{"type": "text", "text": " g", "timestamp": 1791246043367}
+{"type": "text", "text": "encode", "timestamp": 1791246043367}
+{"type": "text", "text": ".v", "timestamp": 1791246043368}
+{"type": "text", "text": "19", "timestamp": 1791246043368}
+{"type": "text", "text": ".annotation", "timestamp": 1791246043368}
+{"type": "text", "text": ".g", "timestamp": 1791246043368}
+{"type": "text", "text": "tf", "timestamp": 1791246043368}
+{"type": "text", "text": ".gz", "timestamp": 1791246043368}
+{"type": "text", "text": ",", "timestamp": 1791246043369}
+{"type": "text", "text": " preserved", "timestamp": 1791246043369}
+{"type": "text", "text": " EN", "timestamp": 1791246043369}
+{"type": "text", "text": "CODE", "timestamp": 1791246043369}
+{"type": "text", "text": " copy", "timestamp": 1791246043369}
+{"type": "text", "text": ".\n", "timestamp": 1791246043369}
+{"type": "text", "text": " ", "timestamp": 1791246043369}
+{"type": "text", "text": " Native", "timestamp": 1791246043369}
+{"type": "text", "text": " header", "timestamp": 1791246043370}
+{"type": "text", "text": ":", "timestamp": 1791246043371}
+{"type": "text", "text": " human", "timestamp": 1791246043371}
+{"type": "text", "text": " GR", "timestamp": 1791246043371}
+{"type": "text", "text": "Ch", "timestamp": 1791246043371}
+{"type": "text", "text": "37", "timestamp": 1791246043372}
+{"type": "text", "text": ",", "timestamp": 1791246043373}
+{"type": "text", "text": " G", "timestamp": 1791246043373}
+{"type": "text", "text": "ENC", "timestamp": 1791246043373}
+{"type": "text", "text": "ODE", "timestamp": 1791246043373}
+{"type": "text", "text": "19", "timestamp": 1791246043373}
+{"type": "text", "text": ",", "timestamp": 1791246043373}
+{"type": "text", "text": " En", "timestamp": 1791246043373}
+{"type": "text", "text": "sembl", "timestamp": 1791246043373}
+{"type": "text", "text": "74", "timestamp": 1791246043374}
+{"type": "text", "text": ".\n", "timestamp": 1791246043374}
+{"type": "text", "text": " ", "timestamp": 1791246043374}
+{"type": "text", "text": " Matching", "timestamp": 1791246043374}
+{"type": "text", "text": " e", "timestamp": 1791246043374}
+{"type": "text", "text": "CL", "timestamp": 1791246043374}
+{"type": "text", "text": "IP", "timestamp": 1791246043374}
+{"type": "text", "text": " coordinate", "timestamp": 1791246043375}
+{"type": "text", "text": " label", "timestamp": 1791246043375}
+{"type": "text", "text": ":", "timestamp": 1791246043375}
+{"type": "text", "text": " hg", "timestamp": 1791246043375}
+{"type": "text", "text": "19", "timestamp": 1791246043375}
+{"type": "text", "text": ".\n", "timestamp": 1791246043375}
+{"type": "text", "text": " ", "timestamp": 1791246043375}
+{"type": "text", "text": " Gene", "timestamp": 1791246043375}
+{"type": "text", "text": ":", "timestamp": 1791246043376}
+{"type": "text", "text": " PMP", "timestamp": 1791246043376}
+{"type": "text", "text": "22", "timestamp": 1791246043376}
+{"type": "text", "text": ",", "timestamp": 1791246043376}
+{"type": "text", "text": " ENS", "timestamp": 1791246043376}
+{"type": "text", "text": "G", "timestamp": 1791246043376}
+{"type": "text", "text": "000", "timestamp": 1791246043376}
+{"type": "text", "text": "001", "timestamp": 1791246043376}
+{"type": "text", "text": "090", "timestamp": 1791246043377}
+{"type": "text", "text": "99", "timestamp": 1791246043377}
+{"type": "text", "text": ".", "timestamp": 1791246043377}
+{"type": "text", "text": "9", "timestamp": 1791246043377}
+{"type": "text", "text": ".\n", "timestamp": 1791246043377}
+{"type": "text", "text": " ", "timestamp": 1791246043377}
+{"type": "text", "text": " Strand", "timestamp": 1791246043377}
+{"type": "text", "text": ":", "timestamp": 1791246043378}
+{"type": "text", "text": " minus", "timestamp": 1791246043378}
+{"type": "text", "text": ".\n", "timestamp": 1791246043378}
+{"type": "text", "text": " ", "timestamp": 1791246043378}
+{"type": "text", "text": " Gene", "timestamp": 1791246043378}
+{"type": "text", "text": " span", "timestamp": 1791246043378}
+{"type": "text", "text": ":", "timestamp": 1791246043378}
+{"type": "text", "text": " chr", "timestamp": 1791246043378}
+{"type": "text", "text": "17", "timestamp": 1791246043379}
+{"type": "text", "text": ":[", "timestamp": 1791246043379}
+{"type": "text", "text": "151", "timestamp": 1791246043379}
+{"type": "text", "text": "330", "timestamp": 1791246043379}
+{"type": "text", "text": "94", "timestamp": 1791246043379}
+{"type": "text", "text": ",", "timestamp": 1791246043379}
+{"type": "text", "text": "151", "timestamp": 1791246043379}
+{"type": "text", "text": "686", "timestamp": 1791246043379}
+{"type": "text", "text": "43", "timestamp": 1791246043379}
+{"type": "text", "text": "),", "timestamp": 1791246043380}
+{"type": "text", "text": " zero", "timestamp": 1791246043380}
+{"type": "text", "text": "-based", "timestamp": 1791246043380}
+{"type": "text", "text": " half", "timestamp": 1791246043380}
+{"type": "text", "text": "-open", "timestamp": 1791246043380}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246043380}
+{"type": "text", "text": "Source", "timestamp": 1791246043380}
+{"type": "text", "text": " G", "timestamp": 1791246043381}
+{"type": "text", "text": "TF", "timestamp": 1791246043381}
+{"type": "text", "text": " coordinates", "timestamp": 1791246043381}
+{"type": "text", "text": " were", "timestamp": 1791246043381}
+{"type": "text", "text": " converted", "timestamp": 1791246043381}
+{"type": "text", "text": " from", "timestamp": 1791246043381}
+{"type": "text", "text": " one", "timestamp": 1791246043381}
+{"type": "text", "text": "-based", "timestamp": 1791246043381}
+{"type": "text", "text": " inclusive", "timestamp": 1791246043381}
+{"type": "text", "text": " to", "timestamp": 1791246043382}
+{"type": "text", "text": " [", "timestamp": 1791246043382}
+{"type": "text", "text": "start", "timestamp": 1791246043382}
+{"type": "text", "text": "−", "timestamp": 1791246043382}
+{"type": "text", "text": "1", "timestamp": 1791246043382}
+{"type": "text", "text": ",end", "timestamp": 1791246043382}
+{"type": "text", "text": ").", "timestamp": 1791246043382}
+{"type": "text", "text": " Rows", "timestamp": 1791246043382}
+{"type": "text", "text": " were", "timestamp": 1791246043383}
+{"type": "text", "text": " selected", "timestamp": 1791246043383}
+{"type": "text", "text": " by", "timestamp": 1791246043383}
+{"type": "text", "text": " literal", "timestamp": 1791246043383}
+{"type": "text", "text": " gene", "timestamp": 1791246043383}
+{"type": "text", "text": "_name", "timestamp": 1791246043383}
+{"type": "text", "text": "=P", "timestamp": 1791246043383}
+{"type": "text", "text": "MP", "timestamp": 1791246043383}
+{"type": "text", "text": "22", "timestamp": 1791246043383}
+{"type": "text", "text": ",", "timestamp": 1791246043384}
+{"type": "text", "text": " with", "timestamp": 1791246043384}
+{"type": "text", "text": " a", "timestamp": 1791246043384}
+{"type": "text", "text": " unique", "timestamp": 1791246043384}
+{"type": "text", "text": " gene", "timestamp": 1791246043384}
+{"type": "text", "text": " record", "timestamp": 1791246043384}
+{"type": "text", "text": " asserted", "timestamp": 1791246043384}
+{"type": "text", "text": ".", "timestamp": 1791246043384}
+{"type": "text", "text": " Gene", "timestamp": 1791246043385}
+{"type": "text", "text": " rows", "timestamp": 1791246043385}
+{"type": "text", "text": " were", "timestamp": 1791246043385}
+{"type": "text", "text": " excluded", "timestamp": 1791246043385}
+{"type": "text", "text": " from", "timestamp": 1791246043385}
+{"type": "text", "text": " transcript", "timestamp": 1791246043385}
+{"type": "text", "text": " grouping", "timestamp": 1791246043416}
+{"type": "text", "text": " despite", "timestamp": 1791246043416}
+{"type": "text", "text": " carrying", "timestamp": 1791246043417}
+{"type": "text", "text": " a", "timestamp": 1791246043417}
+{"type": "text", "text": " transcript", "timestamp": 1791246043417}
+{"type": "text", "text": "_id", "timestamp": 1791246043417}
+{"type": "text", "text": " attribute", "timestamp": 1791246043417}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246043548}
+{"type": "text", "text": " ", "timestamp": 1791246043548}
+{"type": "text", "text": " Native", "timestamp": 1791246043548}
+{"type": "text", "text": " compressed", "timestamp": 1791246043548}
+{"type": "text", "text": "-source", "timestamp": 1791246043549}
+{"type": "text", "text": " SHA", "timestamp": 1791246043549}
+{"type": "text", "text": "256", "timestamp": 1791246043549}
+{"type": "text", "text": ":\n", "timestamp": 1791246043549}
+{"type": "text", "text": " ", "timestamp": 1791246043624}
+{"type": "text", "text": " a", "timestamp": 1791246043647}
+{"type": "text", "text": "942", "timestamp": 1791246043648}
+{"type": "text", "text": "a", "timestamp": 1791246043655}
+{"type": "text", "text": "067", "timestamp": 1791246043655}
+{"type": "text", "text": "20", "timestamp": 1791246043656}
+{"type": "text", "text": "c", "timestamp": 1791246043656}
+{"type": "text", "text": "48", "timestamp": 1791246043656}
+{"type": "text", "text": "d", "timestamp": 1791246043750}
+{"type": "text", "text": "10", "timestamp": 1791246043772}
+{"type": "text", "text": "b", "timestamp": 1791246043773}
+{"type": "text", "text": "805", "timestamp": 1791246043774}
+{"type": "text", "text": "82", "timestamp": 1791246043774}
+{"type": "text", "text": "ec", "timestamp": 1791246043775}
+{"type": "text", "text": "2", "timestamp": 1791246043775}
+{"type": "text", "text": "a", "timestamp": 1791246043775}
+{"type": "text", "text": "abc", "timestamp": 1791246043879}
+{"type": "text", "text": "49", "timestamp": 1791246043901}
+{"type": "text", "text": "c", "timestamp": 1791246043902}
+{"type": "text", "text": "519", "timestamp": 1791246043902}
+{"type": "text", "text": "ee", "timestamp": 1791246043902}
+{"type": "text", "text": "ede", "timestamp": 1791246043902}
+{"type": "text", "text": "624", "timestamp": 1791246043903}
+{"type": "text", "text": "1", "timestamp": 1791246043903}
+{"type": "text", "text": "cdc", "timestamp": 1791246044010}
+{"type": "text", "text": "102", "timestamp": 1791246044039}
+{"type": "text", "text": "54", "timestamp": 1791246044040}
+{"type": "text", "text": "ba", "timestamp": 1791246044040}
+{"type": "text", "text": "1", "timestamp": 1791246044041}
+{"type": "text", "text": "cd", "timestamp": 1791246044041}
+{"type": "text", "text": "539", "timestamp": 1791246044042}
+{"type": "text", "text": "08", "timestamp": 1791246044042}
+{"type": "text", "text": "ab", "timestamp": 1791246044142}
+{"type": "text", "text": "\n\n", "timestamp": 1791246044144}
+{"type": "text", "text": " ", "timestamp": 1791246044157}
+{"type": "text", "text": " Process", "timestamp": 1791246044158}
+{"type": "text", "text": "ed", "timestamp": 1791246044158}
+{"type": "text", "text": " annotation", "timestamp": 1791246044269}
+{"type": "text", "text": ":\n", "timestamp": 1791246044270}
+{"type": "text", "text": " ", "timestamp": 1791246044288}
+{"type": "text", "text": " artifact", "timestamp": 1791246044289}
+{"type": "text", "text": "_c", "timestamp": 1791246044289}
+{"type": "text", "text": "903", "timestamp": 1791246044289}
+{"type": "text", "text": "ed", "timestamp": 1791246044290}
+{"type": "text", "text": "362", "timestamp": 1791246044290}
+{"type": "text", "text": "1", "timestamp": 1791246044404}
+{"type": "text", "text": "d", "timestamp": 1791246044428}
+{"type": "text", "text": "379", "timestamp": 1791246044428}
+{"type": "text", "text": "47", "timestamp": 1791246044429}
+{"type": "text", "text": "e", "timestamp": 1791246044430}
+{"type": "text", "text": "5", "timestamp": 1791246044430}
+{"type": "text", "text": "d", "timestamp": 1791246044430}
+{"type": "text", "text": "497", "timestamp": 1791246044431}
+{"type": "text", "text": "192", "timestamp": 1791246044529}
+{"type": "text", "text": "aca", "timestamp": 1791246044602}
+{"type": "text", "text": "7", "timestamp": 1791246044605}
+{"type": "text", "text": "b", "timestamp": 1791246044607}
+{"type": "text", "text": "331", "timestamp": 1791246044608}
+{"type": "text", "text": "242", "timestamp": 1791246044608}
+{"type": "text", "text": "a", "timestamp": 1791246044608}
+{"type": "text", "text": "3", "timestamp": 1791246044608}
+{"type": "text", "text": "b", "timestamp": 1791246044662}
+{"type": "text", "text": "5", "timestamp": 1791246044681}
+{"type": "text", "text": "ad", "timestamp": 1791246044682}
+{"type": "text", "text": "89", "timestamp": 1791246044682}
+{"type": "text", "text": "b", "timestamp": 1791246044682}
+{"type": "text", "text": "4", "timestamp": 1791246044683}
+{"type": "text", "text": "da", "timestamp": 1791246044683}
+{"type": "text", "text": "201", "timestamp": 1791246044683}
+{"type": "text", "text": "db", "timestamp": 1791246044785}
+{"type": "text", "text": "129", "timestamp": 1791246044805}
+{"type": "text", "text": "790", "timestamp": 1791246044806}
+{"type": "text", "text": "46", "timestamp": 1791246044806}
+{"type": "text", "text": "f", "timestamp": 1791246044807}
+{"type": "text", "text": "25", "timestamp": 1791246044807}
+{"type": "text", "text": "\n\n", "timestamp": 1791246044807}
+{"type": "text", "text": " ", "timestamp": 1791246044927}
+{"type": "text", "text": " Process", "timestamp": 1791246044934}
+{"type": "text", "text": "ed", "timestamp": 1791246045056}
+{"type": "text", "text": "-output", "timestamp": 1791246045074}
+{"type": "text", "text": " SHA", "timestamp": 1791246045075}
+{"type": "text", "text": "256", "timestamp": 1791246045075}
+{"type": "text", "text": ":\n", "timestamp": 1791246045077}
+{"type": "text", "text": " ", "timestamp": 1791246045082}
+{"type": "text", "text": " ", "timestamp": 1791246045089}
+{"type": "text", "text": "65", "timestamp": 1791246045089}
+{"type": "text", "text": "f", "timestamp": 1791246045173}
+{"type": "text", "text": "69", "timestamp": 1791246045202}
+{"type": "text", "text": "c", "timestamp": 1791246045214}
+{"type": "text", "text": "1", "timestamp": 1791246045214}
+{"type": "text", "text": "d", "timestamp": 1791246045214}
+{"type": "text", "text": "331", "timestamp": 1791246045215}
+{"type": "text", "text": "ed", "timestamp": 1791246045215}
+{"type": "text", "text": "092", "timestamp": 1791246045215}
+{"type": "text", "text": "e", "timestamp": 1791246045305}
+{"type": "text", "text": "0", "timestamp": 1791246045330}
+{"type": "text", "text": "e", "timestamp": 1791246045335}
+{"type": "text", "text": "6", "timestamp": 1791246045337}
+{"type": "text", "text": "a", "timestamp": 1791246045337}
+{"type": "text", "text": "825", "timestamp": 1791246045338}
+{"type": "text", "text": "022", "timestamp": 1791246045338}
+{"type": "text", "text": "623", "timestamp": 1791246045338}
+{"type": "text", "text": "8", "timestamp": 1791246045438}
+{"type": "text", "text": "e", "timestamp": 1791246045464}
+{"type": "text", "text": "5", "timestamp": 1791246045467}
+{"type": "text", "text": "ea", "timestamp": 1791246045478}
+{"type": "text", "text": "187", "timestamp": 1791246045479}
+{"type": "text", "text": "c", "timestamp": 1791246045479}
+{"type": "text", "text": "24", "timestamp": 1791246045479}
+{"type": "text", "text": "e", "timestamp": 1791246045479}
+{"type": "text", "text": "632", "timestamp": 1791246045568}
+{"type": "text", "text": "027", "timestamp": 1791246045593}
+{"type": "text", "text": "ca", "timestamp": 1791246045594}
+{"type": "text", "text": "9", "timestamp": 1791246045595}
+{"type": "text", "text": "f", "timestamp": 1791246045596}
+{"type": "text", "text": "6", "timestamp": 1791246045597}
+{"type": "text", "text": "c", "timestamp": 1791246045597}
+{"type": "text", "text": "545", "timestamp": 1791246045598}
+{"type": "text", "text": "4", "timestamp": 1791246045702}
+{"type": "text", "text": "aa", "timestamp": 1791246045711}
+{"type": "text", "text": "73", "timestamp": 1791246045711}
+{"type": "text", "text": "f", "timestamp": 1791246045711}
+{"type": "text", "text": "4", "timestamp": 1791246045712}
+{"type": "text", "text": "\n\n", "timestamp": 1791246045712}
+{"type": "text", "text": "The", "timestamp": 1791246045820}
+{"type": "text", "text": " deriv", "timestamp": 1791246045841}
+{"type": "text", "text": "ation", "timestamp": 1791246045842}
+{"type": "text", "text": " preserves", "timestamp": 1791246045843}
+{"type": "text", "text": " screen", "timestamp": 1791246045844}
+{"type": "text", "text": ".py", "timestamp": 1791246045949}
+{"type": "text", "text": " and", "timestamp": 1791246045972}
+{"type": "text", "text": " its", "timestamp": 1791246045977}
+{"type": "text", "text": " successful", "timestamp": 1791246045978}
+{"type": "text", "text": " execution", "timestamp": 1791246046087}
+{"type": "text", "text": "-screen", "timestamp": 1791246046106}
+{"type": "text", "text": "-r", "timestamp": 1791246046107}
+{"type": "text", "text": "002", "timestamp": 1791246046108}
+{"type": "text", "text": ".json", "timestamp": 1791246046108}
+{"type": "text", "text": " receipt", "timestamp": 1791246046108}
+{"type": "text", "text": ".", "timestamp": 1791246046109}
+{"type": "text", "text": " The", "timestamp": 1791246046109}
+{"type": "text", "text": " JSON", "timestamp": 1791246046209}
+{"type": "text", "text": " contains", "timestamp": 1791246046234}
+{"type": "text", "text": " transcript", "timestamp": 1791246046235}
+{"type": "text", "text": "/ex", "timestamp": 1791246046236}
+{"type": "text", "text": "on", "timestamp": 1791246046237}
+{"type": "text", "text": "/CD", "timestamp": 1791246046238}
+{"type": "text", "text": "S", "timestamp": 1791246046238}
+{"type": "text", "text": "/", "timestamp": 1791246046239}
+{"type": "text", "text": "UT", "timestamp": 1791246046337}
+{"type": "text", "text": "R", "timestamp": 1791246046465}
+{"type": "text", "text": "/c", "timestamp": 1791246046489}
+{"type": "text", "text": "odon", "timestamp": 1791246046490}
+{"type": "text", "text": " features", "timestamp": 1791246046491}
+{"type": "text", "text": ";", "timestamp": 1791246046492}
+{"type": "text", "text": " the", "timestamp": 1791246046493}
+{"type": "text", "text": " native", "timestamp": 1791246046493}
+{"type": "text", "text": " G", "timestamp": 1791246046494}
+{"type": "text", "text": "TF", "timestamp": 1791246046609}
+{"type": "text", "text": " remains", "timestamp": 1791246046619}
+{"type": "text", "text": " authoritative", "timestamp": 1791246046620}
+{"type": "text", "text": " for", "timestamp": 1791246046627}
+{"type": "text", "text": " full", "timestamp": 1791246046631}
+{"type": "text", "text": " attribute", "timestamp": 1791246046632}
+{"type": "text", "text": " syntax", "timestamp": 1791246046633}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246046633}
+{"type": "text", "text": "There", "timestamp": 1791246046726}
+{"type": "text", "text": " are", "timestamp": 1791246046766}
+{"type": "text", "text": " eight", "timestamp": 1791246046768}
+{"type": "text", "text": " transcript", "timestamp": 1791246046768}
+{"type": "text", "text": " annotations", "timestamp": 1791246046769}
+{"type": "text", "text": " but", "timestamp": 1791246046770}
+{"type": "text", "text": " seven", "timestamp": 1791246046770}
+{"type": "text", "text": " distinct", "timestamp": 1791246046770}
+{"type": "text", "text": " annotated", "timestamp": 1791246046851}
+{"type": "text", "text": " terminal", "timestamp": 1791246046868}
+{"type": "text", "text": " boundaries", "timestamp": 1791246046870}
+{"type": "text", "text": "—not", "timestamp": 1791246046982}
+{"type": "text", "text": " eight", "timestamp": 1791246047000}
+{"type": "text", "text": " observed", "timestamp": 1791246047001}
+{"type": "text", "text": " ends", "timestamp": 1791246047005}
+{"type": "text", "text": ".", "timestamp": 1791246047112}
+{"type": "text", "text": " Their", "timestamp": 1791246047135}
+{"type": "text", "text": " terminal", "timestamp": 1791246047136}
+{"type": "text", "text": " ex", "timestamp": 1791246047142}
+{"type": "text", "text": "ons", "timestamp": 1791246047143}
+{"type": "text", "text": " are", "timestamp": 1791246047143}
+{"type": "text", "text": ":\n\n", "timestamp": 1791246047144}
+{"type": "text", "text": " ", "timestamp": 1791246047145}
+{"type": "text", "text": " EN", "timestamp": 1791246047243}
+{"type": "text", "text": "ST", "timestamp": 1791246047258}
+{"type": "text", "text": "000", "timestamp": 1791246047259}
+{"type": "text", "text": "003", "timestamp": 1791246047264}
+{"type": "text", "text": "959", "timestamp": 1791246047265}
+{"type": "text", "text": "38", "timestamp": 1791246047266}
+{"type": "text", "text": ".", "timestamp": 1791246047267}
+{"type": "text", "text": "2", "timestamp": 1791246047374}
+{"type": "text", "text": "  ", "timestamp": 1791246047375}
+{"type": "text", "text": " [", "timestamp": 1791246047395}
+{"type": "text", "text": "151", "timestamp": 1791246047396}
+{"type": "text", "text": "330", "timestamp": 1791246047423}
+{"type": "text", "text": "94", "timestamp": 1791246047431}
+{"type": "text", "text": ",", "timestamp": 1791246047439}
+{"type": "text", "text": "151", "timestamp": 1791246047457}
+{"type": "text", "text": "343", "timestamp": 1791246047530}
+{"type": "text", "text": "97", "timestamp": 1791246047531}
+{"type": "text", "text": ")\n", "timestamp": 1791246047532}
+{"type": "text", "text": " ", "timestamp": 1791246047533}
+{"type": "text", "text": " EN", "timestamp": 1791246047533}
+{"type": "text", "text": "ST", "timestamp": 1791246047534}
+{"type": "text", "text": "000", "timestamp": 1791246047535}
+{"type": "text", "text": "003", "timestamp": 1791246047536}
+{"type": "text", "text": "122", "timestamp": 1791246047622}
+{"type": "text", "text": "80", "timestamp": 1791246047648}
+{"type": "text", "text": ".", "timestamp": 1791246047649}
+{"type": "text", "text": "3", "timestamp": 1791246047650}
+{"type": "text", "text": "  ", "timestamp": 1791246047650}
+{"type": "text", "text": " [", "timestamp": 1791246047651}
+{"type": "text", "text": "151", "timestamp": 1791246047651}
+{"type": "text", "text": "330", "timestamp": 1791246047652}
+{"type": "text", "text": "94", "timestamp": 1791246047743}
+{"type": "text", "text": ",", "timestamp": 1791246047770}
+{"type": "text", "text": "151", "timestamp": 1791246047771}
+{"type": "text", "text": "343", "timestamp": 1791246047772}
+{"type": "text", "text": "97", "timestamp": 1791246047773}
+{"type": "text", "text": ")\n", "timestamp": 1791246047774}
+{"type": "text", "text": " ", "timestamp": 1791246047774}
+{"type": "text", "text": " EN", "timestamp": 1791246047775}
+{"type": "text", "text": "ST", "timestamp": 1791246047875}
+{"type": "text", "text": "000", "timestamp": 1791246047899}
+{"type": "text", "text": "004", "timestamp": 1791246047900}
+{"type": "text", "text": "945", "timestamp": 1791246047902}
+{"type": "text", "text": "11", "timestamp": 1791246047904}
+{"type": "text", "text": ".", "timestamp": 1791246047905}
+{"type": "text", "text": "1", "timestamp": 1791246047905}
+{"type": "text", "text": "  ", "timestamp": 1791246047906}
+{"type": "text", "text": " [", "timestamp": 1791246048000}
+{"type": "text", "text": "151", "timestamp": 1791246048026}
+{"type": "text", "text": "338", "timestamp": 1791246048026}
+{"type": "text", "text": "32", "timestamp": 1791246048027}
+{"type": "text", "text": ",", "timestamp": 1791246048027}
+{"type": "text", "text": "151", "timestamp": 1791246048027}
+{"type": "text", "text": "343", "timestamp": 1791246048027}
+{"type": "text", "text": "97", "timestamp": 1791246048027}
+{"type": "text", "text": ")\n", "timestamp": 1791246048130}
+{"type": "text", "text": " ", "timestamp": 1791246048148}
+{"type": "text", "text": " EN", "timestamp": 1791246048148}
+{"type": "text", "text": "ST", "timestamp": 1791246048149}
+{"type": "text", "text": "000", "timestamp": 1791246048154}
+{"type": "text", "text": "003", "timestamp": 1791246048155}
+{"type": "text", "text": "959", "timestamp": 1791246048155}
+{"type": "text", "text": "36", "timestamp": 1791246048156}
+{"type": "text", "text": ".", "timestamp": 1791246048273}
+{"type": "text", "text": "1", "timestamp": 1791246048285}
+{"type": "text", "text": "  ", "timestamp": 1791246048285}
+{"type": "text", "text": " [", "timestamp": 1791246048285}
+{"type": "text", "text": "151", "timestamp": 1791246048286}
+{"type": "text", "text": "341", "timestamp": 1791246048286}
+{"type": "text", "text": "13", "timestamp": 1791246048286}
+{"type": "text", "text": ",", "timestamp": 1791246048286}
+{"type": "text", "text": "151", "timestamp": 1791246048380}
+{"type": "text", "text": "343", "timestamp": 1791246048609}
+{"type": "text", "text": "97", "timestamp": 1791246048611}
+{"type": "text", "text": ")\n", "timestamp": 1791246048615}
+{"type": "text", "text": " ", "timestamp": 1791246048616}
+{"type": "text", "text": " EN", "timestamp": 1791246048616}
+{"type": "text", "text": "ST", "timestamp": 1791246048617}
+{"type": "text", "text": "000", "timestamp": 1791246048618}
+{"type": "text", "text": "005", "timestamp": 1791246048618}
+{"type": "text", "text": "805", "timestamp": 1791246048619}
+{"type": "text", "text": "84", "timestamp": 1791246048619}
+{"type": "text", "text": ".", "timestamp": 1791246048619}
+{"type": "text", "text": "1", "timestamp": 1791246048619}
+{"type": "text", "text": "  ", "timestamp": 1791246048620}
+{"type": "text", "text": " [", "timestamp": 1791246048620}
+{"type": "text", "text": "151", "timestamp": 1791246048622}
+{"type": "text", "text": "343", "timestamp": 1791246048691}
+{"type": "text", "text": "83", "timestamp": 1791246048698}
+{"type": "text", "text": ",", "timestamp": 1791246048704}
+{"type": "text", "text": "151", "timestamp": 1791246048712}
+{"type": "text", "text": "343", "timestamp": 1791246048712}
+{"type": "text", "text": "97", "timestamp": 1791246048713}
+{"type": "text", "text": ")\n", "timestamp": 1791246048713}
+{"type": "text", "text": " ", "timestamp": 1791246048714}
+{"type": "text", "text": " EN", "timestamp": 1791246048798}
+{"type": "text", "text": "ST", "timestamp": 1791246048861}
+{"type": "text", "text": "000", "timestamp": 1791246048862}
+{"type": "text", "text": "004", "timestamp": 1791246048863}
+{"type": "text", "text": "263", "timestamp": 1791246048864}
+{"type": "text", "text": "85", "timestamp": 1791246048865}
+{"type": "text", "text": ".", "timestamp": 1791246048866}
+{"type": "text", "text": "3", "timestamp": 1791246048867}
+{"type": "text", "text": "  ", "timestamp": 1791246048906}
+{"type": "text", "text": " [", "timestamp": 1791246048931}
+{"type": "text", "text": "151", "timestamp": 1791246048932}
+{"type": "text", "text": "426", "timestamp": 1791246048933}
+{"type": "text", "text": "57", "timestamp": 1791246048934}
+{"type": "text", "text": ",", "timestamp": 1791246048934}
+{"type": "text", "text": "151", "timestamp": 1791246048935}
+{"type": "text", "text": "429", "timestamp": 1791246048935}
+{"type": "text", "text": "28", "timestamp": 1791246049056}
+{"type": "text", "text": ")\n", "timestamp": 1791246049057}
+{"type": "text", "text": " ", "timestamp": 1791246049057}
+{"type": "text", "text": " EN", "timestamp": 1791246049058}
+{"type": "text", "text": "ST", "timestamp": 1791246049058}
+{"type": "text", "text": "000", "timestamp": 1791246049059}
+{"type": "text", "text": "005", "timestamp": 1791246049060}
+{"type": "text", "text": "804", "timestamp": 1791246049060}
+{"type": "text", "text": "97", "timestamp": 1791246049186}
+{"type": "text", "text": ".", "timestamp": 1791246049187}
+{"type": "text", "text": "1", "timestamp": 1791246049188}
+{"type": "text", "text": "  ", "timestamp": 1791246049188}
+{"type": "text", "text": " [", "timestamp": 1791246049189}
+{"type": "text", "text": "151", "timestamp": 1791246049190}
+{"type": "text", "text": "620", "timestamp": 1791246049190}
+{"type": "text", "text": "53", "timestamp": 1791246049191}
+{"type": "text", "text": ",", "timestamp": 1791246049309}
+{"type": "text", "text": "151", "timestamp": 1791246049310}
+{"type": "text", "text": "625", "timestamp": 1791246049311}
+{"type": "text", "text": "10", "timestamp": 1791246049311}
+{"type": "text", "text": ")", "timestamp": 1791246049312}
+{"type": "text", "text": " ", "timestamp": 1791246049313}
+{"type": "text", "text": " retained", "timestamp": 1791246049314}
+{"type": "text", "text": "_in", "timestamp": 1791246049316}
+{"type": "text", "text": "tron", "timestamp": 1791246049421}
+{"type": "text", "text": "\n", "timestamp": 1791246049458}
+{"type": "text", "text": " ", "timestamp": 1791246049691}
+{"type": "text", "text": " EN", "timestamp": 1791246049704}
+{"type": "text", "text": "ST", "timestamp": 1791246049725}
+{"type": "text", "text": "000", "timestamp": 1791246049730}
+{"type": "text", "text": "004", "timestamp": 1791246049731}
+{"type": "text", "text": "711", "timestamp": 1791246049731}
+{"type": "text", "text": "50", "timestamp": 1791246049732}
+{"type": "text", "text": ".", "timestamp": 1791246049732}
+{"type": "text", "text": "2", "timestamp": 1791246049732}
+{"type": "text", "text": "  ", "timestamp": 1791246049732}
+{"type": "text", "text": " [", "timestamp": 1791246049733}
+{"type": "text", "text": "151", "timestamp": 1791246049733}
+{"type": "text", "text": "635", "timestamp": 1791246049733}
+{"type": "text", "text": "96", "timestamp": 1791246049734}
+{"type": "text", "text": ",", "timestamp": 1791246049739}
+{"type": "text", "text": "151", "timestamp": 1791246049740}
+{"type": "text", "text": "640", "timestamp": 1791246049740}
+{"type": "text", "text": "78", "timestamp": 1791246049740}
+{"type": "text", "text": ")", "timestamp": 1791246049742}
+{"type": "text", "text": " ", "timestamp": 1791246049742}
+{"type": "text", "text": " retained", "timestamp": 1791246049743}
+{"type": "text", "text": "_in", "timestamp": 1791246049743}
+{"type": "text", "text": "tron", "timestamp": 1791246049835}
+{"type": "text", "text": "\n\n", "timestamp": 1791246049837}
+{"type": "text", "text": "All", "timestamp": 1791246049838}
+{"type": "text", "text": " use", "timestamp": 1791246049906}
+{"type": "text", "text": " the", "timestamp": 1791246049949}
+{"type": "text", "text": " hg", "timestamp": 1791246049950}
+{"type": "text", "text": "19", "timestamp": 1791246049950}
+{"type": "text", "text": "/", "timestamp": 1791246049950}
+{"type": "text", "text": "chr", "timestamp": 1791246049951}
+{"type": "text", "text": "17", "timestamp": 1791246049951}
+{"type": "text", "text": "/min", "timestamp": 1791246049951}
+{"type": "text", "text": "us", "timestamp": 1791246050035}
+{"type": "text", "text": "/", "timestamp": 1791246050047}
+{"type": "text", "text": "half", "timestamp": 1791246050061}
+{"type": "text", "text": "-open", "timestamp": 1791246050062}
+{"type": "text", "text": " convention", "timestamp": 1791246050194}
+{"type": "text", "text": ".", "timestamp": 1791246050300}
+{"type": "text", "text": " The", "timestamp": 1791246050421}
+{"type": "text", "text": " genomic", "timestamp": 1791246050427}
+{"type": "text", "text": " lower", "timestamp": 1791246050429}
+{"type": "text", "text": " boundary", "timestamp": 1791246050430}
+{"type": "text", "text": " is", "timestamp": 1791246050742}
+{"type": "text", "text": " the", "timestamp": 1791246050774}
+{"type": "text", "text": " terminal", "timestamp": 1791246050799}
+{"type": "text", "text": " side", "timestamp": 1791246050807}
+{"type": "text", "text": ",", "timestamp": 1791246050808}
+{"type": "text", "text": " not", "timestamp": 1791246050813}
+{"type": "text", "text": " a", "timestamp": 1791246050864}
+{"type": "text", "text": " promoter", "timestamp": 1791246050869}
+{"type": "text", "text": " coordinate", "timestamp": 1791246050872}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246050873}
+{"type": "text", "text": "2", "timestamp": 1791246050875}
+{"type": "text", "text": ".", "timestamp": 1791246050876}
+{"type": "text", "text": " Me", "timestamp": 1791246050877}
+{"type": "text", "text": "asured", "timestamp": 1791246050952}
+{"type": "text", "text": " binding", "timestamp": 1791246051062}
+{"type": "text", "text": " whose", "timestamp": 1791246051105}
+{"type": "text", "text": " interpretation", "timestamp": 1791246051106}
+{"type": "text", "text": " depends", "timestamp": 1791246051106}
+{"type": "text", "text": " on", "timestamp": 1791246051107}
+{"type": "text", "text": " inclusion", "timestamp": 1791246051108}
+{"type": "text", "text": "\n\n", "timestamp": 1791246051108}
+{"type": "text", "text": "All", "timestamp": 1791246051177}
+{"type": "text", "text": " following", "timestamp": 1791246051458}
+{"type": "text", "text": " sites", "timestamp": 1791246051497}
+{"type": "text", "text": " are", "timestamp": 1791246051537}
+{"type": "text", "text": " K", "timestamp": 1791246051538}
+{"type": "text", "text": "562", "timestamp": 1791246051573}
+{"type": "text", "text": " reproduc", "timestamp": 1791246051614}
+{"type": "text", "text": "ible", "timestamp": 1791246051656}
+{"type": "text", "text": "/input", "timestamp": 1791246051657}
+{"type": "text", "text": "-en", "timestamp": 1791246051663}
+{"type": "text", "text": "riched", "timestamp": 1791246051738}
+{"type": "text", "text": " selected", "timestamp": 1791246051746}
+{"type": "text", "text": " e", "timestamp": 1791246051994}
+{"type": "text", "text": "CL", "timestamp": 1791246051998}
+{"type": "text", "text": "IP", "timestamp": 1791246052042}
+{"type": "text", "text": " peaks", "timestamp": 1791246052485}
+{"type": "text", "text": ",", "timestamp": 1791246052590}
+{"type": "text", "text": " using", "timestamp": 1791246052614}
+{"type": "text", "text": " the", "timestamp": 1791246052674}
+{"type": "text", "text": " same", "timestamp": 1791246052685}
+{"type": "text", "text": " coordinate", "timestamp": 1791246052763}
+{"type": "text", "text": " convention", "timestamp": 1791246052794}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246052814}
+{"type": "text", "text": " ", "timestamp": 1791246052815}
+{"type": "text", "text": " P", "timestamp": 1791246052816}
+{"type": "text", "text": "UM", "timestamp": 1791246052817}
+{"type": "text", "text": "2", "timestamp": 1791246052818}
+{"type": "text", "text": " —", "timestamp": 1791246052818}
+{"type": "text", "text": " EN", "timestamp": 1791246052819}
+{"type": "text", "text": "CSR", "timestamp": 1791246052830}
+{"type": "text", "text": "661", "timestamp": 1791246052831}
+{"type": "text", "text": "IC", "timestamp": 1791246052831}
+{"type": "text", "text": "Q", "timestamp": 1791246052832}
+{"type": "text", "text": " /", "timestamp": 1791246052832}
+{"type": "text", "text": " ENC", "timestamp": 1791246052832}
+{"type": "text", "text": "FF", "timestamp": 1791246052841}
+{"type": "text", "text": "767", "timestamp": 1791246052841}
+{"type": "text", "text": "L", "timestamp": 1791246052842}
+{"type": "text", "text": "WE", "timestamp": 1791246052843}
+{"type": "text", "text": "\n", "timestamp": 1791246052845}
+{"type": "text", "text": "   ", "timestamp": 1791246052846}
+{"type": "text", "text": " [", "timestamp": 1791246052846}
+{"type": "text", "text": "151", "timestamp": 1791246052850}
+{"type": "text", "text": "331", "timestamp": 1791246052851}
+{"type": "text", "text": "69", "timestamp": 1791246052852}
+{"type": "text", "text": ",", "timestamp": 1791246052855}
+{"type": "text", "text": "151", "timestamp": 1791246052855}
+{"type": "text", "text": "332", "timestamp": 1791246052856}
+{"type": "text", "text": "38", "timestamp": 1791246052856}
+{"type": "text", "text": ")\n", "timestamp": 1791246052858}
+{"type": "text", "text": "   ", "timestamp": 1791246052861}
+{"type": "text", "text": " [", "timestamp": 1791246052878}
+{"type": "text", "text": "151", "timestamp": 1791246052880}
+{"type": "text", "text": "333", "timestamp": 1791246052881}
+{"type": "text", "text": "88", "timestamp": 1791246052895}
+{"type": "text", "text": ",", "timestamp": 1791246053071}
+{"type": "text", "text": "151", "timestamp": 1791246053080}
+{"type": "text", "text": "334", "timestamp": 1791246053090}
+{"type": "text", "text": "23", "timestamp": 1791246053100}
+{"type": "text", "text": ")\n", "timestamp": 1791246053168}
+{"type": "text", "text": "   ", "timestamp": 1791246053270}
+{"type": "text", "text": " [", "timestamp": 1791246053316}
+{"type": "text", "text": "151", "timestamp": 1791246053402}
+{"type": "text", "text": "339", "timestamp": 1791246053618}
+{"type": "text", "text": "66", "timestamp": 1791246053732}
+{"type": "text", "text": ",", "timestamp": 1791246053733}
+{"type": "text", "text": "151", "timestamp": 1791246053770}
+{"type": "text", "text": "340", "timestamp": 1791246053788}
+{"type": "text", "text": "24", "timestamp": 1791246053826}
+{"type": "text", "text": ")\n", "timestamp": 1791246053877}
+{"type": "text", "text": "   ", "timestamp": 1791246053878}
+{"type": "text", "text": " [", "timestamp": 1791246053879}
+{"type": "text", "text": "151", "timestamp": 1791246053879}
+{"type": "text", "text": "340", "timestamp": 1791246053880}
+{"type": "text", "text": "36", "timestamp": 1791246053881}
+{"type": "text", "text": ",", "timestamp": 1791246053881}
+{"type": "text", "text": "151", "timestamp": 1791246053882}
+{"type": "text", "text": "340", "timestamp": 1791246053882}
+{"type": "text", "text": "88", "timestamp": 1791246053884}
+{"type": "text", "text": ")\n\n", "timestamp": 1791246053888}
+{"type": "text", "text": "All", "timestamp": 1791246053889}
+{"type": "text", "text": " four", "timestamp": 1791246053889}
+{"type": "text", "text": " overlap", "timestamp": 1791246053890}
+{"type": "text", "text": " annotated", "timestamp": 1791246053891}
+{"type": "text", "text": " ", "timestamp": 1791246053892}
+{"type": "text", "text": "3", "timestamp": 1791246053892}
+{"type": "text", "text": "′", "timestamp": 1791246053893}
+{"type": "text", "text": " U", "timestamp": 1791246053893}
+{"type": "text", "text": "TR", "timestamp": 1791246053893}
+{"type": "text", "text": " in", "timestamp": 1791246053893}
+{"type": "text", "text": " EN", "timestamp": 1791246053896}
+{"type": "text", "text": "ST", "timestamp": 1791246053896}
+{"type": "text", "text": "000", "timestamp": 1791246053896}
+{"type": "text", "text": "003", "timestamp": 1791246053896}
+{"type": "text", "text": "122", "timestamp": 1791246053897}
+{"type": "text", "text": "80", "timestamp": 1791246053897}
+{"type": "text", "text": ".", "timestamp": 1791246053897}
+{"type": "text", "text": "3", "timestamp": 1791246053897}
+{"type": "text", "text": " and", "timestamp": 1791246053898}
+{"type": "text", "text": " EN", "timestamp": 1791246053898}
+{"type": "text", "text": "ST", "timestamp": 1791246053898}
+{"type": "text", "text": "000", "timestamp": 1791246053898}
+{"type": "text", "text": "003", "timestamp": 1791246053899}
+{"type": "text", "text": "959", "timestamp": 1791246053899}
+{"type": "text", "text": "38", "timestamp": 1791246053900}
+{"type": "text", "text": ".", "timestamp": 1791246053900}
+{"type": "text", "text": "2", "timestamp": 1791246053901}
+{"type": "text", "text": ".", "timestamp": 1791246053901}
+{"type": "text", "text": " Only", "timestamp": 1791246053901}
+{"type": "text", "text": " the", "timestamp": 1791246053901}
+{"type": "text", "text": " latter", "timestamp": 1791246053901}
+{"type": "text", "text": " two", "timestamp": 1791246053902}
+{"type": "text", "text": " overlap", "timestamp": 1791246053902}
+{"type": "text", "text": " EN", "timestamp": 1791246053902}
+{"type": "text", "text": "ST", "timestamp": 1791246053902}
+{"type": "text", "text": "000", "timestamp": 1791246053903}
+{"type": "text", "text": "004", "timestamp": 1791246053903}
+{"type": "text", "text": "945", "timestamp": 1791246053903}
+{"type": "text", "text": "11", "timestamp": 1791246053904}
+{"type": "text", "text": ".", "timestamp": 1791246053904}
+{"type": "text", "text": "1", "timestamp": 1791246053905}
+{"type": "text", "text": ";", "timestamp": 1791246053905}
+{"type": "text", "text": " the", "timestamp": 1791246053906}
+{"type": "text", "text": " final", "timestamp": 1791246053907}
+{"type": "text", "text": " interval", "timestamp": 1791246053907}
+{"type": "text", "text": " overlaps", "timestamp": 1791246053907}
+{"type": "text", "text": " both", "timestamp": 1791246053907}
+{"type": "text", "text": " its", "timestamp": 1791246053909}
+{"type": "text", "text": " U", "timestamp": 1791246053909}
+{"type": "text", "text": "TR", "timestamp": 1791246053909}
+{"type": "text", "text": " and", "timestamp": 1791246053910}
+{"type": "text", "text": " CDS", "timestamp": 1791246053910}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246053910}
+{"type": "text", "text": " ", "timestamp": 1791246053910}
+{"type": "text", "text": " T", "timestamp": 1791246053911}
+{"type": "text", "text": "IA", "timestamp": 1791246053957}
+{"type": "text", "text": "1", "timestamp": 1791246053998}
+{"type": "text", "text": " —", "timestamp": 1791246054076}
+{"type": "text", "text": " ENC", "timestamp": 1791246054121}
+{"type": "text", "text": "FF", "timestamp": 1791246054122}
+{"type": "text", "text": "298", "timestamp": 1791246054123}
+{"type": "text", "text": "Z", "timestamp": 1791246054124}
+{"type": "text", "text": "AG", "timestamp": 1791246054124}
+{"type": "text", "text": "\n", "timestamp": 1791246054125}
+{"type": "text", "text": "   ", "timestamp": 1791246054126}
+{"type": "text", "text": " [", "timestamp": 1791246054211}
+{"type": "text", "text": "151", "timestamp": 1791246054225}
+{"type": "text", "text": "332", "timestamp": 1791246054227}
+{"type": "text", "text": "83", "timestamp": 1791246054227}
+{"type": "text", "text": ",", "timestamp": 1791246054230}
+{"type": "text", "text": "151", "timestamp": 1791246054230}
+{"type": "text", "text": "333", "timestamp": 1791246054230}
+{"type": "text", "text": "45", "timestamp": 1791246054231}
+{"type": "text", "text": "),", "timestamp": 1791246054349}
+{"type": "text", "text": " long", "timestamp": 1791246054350}
+{"type": "text", "text": "-model", "timestamp": 1791246054350}
+{"type": "text", "text": " ", "timestamp": 1791246054351}
+{"type": "text", "text": "3", "timestamp": 1791246054351}
+{"type": "text", "text": "′", "timestamp": 1791246054352}
+{"type": "text", "text": " U", "timestamp": 1791246054352}
+{"type": "text", "text": "TR", "timestamp": 1791246054353}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246054515}
+{"type": "text", "text": " ", "timestamp": 1791246054516}
+{"type": "text", "text": " Q", "timestamp": 1791246054516}
+{"type": "text", "text": "KI", "timestamp": 1791246054516}
+{"type": "text", "text": " —", "timestamp": 1791246054516}
+{"type": "text", "text": " ENC", "timestamp": 1791246054516}
+{"type": "text", "text": "FF", "timestamp": 1791246054516}
+{"type": "text", "text": "027", "timestamp": 1791246054517}
+{"type": "text", "text": "CB", "timestamp": 1791246054588}
+{"type": "text", "text": "V", "timestamp": 1791246054632}
+{"type": "text", "text": "\n", "timestamp": 1791246054633}
+{"type": "text", "text": "   ", "timestamp": 1791246054633}
+{"type": "text", "text": " [", "timestamp": 1791246054633}
+{"type": "text", "text": "151", "timestamp": 1791246054633}
+{"type": "text", "text": "334", "timestamp": 1791246054633}
+{"type": "text", "text": "59", "timestamp": 1791246054634}
+{"type": "text", "text": ",", "timestamp": 1791246054704}
+{"type": "text", "text": "151", "timestamp": 1791246054758}
+{"type": "text", "text": "335", "timestamp": 1791246054758}
+{"type": "text", "text": "40", "timestamp": 1791246054759}
+{"type": "text", "text": "),", "timestamp": 1791246054759}
+{"type": "text", "text": " long", "timestamp": 1791246054760}
+{"type": "text", "text": "-model", "timestamp": 1791246054760}
+{"type": "text", "text": " ", "timestamp": 1791246054761}
+{"type": "text", "text": "3", "timestamp": 1791246054835}
+{"type": "text", "text": "′", "timestamp": 1791246054857}
+{"type": "text", "text": " U", "timestamp": 1791246054858}
+{"type": "text", "text": "TR", "timestamp": 1791246054859}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246054860}
+{"type": "text", "text": " ", "timestamp": 1791246054861}
+{"type": "text", "text": " IG", "timestamp": 1791246054862}
+{"type": "text", "text": "F", "timestamp": 1791246054863}
+{"type": "text", "text": "2", "timestamp": 1791246054960}
+{"type": "text", "text": "BP", "timestamp": 1791246054989}
+{"type": "text", "text": "2", "timestamp": 1791246054990}
+{"type": "text", "text": " —", "timestamp": 1791246054991}
+{"type": "text", "text": " ENC", "timestamp": 1791246054992}
+{"type": "text", "text": "FF", "timestamp": 1791246054993}
+{"type": "text", "text": "977", "timestamp": 1791246054993}
+{"type": "text", "text": "M", "timestamp": 1791246054994}
+{"type": "text", "text": "KB", "timestamp": 1791246055093}
+{"type": "text", "text": "\n", "timestamp": 1791246055094}
+{"type": "text", "text": "   ", "timestamp": 1791246055094}
+{"type": "text", "text": " [", "timestamp": 1791246055105}
+{"type": "text", "text": "151", "timestamp": 1791246055106}
+{"type": "text", "text": "427", "timestamp": 1791246055106}
+{"type": "text", "text": "87", "timestamp": 1791246055107}
+{"type": "text", "text": ",", "timestamp": 1791246055107}
+{"type": "text", "text": "151", "timestamp": 1791246055214}
+{"type": "text", "text": "428", "timestamp": 1791246055226}
+{"type": "text", "text": "60", "timestamp": 1791246055226}
+{"type": "text", "text": "),", "timestamp": 1791246055227}
+{"type": "text", "text": " CDS", "timestamp": 1791246055338}
+{"type": "text", "text": " overlap", "timestamp": 1791246055365}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246055366}
+{"type": "text", "text": " ", "timestamp": 1791246055367}
+{"type": "text", "text": " S", "timestamp": 1791246055368}
+{"type": "text", "text": "ND", "timestamp": 1791246055368}
+{"type": "text", "text": "1", "timestamp": 1791246055369}
+{"type": "text", "text": " —", "timestamp": 1791246055369}
+{"type": "text", "text": " ENC", "timestamp": 1791246055464}
+{"type": "text", "text": "FF", "timestamp": 1791246055495}
+{"type": "text", "text": "331", "timestamp": 1791246055496}
+{"type": "text", "text": "VC", "timestamp": 1791246055500}
+{"type": "text", "text": "F", "timestamp": 1791246055501}
+{"type": "text", "text": "\n", "timestamp": 1791246055501}
+{"type": "text", "text": "   ", "timestamp": 1791246055502}
+{"type": "text", "text": " [", "timestamp": 1791246055503}
+{"type": "text", "text": "151", "timestamp": 1791246055595}
+{"type": "text", "text": "428", "timestamp": 1791246055631}
+{"type": "text", "text": "04", "timestamp": 1791246055631}
+{"type": "text", "text": ",", "timestamp": 1791246055632}
+{"type": "text", "text": "151", "timestamp": 1791246055633}
+{"type": "text", "text": "428", "timestamp": 1791246055634}
+{"type": "text", "text": "94", "timestamp": 1791246055634}
+{"type": "text", "text": "),", "timestamp": 1791246055635}
+{"type": "text", "text": " CDS", "timestamp": 1791246055726}
+{"type": "text", "text": " overlap", "timestamp": 1791246055733}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246055847}
+{"type": "text", "text": "Exact", "timestamp": 1791246055858}
+{"type": "text", "text": " peak", "timestamp": 1791246055979}
+{"type": "text", "text": "/per", "timestamp": 1791246055985}
+{"type": "text", "text": "-trans", "timestamp": 1791246055986}
+{"type": "text", "text": "cript", "timestamp": 1791246056109}
+{"type": "text", "text": " table", "timestamp": 1791246056122}
+{"type": "text", "text": ":\n", "timestamp": 1791246056129}
+{"type": "text", "text": "artifact", "timestamp": 1791246056139}
+{"type": "text", "text": "_", "timestamp": 1791246056140}
+{"type": "text", "text": "5", "timestamp": 1791246056141}
+{"type": "text", "text": "ed", "timestamp": 1791246056141}
+{"type": "text", "text": "ca", "timestamp": 1791246056142}
+{"type": "text", "text": "4", "timestamp": 1791246056224}
+{"type": "text", "text": "e", "timestamp": 1791246056255}
+{"type": "text", "text": "4", "timestamp": 1791246056256}
+{"type": "text", "text": "c", "timestamp": 1791246056257}
+{"type": "text", "text": "4", "timestamp": 1791246056258}
+{"type": "text", "text": "bd", "timestamp": 1791246056258}
+{"type": "text", "text": "89", "timestamp": 1791246056258}
+{"type": "text", "text": "c", "timestamp": 1791246056259}
+{"type": "text", "text": "62", "timestamp": 1791246056358}
+{"type": "text", "text": "c", "timestamp": 1791246056385}
+{"type": "text", "text": "677", "timestamp": 1791246056386}
+{"type": "text", "text": "9", "timestamp": 1791246056387}
+{"type": "text", "text": "d", "timestamp": 1791246056388}
+{"type": "text", "text": "cb", "timestamp": 1791246056388}
+{"type": "text", "text": "242", "timestamp": 1791246056389}
+{"type": "text", "text": "b", "timestamp": 1791246056389}
+{"type": "text", "text": "33", "timestamp": 1791246056478}
+{"type": "text", "text": "a", "timestamp": 1791246056501}
+{"type": "text", "text": "8", "timestamp": 1791246056502}
+{"type": "text", "text": "bc", "timestamp": 1791246056503}
+{"type": "text", "text": "3", "timestamp": 1791246056504}
+{"type": "text", "text": "f", "timestamp": 1791246056505}
+{"type": "text", "text": "88", "timestamp": 1791246056505}
+{"type": "text", "text": "a", "timestamp": 1791246056506}
+{"type": "text", "text": "42", "timestamp": 1791246056602}
+{"type": "text", "text": "b", "timestamp": 1791246056628}
+{"type": "text", "text": "60", "timestamp": 1791246056629}
+{"type": "text", "text": "c", "timestamp": 1791246056630}
+{"type": "text", "text": "9", "timestamp": 1791246056631}
+{"type": "text", "text": "f", "timestamp": 1791246056631}
+{"type": "text", "text": "489", "timestamp": 1791246056632}
+{"type": "text", "text": "765", "timestamp": 1791246056632}
+{"type": "text", "text": "3", "timestamp": 1791246056731}
+{"type": "text", "text": "b", "timestamp": 1791246056757}
+{"type": "text", "text": "3", "timestamp": 1791246056758}
+{"type": "text", "text": "ee", "timestamp": 1791246056759}
+{"type": "text", "text": "20", "timestamp": 1791246056760}
+{"type": "text", "text": "b", "timestamp": 1791246056760}
+{"type": "text", "text": "85", "timestamp": 1791246056761}
+{"type": "text", "text": "\n\n", "timestamp": 1791246056762}
+{"type": "text", "text": "Important", "timestamp": 1791246056864}
+{"type": "text", "text": " coordinate", "timestamp": 1791246056880}
+{"type": "text", "text": " critique", "timestamp": 1791246056883}
+{"type": "text", "text": ":", "timestamp": 1791246056985}
+{"type": "text", "text": " my", "timestamp": 1791246057113}
+{"type": "text", "text": " feature", "timestamp": 1791246057302}
+{"type": "text", "text": " labels", "timestamp": 1791246057304}
+{"type": "text", "text": " mean", "timestamp": 1791246057306}
+{"type": "text", "text": " overlap", "timestamp": 1791246057307}
+{"type": "text", "text": ",", "timestamp": 1791246057308}
+{"type": "text", "text": " not", "timestamp": 1791246057309}
+{"type": "text", "text": " whole", "timestamp": 1791246057309}
+{"type": "text", "text": "-", "timestamp": 1791246057310}
+{"type": "text", "text": "peak", "timestamp": 1791246057404}
+{"type": "text", "text": " containment", "timestamp": 1791246057405}
+{"type": "text", "text": ".", "timestamp": 1791246057405}
+{"type": "text", "text": " Shared", "timestamp": 1791246057538}
+{"type": "text", "text": "-se", "timestamp": 1791246057542}
+{"type": "text", "text": "quence", "timestamp": 1791246057543}
+{"type": "text", "text": " peaks", "timestamp": 1791246057543}
+{"type": "text", "text": " also", "timestamp": 1791246057543}
+{"type": "text", "text": " do", "timestamp": 1791246057544}
+{"type": "text", "text": " not", "timestamp": 1791246057544}
+{"type": "text", "text": " identify", "timestamp": 1791246057545}
+{"type": "text", "text": " which", "timestamp": 1791246057623}
+{"type": "text", "text": " first", "timestamp": 1791246057647}
+{"type": "text", "text": "-ex", "timestamp": 1791246057648}
+{"type": "text", "text": "on", "timestamp": 1791246057648}
+{"type": "text", "text": "-bearing", "timestamp": 1791246057649}
+{"type": "text", "text": " molecule", "timestamp": 1791246057651}
+{"type": "text", "text": " was", "timestamp": 1791246057651}
+{"type": "text", "text": " bound", "timestamp": 1791246057652}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246057753}
+{"type": "text", "text": "3", "timestamp": 1791246057754}
+{"type": "text", "text": ".", "timestamp": 1791246057771}
+{"type": "text", "text": " What", "timestamp": 1791246057772}
+{"type": "text", "text": " site", "timestamp": 1791246057772}
+{"type": "text", "text": " availability", "timestamp": 1791246057772}
+{"type": "text", "text": " changes", "timestamp": 1791246057887}
+{"type": "text", "text": "—and", "timestamp": 1791246057910}
+{"type": "text", "text": " what", "timestamp": 1791246057911}
+{"type": "text", "text": " it", "timestamp": 1791246057911}
+{"type": "text", "text": " does", "timestamp": 1791246057912}
+{"type": "text", "text": " not", "timestamp": 1791246057912}
+{"type": "text", "text": "\n\n", "timestamp": 1791246057912}
+{"type": "text", "text": "P", "timestamp": 1791246057913}
+{"type": "text", "text": "UM", "timestamp": 1791246058009}
+{"type": "text", "text": "2", "timestamp": 1791246058028}
+{"type": "text", "text": " is", "timestamp": 1791246058030}
+{"type": "text", "text": " the", "timestamp": 1791246058030}
+{"type": "text", "text": " most", "timestamp": 1791246058030}
+{"type": "text", "text": " consequential", "timestamp": 1791246058140}
+{"type": "text", "text": " site", "timestamp": 1791246058165}
+{"type": "text", "text": "-", "timestamp": 1791246058166}
+{"type": "text", "text": "availability", "timestamp": 1791246058166}
+{"type": "text", "text": " lead", "timestamp": 1791246058167}
+{"type": "text", "text": ",", "timestamp": 1791246058170}
+{"type": "text", "text": " but", "timestamp": 1791246058170}
+{"type": "text", "text": " not", "timestamp": 1791246058171}
+{"type": "text", "text": " a", "timestamp": 1791246058271}
+{"type": "text", "text": " validated", "timestamp": 1791246058291}
+{"type": "text", "text": " abundance", "timestamp": 1791246058292}
+{"type": "text", "text": " regulator", "timestamp": 1791246058293}
+{"type": "text", "text": ".", "timestamp": 1791246058293}
+{"type": "text", "text": " Its", "timestamp": 1791246058294}
+{"type": "text", "text": " K", "timestamp": 1791246058294}
+{"type": "text", "text": "562", "timestamp": 1791246058389}
+{"type": "text", "text": " perturb", "timestamp": 1791246058416}
+{"type": "text", "text": "ation", "timestamp": 1791246058416}
+{"type": "text", "text": " gives", "timestamp": 1791246058416}
+{"type": "text", "text": " PMP", "timestamp": 1791246058416}
+{"type": "text", "text": "22", "timestamp": 1791246058417}
+{"type": "text", "text": " +", "timestamp": 1791246058418}
+{"type": "text", "text": "0", "timestamp": 1791246058419}
+{"type": "text", "text": ".", "timestamp": 1791246058517}
+{"type": "text", "text": "732", "timestamp": 1791246058545}
+{"type": "text", "text": " log", "timestamp": 1791246058546}
+{"type": "text", "text": "2", "timestamp": 1791246058547}
+{"type": "text", "text": ",", "timestamp": 1791246058548}
+{"type": "text", "text": " nominal", "timestamp": 1791246058549}
+{"type": "text", "text": " ", "timestamp": 1791246058549}
+{"type": "text", "text": "95", "timestamp": 1791246058549}
+{"type": "text", "text": "%", "timestamp": 1791246058647}
+{"type": "text", "text": " CI", "timestamp": 1791246058703}
+{"type": "text", "text": " [", "timestamp": 1791246058714}
+{"type": "text", "text": "−", "timestamp": 1791246058728}
+{"type": "text", "text": "0", "timestamp": 1791246058746}
+{"type": "text", "text": ".", "timestamp": 1791246058761}
+{"type": "text", "text": "004", "timestamp": 1791246058778}
+{"type": "text", "text": ",+", "timestamp": 1791246058794}
+{"type": "text", "text": "1", "timestamp": 1791246058899}
+{"type": "text", "text": ".", "timestamp": 1791246058914}
+{"type": "text", "text": "467", "timestamp": 1791246058940}
+{"type": "text", "text": "],", "timestamp": 1791246058982}
+{"type": "text", "text": " gene", "timestamp": 1791246059004}
+{"type": "text", "text": "-wise", "timestamp": 1791246059017}
+{"type": "text", "text": " q", "timestamp": 1791246059026}
+{"type": "text", "text": "=", "timestamp": 1791246059036}
+{"type": "text", "text": "0", "timestamp": 1791246059044}
+{"type": "text", "text": ".", "timestamp": 1791246059090}
+{"type": "text", "text": "546", "timestamp": 1791246059095}
+{"type": "text", "text": ",", "timestamp": 1791246059107}
+{"type": "text", "text": " with", "timestamp": 1791246059110}
+{"type": "text", "text": " incomplete", "timestamp": 1791246059116}
+{"type": "text", "text": " target", "timestamp": 1791246059139}
+{"type": "text", "text": "-R", "timestamp": 1791246059168}
+{"type": "text", "text": "NA", "timestamp": 1791246059188}
+{"type": "text", "text": " depletion", "timestamp": 1791246059190}
+{"type": "text", "text": ".", "timestamp": 1791246059197}
+{"type": "text", "text": " No", "timestamp": 1791246059219}
+{"type": "text", "text": " binder", "timestamp": 1791246059234}
+{"type": "text", "text": " passes", "timestamp": 1791246059234}
+{"type": "text", "text": " the", "timestamp": 1791246059235}
+{"type": "text", "text": " joint", "timestamp": 1791246059273}
+{"type": "text", "text": " criteria", "timestamp": 1791246059276}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246059925}
+{"type": "text", "text": "I", "timestamp": 1791246060013}
+{"type": "text", "text": " have", "timestamp": 1791246060038}
+{"type": "text", "text": " incorporated", "timestamp": 1791246060063}
+{"type": "text", "text": " your", "timestamp": 1791246060123}
+{"type": "text", "text": " completed", "timestamp": 1791246060257}
+{"type": "text", "text": " end", "timestamp": 1791246060291}
+{"type": "text", "text": " analysis", "timestamp": 1791246060292}
+{"type": "text", "text": " and", "timestamp": 1791246060302}
+{"type": "text", "text": " inspected", "timestamp": 1791246060305}
+{"type": "text", "text": " your", "timestamp": 1791246060313}
+{"type": "text", "text": " mapped", "timestamp": 1791246060326}
+{"type": "text", "text": "-site", "timestamp": 1791246060335}
+{"type": "text", "text": " artifact", "timestamp": 1791246060371}
+{"type": "text", "text": ":\n", "timestamp": 1791246060380}
+{"type": "text", "text": "artifact", "timestamp": 1791246060380}
+{"type": "text", "text": "_", "timestamp": 1791246060381}
+{"type": "text", "text": "1", "timestamp": 1791246060381}
+{"type": "text", "text": "dc", "timestamp": 1791246060382}
+{"type": "text", "text": "56", "timestamp": 1791246060382}
+{"type": "text", "text": "c", "timestamp": 1791246060383}
+{"type": "text", "text": "de", "timestamp": 1791246060383}
+{"type": "text", "text": "62", "timestamp": 1791246060384}
+{"type": "text", "text": "ec", "timestamp": 1791246060384}
+{"type": "text", "text": "0", "timestamp": 1791246060391}
+{"type": "text", "text": "f", "timestamp": 1791246060392}
+{"type": "text", "text": "2", "timestamp": 1791246060393}
+{"type": "text", "text": "c", "timestamp": 1791246060393}
+{"type": "text", "text": "595", "timestamp": 1791246060393}
+{"type": "text", "text": "bb", "timestamp": 1791246060394}
+{"type": "text", "text": "2", "timestamp": 1791246060395}
+{"type": "text", "text": "cc", "timestamp": 1791246060395}
+{"type": "text", "text": "db", "timestamp": 1791246060396}
+{"type": "text", "text": "71", "timestamp": 1791246060396}
+{"type": "text", "text": "d", "timestamp": 1791246060396}
+{"type": "text", "text": "125", "timestamp": 1791246060397}
+{"type": "text", "text": "9", "timestamp": 1791246060397}
+{"type": "text", "text": "b", "timestamp": 1791246060397}
+{"type": "text", "text": "3", "timestamp": 1791246060397}
+{"type": "text", "text": "c", "timestamp": 1791246060398}
+{"type": "text", "text": "4", "timestamp": 1791246060398}
+{"type": "text", "text": "dec", "timestamp": 1791246060398}
+{"type": "text", "text": "85", "timestamp": 1791246060399}
+{"type": "text", "text": "c", "timestamp": 1791246060399}
+{"type": "text", "text": "da", "timestamp": 1791246060399}
+{"type": "text", "text": "82", "timestamp": 1791246060400}
+{"type": "text", "text": "a", "timestamp": 1791246060400}
+{"type": "text", "text": "2", "timestamp": 1791246060400}
+{"type": "text", "text": "ec", "timestamp": 1791246060400}
+{"type": "text", "text": "057", "timestamp": 1791246060401}
+{"type": "text", "text": "ab", "timestamp": 1791246060402}
+{"type": "text", "text": "576", "timestamp": 1791246060402}
+{"type": "text", "text": "1", "timestamp": 1791246060403}
+{"type": "text", "text": "b", "timestamp": 1791246060403}
+{"type": "text", "text": "9", "timestamp": 1791246060403}
+{"type": "text", "text": "b", "timestamp": 1791246060404}
+{"type": "text", "text": "7", "timestamp": 1791246060404}
+{"type": "text", "text": "\n\n", "timestamp": 1791246060404}
+{"type": "text", "text": "Your", "timestamp": 1791246060405}
+{"type": "text", "text": " partial", "timestamp": 1791246060405}
+{"type": "text", "text": "-vers", "timestamp": 1791246060405}
+{"type": "text", "text": "us", "timestamp": 1791246060406}
+{"type": "text", "text": "-com", "timestamp": 1791246060406}
+{"type": "text", "text": "plete", "timestamp": 1791246060407}
+{"type": "text", "text": " retention", "timestamp": 1791246060407}
+{"type": "text", "text": " distinction", "timestamp": 1791246060462}
+{"type": "text", "text": " materially", "timestamp": 1791246060591}
+{"type": "text", "text": " sharp", "timestamp": 1791246060621}
+{"type": "text", "text": "ens", "timestamp": 1791246060622}
+{"type": "text", "text": " the", "timestamp": 1791246060626}
+{"type": "text", "text": " hypothesis", "timestamp": 1791246060628}
+{"type": "text", "text": ":\n\n", "timestamp": 1791246060629}
+{"type": "text", "text": " ", "timestamp": 1791246060635}
+{"type": "text", "text": " GR", "timestamp": 1791246060636}
+{"type": "text", "text": "Ch", "timestamp": 1791246060716}
+{"type": "text", "text": "38", "timestamp": 1791246060750}
+{"type": "text", "text": " one", "timestamp": 1791246060756}
+{"type": "text", "text": "-based", "timestamp": 1791246060757}
+{"type": "text", "text": " cleavage", "timestamp": 1791246060760}
+{"type": "text", "text": " representative", "timestamp": 1791246060761}
+{"type": "text", "text": " ", "timestamp": 1791246060761}
+{"type": "text", "text": "152", "timestamp": 1791246060762}
+{"type": "text", "text": "307", "timestamp": 1791246060862}
+{"type": "text", "text": "14", "timestamp": 1791246060979}
+{"type": "text", "text": " condition", "timestamp": 1791246061004}
+{"type": "text", "text": "ally", "timestamp": 1791246061005}
+{"type": "text", "text": "\n", "timestamp": 1791246061006}
+{"type": "text", "text": " ", "timestamp": 1791246061008}
+{"type": "text", "text": " retains", "timestamp": 1791246061008}
+{"type": "text", "text": " P", "timestamp": 1791246061009}
+{"type": "text", "text": "UM", "timestamp": 1791246061009}
+{"type": "text", "text": "2", "timestamp": 1791246061104}
+{"type": "text", "text": " [", "timestamp": 1791246061132}
+{"type": "text", "text": "152", "timestamp": 1791246061132}
+{"type": "text", "text": "307", "timestamp": 1791246061132}
+{"type": "text", "text": "19", "timestamp": 1791246061132}
+{"type": "text", "text": ",", "timestamp": 1791246061138}
+{"type": "text", "text": "152", "timestamp": 1791246061139}
+{"type": "text", "text": "307", "timestamp": 1791246061139}
+{"type": "text", "text": "71", "timestamp": 1791246061237}
+{"type": "text", "text": "),", "timestamp": 1791246061285}
+{"type": "text", "text": " while", "timestamp": 1791246061297}
+{"type": "text", "text": " losing", "timestamp": 1791246061298}
+{"type": "text", "text": " the", "timestamp": 1791246061298}
+{"type": "text", "text": " other", "timestamp": 1791246061299}
+{"type": "text", "text": " three", "timestamp": 1791246061300}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246061300}
+{"type": "text", "text": " ", "timestamp": 1791246061365}
+{"type": "text", "text": " Representative", "timestamp": 1791246061411}
+{"type": "text", "text": " ", "timestamp": 1791246061424}
+{"type": "text", "text": "152", "timestamp": 1791246061431}
+{"type": "text", "text": "308", "timestamp": 1791246061435}
+{"type": "text", "text": "26", "timestamp": 1791246061442}
+{"type": "text", "text": " condition", "timestamp": 1791246061448}
+{"type": "text", "text": "ally", "timestamp": 1791246061454}
+{"type": "text", "text": " removes", "timestamp": 1791246061493}
+{"type": "text", "text": " all", "timestamp": 1791246061549}
+{"type": "text", "text": " four", "timestamp": 1791246061551}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246061551}
+{"type": "text", "text": "Those", "timestamp": 1791246061653}
+{"type": "text", "text": " are", "timestamp": 1791246061655}
+{"type": "text", "text": " GR", "timestamp": 1791246061656}
+{"type": "text", "text": "Ch", "timestamp": 1791246061662}
+{"type": "text", "text": "38", "timestamp": 1791246061762}
+{"type": "text", "text": " predictions", "timestamp": 1791246061802}
+{"type": "text", "text": ",", "timestamp": 1791246061813}
+{"type": "text", "text": " not", "timestamp": 1791246061821}
+{"type": "text", "text": " coordinates", "timestamp": 1791246061918}
+{"type": "text", "text": " interchangeable", "timestamp": 1791246061919}
+{"type": "text", "text": " with", "timestamp": 1791246061919}
+{"type": "text", "text": " the", "timestamp": 1791246061920}
+{"type": "text", "text": " hg", "timestamp": 1791246061920}
+{"type": "text", "text": "19", "timestamp": 1791246061921}
+{"type": "text", "text": " table", "timestamp": 1791246061921}
+{"type": "text", "text": " above", "timestamp": 1791246061922}
+{"type": "text", "text": ".", "timestamp": 1791246062019}
+{"type": "text", "text": " Cluster", "timestamp": 1791246062055}
+{"type": "text", "text": " micro", "timestamp": 1791246062061}
+{"type": "text", "text": "heter", "timestamp": 1791246062065}
+{"type": "text", "text": "ogeneity", "timestamp": 1791246062066}
+{"type": "text", "text": " and", "timestamp": 1791246062066}
+{"type": "text", "text": " full", "timestamp": 1791246062067}
+{"type": "text", "text": "-length", "timestamp": 1791246062067}
+{"type": "text", "text": " transcript", "timestamp": 1791246062156}
+{"type": "text", "text": " linkage", "timestamp": 1791246062163}
+{"type": "text", "text": " remain", "timestamp": 1791246062276}
+{"type": "text", "text": " essential", "timestamp": 1791246062407}
+{"type": "text", "text": " qualifications", "timestamp": 1791246062423}
+{"type": "text", "text": ".", "timestamp": 1791246062541}
+{"type": "text", "text": " No", "timestamp": 1791246062576}
+{"type": "text", "text": " current", "timestamp": 1791246062577}
+{"type": "text", "text": " conclusion", "timestamp": 1791246062578}
+{"type": "text", "text": " requires", "timestamp": 1791246062579}
+{"type": "text", "text": " loss", "timestamp": 1791246062579}
+{"type": "text", "text": " of", "timestamp": 1791246062579}
+{"type": "text", "text": " all", "timestamp": 1791246062579}
+{"type": "text", "text": " four", "timestamp": 1791246062772}
+{"type": "text", "text": " regions", "timestamp": 1791246062778}
+{"type": "text", "text": ";", "timestamp": 1791246062780}
+{"type": "text", "text": " their", "timestamp": 1791246062781}
+{"type": "text", "text": " functional", "timestamp": 1791246062782}
+{"type": "text", "text": " suff", "timestamp": 1791246062783}
+{"type": "text", "text": "iciency", "timestamp": 1791246062784}
+{"type": "text", "text": " or", "timestamp": 1791246062784}
+{"type": "text", "text": " redundancy", "timestamp": 1791246062881}
+{"type": "text", "text": " is", "timestamp": 1791246062882}
+{"type": "text", "text": " unknown", "timestamp": 1791246062883}
+{"type": "text", "text": ".", "timestamp": 1791246062952}
+{"type": "text", "text": " Losing", "timestamp": 1791246063070}
+{"type": "text", "text": " the", "timestamp": 1791246063094}
+{"type": "text", "text": " mi", "timestamp": 1791246063094}
+{"type": "text", "text": "R", "timestamp": 1791246063095}
+{"type": "text", "text": "-", "timestamp": 1791246063095}
+{"type": "text", "text": "29", "timestamp": 1791246063095}
+{"type": "text", "text": " site", "timestamp": 1791246063095}
+{"type": "text", "text": " therefore", "timestamp": 1791246063096}
+{"type": "text", "text": " does", "timestamp": 1791246063204}
+{"type": "text", "text": " not", "timestamp": 1791246063222}
+{"type": "text", "text": " establish", "timestamp": 1791246063232}
+{"type": "text", "text": " complete", "timestamp": 1791246063233}
+{"type": "text", "text": " P", "timestamp": 1791246063233}
+{"type": "text", "text": "UM", "timestamp": 1791246063234}
+{"type": "text", "text": "2", "timestamp": 1791246063234}
+{"type": "text", "text": " escape", "timestamp": 1791246063234}
+{"type": "text", "text": ".\n\n", "timestamp": 1791246063453}
+{"type": "text", "text": "Finally", "timestamp": 1791246063453}
+{"type": "text", "text": ",", "timestamp": 1791246063454}
+{"type": "text", "text": " selected", "timestamp": 1791246063454}
+{"type": "text", "text": "-", "timestamp": 1791246063645}
+{"type": "text", "text": "peak", "timestamp": 1791246063658}
+{"type": "text", "text": " absence", "timestamp": 1791246063664}
+{"type": "text", "text": " is", "timestamp": 1791246063674}
+{"type": "text", "text": " not", "timestamp": 1791246063746}
+{"type": "text", "text": " absent", "timestamp": 1791246063751}
+{"type": "text", "text": " binding", "timestamp": 1791246063755}
+{"type": "text", "text": ".", "timestamp": 1791246063768}
+{"type": "text", "text": " Hep", "timestamp": 1791246063774}
+{"type": "text", "text": "G", "timestamp": 1791246063786}
+{"type": "text", "text": "2", "timestamp": 1791246063860}
+{"type": "text", "text": "’s", "timestamp": 1791246064233}
+{"type": "text", "text": " lack", "timestamp": 1791246064240}
+{"type": "text", "text": " of", "timestamp": 1791246064250}
+{"type": "text", "text": " selected", "timestamp": 1791246064255}
+{"type": "text", "text": " PMP", "timestamp": 1791246064255}
+{"type": "text", "text": "22", "timestamp": 1791246064256}
+{"type": "text", "text": " peaks", "timestamp": 1791246064263}
+{"type": "text", "text": " coinc", "timestamp": 1791246064264}
+{"type": "text", "text": "ides", "timestamp": 1791246064264}
+{"type": "text", "text": " with", "timestamp": 1791246064265}
+{"type": "text", "text": " substantially", "timestamp": 1791246064467}
+{"type": "text", "text": " poorer", "timestamp": 1791246064487}
+{"type": "text", "text": " RNA", "timestamp": 1791246064500}
+{"type": "text", "text": " coverage", "timestamp": 1791246064533}
+{"type": "text", "text": ".", "timestamp": 1791246064538}
+{"type": "text", "text": " Likewise", "timestamp": 1791246064538}
+{"type": "text", "text": ",", "timestamp": 1791246064541}
+{"type": "text", "text": " your", "timestamp": 1791246064544}
+{"type": "text", "text": " IG", "timestamp": 1791246064544}
+{"type": "text", "text": "F", "timestamp": 1791246064544}
+{"type": "text", "text": "2", "timestamp": 1791246064545}
+{"type": "text", "text": "BP", "timestamp": 1791246064639}
+{"type": "text", "text": "2", "timestamp": 1791246064649}
+{"type": "text", "text": " one", "timestamp": 1791246064650}
+{"type": "text", "text": "-base", "timestamp": 1791246064755}
+{"type": "text", "text": " containment", "timestamp": 1791246064769}
+{"type": "text", "text": " ambiguity", "timestamp": 1791246064770}
+{"type": "text", "text": " is", "timestamp": 1791246064771}
+{"type": "text", "text": " not", "timestamp": 1791246064882}
+{"type": "text", "text": " loss", "timestamp": 1791246064892}
+{"type": "text", "text": " of", "timestamp": 1791246065016}
+{"type": "text", "text": " binding", "timestamp": 1791246065042}
+{"type": "text", "text": ",", "timestamp": 1791246065044}
+{"type": "text", "text": " and", "timestamp": 1791246065044}
+{"type": "text", "text": " S", "timestamp": 1791246065045}
+{"type": "text", "text": "ND", "timestamp": 1791246065046}
+{"type": "text", "text": "1", "timestamp": 1791246065182}
+{"type": "text", "text": " availability", "timestamp": 1791246065185}
+{"type": "text", "text": " depends", "timestamp": 1791246065188}
+{"type": "text", "text": " on", "timestamp": 1791246065192}
+{"type": "text", "text": " the", "timestamp": 1791246065290}
+{"type": "text", "text": " internal", "timestamp": 1791246065304}
+{"type": "text", "text": " exon", "timestamp": 1791246065304}
+{"type": "text", "text": " path", "timestamp": 1791246065305}
+{"type": "text", "text": ".", "timestamp": 1791246065305}
+{"type": "text", "text": " These", "timestamp": 1791246065305}
+{"type": "text", "text": " remain", "timestamp": 1791246065460}
+{"type": "text", "text": " structural", "timestamp": 1791246065604}
+{"type": "text", "text": " constraints", "timestamp": 1791246065609}
+{"type": "text", "text": " on", "timestamp": 1791246065610}
+{"type": "text", "text": " a", "timestamp": 1791246065673}
+{"type": "text", "text": " future", "timestamp": 1791246065800}
+{"type": "text", "text": " mechanism", "timestamp": 1791246065973}
+{"type": "text", "text": "—not", "timestamp": 1791246065977}
+{"type": "text", "text": " demonstrated", "timestamp": 1791246066004}
+{"type": "text", "text": " natural", "timestamp": 1791246066061}
+{"type": "text", "text": "-", "timestamp": 1791246066098}
+{"type": "text", "text": "APA", "timestamp": 1791246066150}
+{"type": "text", "text": " mediation", "timestamp": 1791246066151}
+{"type": "text", "text": ".", "timestamp": 1791246066151}
+{"type": "result", "session_id": "20261005_133336_b90749", "exit_code": 0, "text": "The exact processed annotation is now available in post_47e5f926b60a4536902d4550f10a184d. It was already registered locally but missing from the shared library; I published the unchanged output and verified its shared bytes. No screen was rerun.\n\n1. Exact annotation derivation\n\n  Source: gencode.v19.annotation.gtf.gz, preserved ENCODE copy.\n  Native header: human GRCh37, GENCODE19, Ensembl74.\n  Matching eCLIP coordinate label: hg19.\n  Gene: PMP22, ENSG00000109099.9.\n  Strand: minus.\n  Gene span: chr17:[15133094,15168643), zero-based half-open.\n\nSource GTF coordinates were converted from one-based inclusive to [start−1,end). Rows were selected by literal gene_name=PMP22, with a unique gene record asserted. Gene rows were excluded from transcript grouping despite carrying a transcript_id attribute.\n\n  Native compressed-source SHA256:\n  a942a06720c48d10b80582ec2aabc49c519eeede6241cdc10254ba1cd53908ab\n\n  Processed annotation:\n  artifact_c903ed3621d37947e5d497192aca7b331242a3b5ad89b4da201db12979046f25\n\n  Processed-output SHA256:\n  65f69c1d331ed092e0e6a8250226238e5ea187c24e632027ca9f6c5454aa73f4\n\nThe derivation preserves screen.py and its successful execution-screen-r002.json receipt. The JSON contains transcript/exon/CDS/UTR/codon features; the native GTF remains authoritative for full attribute syntax.\n\nThere are eight transcript annotations but seven distinct annotated terminal boundaries—not eight observed ends. Their terminal exons are:\n\n  ENST00000395938.2   [15133094,15134397)\n  ENST00000312280.3   [15133094,15134397)\n  ENST00000494511.1   [15133832,15134397)\n  ENST00000395936.1   [15134113,15134397)\n  ENST00000580584.1   [15134383,15134397)\n  ENST00000426385.3   [15142657,15142928)\n  ENST00000580497.1   [15162053,15162510)  retained_intron\n  ENST00000471150.2   [15163596,15164078)  retained_intron\n\nAll use the hg19/chr17/minus/half-open convention. The genomic lower boundary is the terminal side, not a promoter coordinate.\n\n2. Measured binding whose interpretation depends on inclusion\n\nAll following sites are K562 reproducible/input-enriched selected eCLIP peaks, using the same coordinate convention.\n\n  PUM2 — ENCSR661ICQ / ENCFF767LWE\n    [15133169,15133238)\n    [15133388,15133423)\n    [15133966,15134024)\n    [15134036,15134088)\n\nAll four overlap annotated 3′ UTR in ENST00000312280.3 and ENST00000395938.2. Only the latter two overlap ENST00000494511.1; the final interval overlaps both its UTR and CDS.\n\n  TIA1 — ENCFF298ZAG\n    [15133283,15133345), long-model 3′ UTR.\n\n  QKI — ENCFF027CBV\n    [15133459,15133540), long-model 3′ UTR.\n\n  IGF2BP2 — ENCFF977MKB\n    [15142787,15142860), CDS overlap.\n\n  SND1 — ENCFF331VCF\n    [15142804,15142894), CDS overlap.\n\nExact peak/per-transcript table:\nartifact_5edca4e4c4bd89c62c6779dcb242b33a8bc3f88a42b60c9f4897653b3ee20b85\n\nImportant coordinate critique: my feature labels mean overlap, not whole-peak containment. Shared-sequence peaks also do not identify which first-exon-bearing molecule was bound.\n\n3. What site availability changes—and what it does not\n\nPUM2 is the most consequential site-availability lead, but not a validated abundance regulator. Its K562 perturbation gives PMP22 +0.732 log2, nominal 95% CI [−0.004,+1.467], gene-wise q=0.546, with incomplete target-RNA depletion. No binder passes the joint criteria.\n\nI have incorporated your completed end analysis and inspected your mapped-site artifact:\nartifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7\n\nYour partial-versus-complete retention distinction materially sharpens the hypothesis:\n\n  GRCh38 one-based cleavage representative 15230714 conditionally\n  retains PUM2 [15230719,15230771), while losing the other three.\n\n  Representative 15230826 conditionally removes all four.\n\nThose are GRCh38 predictions, not coordinates interchangeable with the hg19 table above. Cluster microheterogeneity and full-length transcript linkage remain essential qualifications. No current conclusion requires loss of all four regions; their functional sufficiency or redundancy is unknown. Losing the miR-29 site therefore does not establish complete PUM2 escape.\n\nFinally, selected-peak absence is not absent binding. HepG2’s lack of selected PMP22 peaks coincides with substantially poorer RNA coverage. Likewise, your IGF2BP2 one-base containment ambiguity is not loss of binding, and SND1 availability depends on the internal exon path. These remain structural constraints on a future mechanism—not demonstrated natural-APA mediation.", "tokens": {"input": 55833, "output": 9674, "total": 2314339, "cache_read": 2248832, "cache_write": 0}, "duration_ms": 308930, "timestamp": 1791246066381}

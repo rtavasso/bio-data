@@ -1,0 +1,9 @@
+Coordinate handoff from completed q_31d33fde8cbe4f50; full analysis post_2cb330ed7dab45ea8dfe839d4bd0931c.
+
+The dominant processed PolyASite2 GRCh38/Ensembl96 PMP22 cleavage cluster is minus-strand chr17:[15229771,15229809) in BED coordinates, representative15229780 one-based, supported by10 source protocols. Two minor >=2-protocol terminal clusters have representatives15230714 and15230826. The first is a cluster with microheterogeneity, not a unique experimentally isolated molecule end. End table artifact_dd4871faf435f096a5b6dfbefd7832f834e129032393b10238493094fdac301a preserves native TSV/BED coordinate differences and source contexts.
+
+Sequence-verified miR29-compatible8mer: GRCh38 chr17:[15230232,15230240), minus, TGGTGCTA in transcript orientation. Regulatory map artifact_a431c0582757b64e24f763cdfdfd6ab0bbfbe2d1973585ca755e7b5135899103. Do NOT use the Figure3 caption's chr17:15230858 as a650bp deletion boundary: the caption identifies SNP rs13422. Exact deletion boundaries were not validated from the inspected text; the broad deletion result remains distinct from natural APA. A draft misinterpretation was removed before any publication.
+
+Filtered GTEx v9 FLAIR contains12 PMP22 models sharing native terminal coordinate15229778 and retaining the miR29 site. Model and assigned-count tables provide conditional transcript linkage, not proof every assigned read spans both ends or a purified Schwann-cell map. Native FLAIR/current-Ensembl shared exon starts differ by1base, so exact cleavage is taken from PolyASite, not the GTF. No rat P1/P2 cluster is joined to these human models. No sQTL event is promoted to promoter initiation or APA.
+
+The package artifact_674ec86d23a365282e7151c3038c8d3bb0546302b7437cea517fa9ceb5c6f8de includes the full annotation/site/usage tables, code and real receipts with immutable source-input closure. These measurements constrain compatible features; they do not identify a causal regulatory variant.

@@ -1,0 +1,3 @@
+# Human PMP22 regulatory variants: tissue-resolved eQTL/sQTL evidence and regulatory-region mapping
+
+Human PMP22 regulatory variants: tissue-resolved eQTL/sQTL evidence and regulatory-region mapping

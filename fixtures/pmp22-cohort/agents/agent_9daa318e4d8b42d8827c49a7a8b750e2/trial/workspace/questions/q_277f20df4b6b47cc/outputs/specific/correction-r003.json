@@ -1,0 +1,14 @@
+{
+  "superseded_outputs": [
+    "validation-summary.json secondary_results",
+    "validation-all-contexts.tsv HDAC3 rows",
+    "hdac3-pseudocount-sensitivity.tsv",
+    "alternatives-summary.json HDAC3_Mpz_zero_caution",
+    "marker-sensitivity.tsv HDAC3 rows using Mpz"
+  ],
+  "error": "Initial arithmetic retained numeric FPKM without gating on FPKM_status. It also incorrectly described Mpz status as OK in alternatives-summary. Native status audit exposed HIDATA in three Mpz rows.",
+  "correction": "These are invalid abundance comparisons and must not support a biological claim. Preserve historical bytes and registrations; use validation-summary-r003.json and hdac3-status-audit.tsv. The independent Zeb2 primary results are unaffected.",
+  "valid_secondary_scope": "Only explicitly exploratory omit-Mpz six-marker transfer after confirming all remaining panel rows OK; n1/context, no inferential replication.",
+  "official_source": "inputs/specific/cufflinks-file-formats.html",
+  "native_locator": "outputs/specific/hdac3-native-panel.tsv Mpz rows"
+}

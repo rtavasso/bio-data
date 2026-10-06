@@ -1,0 +1,252 @@
+{
+  "revision": 2,
+  "scope": "Pmp22 steady-state RNA prediction beyond a prespecified myelination program; species and source contexts separate",
+  "known_baseline": "Inherited Egr2-AS/SOX10/RUNX studies and new source PMC9063194 already report shared myelin/injury responses. PMC4964942 and PMC4961522 already report Zeb2 differentiation blockade. PMC2440619 Table1 reports Hck as Egr2/NAB-responsive. See outputs/specific/literature-novelty-audit.json and primary-literature-passages.json.",
+  "budget_allocation": "~60 min allowed; discovery/locks first ~18min, remaining work prioritized independent validation, status/source audits, biological/technical alternatives and novelty. Final retrieval accounting in inputs/specific/transport.json. No need to exhaust downloads after clear failed primary prediction.",
+  "stopping_reason": "Scoped prediction question answered with informative rejection. No selected model passes independent primary test. Secondary studies have source-status/mapping limits; feasible processed representations were inspected and numerically audited. New mechanistic claims would require a fresh matched perturbation experiment. Broader inherited full-system frontier remains open.",
+  "candidates": [
+    {
+      "id": "specific-ppp6r1",
+      "claim": "Ppp6r1 expression negatively predicts Pmp22 beyond the seven-gene myelin score and transfers to independent perturbation",
+      "context": "Rat purified Schwann injury discovery (8 pooled preparations), mouse P25 Zeb2-deletion whole-nerve validation (3 mice/group)",
+      "kind": "biological",
+      "status": "contradicted",
+      "alternatives": [
+        "shared injury timing",
+        "broader residual myelin program",
+        "Egr2/NAB shared regulation for Hck",
+        "cell composition and abundance/activity distinction",
+        "cross-species/array scale transfer"
+      ],
+      "discovery_artifacts": [
+        "artifact_b3ce20de2a945d71e047e29d3cb9f0e78eb9c8d6edde36ce83d0e349ec13b207",
+        "artifact_6a192de763de3b4b67d50cf649125b6c3d5b46b5b6cca2b3a53c4c83da9d036d"
+      ],
+      "prediction_lock": "outputs/specific/prediction-r002.json",
+      "prediction_sha256": "59fd5240b9e676b0d0eed97a0c42d41eca7d2645e9e3a368328ab2b8980f1c18",
+      "validation_mode": "prospective",
+      "validation_artifacts": [
+        "artifact_da0afdf7e9c73ff43eb4d8bb6fc5cab8c9fe10f9cde18fde16a77225d82b4b89",
+        "artifact_abee146fb898851d7990ccc5bce8cd7853e6998cdf03f02523f02a63ec2a88ed",
+        "artifact_5328bf59395ab082d075d4757ef7e47b40e2a867680992f67a45be9fb12a1171"
+      ],
+      "validation_result": "Frozen Zeb2 SSE ratio 1.240788; conditional slope 0.837542 is positive, contrary to locked negative direction. No primary pass. Contradiction concerns transferable prediction, not a universal causal null.",
+      "independence_assessment": "Different species/studies; no source/sample overlap with discovery. General Zeb2 and HDAC3 myelination phenotypes had been exposed in paper snippets; candidate-specific quantitative transfer was sealed before measurement acquisition. Model prior knowledge cannot be excluded. Not a fully blinded experiment. Inherited AS/RUNX results are retrospective only.",
+      "novelty": {
+        "status": "unresolved",
+        "closest_prior_work": [
+          {
+            "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9063194/",
+            "locator": "Results Fig2D and WGCNA injury modules",
+            "relationship": "Known shared injury/myelin program; our analysis asks residual prediction."
+          }
+        ],
+        "searches": [
+          {
+            "query": "Ppp6r1 AND (PMP22 OR peripheral myelin protein 22); synonyms/Schwann/nerve follow-up",
+            "date": "2026-09-27",
+            "evidence": "outputs/specific/novelty-search-audit.json"
+          }
+        ],
+        "limitation": "No direct Schwann-cell Ppp6r1-to-Pmp22 specificity study identified in scoped exact-name and nerve searches. Two exact PMP22 co-mentions are unrelated topics. Incomplete full-text/synonym coverage and failed validation prohibit novel-mechanism claim."
+      },
+      "limitations": "8 discovery samples across4 states and broad1119-gene selection;6 validation arrays; rat-to-mouse and RNAseq-to-RMA transfer; no direct candidate perturbation; conditional association is not mechanistic specificity. Sample omission destabilizes some validation slopes.",
+      "next_test": "Independent purified Schwann cells, species/age matched, direct candidate perturbation with rescue; measure Pmp22 plus fixed myelin genes, cell state and protein/activity; preregister a new test.",
+      "additional_tests": [
+        {
+          "lock": "outputs/specific/prediction-r001.json",
+          "status": "untested",
+          "reason": "Eed source-truncated; exact missing rows not zeros"
+        },
+        {
+          "source": "GSE93159",
+          "status": "untestable_as_locked",
+          "reason": "Mpz HIDATA makes seven-marker secondary panel ineligible; six-marker results exploratory"
+        },
+        {
+          "source": "GSE74381",
+          "status": "exploratory_source_diagnostic",
+          "reason": "Opposing Pmp22 directions across source representations; no four-replicate reconstruction"
+        }
+      ]
+    },
+    {
+      "id": "specific-gtf2f1",
+      "claim": "Gtf2f1 expression negatively predicts Pmp22 beyond the seven-gene myelin score and transfers to independent perturbation",
+      "context": "Rat purified Schwann injury discovery (8 pooled preparations), mouse P25 Zeb2-deletion whole-nerve validation (3 mice/group)",
+      "kind": "biological",
+      "status": "contradicted",
+      "alternatives": [
+        "shared injury timing",
+        "broader residual myelin program",
+        "Egr2/NAB shared regulation for Hck",
+        "cell composition and abundance/activity distinction",
+        "cross-species/array scale transfer"
+      ],
+      "discovery_artifacts": [
+        "artifact_b3ce20de2a945d71e047e29d3cb9f0e78eb9c8d6edde36ce83d0e349ec13b207",
+        "artifact_6a192de763de3b4b67d50cf649125b6c3d5b46b5b6cca2b3a53c4c83da9d036d"
+      ],
+      "prediction_lock": "outputs/specific/prediction-r002.json",
+      "prediction_sha256": "59fd5240b9e676b0d0eed97a0c42d41eca7d2645e9e3a368328ab2b8980f1c18",
+      "validation_mode": "prospective",
+      "validation_artifacts": [
+        "artifact_da0afdf7e9c73ff43eb4d8bb6fc5cab8c9fe10f9cde18fde16a77225d82b4b89",
+        "artifact_abee146fb898851d7990ccc5bce8cd7853e6998cdf03f02523f02a63ec2a88ed",
+        "artifact_5328bf59395ab082d075d4757ef7e47b40e2a867680992f67a45be9fb12a1171"
+      ],
+      "validation_result": "Frozen Zeb2 SSE ratio 0.849930; conditional slope 0.510477 is positive, contrary to locked negative direction. No primary pass. Contradiction concerns transferable prediction, not a universal causal null.",
+      "independence_assessment": "Different species/studies; no source/sample overlap with discovery. General Zeb2 and HDAC3 myelination phenotypes had been exposed in paper snippets; candidate-specific quantitative transfer was sealed before measurement acquisition. Model prior knowledge cannot be excluded. Not a fully blinded experiment. Inherited AS/RUNX results are retrospective only.",
+      "novelty": {
+        "status": "unresolved",
+        "closest_prior_work": [
+          {
+            "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9063194/",
+            "locator": "Results Fig2D and WGCNA injury modules",
+            "relationship": "Known shared injury/myelin program; our analysis asks residual prediction."
+          }
+        ],
+        "searches": [
+          {
+            "query": "Gtf2f1 AND (PMP22 OR peripheral myelin protein 22); synonyms/Schwann/nerve follow-up",
+            "date": "2026-09-27",
+            "evidence": "outputs/specific/novelty-search-audit.json"
+          }
+        ],
+        "limitation": "Exact names/TFIIF/RAP74 plus PMP22 yielded13 records, mostly broad neuropathy or omics co-mentions; no direct target-specific mechanism established in inspected primary papers. Full corpus not exhaustively audited."
+      },
+      "limitations": "8 discovery samples across4 states and broad1119-gene selection;6 validation arrays; rat-to-mouse and RNAseq-to-RMA transfer; no direct candidate perturbation; conditional association is not mechanistic specificity. Sample omission destabilizes some validation slopes.",
+      "next_test": "Independent purified Schwann cells, species/age matched, direct candidate perturbation with rescue; measure Pmp22 plus fixed myelin genes, cell state and protein/activity; preregister a new test.",
+      "additional_tests": [
+        {
+          "lock": "outputs/specific/prediction-r001.json",
+          "status": "untested",
+          "reason": "Eed source-truncated; exact missing rows not zeros"
+        },
+        {
+          "source": "GSE93159",
+          "status": "untestable_as_locked",
+          "reason": "Mpz HIDATA makes seven-marker secondary panel ineligible; six-marker results exploratory"
+        },
+        {
+          "source": "GSE74381",
+          "status": "exploratory_source_diagnostic",
+          "reason": "Opposing Pmp22 directions across source representations; no four-replicate reconstruction"
+        }
+      ]
+    },
+    {
+      "id": "specific-hck",
+      "claim": "Hck expression negatively predicts Pmp22 beyond the seven-gene myelin score and transfers to independent perturbation",
+      "context": "Rat purified Schwann injury discovery (8 pooled preparations), mouse P25 Zeb2-deletion whole-nerve validation (3 mice/group)",
+      "kind": "biological",
+      "status": "contradicted",
+      "alternatives": [
+        "shared injury timing",
+        "broader residual myelin program",
+        "Egr2/NAB shared regulation for Hck",
+        "cell composition and abundance/activity distinction",
+        "cross-species/array scale transfer"
+      ],
+      "discovery_artifacts": [
+        "artifact_b3ce20de2a945d71e047e29d3cb9f0e78eb9c8d6edde36ce83d0e349ec13b207",
+        "artifact_6a192de763de3b4b67d50cf649125b6c3d5b46b5b6cca2b3a53c4c83da9d036d"
+      ],
+      "prediction_lock": "outputs/specific/prediction-r002.json",
+      "prediction_sha256": "59fd5240b9e676b0d0eed97a0c42d41eca7d2645e9e3a368328ab2b8980f1c18",
+      "validation_mode": "prospective",
+      "validation_artifacts": [
+        "artifact_da0afdf7e9c73ff43eb4d8bb6fc5cab8c9fe10f9cde18fde16a77225d82b4b89",
+        "artifact_abee146fb898851d7990ccc5bce8cd7853e6998cdf03f02523f02a63ec2a88ed",
+        "artifact_5328bf59395ab082d075d4757ef7e47b40e2a867680992f67a45be9fb12a1171"
+      ],
+      "validation_result": "Frozen Zeb2 SSE ratio 0.981398; conditional slope 0.221192 is positive, contrary to locked negative direction. No primary pass. Contradiction concerns transferable prediction, not a universal causal null.",
+      "independence_assessment": "Different species/studies; no source/sample overlap with discovery. General Zeb2 and HDAC3 myelination phenotypes had been exposed in paper snippets; candidate-specific quantitative transfer was sealed before measurement acquisition. Model prior knowledge cannot be excluded. Not a fully blinded experiment. Inherited AS/RUNX results are retrospective only.",
+      "novelty": {
+        "status": "unresolved",
+        "closest_prior_work": [
+          {
+            "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9063194/",
+            "locator": "Results Fig2D and WGCNA injury modules",
+            "relationship": "Known shared injury/myelin program; our analysis asks residual prediction."
+          },
+          {
+            "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2440619/",
+            "locator": "Table1 and Results Activation of Egr2 Target Genes in Egr2-null Mice",
+            "relationship": "Hck responsiveness to Egr2/NAB is already known, providing shared-upstream alternative; no Hck-to-Pmp22 causal effect shown."
+          }
+        ],
+        "searches": [
+          {
+            "query": "Hck AND (PMP22 OR peripheral myelin protein 22); synonyms/Schwann/nerve follow-up",
+            "date": "2026-09-27",
+            "evidence": "outputs/specific/novelty-search-audit.json"
+          }
+        ],
+        "limitation": "Hck participation in the Egr2/NAB myelination program is known. The specific Hck-to-Pmp22 residual predictor claim is not established, and validation failed. Do not call the gene a novel Schwann regulator."
+      },
+      "limitations": "8 discovery samples across4 states and broad1119-gene selection;6 validation arrays; rat-to-mouse and RNAseq-to-RMA transfer; no direct candidate perturbation; conditional association is not mechanistic specificity. Sample omission destabilizes some validation slopes.",
+      "next_test": "Independent purified Schwann cells, species/age matched, direct candidate perturbation with rescue; measure Pmp22 plus fixed myelin genes, cell state and protein/activity; preregister a new test.",
+      "additional_tests": [
+        {
+          "lock": "outputs/specific/prediction-r001.json",
+          "status": "untested",
+          "reason": "Eed source-truncated; exact missing rows not zeros"
+        },
+        {
+          "source": "GSE93159",
+          "status": "untestable_as_locked",
+          "reason": "Mpz HIDATA makes seven-marker secondary panel ineligible; six-marker results exploratory"
+        },
+        {
+          "source": "GSE74381",
+          "status": "exploratory_source_diagnostic",
+          "reason": "Opposing Pmp22 directions across source representations; no four-replicate reconstruction"
+        }
+      ]
+    },
+    {
+      "id": "context-proportionality",
+      "claim": "Pmp22 array signal is relatively preserved compared with the seven-marker myelin mean after Zeb2 deletion",
+      "context": "GSE76027 mouse P25 whole nerve; gene-level RMA array signal",
+      "kind": "analytical",
+      "status": "candidate",
+      "alternatives": [
+        "developmental context dependence of Pmp22",
+        "highest-intensity probe compression",
+        "different transcript contributions or cell composition"
+      ],
+      "discovery_artifacts": [
+        "artifact_da0afdf7e9c73ff43eb4d8bb6fc5cab8c9fe10f9cde18fde16a77225d82b4b89",
+        "artifact_fd4f9f1f18ea83c43f8ebaf6e286bd72f51a277ad191f2b96ee184adaa5bd81e"
+      ],
+      "prediction_lock": null,
+      "prediction_sha256": null,
+      "validation_mode": "not_tested",
+      "validation_artifacts": [],
+      "validation_result": "Observed retrospectively: Pmp22 -0.603log2 vs score -2.177log2; difference+1.575. No clean independent validation of this new proportionality hypothesis.",
+      "independence_assessment": "Hypothesis arose after inspecting validation; cannot recycle GSE76027 as untouched evidence. GSE74381 diagnostic is different source/age but conflicting representations do not settle it.",
+      "novelty": {
+        "status": "unresolved",
+        "closest_prior_work": [
+          {
+            "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4964942/",
+            "locator": "Results myelin gene reduction; Fig3/4",
+            "relationship": "General Zeb2 myelination phenotype known; exact residual interpretation is unvalidated."
+          }
+        ],
+        "searches": [
+          {
+            "query": "PMP22 regulatory candidates and source Zeb2 primary studies",
+            "date": "2026-09-27",
+            "evidence": "outputs/specific/literature-novelty-audit.json"
+          }
+        ],
+        "limitation": "Not a novel mechanism claim; assay calibration unresolved."
+      },
+      "limitations": "Pmp22 is highest mean-control RMA signal; no saturation proof from RMA alone. Cannot distinguish technical from biological relative preservation.",
+      "next_test": "Matched P25 samples measured by calibrated qPCR or RNAseq including adequate high-abundance quantification, with fixed myelin controls."
+    }
+  ],
+  "no_candidates_reason": ""
+}

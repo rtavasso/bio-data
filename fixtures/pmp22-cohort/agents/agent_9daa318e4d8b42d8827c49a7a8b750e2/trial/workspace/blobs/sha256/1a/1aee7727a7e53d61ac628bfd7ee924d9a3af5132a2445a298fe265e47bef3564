@@ -1,0 +1,19 @@
+import Foundation
+import PDFKit
+import AppKit
+let input = CommandLine.arguments[1]
+let output = CommandLine.arguments[2]
+guard let doc = PDFDocument(url: URL(fileURLWithPath: input)) else { fatalError("Invalid PDF") }
+var result = ""
+for i in 0..<doc.pageCount {
+    guard let page = doc.page(at: i) else { continue }
+    result += "\n--- PAGE \(i+1) ---\n" + (page.string ?? "[no extractable text]")
+    if CommandLine.arguments.count > 3 {
+        let img = page.thumbnail(of: NSSize(width: 1500, height: 2000), for: .mediaBox)
+        if let data = img.tiffRepresentation, let bitmap = NSBitmapImageRep(data: data), let png = bitmap.representation(using: .png, properties: [:]) {
+            try png.write(to: URL(fileURLWithPath: output + ".page\(i+1).png"))
+        }
+    }
+}
+try result.write(toFile: output, atomically: true, encoding: .utf8)
+print("pages \(doc.pageCount); chars \(result.count)")

@@ -1,0 +1,363 @@
+{
+  "question": "q_cfe0be2ab0e146a4",
+  "agent_authorship": "Agent-curated endpoint interpretations, not author-supplied measurements. Numerical values are transcribed source summaries; no digitization or inferred biological replicates.",
+  "contexts": {
+    "hek2021": {
+      "species_cell": "Human HEK293; heterologous expression of human PMP22",
+      "construct": "Extracellular-loop-2 myc-tagged PMP22 in pIRES2; GFP expressed separately, not fused",
+      "time": "Flow cytometry approximately 36 h after transient transfection; clonal CRISPR knockout backgrounds",
+      "unit": "Culture experiments described as biological replicates; individual cells are nested observations, not donors; number of independently validated KO clones per comparison not established",
+      "normalization": "PE surface and Alexa647 internal signals; GFP-positive singlets; GFP-negative background subtraction; antibody brightness calibration; e=S/(S+I). Below-background signals floored to zero. Relative fluorescence, not calibrated molecules per viable cell or synthesis flux.",
+      "applicability": "No endogenous human duplication model, patient donor contrast, myelinating axons, functional myelin or conduction endpoint. Clonal adaptation and tag effects possible."
+    },
+    "rat2021": {
+      "species_cell": "Primary rat Schwann cells, gift from Carter laboratory; donor age/sex/pool not provided in inspected methods",
+      "construct": "Transient human extracellular-myc PMP22; independent GFP reporter",
+      "time": "Same flow-assay workflow; transfection with lipofectamine; no axonal myelination assay",
+      "unit": "Three reported biological replicates, 250-900 GFP-positive cells per replicate; donor independence unresolved",
+      "normalization": "Total, surface and efficiency normalized to paired WT experiments; relative fluorescence. GFP gating is not a calibrated PMP22 synthesis measurement.",
+      "applicability": "Schwann-cell relevance but not human endogenous wild-type overdosage or functional myelin."
+    },
+    "hela2014": {
+      "species_cell": "Human HeLa cells stably expressing human PMP22; COS1 follow-up for RER1 localization only; HEK293T for selected interaction experiments",
+      "construct": "C-terminal GFP fusion; retroviral stable expression; expression constructs use LTR or CMV promoters",
+      "time": "siRNA comparisons at 72 h; drug and CHX times specified per row",
+      "unit": "Three or four independent culture experiments as panel-labelled; more than 30 cells per microscopy experiment where stated; no human donors",
+      "normalization": "Anti-GFP bands relative to alpha-actin and then matching control; glycoforms via Endo H/PNGase F; confocal PDI/Lamp1/Rab7 localization. Not molecules per cell or direct quantitative surface capture.",
+      "applicability": "Not Schwann cells or myelin; GFP fusion and knockdown versus extracellular-myc clonal knockout differ from 2021. Endo H resistance means post-ER/cis-Golgi transit, not proof of surface delivery or correct folding."
+    }
+  },
+  "audited_intervention_contexts": 16,
+  "qualifying_functional_myelin_rescues_in_audited_rows": 0,
+  "case_status": [
+    {
+      "id": "glycan_wt",
+      "context": "hek2021",
+      "locator": "Results p0045,p0050; Fig 1B,D; Supplement Fig S2",
+      "supports_surface_direction": true,
+      "supports_myelin_rescue": false,
+      "interpretation": "Total and delivery fraction increase together in this construct context, but function is untested."
+    },
+    {
+      "id": "glycan_l16p",
+      "context": "hek2021",
+      "locator": "Results p0050; Fig 1C,D; Supplement Fig S2",
+      "supports_surface_direction": true,
+      "supports_myelin_rescue": false,
+      "interpretation": "Trafficking change without a demonstrated total increase; surface escape does not establish repaired mutant structure."
+    },
+    {
+      "id": "glycan_schwann",
+      "context": "rat2021",
+      "locator": "Results p0055; Fig 2A-C",
+      "supports_surface_direction": true,
+      "supports_myelin_rescue": false,
+      "interpretation": "Replicates the direction in rat Schwann culture but not functional myelin or endogenous human dosage."
+    },
+    {
+      "id": "ost_inhibition",
+      "context": "hek2021",
+      "locator": "Results p0100-p0115; Fig 3-4; Supplement Fig S8",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Glycan-dependent effect on fraction; do not substitute this for absolute surface. Supplement S8 extracted dose token is 10 mM versus main 10 micromolar: unresolved caption/extraction inconsistency, not a dose recommendation."
+    },
+    {
+      "id": "cnx_ko_stable",
+      "context": "hek2021",
+      "locator": "Results p0150; Fig 6; Supplement Fig S9",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Supports retention effect on fraction. Does not prove no change in total or functional rescue."
+    },
+    {
+      "id": "cnx_ko_l16p",
+      "context": "hek2021",
+      "locator": "Results p0155-p0160; Fig 6; Supplement Fig S10",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "CNX effect is variant-dependent; binding strength does not determine beneficial removal."
+    },
+    {
+      "id": "lman1_null",
+      "context": "hek2021",
+      "locator": "Results p0145,p0165; Fig 5-6",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Negative functional follow-up of an interaction candidate; neither universal dispensability nor redundancy is established."
+    },
+    {
+      "id": "uggt1_ko",
+      "context": "hek2021",
+      "locator": "Results p0170 and Discussion p0210; Fig 6; Supplement S10; contrast abstract",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Detailed results support pro-folding/protective UGGT1; abstract saying it limits trafficking is internally contradicted. PRIDE PXD023091 description says promotes trafficking."
+    },
+    {
+      "id": "rer1_ko",
+      "context": "hek2021",
+      "locator": "Results p0175; Discussion p0215; Fig 6; Supplement S10",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Primary discriminating case: higher surface fraction can coexist with lower total; absolute surface and productive incorporation remain unidentified."
+    },
+    {
+      "id": "mg132",
+      "context": "hela2014",
+      "locator": "Results ERAD section; Fig 1C",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Accumulation after clearance blockade is not evidence of productive delivery."
+    },
+    {
+      "id": "bafa1",
+      "context": "hela2014",
+      "locator": "Results ERAD section; Fig 1D",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Post-ER accumulation can be a degradation endpoint rather than functional surface residence."
+    },
+    {
+      "id": "hrd1_kd",
+      "context": "hela2014",
+      "locator": "Fig 2A-B; Supplement S2-S3; CHX Methods",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "ERAD accumulation alternative supported. S2 explicitly says Hrd1 siRNA #1 also reduces gp78; main #2 and rescue/second reagent needed for specificity."
+    },
+    {
+      "id": "gp78_kd",
+      "context": "hela2014",
+      "locator": "Fig 2C-F; Supplement S3",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Variant-specific degradation; strong binding alone cannot rank effective clearance."
+    },
+    {
+      "id": "rer1_kd",
+      "context": "hela2014",
+      "locator": "Fig 3A-F; Supplement S4-S5",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "ER exit is not synonymous with productive surface delivery. Rescue supports RER1 specificity of redistribution, not myelin rescue."
+    },
+    {
+      "id": "cnx_kd",
+      "context": "hela2014",
+      "locator": "Fig 5A-C; Supplement S3",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Apparent difference from 2021 must retain cell/tag/dose/KO-versus-KD context; does not refute all CNX retention."
+    },
+    {
+      "id": "double_kd",
+      "context": "hela2014",
+      "locator": "Fig 6A-C; Supplement S6",
+      "supports_surface_direction": false,
+      "supports_myelin_rescue": false,
+      "interpretation": "Combined release from retention is variant-limited and not a demonstration of functional folding/myelination."
+    }
+  ],
+  "surface_summary_diagnostics": [
+    {
+      "id": "glycan_wt",
+      "control_percent": 19,
+      "perturbed_percent": 53,
+      "statistic": "means",
+      "dispersion": "SD 5 and 7 percentage points; n=5 cultures; no paired raw data",
+      "percentage_point_difference": 34,
+      "ratio_of_reported_summaries": 2.789473684210526,
+      "interpretation": "Descriptive arithmetic only, not mean paired ratio or an inferential estimate; no new CI or p-value"
+    },
+    {
+      "id": "glycan_l16p",
+      "control_percent": 3,
+      "perturbed_percent": 34,
+      "statistic": "means",
+      "dispersion": "SD 1 and 10 percentage points; n=5 cultures; no paired raw data",
+      "percentage_point_difference": 31,
+      "ratio_of_reported_summaries": 11.333333333333334,
+      "interpretation": "Descriptive arithmetic only, not mean paired ratio or an inferential estimate; no new CI or p-value"
+    },
+    {
+      "id": "cnx_wt",
+      "control_percent": 22,
+      "perturbed_percent": 49,
+      "statistic": "medians",
+      "dispersion": "No native replicate medians/total-surface covariance",
+      "percentage_point_difference": 27,
+      "ratio_of_reported_summaries": 2.227272727272727,
+      "interpretation": "Descriptive arithmetic only, not mean paired ratio or an inferential estimate; no new CI or p-value"
+    },
+    {
+      "id": "cnx_n41q",
+      "control_percent": 56,
+      "perturbed_percent": 72,
+      "statistic": "medians",
+      "dispersion": "No native replicate medians/total-surface covariance",
+      "percentage_point_difference": 16,
+      "ratio_of_reported_summaries": 1.2857142857142858,
+      "interpretation": "Descriptive arithmetic only, not mean paired ratio or an inferential estimate; no new CI or p-value"
+    }
+  ],
+  "quantitative_export_inventory": [
+    {
+      "accession": "PXD023091",
+      "listed_files": 28,
+      "requested_page_size": 100,
+      "category_counts": {
+        "RAW": 24,
+        "SEARCH": 4
+      },
+      "nonraw_files": [
+        {
+          "name": "20181214_Marinko_SandersLab_PMP22_IP_TMT6plex_.msf",
+          "bytes": 1389334528,
+          "category": "SEARCH"
+        },
+        {
+          "name": "20190207_Marinko_SandersLab_PMP22_IP_TMT6plex_R2_.msf",
+          "bytes": 1183121408,
+          "category": "SEARCH"
+        },
+        {
+          "name": "Exp03-52_Marinko_SandersLab_PMP22_Co-IP_TMT6plex_05Nov2019_.msf",
+          "bytes": 1881145344,
+          "category": "SEARCH"
+        },
+        {
+          "name": "20190206_Marinko_SandersLab_PMP22_IP_TMT6plex_R1_.msf",
+          "bytes": 1203187712,
+          "category": "SEARCH"
+        }
+      ],
+      "decision": "No listed native paired total/surface/myelin export; no raw or search-file processing authorized/performed"
+    },
+    {
+      "accession": "PXD043917",
+      "listed_files": 39,
+      "requested_page_size": 100,
+      "category_counts": {
+        "RAW": 19,
+        "PEAK": 19,
+        "RESULT": 1
+      },
+      "nonraw_files": [
+        {
+          "name": "191205A_AW_7_Slot1-34_12-21-2019_5838.mgf",
+          "bytes": 661511244,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_15_Slot1-42_12-22-2019_5854.mgf",
+          "bytes": 703703349,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_13_Slot1-40_12-22-2019_5850.mgf",
+          "bytes": 596797413,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_19_Slot1-46_12-22-2019_5862.mgf",
+          "bytes": 690002918,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_8_Slot1-35_12-21-2019_5840.mgf",
+          "bytes": 698046203,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_12_Slot1-39_12-22-2019_5848.mgf",
+          "bytes": 671895397,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_4_Slot1-31_12-21-2019_5832.mgf",
+          "bytes": 706588442,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_1_Slot1-28_12-20-2019_5826.mgf",
+          "bytes": 644505396,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_5_Slot1-32_12-21-2019_5834.mgf",
+          "bytes": 447196093,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_10_Slot1-37_12-21-2019_5844.mgf",
+          "bytes": 708049368,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_6_Slot1-33_12-21-2019_5836.mgf",
+          "bytes": 649374614,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_16_Slot1-43_12-22-2019_5856.mgf",
+          "bytes": 674090557,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_2_Slot1-29_12-21-2019_5828.mgf",
+          "bytes": 764746466,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_18_Slot1-45_12-22-2019_5860.mgf",
+          "bytes": 687361365,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_14_Slot1-41_12-22-2019_5852.mgf",
+          "bytes": 722789983,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_11_Slot1-38_12-21-2019_5846.mgf",
+          "bytes": 671438148,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_3_Slot1-30_12-21-2019_5830.mgf",
+          "bytes": 654164591,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_17_Slot1-44_12-22-2019_5858.mgf",
+          "bytes": 730523128,
+          "category": "PEAK"
+        },
+        {
+          "name": "191205A_AW_9_Slot1-36_12-21-2019_5842.mgf",
+          "bytes": 700445847,
+          "category": "PEAK"
+        },
+        {
+          "name": "peptides_1_1_0.mzid.gz",
+          "bytes": 64301309,
+          "category": "RESULT"
+        }
+      ],
+      "decision": "No listed native paired total/surface/myelin export; no raw or search-file processing authorized/performed"
+    }
+  ],
+  "paired_rer1_total_surface_synthesis_function_matrix": null,
+  "missing_status": "not available in inspected exports; not measured zero; no global claim of nonexistence",
+  "pxd043917_blocker": "Existing source audit: mzIdentML identification scores are not genotype-resolved LFQ. Current PRIDE still describes 15-day nerves; inherited main-figure P7 versus methods/PRIDE P15 conflict remains. No raw reprocessing or assignment of identification scores as protein abundance.",
+  "peer_reuse": "Corrected regulator-turnover table: MG132 restores EGR2 abundance without MPZ rescue. Different cargo/endpoint, so used to reject broad inhibitor as clean functional-rescue instrument, not counted as a PMP22 surface result.",
+  "corrections_and_contradictions": [
+    "PMC8191293 abstract UGGT1-limiting wording conflicts with Results p0170 and Discussion p0210; PRIDE description agrees with promoting direction.",
+    "CNX knockdown HeLa C-terminal GFP and knockout HEK293 extracellular-myc responses are not pooled; no proven explanation of cross-study discrepancy.",
+    "2014 RER1 release is L16P-specific versus G150D; endolysosomal localization does not establish rescue.",
+    "S2 in 2014 reports Hrd1 siRNA #1 off-target reduction of gp78.",
+    "2021 supplementary S8 extracted dose text 10 mM differs from main Fig 4 10 micromolar; do not silently normalize.",
+    "2021 S10B caption describes WT/UGGT1 although Results cite it for mutant total-level effects; total-direction statements remain attributed to main text, not independently re-quantified."
+  ]
+}

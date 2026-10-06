@@ -1,0 +1,65 @@
+{
+  "valid": true,
+  "checks": [
+    {
+      "check": "unique_row_ids_source_anchor_and_context_integrity",
+      "passed": true,
+      "rows": 16
+    },
+    {
+      "check": "coip_native_numeric_and_accession_roundtrip",
+      "passed": true,
+      "rows": 670,
+      "numeric_values": 1340
+    },
+    {
+      "check": "strict_finite_json_roundtrip",
+      "passed": true
+    },
+    {
+      "check": "native_workbook_no_formulas_errors_or_duplicate_accessions_within_sheet",
+      "passed": true
+    },
+    {
+      "check": "all_selected_rows_meet_declared_Q_and_log2_thresholds",
+      "passed": true
+    }
+  ],
+  "used_input_blobs": {
+    "inputs/curation.json": "f12818cbc5731e65d17e6c94718e6d0662f7cac9217cc36ffbc9c6d3c7d0f644",
+    "inputs/test-design.json": "67b82e9e5ed2d1a53e5b5eb42ca7778ba20bd1ec9e55d6478a517125a784fefa",
+    "inputs/public/PMC8191293.xml": "522273ef6e6c936c23560f67e97be252e77a7e6783e020cbccbbe82673cdc707",
+    "inputs/public/PMC4227013.xml": "e3c5db97f751cf5772314eb541259991781141b059af37fc1d475c5ea7740aea",
+    "inputs/public/PMC8191293-mmc2.xlsx": "8f70d8ae1836a57ee1ab4251493a3463223bd2a157036451eaf99c3eb0c5177f",
+    "inputs/public/PXD023091-files.json": "dbe736093e2e493ccc36c21b281c6edab5d6316970f1693d595a0f996c5c847b",
+    "inputs/public/PXD043917-files-current.json": "42aee9d8b87e429359c724a3efec6f151462d0a3b49ee5a86f03e6309b6dab98",
+    "inputs/public/PXD043917-project-current.json": "7341bffa760bca4543408763dd86eb0cd22a7c785f1601da9d8c938a2ed823a9",
+    "inputs/public/PXD023091-project.json": "a4ac2d5822c8613c8b7c145671030f767756c4cfec4e523096f51b39c827427c",
+    "peer/intervention-by-endpoint.tsv": "9e055a837fe13d3af27cf70b5d1d2cb630028cfcee938535ef019dd0065d6030",
+    "inputs/prior/REPORT.md": "6feef5a3a963b2970a63df8723f7fc1641d3729314f92443a0bb7acefbced3d8",
+    "inputs/prior/mechanisms.r021.json": "043b8a66d39ab07ff0ad7ad179e3d13e36e6c88f5b480d4f3d25f6e43ebe287e",
+    "inputs/public/PMC8191293-mmc1.pdf": "045860a516a127d500d8767c8167ca070cedee0e2ca3e7c8d7f8a2017ad35d0f",
+    "inputs/public/PMC4227013-srep06992-s1.pdf": "cbdae1bbad10309eb9d39356546892ee54b1480dc7f4ec0943efc1e3e51ba313",
+    "inputs/public/PMC8191293-mmc3.xlsx": "014d98fd853cdc96d720fadb63b138a7ee3737d215c07123dce37c25fa6ac577",
+    "inputs/public/PMC4227013-oa.xml": "00a66888d89cdeecb51e208e625f0660e837fcfb5401e0f0b5f3c086c0bc9979",
+    "inputs/public/PMC8191293-oa.xml": "9b55888f3b891882c84dcc5f47ecab3469fc0a46207e72a829e314e738f5c5f9",
+    "inputs/public/PMC4227013-oa.xml.receipt.json": "b10aad0b3c2c7bf8144df00e0d77d938ce710f7d6f4cab43f89b4782b698436f",
+    "inputs/public/PMC4227013-supplements.bin.receipt.json": "878c21a6f0abe967021dbd998a1c614fcf5ee264fcae23b7cc6bddd7a221d3d7",
+    "inputs/public/PMC4227013.receipt.json": "31b4f447b30459362e659895b792a68a7f124b8a72c9642134606cde9c3f9ff8",
+    "inputs/public/PMC8191293-oa.xml.receipt.json": "f1d9b1ba65c4336e3913585e60e764adae0391e951a596f09d603a99ff8c96e2",
+    "inputs/public/PMC8191293-supplements.bin.receipt.json": "349b61025a62ae328df33cb9eaeaa741587c11b9fd373b193395e6b3d9b05e23",
+    "inputs/public/PMC8191293.receipt.json": "3f10485c5d5e312f6a87e09efdc58915751d4ed7ec922ae906f023911256148e",
+    "inputs/public/PXD023091-files.json.receipt.json": "0dacf3dac19327ddb1ca122716771cb4c60ea8d9db505fed9ff37835647041c3",
+    "inputs/public/PXD023091-project.json.receipt.json": "a6398d32f665405dcc005a3e65c89d57eed13cad5e06f04dc4eb44bae4da8d4d",
+    "inputs/public/PXD043917-files-current.json.receipt.json": "16bd79527a2232729aad3123ec2316610af787bc4dac2df19f9ad5f8970fbacf",
+    "inputs/public/PXD043917-project-current.json.receipt.json": "363a80a5d271613898e89572d4f9203bc9ec0171be6574b4f74b7a5e3d43ccdb"
+  },
+  "output_hashes": {
+    "disposition-evidence.tsv": "dbd02320c6f14dd1f08a33681c37acafd21193f9e58508a942fee0370cbddab2",
+    "coip-selected-native.tsv": "7d26f5f76d01737f4d10a48a3d1f4f2edbf2b7943826dfb6e06df523fe61cf85",
+    "coip-audit.json": "66f10e5eee2df490be078811c82c79f0213b217cf81ff92230c793714750cb3d",
+    "assay-eligibility.json": "cf44055bbca9cdcca9176b3bdef46c7000476f1027513a8c333c265caf82f7ce",
+    "rer1-discriminating-test.json": "f5cce630de2378de0aad3ad680d634950ed7b695c5b14fba9ce1fa3793697517",
+    "source-locators.json": "d596db07d234f986b45747c104110056b93d6cd8ece69d38b40e4e8b0fa56581"
+  }
+}

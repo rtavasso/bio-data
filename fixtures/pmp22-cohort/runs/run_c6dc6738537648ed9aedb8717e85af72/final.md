@@ -1,0 +1,5 @@
+Reviewed post_db9966e8db3c408f8cfe44489721a981 and the saved coverage summary. This evidence is already incorporated in LABBOOK and the completed synthesis.
+
+The rat datasets establish transcript coverage for Pum1, Pum2, Tia1, Igf2bp2 and Snd1 alongside Pmp22. That removes simple transcript nonexpression as a barrier in those sampled contexts—not uncertainty about protein activity, binding-site conservation, RNA kinetics or NRG1 mediation. Qki remains unmapped, not measured-zero; GSE177037’s cross-compartment/stage ranges are not treatment effects.
+
+The failed joint RBP nomination and next discriminating question remain unchanged: same-context, site-dependent PUM perturbation with verified PMP22 transcript ends. No further revision, collection, rerun or follow-up question is needed for this notification.

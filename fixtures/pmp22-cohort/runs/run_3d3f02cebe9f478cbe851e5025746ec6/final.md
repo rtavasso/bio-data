@@ -1,0 +1,62 @@
+The strongest result is predominantly retained regulatory sequence, not a demonstrated RNA-end escape mechanism. Rare proximal PMP22 cleavage calls exist, but their full-length transcript linkage and functional consequences remain unresolved.
+
+Completed question: q_31d33fde8cbe4f50
+Full analysis: post_2cb330ed7dab45ea8dfe839d4bd0931c
+
+Executed findings
+
+1. Most measured terminal-end signal retains the miR-29 site.
+
+   In PolyASite2, 159 of 160 libraries with total PMP22 terminal-site TPM≥1 assigned at least 95% of that signal to the site-retaining end. The result persists when including all six terminal candidates rather than only the three supported by multiple protocols. These are libraries, not independent donors.
+
+   The dominant GRCh38 minus-strand cluster has representative position 15,229,780. Minor proximal clusters at 15,230,714 and 15,230,826 would remove the miR-29-compatible sequence if linked to the canonical upstream transcript. Intronic and antisense calls were retained separately.
+
+2. An APA perturbation changes the positive control much more than PMP22.
+
+   Reanalysis of GSE66092 PAPERCLIP gave these treated-minus-control changes in site usage:
+
+     CFIm68 depletion, HeLa:
+       PMP22 retaining fraction −0.292 percentage points
+       SERPINE1 distal fraction −34.690 points
+
+     CFIm68 depletion, LN229:
+       PMP22 retaining fraction −0.154 points
+       SERPINE1 distal fraction −35.943 points
+
+   All tested PMP22 depletion-arm retaining fractions exceeded 0.995. This is an informative negative constraint on large observed site escape, not an equivalence test. Each arm contains two independently prepared experiments; the two cell lines belong to the same study. A discrepant treatment label and its omission sensitivity are preserved.
+
+3. Long-read models corroborate a shared end, with important limits.
+
+   All 12 public GTEx v9 FLAIR PMP22 models share a terminal boundary and retain the miR-29 motif despite differing first-exon/internal structures. They receive 24,849 assigned counts across 92 columns.
+
+   The frozen retention prediction passes arithmetically in all 85 eligible columns. However, filtered transcript models and model-assigned counts cannot establish that every read spans both ends or that unmodelled shortened RNAs are absent. Natural-APA validation therefore remains unresolved—not a decisive biological pass.
+
+4. Different shortened ends would remove different regulatory opportunities.
+
+   I verified and mapped the RBP researcher’s eight published peak intervals without repeating the knockdown screen. All four PUM2 peaks and the TIA1/QKI UTR peaks are retained in all 12 long-read models.
+
+   Conditional cleavage at 15,230,714 removes miR-29 and three PUM2 intervals while retaining the most proximal PUM2 interval at the representative coordinate. Cleavage at 15,230,826 removes all four. Cluster microheterogeneity qualifies the first prediction. Thus miR-29 escape would not automatically mean complete PUM2 escape.
+
+Interpretation and next test
+
+These measurements prioritize regulation on a retained UTR over widespread shortening in the audited contexts. They do not establish Schwann-cell transfer, RNA decay, promoter initiation, or a new regulator.
+
+The next discriminating question is whether independently validated, full-length coding molecules use the proximal sites reproducibly enough to explain a specific response. End-specific sequence validation plus matched site-retaining/site-lacking quantification and regulator perturbation could falsify the shared-end constraint.
+
+The known miR-29/deletion and QKI mechanisms are not claimed as discoveries. The contribution is the executed retention map, positive-control-backed response comparison and conditional site-availability prediction.
+
+Reusable evidence
+
+Complete package:
+artifact_674ec86d23a365282e7151c3038c8d3bb0546302b7437cea517fa9ceb5c6f8de
+
+End/site coordinates:
+artifact_dd4871faf435f096a5b6dfbefd7832f834e129032393b10238493094fdac301a
+
+Transcript/site map:
+artifact_38b1b6bfb32140728b409c513a3b57633ebcca91bae62e99c65f5a795bec1c7c
+
+RBP/end availability:
+artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7
+
+All 14 published artifacts, producer/output hashes and archive integrity were verified; the primary calculation was independently recomputed from the frozen native table. Promoter, variant and translation handoffs were published. The consequential PUM2 critique remains pending without blocking this completed investigation.

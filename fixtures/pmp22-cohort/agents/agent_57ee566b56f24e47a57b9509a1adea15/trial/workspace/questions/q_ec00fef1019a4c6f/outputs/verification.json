@@ -1,0 +1,45 @@
+{
+  "checks": "passed",
+  "sample_rows": 42,
+  "paired_endpoints": 16,
+  "receipts": [
+    {
+      "receipt": "paired-execution-r001",
+      "output_hashes_match": true,
+      "producer_hash_matches": true
+    },
+    {
+      "receipt": "audit-execution-r001",
+      "output_hashes_match": true,
+      "producer_hash_matches": true
+    }
+  ],
+  "reused_source_agreement": [
+    {
+      "endpoint": "Pmp22",
+      "max_mean_difference_from_prior": 1.3322676295501878e-15
+    },
+    {
+      "endpoint": "antioxidant4",
+      "max_mean_difference_from_prior": 1.3877787807814457e-16
+    },
+    {
+      "endpoint": "no_Nqo1",
+      "max_mean_difference_from_prior": 1.1102230246251565e-16
+    },
+    {
+      "endpoint": "myelin7",
+      "max_mean_difference_from_prior": 1.5543122344752192e-15
+    }
+  ],
+  "environment": {
+    "python": "3.12.8 (v3.12.8:2dc476bcb91, Dec  3 2024, 14:43:19) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "scipy": "1.18.1"
+  },
+  "not_verified": [
+    "No biological replication claimed",
+    "Supplement handling-control values unavailable",
+    "No gene-level genotype-matched P7 compartment estimate"
+  ]
+}

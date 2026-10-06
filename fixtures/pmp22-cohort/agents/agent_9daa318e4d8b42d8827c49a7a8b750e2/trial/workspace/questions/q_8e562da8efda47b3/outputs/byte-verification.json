@@ -1,0 +1,39 @@
+{
+  "valid": true,
+  "scope": "source byte preservation and locator checks only",
+  "archive_members": 8,
+  "archive_bytes": 1288485,
+  "archive_sha256": "7524526ad81bc922edf72c61f7e179710b3a746a24ec8d88a383104279988212",
+  "manifest_sha256": "c688d7fb13cc55472a1bb407491fc9a30d187bbb6f704a39da15b67ed212499a",
+  "native_text_bytes": 1331549,
+  "compressed_parent_bytes": 561929,
+  "native_text_sha256": "fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5",
+  "compressed_parent_sha256": "db25ebe101852035d5375434e71c7297c54289ca85a76cefee1b45f8a8bc6144",
+  "gzip_identity": true,
+  "tss_data_rows": 4993,
+  "rpm_columns": 14,
+  "pmp22_rows": 22,
+  "focal_locators": [
+    {
+      "tss_id": "5439",
+      "gene_symbol": "Pmp22",
+      "native_text_line_1based_including_header": 817,
+      "original_line_sha256": "a9c6705fa8d505989e97f7b108d3efed2049c8d29bb0ef5ddef8271408747f87",
+      "chromosome_token": "chr10",
+      "start_token": "49316968",
+      "end_token": "49317054",
+      "strand_token": "+"
+    },
+    {
+      "tss_id": "5446",
+      "gene_symbol": "Pmp22",
+      "native_text_line_1based_including_header": 824,
+      "original_line_sha256": "cbfcca563f7be482814db810a29fd51d6691dff0625ec7af0cf39ca4c60c9897",
+      "chromosome_token": "chr10",
+      "start_token": "49319494",
+      "end_token": "49319573",
+      "strand_token": "+"
+    }
+  ],
+  "scientific_rerun": false
+}

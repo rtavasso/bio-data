@@ -1,0 +1,63 @@
+{
+  "inputs": {
+    "MEF": "7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+    "NIH": "8b837d3c0a48e869522484f68d0837994ee9c932e2dac52ef6dd5f679b6928d7"
+  },
+  "shared_gene_labels": 22406,
+  "MEF_only": 0,
+  "source_value_min": {
+    "MEF": 0.0,
+    "NIH": 0.0
+  },
+  "pmp22": {
+    "MEF_control": 66.11,
+    "NIH_control": 102.35,
+    "MEF_2h": 99.1,
+    "NIH_2h": 39.38,
+    "MEF_log2FC_2h": 0.5840165427253678,
+    "NIH_log2FC_2h": -1.3779760860092192,
+    "delta_2h": 1.961992628734587,
+    "unfloored_2h": true,
+    "positive_2h": true,
+    "MEF_late8vs7h": 155.98,
+    "NIH_late8vs7h": 33.34,
+    "MEF_log2FC_late8vs7h": 1.2384206365283306,
+    "NIH_log2FC_late8vs7h": -1.618185092924356,
+    "delta_late8vs7h": 2.8566057294526868,
+    "unfloored_late8vs7h": true,
+    "positive_late8vs7h": true,
+    "baseline_distance": 0.0,
+    "baseline_max_abs_log2distance": 0.0
+  },
+  "primary": {
+    "time": "2h",
+    "baseline_min": 10,
+    "eligibility": "unfloored",
+    "reference": "box1",
+    "n": 1276,
+    "pmp22_eligible": true,
+    "pmp22_delta": 1.961992628734587,
+    "reference_median_delta": 0.22211923540450887,
+    "pmp22_minus_reference_median": 1.739873393330078,
+    "pmp22_percentile": 0.9984326018808778,
+    "reference_q025": -0.9534994666702983,
+    "reference_q25": -0.11897651911711934,
+    "reference_q75": 0.5484569636700517,
+    "reference_q975": 1.203219622617976,
+    "MEF_median": -0.007720834577122915,
+    "NIH_median": -0.25384926929119983,
+    "opposed_MEFup_NIHdown_fraction": 0.3181818181818182,
+    "strong_opposed_fraction": 0.0,
+    "abs_delta_ge_pmp22_fraction": 0.003134796238244514,
+    "MEF_NIH_spearman": 0.35859331192641974,
+    "max_baseline_distance": 0.9990136381618786
+  },
+  "primary_reference_rules": "Baseline>=10TPM both contexts; all contrast cells>4; +/-1log2 control TPM each context, exclude Pmp22. Empirical gene distributions, not biological confidence intervals.",
+  "exposure": "Retrospective: source matrices and Pmp22 responses exposed in inherited work.",
+  "limits": "n1/library per condition; no matched total RNA, no absolute synthesis calibration; MEF1uM versus NIH3T3 200nM. Late8vs7h is time-mismatched secondary. No causal attribution or gene bootstrap inference.",
+  "environment": {
+    "python": "3.12.8",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3"
+  }
+}

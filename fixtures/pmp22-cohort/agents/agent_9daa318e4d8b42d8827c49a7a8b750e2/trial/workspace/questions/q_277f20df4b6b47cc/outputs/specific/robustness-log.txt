@@ -1,0 +1,56 @@
+{
+  "bootstrap_units": "3 source-reported biological mice/group, independently resampled; litter mapping unknown, small n",
+  "contrasts": {
+    "Pmp22": {
+      "lower95": -0.7705054126666667,
+      "upper95": -0.4532739206666651
+    },
+    "myelin": {
+      "lower95": -2.439514854714286,
+      "upper95": -1.9167444882476221
+    },
+    "Pmp22_minus_myelin": {
+      "lower95": 1.4548774100000035,
+      "upper95": 1.7506585542666648
+    }
+  },
+  "leverage_ranges": [
+    {
+      "dataset": "discovery",
+      "candidate": "Gtf2f1",
+      "min": -0.7614287986400261,
+      "max": -0.6277866854384512
+    },
+    {
+      "dataset": "discovery",
+      "candidate": "Hck",
+      "min": -1.6442572392653552,
+      "max": -1.388130713233383
+    },
+    {
+      "dataset": "discovery",
+      "candidate": "Ppp6r1",
+      "min": -0.7701727365067602,
+      "max": -0.5625643623498849
+    },
+    {
+      "dataset": "validation",
+      "candidate": "Gtf2f1",
+      "min": 0.08386506794423697,
+      "max": 0.7520178539932367
+    },
+    {
+      "dataset": "validation",
+      "candidate": "Hck",
+      "min": -0.159286234499544,
+      "max": 0.4483839061542278
+    },
+    {
+      "dataset": "validation",
+      "candidate": "Ppp6r1",
+      "min": -0.43893909573504186,
+      "max": 1.1714254707997824
+    }
+  ],
+  "array_caution": "Pmp22 control abundance near upper expression range may be affected by array dynamic range. RMA values alone do not prove saturation; source-matched RNA-seq diagnostic is not a clean calibration because age/Cre differ and representations disagree."
+}

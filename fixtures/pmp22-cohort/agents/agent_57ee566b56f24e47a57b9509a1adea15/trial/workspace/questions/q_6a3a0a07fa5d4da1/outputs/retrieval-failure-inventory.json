@@ -1,0 +1,76 @@
+{
+  "actual_receipt_count": 7,
+  "scope": "Native files and receipts in this question only; successful alternatives and exclusions described in LABBOOK. Wrong-identifier attempts remain excluded from scientific evidence.",
+  "failures": [
+    {
+      "receipt": "inputs/public/A-MEXP-784.adf.txt.receipt.json",
+      "status": 404,
+      "bytes": 196,
+      "sha256": "80c3fe2ae1062abf56456f52518bd670f9ec3917b7f85e152b347ac6b6faf880",
+      "error": null,
+      "unexpected_html": false,
+      "requested_url": "https://ftp.ebi.ac.uk/pub/databases/arrayexpress/data/array/A-MEXP-784/A-MEXP-784.adf.txt",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/public/PMC7530063.xml.receipt.json",
+      "status": 500,
+      "bytes": 150,
+      "sha256": "7339a930b8e23a08c6eec44e962e18fde67dc087b0668d41e451a2bad3e091d8",
+      "error": null,
+      "unexpected_html": false,
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7530063/fullTextXML",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/public/PMC5298992.xml.receipt.json",
+      "status": 503,
+      "bytes": 190,
+      "sha256": "b429e25e7813a9e2b90dcec11d9cb5287751246128dd6c76a7349774829c5554",
+      "error": null,
+      "unexpected_html": true,
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5298992/fullTextXML",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/public/rat-Qk-lookup.json.receipt.json",
+      "status": 400,
+      "bytes": 47,
+      "sha256": "1123bf4578b363f2a09b7f35cfb1b4353ee1dce1b001b9639e8baea841be0398",
+      "error": null,
+      "unexpected_html": false,
+      "requested_url": "https://rest.ensembl.org/lookup/symbol/rattus_norvegicus/Qk?content-type=application/json",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/public/GPL7294.annot.gz.receipt.json",
+      "status": 404,
+      "bytes": 990,
+      "sha256": "04b10f58e3f1340fc897c7057a0001c82ebd216d8ced1a96a2f05676b5d22494",
+      "error": null,
+      "unexpected_html": true,
+      "requested_url": "https://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL7nnn/GPL7294/annot/GPL7294.annot.gz",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/primary/PMC11409949.receipt.json",
+      "status": 500,
+      "bytes": 151,
+      "sha256": "41dc8990c691590ccc50bbac88eb9e1dbdb321138968214c14920993bc10982c",
+      "error": null,
+      "unexpected_html": false,
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11409949/fullTextXML",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    },
+    {
+      "receipt": "inputs/primary/PMC7067678.receipt.json",
+      "status": 500,
+      "bytes": 150,
+      "sha256": "cf18ce9970678a19e7351f9766b840b71066462194ffebad9dfbd7472783234f",
+      "error": null,
+      "unexpected_html": false,
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7067678/fullTextXML",
+      "interpretation": "This attempted route failed or yielded non-scientific HTML; not a claim that the dataset/feature does not exist."
+    }
+  ]
+}

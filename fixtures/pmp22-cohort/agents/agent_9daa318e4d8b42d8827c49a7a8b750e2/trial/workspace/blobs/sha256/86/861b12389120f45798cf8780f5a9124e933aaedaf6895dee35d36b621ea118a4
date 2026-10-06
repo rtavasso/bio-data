@@ -1,0 +1,64 @@
+{
+  "half_lives": [
+    {
+      "condition": "SiCtrl",
+      "source_cell": "4.4\u2009\u00b1\u20090.67",
+      "half_life_hours": 4.4,
+      "SEM_hours": 0.67,
+      "n_source_independent_experiments": 3,
+      "ratio_to_control_mean": 1.0
+    },
+    {
+      "condition": "SiG3BP1",
+      "source_cell": "4.2\u2009\u00b1\u20090.09",
+      "half_life_hours": 4.2,
+      "SEM_hours": 0.09,
+      "n_source_independent_experiments": 3,
+      "ratio_to_control_mean": 0.9545454545454545
+    },
+    {
+      "condition": "SiG3BP2",
+      "source_cell": "3.9\u2009\u00b1\u20090.26",
+      "half_life_hours": 3.9,
+      "SEM_hours": 0.26,
+      "n_source_independent_experiments": 3,
+      "ratio_to_control_mean": 0.8863636363636362
+    },
+    {
+      "condition": "SiG3BP1/2",
+      "source_cell": "4.3\u2009\u00b1\u20090.48",
+      "half_life_hours": 4.3,
+      "SEM_hours": 0.48,
+      "n_source_independent_experiments": 3,
+      "ratio_to_control_mean": 0.9772727272727272
+    }
+  ],
+  "selected_microarray_PMP22": [
+    {
+      "comparison_source": "control vs siG3BP1+siG3BP2",
+      "PMP22_source_logFC": -2.14,
+      "source_adjusted_p": 0.003156,
+      "direction": "PMP22 higher in G3BP1-depleted condition; source control-minus-KD contrast",
+      "locator": "Supplementary Table1 page1 columns 2 and 1, then page2 column1; parsed text order audited against layout"
+    },
+    {
+      "comparison_source": "control vs siG3BP1",
+      "PMP22_source_logFC": -1.8,
+      "source_adjusted_p": 0.01512,
+      "direction": "PMP22 higher in G3BP1-depleted condition; source control-minus-KD contrast",
+      "locator": "Supplementary Table1 page1 columns 2 and 1, then page2 column1; parsed text order audited against layout"
+    },
+    {
+      "comparison_source": "siG3BP2 vs siG3BP1+siG3BP2",
+      "PMP22_source_logFC": -1.71,
+      "source_adjusted_p": 0.009269,
+      "direction": "PMP22 higher in G3BP1-depleted condition; source control-minus-KD contrast",
+      "locator": "Supplementary Table1 page1 columns 2 and 1, then page2 column1; parsed text order audited against layout"
+    }
+  ],
+  "context": "MCF-7 human breast cancer cells, three separate microarray experiments reported; no transfer to Schwann cells.",
+  "source_table_semantics": "Supplement lists selected differentially expressed genes, not complete universe. No PMP22 entry under siG3BP2-only is absence from a selected list, not zero response.",
+  "finding": "G3BP1-depleted PMP22 RNA increases while half-life mean 4.2h vs control4.4h is not prolonged. Source reports no significant stability difference. Neither fresh significance nor equivalence tested without replicate values.",
+  "source_validation": "Results report PMP22 validated with three independent siG3BP1 oligonucleotides; other tested microarray candidates failed consistent qPCR across siRNAs. Broad screen alone did not establish all targets.",
+  "limits": "Cannot estimate synthesis, degradation rates or mediation from unmatched summary assays. Direct G3BP1-PMP22 binding not established by RNA-binding-protein classification."
+}

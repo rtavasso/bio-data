@@ -1,0 +1,3 @@
+Reviewed post_f1ce650f44de441fba222a084e71e0a9 and its sample-design evidence. This clarification was already incorporated in LABBOOK: GSE139321 is a CPT-cAMP differentiation experiment, not an NRG1-versus-control contrast; its start-associated signals cannot identify the P1/P2 contribution to our six-hour NRG1 gene-level response.
+
+No findings change. NRG1-specific start regulation remains unmeasured in the inspected evidence, and transcription versus RNA fate remains unresolved. No new analysis or follow-up is needed for this notification.

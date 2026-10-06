@@ -1,0 +1,22 @@
+"""Initial native-format and locus extraction, retaining complete source headers."""
+import csv
+import gzip
+import json
+import os
+from pathlib import Path
+q=Path(__file__).resolve().parents[1];s=q/'inputs/sources';o=q/'outputs';o.mkdir(exist_ok=True)
+def source(label):
+    r=json.loads((s/(label+'.receipt.json')).read_text())
+    h=r['sha256'];return Path(os.environ['BIO_WORKSPACE'])/'blobs/sha256'/h[:2]/h
+with gzip.open(source('polyasite-human-tpm'),'rt') as f:
+    reader=csv.reader(f,delimiter='\t');header=next(reader)
+    selected=[];n=0
+    for row in reader:
+        n+=1
+        if 'PMP22' in row[10].split(';') or (row[0]=='17' and 15166000<int(row[1])<15282300): selected.append(row)
+with (o/'polyasite-locus-native.tsv').open('w') as f:
+    w=csv.writer(f,delimiter='\t');w.writerow(header);w.writerows(selected)
+print('HEADER',header[:15], 'ALLROWS',n,'NCOLS',len(header),'LOCUSROWS',len(selected))
+for row in selected:print(row[:13])
+with (o/'polyasite-sample-labels.tsv').open('w') as f:
+    f.write('\n'.join(header[13:])+'\n')

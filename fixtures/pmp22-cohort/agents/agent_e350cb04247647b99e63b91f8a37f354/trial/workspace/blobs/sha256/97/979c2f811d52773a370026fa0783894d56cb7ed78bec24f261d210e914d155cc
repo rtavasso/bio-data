@@ -1,0 +1,37 @@
+{
+  "status": "corrected; previous browser-tool observations withdrawn as unsupported",
+  "unsupported_gap_withdrawn": "event_5fe42db745f94ab8956e75e7fb88eaed",
+  "actual_attempts": [
+    {
+      "tool": "functions.web_extract",
+      "targets": ["PMC13234107", "NCBI Gene5376"],
+      "success": false,
+      "error": "OpenAI Native Web Search (Codex Responses) is a search-only backend and cannot extract URL content"
+    },
+    {
+      "tool": "terminal: retrieve_qki_primary.py",
+      "target": "NCBI BioC XML PMC13234107",
+      "transport_receipt": "qki-live/PMC13234107-bioc.xml.receipt.json",
+      "status": 200,
+      "payload": "article XML; extracted and inspected",
+      "sha256": "b833e19434b300a41ff72afe3f4380e8297b71383afce5c6b22a5bfbffde0a9e"
+    },
+    {
+      "tool": "terminal: retrieve_qki_primary.py",
+      "target": "NCBI Gene5376 HTML",
+      "transport_receipt": "qki-live/NCBI-Gene5376.html.receipt.json",
+      "status": 200,
+      "payload": "reCAPTCHA browser challenge; excluded as annotation evidence",
+      "sha256": "6468fb3c6050e51a00ac6ae34c38e6ea9e5bb630afb88e52993ad2465bb44de2"
+    },
+    {
+      "tool": "terminal: retrieve_qki_primary.py human-PMP22-two-refseq.gb",
+      "target": "NCBI EFetch NM_000304.4,NM_153321.3",
+      "transport_receipt": "qki-live/human-PMP22-two-refseq.gb.receipt.json",
+      "status": 200,
+      "payload": "two versioned GenBank records; inspected",
+      "sha256": "ec75ecd4faf2c1626487f7c525e588a235646091aa1982bd4d09cfe04fbfd5c6"
+    }
+  ],
+  "limitation": "No paper primer-to-accession mapping, first-exon equivalence, or specific PMP22 junction/event assignment established"
+}

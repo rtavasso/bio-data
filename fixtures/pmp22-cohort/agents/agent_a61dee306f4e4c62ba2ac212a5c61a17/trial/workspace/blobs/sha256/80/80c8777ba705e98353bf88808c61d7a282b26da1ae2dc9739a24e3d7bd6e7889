@@ -1,0 +1,895 @@
+{
+  "question": "q_0622569f8e474689",
+  "source_question": "q_277f20df4b6b47cc",
+  "request": "post_08ad94d4992e46d5af511bf946a6700c",
+  "files": [
+    {
+      "member": "sources/GSE118660_MEF-counts.txt.gz",
+      "sha256": "14ca149475bf0716e53a54775c0519d6f111deb5a41e17db368a4633de9a0169",
+      "bytes": 327676,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE118660_MEF-counts.txt.gz",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE118nnn/GSE118660/suppl/GSE118660_Tg_MEFs_rsem.genes.expected_count.txt.gz"
+      ]
+    },
+    {
+      "member": "sources/GSE118660_MEF-tpm.txt.gz",
+      "sha256": "7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+      "bytes": 445980,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE118660_MEF-tpm.txt.gz",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE118nnn/GSE118660/suppl/GSE118660_Tg_MEFs_rsem.genes.tpm.txt.gz"
+      ]
+    },
+    {
+      "member": "sources/GSE118660_3t3-TPM.txt.gz",
+      "sha256": "8b837d3c0a48e869522484f68d0837994ee9c932e2dac52ef6dd5f679b6928d7",
+      "bytes": 200123,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE118660_3t3-TPM.txt.gz",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE118nnn/GSE118660/suppl/GSE118660_Tg_3t3s_rsem.genes.tpm.txt.gz"
+      ]
+    },
+    {
+      "member": "sources/GSE90070_dataCount.csv.gz",
+      "sha256": "4b93567e305fc21c5daf9a11dddea5ae5fd0b903072a85ea86d2974b46bd9102",
+      "bytes": 954798,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE90070_dataCount.csv.gz",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE90nnn/GSE90070/suppl/GSE90070_dataCount.csv.gz"
+      ]
+    },
+    {
+      "member": "sources/GSE118660.soft",
+      "sha256": "b95f04c1ccd309484bbe56623c96424174edffab2c63fbc5c43817b7d1ee89c4",
+      "bytes": 3895,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE118660.soft",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE118660&targ=self&form=text&view=full"
+      ]
+    },
+    {
+      "member": "sources/GSE118660-samples.soft",
+      "sha256": "f835c34e348d7aece69fc01663953a5ecebcbc2235d55053697ad6020b659be1",
+      "bytes": 40616,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE118660-samples.soft",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE118660&targ=gsm&form=text&view=full"
+      ]
+    },
+    {
+      "member": "sources/GSE90070.soft",
+      "sha256": "2ebe320b9eef086542fd5a5262ed9d32b6a73d85168a9321e09cc385c88dcae1",
+      "bytes": 3982,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE90070.soft",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE90070&targ=self&form=text&view=full"
+      ]
+    },
+    {
+      "member": "sources/GSE90070-samples.soft",
+      "sha256": "97db25f1074ef1fb18507367ca3243277f6339e24bc21e2b5bc68e32cf89031b",
+      "bytes": 94744,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/GSE90070-samples.soft",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE90070&targ=gsm&form=text&view=full"
+      ]
+    },
+    {
+      "member": "sources/PMC6416471.xml",
+      "sha256": "a401ebd6f473f3f7fe3312db8821d3baa6dc5a9c7887ad6758bd58510d0f16eb",
+      "bytes": 109972,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/PMC6416471.xml",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6416471/fullTextXML"
+      ]
+    },
+    {
+      "member": "sources/PMC5730339.html",
+      "sha256": "d2e68a9b688936aa2d5e2bab4f5d154a37c761491b42af5a53210e5ca1452236",
+      "bytes": 262420,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/PMC5730339.html",
+      "transport": "matching inherited HTTP receipt; not current retrieval",
+      "source_urls": [
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC5730339/"
+      ]
+    },
+    {
+      "member": "sources/GSE118660_Tg_3t3s_rsem.genes.expected_count.txt.gz",
+      "sha256": "6f893c348e2297eb7bac49bf61c0cb6ab0dd3fcd512eb90124f7715a9fc77287",
+      "bytes": 166337,
+      "origin": "asset_53dd40f9b97a2571a2fb2632ea636cab",
+      "transport": "inherited bio-fetch receipt"
+    },
+    {
+      "member": "provenance/NIH-counts-fetch.json",
+      "sha256": "09d3c42497ac4894bfc51a1f2cadf7fd030a715b71bea8e1d82bc250964e2e49",
+      "bytes": 288,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/context-audit/NIH-counts-fetch.json"
+    },
+    {
+      "member": "sources/Gonen-TableS5-native.xlsx",
+      "sha256": "5a77229a9e49dc7aed4cad30a782867b172da7ebe83bf595d01ab8cb22b4f6f6",
+      "bytes": 2618331,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/iteration/Gonen-TableS5-native.xlsx",
+      "archive_parent_sha256": "37583638e8e9aec98b62feb7749e0d8446113914a2733dd8986051b549b6da01",
+      "archive_member": "41598_2019_38705_MOESM5_ESM.xlsx",
+      "archive_byte_identity": true,
+      "transport": "extracted from inherited supplementary ZIP; not a standalone workbook HTTP receipt"
+    },
+    {
+      "member": "provenance/source-receipts.redacted.json",
+      "sha256": "7e53deae5d81cf22b23e9382598733aecbe4d4901eebf41aac14f46bc211b8c5",
+      "bytes": 6268,
+      "origin": "selected inherited receipt excerpts"
+    },
+    {
+      "member": "original-results/artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543/footprint-pmp22-effects.tsv",
+      "sha256": "746e45c04402b334e7d16cc42e34f988cec27d0be59ae43b810bb900a4fc2cb2",
+      "bytes": 1246,
+      "origin": "artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543",
+      "historical_output": true
+    },
+    {
+      "member": "provenance/artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543.json",
+      "sha256": "10df8316a23fb6419e0498b3eef38fd3af3c833ec399a363a12a84cb6472c325",
+      "bytes": 4540,
+      "origin": "current catalog readback of unchanged inherited artifact"
+    },
+    {
+      "member": "original-code/58d16905ef286a7c43b3320aa30983560c6f852f7cb9710f019d056246fe5278.py",
+      "sha256": "58d16905ef286a7c43b3320aa30983560c6f852f7cb9710f019d056246fe5278",
+      "bytes": 5749,
+      "origin": "artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543",
+      "execution_policy": "evidence only; not executed"
+    },
+    {
+      "member": "original-results/artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08/summary-r001.json",
+      "sha256": "8c6b8d5e1cdd9f5459d1ff590790893d0191cbe7723205297ff9eed652dbae2f",
+      "bytes": 2349,
+      "origin": "artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08",
+      "historical_output": true
+    },
+    {
+      "member": "provenance/artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08.json",
+      "sha256": "1e6e54386b5b017e41bdd0ac3bb01ad0ad16e00905be2ef5a0c14f32592b04d9",
+      "bytes": 4059,
+      "origin": "current catalog readback of unchanged inherited artifact"
+    },
+    {
+      "member": "original-code/a19501beb6c03a37ddbbde5d86de3ccf61c5dfa836f234b19035071ed851e694.py",
+      "sha256": "a19501beb6c03a37ddbbde5d86de3ccf61c5dfa836f234b19035071ed851e694",
+      "bytes": 6397,
+      "origin": "artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08",
+      "execution_policy": "evidence only; not executed"
+    },
+    {
+      "member": "original-results/artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114/counts-summary.json",
+      "sha256": "3a9fd20a87eb833595dc958e6394f780bec0eb29f470545b3675c749051a748a",
+      "bytes": 3772,
+      "origin": "artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114",
+      "historical_output": true
+    },
+    {
+      "member": "provenance/artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114.json",
+      "sha256": "950b6a8c4b10b8fd4fd46c45d0b780538a9a810ba7da6201806099f23fb2792c",
+      "bytes": 4021,
+      "origin": "current catalog readback of unchanged inherited artifact"
+    },
+    {
+      "member": "original-code/48dfb9f07096bd950141c50b02afc751e78d75e3797ec764102294fc3ee0fb9f.py",
+      "sha256": "48dfb9f07096bd950141c50b02afc751e78d75e3797ec764102294fc3ee0fb9f",
+      "bytes": 3325,
+      "origin": "artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114",
+      "execution_policy": "evidence only; not executed"
+    },
+    {
+      "member": "original-results/artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7/followup-summary.json",
+      "sha256": "19699af86953eed88425353d0a5d0af71b2da93bcdba8b541a610ec2a36a3fdc",
+      "bytes": 4673,
+      "origin": "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+      "historical_output": true
+    },
+    {
+      "member": "provenance/artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7.json",
+      "sha256": "a56f6871be70b15963b7c06e9ae1ad18a537eddb7fbcbb334739f967c268ff03",
+      "bytes": 4514,
+      "origin": "current catalog readback of unchanged inherited artifact"
+    },
+    {
+      "member": "original-code/7396dc56ff829aa9d7d79a9e24172a6e2b87fe4321a82f86df5243b0b91d4204.py",
+      "sha256": "7396dc56ff829aa9d7d79a9e24172a6e2b87fe4321a82f86df5243b0b91d4204",
+      "bytes": 8147,
+      "origin": "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+      "execution_policy": "evidence only; not executed"
+    },
+    {
+      "member": "original-results/artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd/isr-panel-effects.tsv",
+      "sha256": "c8351ba0357008b8cbc964b72c4755c03d14cc13b2999ae9f3f588ebe5a1c54a",
+      "bytes": 78377,
+      "origin": "artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd",
+      "historical_output": true
+    },
+    {
+      "member": "provenance/artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd.json",
+      "sha256": "4da041caf738d21b85ccdac726df3e31640bfad320e15b64794298f39e2ca72f",
+      "bytes": 3887,
+      "origin": "current catalog readback of unchanged inherited artifact"
+    },
+    {
+      "member": "original-code/1b20c0c38203bee385500fd6e440345173e68b269c7ec8c0438f94e16ffe4bce.py",
+      "sha256": "1b20c0c38203bee385500fd6e440345173e68b269c7ec8c0438f94e16ffe4bce",
+      "bytes": 6699,
+      "origin": "artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd",
+      "execution_policy": "evidence only; not executed"
+    },
+    {
+      "member": "inherited/outputs/iteration/isr-summary.json",
+      "sha256": "c75116103b2be3cfa80a0352a9257065be34dda61d9c66c4462c88da361e7674",
+      "bytes": 1556,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/isr-summary.json",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/isr-samples.tsv",
+      "sha256": "304e944fc76373bf3952cc1e5fc6faa693767c4a3f6cf4b79f483dc8568a0ad4",
+      "bytes": 2591,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/isr-samples.tsv",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/footprint-pmp22-counts.tsv",
+      "sha256": "6d0425beabd1dba8a82bf921cedec1cd9723e6395ce06ab9b2eadd0cf7ba749a",
+      "bytes": 198,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/footprint-pmp22-counts.tsv",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/footprint-pmp22-TPM.tsv",
+      "sha256": "d52f987ef382a699e21e57ef514f2efcd9cffaffaba9087bbc9c1f88bd266804",
+      "bytes": 221,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/footprint-pmp22-TPM.tsv",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/counts-primary-source.tsv",
+      "sha256": "e73b182e0201c99e9306987e23d90dc6a36518e8e2f596368edb17943d152096",
+      "bytes": 408909,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/counts-primary-source.tsv",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/genotype-controls.tsv",
+      "sha256": "8b010a757ca9fe1f2d8c1efe7c194aefc7c9e5a9531cd5dba97c2336fd97491a",
+      "bytes": 2961,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/genotype-controls.tsv",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/isr-log.txt",
+      "sha256": "ee3ae5e16d917ce642ab203ce043f7c9aa252be18e290eef8926971c9baf0791",
+      "bytes": 4063,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/isr-log.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/isr-stderr.txt",
+      "sha256": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+      "bytes": 2282,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/isr-stderr.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/validation-log.txt",
+      "sha256": "844125cbeab3e18d2fd10ae49b8624d731c879eb36d0fcfdaf2e0f9c00eea483",
+      "bytes": 4275,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/validation-log.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/validation-stderr.txt",
+      "sha256": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+      "bytes": 2282,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/validation-stderr.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/followup-log.txt",
+      "sha256": "b4390ca88191926f098be8ff9c1944f032bf4f83f739309e4b5c7597d54b4b92",
+      "bytes": 4817,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/followup-log.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/iteration/followup-stderr.txt",
+      "sha256": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+      "bytes": 2282,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/iteration/followup-stderr.txt",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/analysis-r001.log",
+      "sha256": "8b59289c3c0c38991d72aa157f312d8ddc458971c65adaeb76df5b7535b40601",
+      "bytes": 1459,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/analysis-r001.log",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/analysis-r001.stderr",
+      "sha256": "72659d0aec3d8e971b9f7bf7bab46b54483f554adee4e82dce21d67403f636b6",
+      "bytes": 2785,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/analysis-r001.stderr",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/counts.log",
+      "sha256": "3a9fd20a87eb833595dc958e6394f780bec0eb29f470545b3675c749051a748a",
+      "bytes": 3772,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/counts.log",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "inherited/outputs/context-audit/counts.stderr",
+      "sha256": "a726307350170d95fca78788207525b79373623cc7cc7d9fd51310fa49bafb3d",
+      "bytes": 2282,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/context-audit/counts.stderr",
+      "provenance": "historical bytes, not a new execution receipt"
+    },
+    {
+      "member": "sample-locators.json",
+      "sha256": "c0eaa90c8273eb89ae8944e6ff2b42025e2f632630165ad871c9117a3262caa6",
+      "bytes": 10491,
+      "origin": "current header and native metadata checks"
+    }
+  ],
+  "original_artifacts": [
+    {
+      "artifact": "artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543",
+      "title": "PMP22 new ISR iteration: footprint-pmp22-effects.tsv",
+      "output_member": "original-results/artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543/footprint-pmp22-effects.tsv",
+      "output_sha256": "746e45c04402b334e7d16cc42e34f988cec27d0be59ae43b810bb900a4fc2cb2",
+      "original_code_members": [
+        "original-code/58d16905ef286a7c43b3320aa30983560c6f852f7cb9710f019d056246fe5278.py"
+      ],
+      "original_command": [],
+      "input_blobs": [
+        "b525cb4612de9084b94ea456adaaa60cd17c0b8a8e8093381abf6242e2d76e88",
+        "1964a1b6c6fe9c8ae0cc93d118f20a4297e9bd9987563bfb09c6db9eba8d9330",
+        "111ebdac92fefc83d731794784b3d07b4d8c9fa037aec62fa88ecae1f9e0c79d",
+        "6c9294d27eca27b6ca9a961865e5d26193a1010366d9f2a45525f6bf059c3998",
+        "14ca149475bf0716e53a54775c0519d6f111deb5a41e17db368a4633de9a0169",
+        "7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+        "f835c34e348d7aece69fc01663953a5ecebcbc2235d55053697ad6020b659be1",
+        "92011a02a5a636e645e4af0e0c83cb43fa912e034201690ea17a6056a2b1e3c9"
+      ]
+    },
+    {
+      "artifact": "artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08",
+      "title": "PMP22 context audit: summary-r001.json",
+      "output_member": "original-results/artifact_2b2aee3d6e2731025ec24d0cc95a4eb4528f9d191b5d01f87525e01b5fe7ec08/summary-r001.json",
+      "output_sha256": "8c6b8d5e1cdd9f5459d1ff590790893d0191cbe7723205297ff9eed652dbae2f",
+      "original_code_members": [
+        "original-code/a19501beb6c03a37ddbbde5d86de3ccf61c5dfa836f234b19035071ed851e694.py"
+      ],
+      "original_command": [],
+      "input_blobs": [
+        "7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+        "8b837d3c0a48e869522484f68d0837994ee9c932e2dac52ef6dd5f679b6928d7",
+        "f835c34e348d7aece69fc01663953a5ecebcbc2235d55053697ad6020b659be1",
+        "a401ebd6f473f3f7fe3312db8821d3baa6dc5a9c7887ad6758bd58510d0f16eb"
+      ]
+    },
+    {
+      "artifact": "artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114",
+      "title": "PMP22 context audit: counts-summary.json",
+      "output_member": "original-results/artifact_4e1a39ab574e34f0efffa90b4bdad87bbbd473cbff11e1c74893c82f8e09e114/counts-summary.json",
+      "output_sha256": "3a9fd20a87eb833595dc958e6394f780bec0eb29f470545b3675c749051a748a",
+      "original_code_members": [
+        "original-code/48dfb9f07096bd950141c50b02afc751e78d75e3797ec764102294fc3ee0fb9f.py"
+      ],
+      "original_command": [],
+      "input_blobs": [
+        "14ca149475bf0716e53a54775c0519d6f111deb5a41e17db368a4633de9a0169",
+        "6f893c348e2297eb7bac49bf61c0cb6ab0dd3fcd512eb90124f7715a9fc77287",
+        "4f4987ca14a3ae3ebcf30c872daa326321c9f7c2d12b1fb7f7c4664ba4e777cb"
+      ]
+    },
+    {
+      "artifact": "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+      "title": "PMP22 new ISR iteration: followup-summary.json",
+      "output_member": "original-results/artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7/followup-summary.json",
+      "output_sha256": "19699af86953eed88425353d0a5d0af71b2da93bcdba8b541a610ec2a36a3fdc",
+      "original_code_members": [
+        "original-code/7396dc56ff829aa9d7d79a9e24172a6e2b87fe4321a82f86df5243b0b91d4204.py"
+      ],
+      "original_command": [],
+      "input_blobs": [
+        "37583638e8e9aec98b62feb7749e0d8446113914a2733dd8986051b549b6da01",
+        "7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+        "8b837d3c0a48e869522484f68d0837994ee9c932e2dac52ef6dd5f679b6928d7",
+        "9d9ffd0ee51fca52d1afff3db96c7214a1eea1681de74be39b23ecea6b13db7b",
+        "63fb69ddbf296e5cad307fa9e71321d11838c7535544e2d820bdc02acd49cdc8",
+        "e82fb2929f171a7767d24850368b3d562f297b8935c005740b9c59de7b5257c3",
+        "192d543a4bc91b04b2429d593ce2170c7a6aa1244a9c9b5ffc359751af908a6e",
+        "7ea613bf793d63341b7127a7452d1123b8f7e63df947827885d42eb24379db0a"
+      ]
+    },
+    {
+      "artifact": "artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd",
+      "title": "PMP22 new ISR iteration: isr-panel-effects.tsv",
+      "output_member": "original-results/artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd/isr-panel-effects.tsv",
+      "output_sha256": "c8351ba0357008b8cbc964b72c4755c03d14cc13b2999ae9f3f588ebe5a1c54a",
+      "original_code_members": [
+        "original-code/1b20c0c38203bee385500fd6e440345173e68b269c7ec8c0438f94e16ffe4bce.py"
+      ],
+      "original_command": [],
+      "input_blobs": [
+        "4b93567e305fc21c5daf9a11dddea5ae5fd0b903072a85ea86d2974b46bd9102",
+        "97db25f1074ef1fb18507367ca3243277f6339e24bc21e2b5bc68e32cf89031b",
+        "c9a791eb01850c7dca3d136503600ed6f1359a0e684148c33170c4c30d284042"
+      ]
+    }
+  ],
+  "sample_metadata": {
+    "scope": "New structural locator extraction only; no effect estimation or normalization",
+    "GSE118660": [
+      {
+        "gsm": "GSM3336235",
+        "native_column": "PERK_WT_Control",
+        "title": "PERK WT Control MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: WT",
+          "treatment: Control"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336236",
+        "native_column": "PERK_WT_Tg1hr",
+        "title": "PERK WT Tg1hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: WT",
+          "treatment: Tg1hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336237",
+        "native_column": "PERK_WT_Tg2hr",
+        "title": "PERK WT Tg2hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: WT",
+          "treatment: Tg2hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336238",
+        "native_column": "PERK_WT_Tg5hr",
+        "title": "PERK WT Tg5hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: WT",
+          "treatment: Tg5hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336239",
+        "native_column": "PERK_WT_Tg8hr",
+        "title": "PERK WT Tg8hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: WT",
+          "treatment: Tg8hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336240",
+        "native_column": "PERK_KO_Control",
+        "title": "PERK -/- Control MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: PERK -/-",
+          "treatment: Control"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336241",
+        "native_column": "PERK_KO_Tg1hr",
+        "title": "PERK -/- Tg1hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: PERK -/-",
+          "treatment: Tg1hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336242",
+        "native_column": "PERK_KO_Tg2hr",
+        "title": "PERK -/- Tg2hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: PERK -/-",
+          "treatment: Tg2hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336243",
+        "native_column": "PERK_KO_Tg5hr",
+        "title": "PERK -/- Tg5hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: PERK -/-",
+          "treatment: Tg5hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336244",
+        "native_column": "PERK_KO_Tg8hr",
+        "title": "PERK -/- Tg8hr MEF",
+        "source_characteristics": [
+          "cell line: MEF",
+          "genotype: PERK -/-",
+          "treatment: Tg8hr"
+        ],
+        "source_description": [
+          "MEFs_rsem.genes.expected_count.txt; MEFs_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336245",
+        "native_column": "NIH3T3_Cont",
+        "title": "NIH3t3 Control",
+        "source_characteristics": [
+          "cell line: NIH 3T3",
+          "genotype: WT",
+          "treatment: Control"
+        ],
+        "source_description": [
+          "3t3s_rsem.genes.expected_count.txt; 3t3s_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336246",
+        "native_column": "NIH3T3_Tg2hr",
+        "title": "NIH3t3 Tg2hr",
+        "source_characteristics": [
+          "cell line: NIH 3T3",
+          "genotype: WT",
+          "treatment: Tg2hr"
+        ],
+        "source_description": [
+          "3t3s_rsem.genes.expected_count.txt; 3t3s_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      },
+      {
+        "gsm": "GSM3336247",
+        "native_column": "NIH3T3_Tg7hr",
+        "title": "NIH3t3 Tg7hr",
+        "source_characteristics": [
+          "cell line: NIH 3T3",
+          "genotype: WT",
+          "treatment: Tg7hr"
+        ],
+        "source_description": [
+          "3t3s_rsem.genes.expected_count.txt; 3t3s_rsem.genes.tpm.txt"
+        ],
+        "source_library_strategy": [
+          "RNA-Seq"
+        ],
+        "source_molecule": [
+          "total RNA"
+        ],
+        "assay": "ribosome footprints per explicit source processing"
+      }
+    ],
+    "GSE90070_pairs": {
+      "Ctrl_1": {
+        "In": {
+          "column": "P4505_101",
+          "gsm": "GSM2397005"
+        },
+        "H": {
+          "column": "P4505_103",
+          "gsm": "GSM2397006"
+        }
+      },
+      "Ctrl_2": {
+        "In": {
+          "column": "P4505_104",
+          "gsm": "GSM2397007"
+        },
+        "H": {
+          "column": "P4505_106",
+          "gsm": "GSM2397008"
+        }
+      },
+      "Ctrl_3": {
+        "In": {
+          "column": "P4505_107",
+          "gsm": "GSM2397009"
+        },
+        "H": {
+          "column": "P4505_109",
+          "gsm": "GSM2397010"
+        }
+      },
+      "Ctrl_4": {
+        "In": {
+          "column": "P4505_110",
+          "gsm": "GSM2397011"
+        },
+        "H": {
+          "column": "P4505_112",
+          "gsm": "GSM2397012"
+        }
+      },
+      "Tg1_1": {
+        "In": {
+          "column": "P4505_113",
+          "gsm": "GSM2397013"
+        },
+        "H": {
+          "column": "P4505_115",
+          "gsm": "GSM2397014"
+        }
+      },
+      "Tg1_2": {
+        "In": {
+          "column": "P4505_116",
+          "gsm": "GSM2397015"
+        },
+        "H": {
+          "column": "P4505_118",
+          "gsm": "GSM2397016"
+        }
+      },
+      "Tg1_3": {
+        "In": {
+          "column": "P4505_119",
+          "gsm": "GSM2397017"
+        },
+        "H": {
+          "column": "P4505_121",
+          "gsm": "GSM2397018"
+        }
+      },
+      "Tg1_4": {
+        "In": {
+          "column": "P4505_122",
+          "gsm": "GSM2397019"
+        },
+        "H": {
+          "column": "P4505_124",
+          "gsm": "GSM2397020"
+        }
+      },
+      "Tg16_1": {
+        "In": {
+          "column": "P4505_125",
+          "gsm": "GSM2397021"
+        },
+        "H": {
+          "column": "P4505_127",
+          "gsm": "GSM2397022"
+        }
+      },
+      "Tg16_2": {
+        "In": {
+          "column": "P4505_128",
+          "gsm": "GSM2397023"
+        },
+        "H": {
+          "column": "P4505_130",
+          "gsm": "GSM2397024"
+        }
+      },
+      "Tg16_3": {
+        "In": {
+          "column": "P4505_131",
+          "gsm": "GSM2397025"
+        },
+        "H": {
+          "column": "P4505_133",
+          "gsm": "GSM2397026"
+        }
+      },
+      "Tg16_4": {
+        "In": {
+          "column": "P4505_134",
+          "gsm": "GSM2397027"
+        },
+        "H": {
+          "column": "P4505_136",
+          "gsm": "GSM2397028"
+        }
+      },
+      "Tg16+PERKi_1": {
+        "In": {
+          "column": "P4505_137",
+          "gsm": "GSM2397029"
+        },
+        "H": {
+          "column": "P4505_139",
+          "gsm": "GSM2397030"
+        }
+      },
+      "Tg16+PERKi_2": {
+        "In": {
+          "column": "P4505_140",
+          "gsm": "GSM2397031"
+        },
+        "H": {
+          "column": "P4505_142",
+          "gsm": "GSM2397032"
+        }
+      },
+      "Tg16+PERKi_3": {
+        "In": {
+          "column": "P4505_143",
+          "gsm": "GSM2397033"
+        },
+        "H": {
+          "column": "P4505_145",
+          "gsm": "GSM2397034"
+        }
+      },
+      "Tg16+PERKi_4": {
+        "In": {
+          "column": "P4505_146",
+          "gsm": "GSM2397035"
+        },
+        "H": {
+          "column": "P4505_148",
+          "gsm": "GSM2397036"
+        }
+      }
+    },
+    "GSE90070_original_map": "inherited/outputs/iteration/isr-samples.tsv",
+    "mapping_rules": "Literal native columns checked against GEO cell-line/genotype/treatment fields; KO maps explicit PERK -/- and NIH Cont maps explicit Control. No sample identities inferred across studies.",
+    "pairing_limit": "Fraction pairing within source condition/replicate only; no cross-treatment pairing or verified independent donors."
+  },
+  "pairing_and_calibration": {
+    "GSE118660": {
+      "primary": "PMC6416471; PMID30867432; Methods: Ribosome footprint profiling",
+      "units": "RSEM expected counts (possibly fractional) and TPM, not raw integer read counts or an RNA denominator.",
+      "matched_RNA_RPF": "No separate matched RNA denominator identified in these 13 footprint libraries.",
+      "absolute_scale": "Source Methods explicitly states relative, not absolute protein synthesis. No verified per-library external spike/global-synthesis factors supplied in this handoff.",
+      "time_conflict": "NIH3T3 late 7h in GEO/Methods versus 8h in Table S5B; unchanged source labels retained."
+    },
+    "GSE90070": {
+      "primary": "PMC5730339; PMID29220654; series overall_design; Methods Protein synthesis / Polysome profiling",
+      "units": "Deposited read counts for cytosolic and heavy-polysome-associated RNA (>4 ribosomes), not RPF counts.",
+      "pairing": "16 source-design-supported In/H pairs; 4 labelled replicate pairs in each of 4 conditions.",
+      "global_assay": "Paper describes 30-minute [35S]Met/Cys incorporation into total cellular protein, plus a separate ribosome half-transit assay.",
+      "calibration_limit": "These study-level assays are not verified per-library spike factors, an absolute PMP22 synthesis rate, or a cross-study RNA/RPF pairing. No such calibration table was located among the reviewed original outputs."
+    },
+    "peer_correction": {
+      "artifact": "artifact_882bd250c232e55f8c377e3c895353fe414351297a3fbd9b76a4483d8874f486",
+      "disputed": "Total RNA-seq only in audited design",
+      "correction": "For GSE118660 this generic-label reading is contradicted by explicit footprint processing in native SOFT and PMC6416471. Retain the no-valid-RNA/RPF-join limitation, not the RNA-only assay classification."
+    }
+  },
+  "provenance_limits": "Original manifest command arrays retained as found; historical logs are not reconstructed producer receipts. Original artifact publication retains broader original dependencies (including ancillary validation/TE/granule inputs); this ZIP is restricted to the requested footprint/fraction sources and small provenance outputs.",
+  "execution_scope": "Byte-preserving export and source-metadata/header checks only. No scientific rerun, source HTTP requests, raw processing, inherited-code execution or workbook formula execution."
+}

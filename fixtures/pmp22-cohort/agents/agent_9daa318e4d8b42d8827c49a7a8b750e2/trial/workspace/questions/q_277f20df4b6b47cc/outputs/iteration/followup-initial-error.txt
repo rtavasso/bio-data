@@ -1,0 +1,34 @@
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+Traceback (most recent call last):
+  File "/Users/rtavasso/atiercorp/bio-data/workspaces/agent-evals/20260927T221733-775736d3/cases/pmp22-discovery-iteration/trial/workspace/questions/q_277f20df4b6b47cc/scripts/analyze_isr_followup.py", line 15, in <module>
+    common=a.columns.intersection(tables['A'].columns);eq=np.isclose(a[common].to_numpy(float),tables['A'].loc[a.index,common].to_numpy(float)).all()
+                                                                                               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexing.py", line 1185, in __getitem__
+    return self._getitem_tuple(key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexing.py", line 1376, in _getitem_tuple
+    return self._multi_take(tup)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexing.py", line 1328, in _multi_take
+    axis: self._get_listlike_indexer(key, axis)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexing.py", line 1559, in _get_listlike_indexer
+    keyarr, indexer = ax._get_indexer_strict(key, axis_name)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexes/base.py", line 6212, in _get_indexer_strict
+    self._raise_if_missing(keyarr, indexer, axis_name)
+  File "/Users/rtavasso/atiercorp/bio-data/.venv/lib/python3.12/site-packages/pandas/core/indexes/base.py", line 6264, in _raise_if_missing
+    raise KeyError(f"{not_found} not in index")
+KeyError: "['11-Sep', '8-Sep', '6-Sep', '10-Mar', '4-Mar', '2-Mar', '3-Sep', '7-Mar', '12-Sep', '14-Sep', '5-Mar', '4-Sep', '7-Sep', '10-Sep', '11-Mar', '5-Sep', '9-Mar', '6-Mar', '15-Sep', '9-Sep', '3-Mar', '1-Sep', '1-Mar', '8-Mar', '2-Sep'] not in index"

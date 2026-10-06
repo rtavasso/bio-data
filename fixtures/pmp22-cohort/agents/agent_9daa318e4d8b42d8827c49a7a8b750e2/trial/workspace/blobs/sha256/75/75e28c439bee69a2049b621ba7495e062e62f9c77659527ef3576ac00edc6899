@@ -1,0 +1,136 @@
+{
+  "models": [
+    {
+      "model": "linear_myelin",
+      "n_parameters": 2,
+      "in_sample_R2": 0.9812484448993707,
+      "LOTO_SSE": 1.5248357560066341,
+      "LOTO_RMSE": 0.43658271782198305
+    },
+    {
+      "model": "quadratic_myelin",
+      "n_parameters": 3,
+      "in_sample_R2": 0.9905515043771888,
+      "LOTO_SSE": 6.067691160377033,
+      "LOTO_RMSE": 0.8708968911685981
+    },
+    {
+      "model": "linear_plus_Ppp6r1",
+      "n_parameters": 3,
+      "in_sample_R2": 0.9982307195554778,
+      "LOTO_SSE": 0.14701202746966174,
+      "LOTO_RMSE": 0.13555996250260516
+    },
+    {
+      "model": "linear_plus_Gtf2f1",
+      "n_parameters": 3,
+      "in_sample_R2": 0.9984525745800451,
+      "LOTO_SSE": 0.21819503523594586,
+      "LOTO_RMSE": 0.16514956677052844
+    },
+    {
+      "model": "linear_plus_Hck",
+      "n_parameters": 3,
+      "in_sample_R2": 0.9983951738908581,
+      "LOTO_SSE": 0.22281718308862286,
+      "LOTO_RMSE": 0.1668896278564904
+    },
+    {
+      "model": "quadratic_plus_Ppp6r1",
+      "n_parameters": 4,
+      "in_sample_R2": 0.9983425760710057,
+      "LOTO_SSE": 1.7014051712338727,
+      "LOTO_RMSE": 0.46116769878671476
+    },
+    {
+      "model": "quadratic_plus_Gtf2f1",
+      "n_parameters": 4,
+      "in_sample_R2": 0.9984529568707537,
+      "LOTO_SSE": 1.6221711477644263,
+      "LOTO_RMSE": 0.4503014473333983
+    },
+    {
+      "model": "quadratic_plus_Hck",
+      "n_parameters": 4,
+      "in_sample_R2": 0.9985983370508283,
+      "LOTO_SSE": 1.361257103948485,
+      "LOTO_RMSE": 0.4125010763544268
+    }
+  ],
+  "Zeb2_Pmp22_relative_to_myelin_log2": 1.5747751447142857,
+  "retrospective_results": [
+    {
+      "dataset": "inherited_Egr2AS_rat",
+      "mode": "retrospective_exposed",
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": -0.14137829264005397,
+      "delta_myelin": 0.27815540179474546,
+      "delta_candidate": 0.3194627305689588,
+      "Pmp22_minus_myelin_contrast": -0.41953369443479943,
+      "baseline_prediction": 0.3525755449077056,
+      "augmented_prediction": 0.1535331988499913,
+      "SSE_ratio": 0.35645988565201314
+    },
+    {
+      "dataset": "inherited_Egr2AS_rat",
+      "mode": "retrospective_exposed",
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": -0.14137829264005397,
+      "delta_myelin": 0.27815540179474546,
+      "delta_candidate": 0.04946410363391429,
+      "Pmp22_minus_myelin_contrast": -0.41953369443479943,
+      "baseline_prediction": 0.3525755449077056,
+      "augmented_prediction": 0.28572939294553507,
+      "SSE_ratio": 0.7476563825881116
+    },
+    {
+      "dataset": "inherited_Egr2AS_rat",
+      "mode": "retrospective_exposed",
+      "candidate": "Hck",
+      "delta_Pmp22": -0.14137829264005397,
+      "delta_myelin": 0.27815540179474546,
+      "delta_candidate": 0.17282703642577601,
+      "Pmp22_minus_myelin_contrast": -0.41953369443479943,
+      "baseline_prediction": 0.3525755449077056,
+      "augmented_prediction": -0.007470153871769192,
+      "SSE_ratio": 0.07349219517106753
+    },
+    {
+      "dataset": "inherited_Runx_mouse",
+      "mode": "retrospective_exposed",
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": 1.1289160193359375,
+      "delta_myelin": 0.8266890688518262,
+      "delta_candidate": -0.31593989335073047,
+      "Pmp22_minus_myelin_contrast": 0.3022269504841113,
+      "baseline_prediction": 1.0478687346678106,
+      "augmented_prediction": 1.3020294595970503,
+      "SSE_ratio": 4.562308365502249
+    },
+    {
+      "dataset": "inherited_Runx_mouse",
+      "mode": "retrospective_exposed",
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": 1.1289160193359375,
+      "delta_myelin": 0.8266890688518262,
+      "delta_candidate": -0.04476597595187126,
+      "Pmp22_minus_myelin_contrast": 0.3022269504841113,
+      "baseline_prediction": 1.0478687346678106,
+      "augmented_prediction": 0.9798327034244997,
+      "SSE_ratio": 3.383616616573971
+    },
+    {
+      "dataset": "inherited_Runx_mouse",
+      "mode": "retrospective_exposed",
+      "candidate": "Hck",
+      "delta_Pmp22": 1.1289160193359375,
+      "delta_myelin": 0.8266890688518262,
+      "delta_candidate": -3.2077643381407204,
+      "Pmp22_minus_myelin_contrast": 0.3022269504841113,
+      "baseline_prediction": 1.0478687346678106,
+      "augmented_prediction": 5.56767124845837,
+      "SSE_ratio": 2999.476442541397
+    }
+  ],
+  "interpretation": "Nonlinear/alternative baseline analysis exploratory; candidate selection and validation unchanged. General injury program adjustment does not isolate causal regulation. Existing sample outcomes were exposed, so inherited contrasts are retrospective."
+}

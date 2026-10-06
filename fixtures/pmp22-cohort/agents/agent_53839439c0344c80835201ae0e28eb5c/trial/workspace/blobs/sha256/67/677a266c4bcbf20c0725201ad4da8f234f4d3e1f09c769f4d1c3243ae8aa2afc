@@ -1,0 +1,14 @@
+from pathlib import Path
+import json,subprocess
+Q=Path(__file__).resolve().parents[1];O=Q/'outputs';B=str(Q.parents[2]/'bin/bio')
+x=json.loads((O/'investigations.json').read_text());assert x['revision']==25
+x['revision']=26
+r=next(a for a in x['items'] if a['id']=='upstream-indirect-perturbation');r.update(status='analyzed',artifacts=['artifact_1123b0484f0be58e323e908acbde06d4bd2378473bb961b7e36871afa225e274'],finding='Locked relative-preservation transfer fails: DeltaR -0.0365 CI[-0.2407,0.1677]. Pmp22 and myelin panel decline similarly. Broad antioxidant response motivates independent comparison.',next_action='Compare mTOR comparator response; protein quantities separately blocked.')
+x['items'].extend([
+ dict(id='nae1-protein-quantitation',priority='high',question='Does Nae1 loss alter PMP22 protein beyond RNA?',alternatives=['transcription/RNA','translation or turnover'],readout='Matched genotype-resolved quantitative proteome',assets=['PXD043917'],prerequisites=['Quantitative export and age identity'],status='blocked',artifacts=[],finding='mzIdentML contains identification scores not amounts; mouse/PEAKS source contradicts PRIDE tags.',limitation='No abundance/intensity genotype matrix in inspected mzIdentML; P7 caption versus P15 methods/PRIDE conflict.',next_action='Obtain LFQ export, file-to-animal map and corrected age.',blocker_evidence=['outputs/upstream/proteome-mzid-inspection.json','inputs/upstream/PXD043917-project.json','inputs/upstream/PMC11014456.xml']),
+ dict(id='nae1-antioxidant-alternative',priority='high',question='Is antioxidant induction accompanying PMP22 decline generic to perturbed myelination or separable in Nae1 loss?',alternatives=['neddylation-associated antioxidant response','generic differentiation/mTOR response','composition or low-baseline artifact'],readout='Antioxidant/myelin panels plus broad response versus P5 TSC1/PTEN/Raptor cKO',assets=['PMC5589416 Figure3 source data','GSE241269'],prerequisites=['Source control identity and eligible counts','Freeze comparator prediction before outcomes'],status='open',artifacts=[],finding='Nqo1 and Slc7a11 among broad Nae1 extremes; comparator outcomes not inspected.',limitation='P7/P5 and driver differences remain; RNA cannot establish NRF2 activity or mediation.',next_action='Inspect native comparator headers/design, select externally supported panel and execute.',blocker_evidence=[],decision='outputs/upstream/decision-r004.md')])
+for p in [O/'investigations.r026.json',O/'investigations.json']:p.write_text(json.dumps(x,indent=2))
+rr=[]
+for p in [O/'investigations.r026.json',O/'upstream/decision-r004.md']:
+ r=subprocess.run([B,'object','add',str(p)],capture_output=True,text=True,check=True);rr.append(dict(path=str(p.relative_to(Q)),receipt=json.loads(r.stdout)))
+(O/'upstream/checkpoint-r004-receipts.json').write_text(json.dumps(rr,indent=2));print(json.dumps(rr,indent=2))

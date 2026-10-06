@@ -1,0 +1,585 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_142928_db43d1", "timestamp": 1791244316590}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/LABBOOK.md"}, "timestamp": 1791244331574}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/ANSWER-TRANSLATION.md"}, "timestamp": 1791244331575}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:bfe5e157d17b4a1758cbbbb4d844e981a6ba7e6300116e97ef49f2e7aa970297]\"}", "duration_ms": 33, "is_error": false, "timestamp": 1791244331610}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2192 bytes sha256:92c46cf12d4734637b7e95f78d61c5d75d2b8d4ac0455a2e7a62cc01a91acb57]\"}", "duration_ms": 34, "is_error": false, "timestamp": 1791244331610}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_2e10747bc0a044f8933ae15743e2ebf3; ./bin/bio community show post_13a1b621cd7e4c3484ee34e53311dca6; ./bin/bio community inbox; ./bin/bio community search --help", "timeout": 180, "workdir": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_83a71e8384ce4e47bcd4f21f3f1b8ed2/trial"}, "timestamp": 1791244331611}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:47c36bb4d08de1f41e8ef2d96034ce3bd1e96bd1f47a9b3450fa71ed6a8d703e]\"}", "duration_ms": 879, "is_error": false, "timestamp": 1791244332492}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community search --text 'GSE55195' --limit 8; ./bin/bio community search --text 'GSE65778' --limit 8; ./bin/bio community search --text 'poly(A)' --limit 8", "timeout": 180}, "timestamp": 1791244348908}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5005 bytes sha256:ef553ae24626dfc73f42fea632200fc60284b0ac0a918fe95d49babc7eec020c]\"}", "duration_ms": 674, "is_error": false, "timestamp": 1791244349584}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/outputs/transcript-site-map.tsv", "limit": 20}, "timestamp": 1791244349586}
+{"type": "tool_use", "name": "search_files", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/outputs/polyasite-usage.tsv", "pattern": "HEK293", "limit": 10}, "timestamp": 1791244349586}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/outputs/polyasite-usage.tsv", "limit": 3}, "timestamp": 1791244349587}
+{"type": "tool_use", "name": "search_files", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/outputs/polyasite-sample-labels.tsv", "pattern": "HEK293", "limit": 10}, "timestamp": 1791244349587}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:a8b5882c2214f3535f2dff7d527adac7ba03051af02c7181f8055d6171a8f923]\"}", "duration_ms": 10, "is_error": false, "timestamp": 1791244349655}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 38 bytes sha256:3672e3d3a66425a4fcce6d1690b52377acb36632a183cd0a253037e2d28f73dd]\"}", "duration_ms": 65, "is_error": true, "timestamp": 1791244349656}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1004 bytes sha256:dfb280637bd0b8760eb81f1a01d6c7e2c01e3d5ba3c7d28291c66fa5a228cfda]\"}", "duration_ms": 12, "is_error": false, "timestamp": 1791244349657}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 974 bytes sha256:f408bdbd94968ff7f580a849a23b54fe454dd9f9a4577dbcd6c48f582dab59bd]\"}", "duration_ms": 69, "is_error": false, "timestamp": 1791244349657}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 6, "offset": 4, "path": "workspace/questions/q_31d33fde8cbe4f50/outputs/polyasite-usage.tsv"}, "timestamp": 1791244369426}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1805 bytes sha256:ea6183cc56f46c9393e28b4317d1a7d7b288129109aa3ff6cd9c4c99a12feb1f]\"}", "duration_ms": 2, "is_error": false, "timestamp": 1791244369428}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_15bae2ac131a47e7b229eee7b018d6a0; shasum -a 256 workspace/questions/q_31d33fde8cbe4f50/outputs/polyasite-usage.tsv workspace/questions/q_31d33fde8cbe4f50/outputs/transcript-site-map.tsv; ./bin/bio community inbox --sent", "timeout": 180}, "timestamp": 1791244369429}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 3507 bytes sha256:9ce79d05503bde28af0196f332fe2f6f088fd6c3dd03cbdb2dadcb337bc40cbb]\", \"exit_code\": 0}", "duration_ms": 482, "is_error": false, "timestamp": 1791244369913}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/outputs/registrations-final.json", "limit": 30}, "timestamp": 1791244369914}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2263 bytes sha256:4d43a434ef266789bac9bce67277b2cc267696805707b3888bb7ef0b3d3650e0]\"}", "duration_ms": 2, "is_error": false, "timestamp": 1791244369917}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_31d33fde8cbe4f50/ANSWER-TRANSLATION-COORDINATION.md", "content": "No verified result in my end/isoform analysis establishes a PMP22-specific failure of the acute-arsenite poly(A)-selected RNA denominator. That remains unmeasured, not validated safe. Existing artifact-backed handoff: post_13a1b621cd7e4c3484ee34e53311dca6.\n\nExact available evidence\n\n1. PolyASite2 / GSE66092 PAPERCLIP, untreated HEK293:\n   GSM1614165: primary terminal TPM 61.594916; site-retaining fraction 1.0.\n   GSM1614166: primary terminal TPM 28.036445; site-retaining fraction 1.0.\n   Native source labels say HEK293 cells and treatment none, not HEK293T plus arsenite. The primary denominator contains the three multi-protocol PMP22 terminal clusters; all-six-site sensitivity also retains fraction 1.0 in these two libraries. These are end-usage measurements, not poly(A)-tail-length or oligo(dT)-capture-efficiency measurements.\n   Source rows: outputs/polyasite-usage.tsv lines4-5 in q_31d33fde8cbe4f50.\n   artifact_cab9bfda14010251628ff7b8d893fb0eb8ad87d192ee525239ac3401f4b407dd.\n\n2. GTEx v9 filtered FLAIR, GRCh38:\n   ENST00000395938.6 and ENST00000312280.7 share native terminal-exon fields15229778-15231080 but have distinct first exons. ENST00000494511.5 shares that terminal exon while its internal path omits canonical coding segments. The table distinguishes canonical-CDS containment from terminal-site retention. A common end is therefore not a guarantee of identical CDS composition. These models do not establish stress-induced isoform changes, productive ORFs, per-read full-length coverage, or correspondence to your three RefSeq rows.\n   Source: outputs/transcript-site-map.tsv, rows for the exact transcript IDs above.\n   artifact_38b1b6bfb32140728b409c513a3b57633ebcca91bae62e99c65f5a795bec1c7c.\n\nConsequence for your planned sensitivity comparison\n\nGiven your stated preparation, CDS-only and transcript-wide RNA counts both come from the same poly(A)-selected material. Agreement can show robustness to counted region, but cannot by itself exclude a bias introduced during selection before regional counting. Disagreement establishes denominator dependence; it does not identify APA, tail shortening, degradation, or altered isoform usage as its cause.\n\nRetain one shared CDS RPF observation per biological replicate rather than treat its repeated annotation rows as independent evidence. GSE65778 remains a separate perturbation/context, not validation of the arsenite denominator. No new experiment or reanalysis was performed for this response. Both reused output hashes match their registrations; LABBOOK records the current forum review.\n"}, "timestamp": 1791244417390}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "*** Begin Patch\n*** Update File: workspace/questions/q_31d33fde8cbe4f50/LABBOOK.md\n@@\n # Research notebook: PMP22 RNA ends: observed cleavage, transcript linkage and regulatory-site availability\n+\n+## Translation-denominator coordination review\n+Read request post_2e10747bc0a044f8933ae15743e2ebf3 and existing artifact-backed handoff post_13a1b621cd7e4c3484ee34e53311dca6, with no supersession returned. Searched the current shared forum for GSE55195, GSE65778 and poly(A); each result set had next_offset null. Read overlapping peer update post_15bae2ac131a47e7b229eee7b018d6a0, which reports no validated effect estimate from the interrupted GSE55195 analysis and retains GSE65778 as a candidate. Those are peer-reported statuses, not new execution/failures here. The PUM-assay search lead is a different intervention/context and does not supply an acute-arsenite denominator validation. This review does not change the completed end-map findings or justify duplicating the screen.\n+\n+Re-read exact own published PolyASite rows GSM1614165/GSM1614166 (HEK293 PAPERCLIP, treatment none) and the FLAIR transcript/site map; actual shasum checks matched both recorded output blobs. A search_files process error on the usage table was resolved by direct read_file, not treated as missing biological data. Basal HEK293 site retention is not evidence of intact poly(A)-capture efficiency in arsenite-treated HEK293T; shared long-read ends do not establish identical internal coding paths, stress-induced isoform changes or per-read completeness. The consequential logical qualification for the peer is that CDS-only and transcript-wide counts from the same selected RNA do not independently test selection bias; their agreement only addresses region-definition sensitivity, and disagreement does not identify a mechanism. No PMP22-specific acute-arsenite denominator defect is verified by these existing end data. Saved the exact source/features and interpretation in ANSWER-TRANSLATION-COORDINATION.md. Checked inbox/sent once at the review boundary; no waiting or courtesy question. Reused existing registered artifacts, with no new collection, computation registration or manual duplicate publication; final reply is automatically delivered.\n \n ## Promoter answer notification review\n*** End Patch"}, "timestamp": 1791244417390}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 573 bytes sha256:acbe92e75654aa1e35b856a3e0ea1ea8aeb902f812730c10a2516f0bad27d705]\"}", "duration_ms": 118, "is_error": false, "timestamp": 1791244417596}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 4283 bytes sha256:4b01f0b822f84d25113aa4683d9351c2df96957aa2560dceb40f1090a88848b9]\"}", "duration_ms": 205, "is_error": false, "timestamp": 1791244417597}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio work sync q_31d33fde8cbe4f50 --status completed --summary 'Translation-denominator handoff: verified existing HEK293 end rows and FLAIR structures; no acute-arsenite PMP22 capture defect established, and regional denominator agreement cannot exclude shared selection bias.'", "timeout": 180}, "timestamp": 1791244422229}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 2799 bytes sha256:c5fc363347f14e15a835e120d31b03f8958004ad500c8f8b7d2cbf90a7f265e5]\", \"exit_code\": 0}", "duration_ms": 363, "is_error": false, "timestamp": 1791244422593}
+{"type": "text", "text": "\n\nNo", "timestamp": 1791244436937}
+{"type": "text", "text": " verified", "timestamp": 1791244436943}
+{"type": "text", "text": " result", "timestamp": 1791244436945}
+{"type": "text", "text": " in", "timestamp": 1791244436945}
+{"type": "text", "text": " my", "timestamp": 1791244436946}
+{"type": "text", "text": " end", "timestamp": 1791244436947}
+{"type": "text", "text": "/", "timestamp": 1791244436948}
+{"type": "text", "text": "iso", "timestamp": 1791244436948}
+{"type": "text", "text": "form", "timestamp": 1791244436949}
+{"type": "text", "text": " work", "timestamp": 1791244436950}
+{"type": "text", "text": " establishes", "timestamp": 1791244436951}
+{"type": "text", "text": " a", "timestamp": 1791244436951}
+{"type": "text", "text": " PMP", "timestamp": 1791244436952}
+{"type": "text", "text": "22", "timestamp": 1791244436953}
+{"type": "text", "text": "-specific", "timestamp": 1791244436954}
+{"type": "text", "text": " defect", "timestamp": 1791244436954}
+{"type": "text", "text": " in", "timestamp": 1791244436955}
+{"type": "text", "text": " the", "timestamp": 1791244436955}
+{"type": "text", "text": " acute", "timestamp": 1791244436955}
+{"type": "text", "text": "-", "timestamp": 1791244436956}
+{"type": "text", "text": "ars", "timestamp": 1791244436956}
+{"type": "text", "text": "en", "timestamp": 1791244436956}
+{"type": "text", "text": "ite", "timestamp": 1791244436957}
+{"type": "text", "text": " RNA", "timestamp": 1791244436957}
+{"type": "text", "text": " denominator", "timestamp": 1791244436957}
+{"type": "text", "text": ".", "timestamp": 1791244436957}
+{"type": "text", "text": " That", "timestamp": 1791244436958}
+{"type": "text", "text": " remains", "timestamp": 1791244436958}
+{"type": "text", "text": " un", "timestamp": 1791244436958}
+{"type": "text", "text": "me", "timestamp": 1791244436958}
+{"type": "text", "text": "asured", "timestamp": 1791244436959}
+{"type": "text", "text": "—not", "timestamp": 1791244436959}
+{"type": "text", "text": " demonstrated", "timestamp": 1791244436960}
+{"type": "text", "text": " unreliable", "timestamp": 1791244436999}
+{"type": "text", "text": ",", "timestamp": 1791244437013}
+{"type": "text", "text": " but", "timestamp": 1791244437014}
+{"type": "text", "text": " not", "timestamp": 1791244437014}
+{"type": "text", "text": " validated", "timestamp": 1791244437015}
+{"type": "text", "text": " safe", "timestamp": 1791244437129}
+{"type": "text", "text": " either", "timestamp": 1791244437145}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244437148}
+{"type": "text", "text": "Exact", "timestamp": 1791244437149}
+{"type": "text", "text": " available", "timestamp": 1791244437150}
+{"type": "text", "text": " evidence", "timestamp": 1791244437247}
+{"type": "text", "text": "\n\n", "timestamp": 1791244437248}
+{"type": "text", "text": "1", "timestamp": 1791244437248}
+{"type": "text", "text": ".", "timestamp": 1791244437260}
+{"type": "text", "text": " Bas", "timestamp": 1791244437261}
+{"type": "text", "text": "al", "timestamp": 1791244437262}
+{"type": "text", "text": " HE", "timestamp": 1791244437262}
+{"type": "text", "text": "K", "timestamp": 1791244437263}
+{"type": "text", "text": "293", "timestamp": 1791244437375}
+{"type": "text", "text": " cleavage", "timestamp": 1791244437394}
+{"type": "text", "text": " measurements", "timestamp": 1791244437396}
+{"type": "text", "text": "\n\n", "timestamp": 1791244437396}
+{"type": "text", "text": "  ", "timestamp": 1791244437396}
+{"type": "text", "text": " Poly", "timestamp": 1791244437397}
+{"type": "text", "text": "AS", "timestamp": 1791244437398}
+{"type": "text", "text": "ite", "timestamp": 1791244437398}
+{"type": "text", "text": "2", "timestamp": 1791244437486}
+{"type": "text", "text": "/G", "timestamp": 1791244437505}
+{"type": "text", "text": "SE", "timestamp": 1791244437507}
+{"type": "text", "text": "660", "timestamp": 1791244437508}
+{"type": "text", "text": "92", "timestamp": 1791244437509}
+{"type": "text", "text": " PAPER", "timestamp": 1791244437510}
+{"type": "text", "text": "CL", "timestamp": 1791244437510}
+{"type": "text", "text": "IP", "timestamp": 1791244437510}
+{"type": "text", "text": ":\n", "timestamp": 1791244437597}
+{"type": "text", "text": "  ", "timestamp": 1791244437622}
+{"type": "text", "text": " GSM", "timestamp": 1791244437623}
+{"type": "text", "text": "161", "timestamp": 1791244437624}
+{"type": "text", "text": "416", "timestamp": 1791244437625}
+{"type": "text", "text": "5", "timestamp": 1791244437625}
+{"type": "text", "text": ":", "timestamp": 1791244437626}
+{"type": "text", "text": " primary", "timestamp": 1791244437627}
+{"type": "text", "text": " terminal", "timestamp": 1791244437715}
+{"type": "text", "text": " TPM", "timestamp": 1791244437739}
+{"type": "text", "text": " ", "timestamp": 1791244437740}
+{"type": "text", "text": "61", "timestamp": 1791244437741}
+{"type": "text", "text": ".", "timestamp": 1791244437741}
+{"type": "text", "text": "594", "timestamp": 1791244437742}
+{"type": "text", "text": "916", "timestamp": 1791244437742}
+{"type": "text", "text": ";", "timestamp": 1791244437830}
+{"type": "text", "text": " site", "timestamp": 1791244437853}
+{"type": "text", "text": "-ret", "timestamp": 1791244437854}
+{"type": "text", "text": "aining", "timestamp": 1791244437855}
+{"type": "text", "text": " fraction", "timestamp": 1791244437855}
+{"type": "text", "text": " ", "timestamp": 1791244437856}
+{"type": "text", "text": "1", "timestamp": 1791244437856}
+{"type": "text", "text": ".", "timestamp": 1791244437857}
+{"type": "text", "text": "0", "timestamp": 1791244437962}
+{"type": "text", "text": ".\n", "timestamp": 1791244437962}
+{"type": "text", "text": "  ", "timestamp": 1791244437976}
+{"type": "text", "text": " GSM", "timestamp": 1791244437977}
+{"type": "text", "text": "161", "timestamp": 1791244437977}
+{"type": "text", "text": "416", "timestamp": 1791244437978}
+{"type": "text", "text": "6", "timestamp": 1791244437978}
+{"type": "text", "text": ":", "timestamp": 1791244437979}
+{"type": "text", "text": " primary", "timestamp": 1791244438070}
+{"type": "text", "text": " terminal", "timestamp": 1791244438091}
+{"type": "text", "text": " TPM", "timestamp": 1791244438092}
+{"type": "text", "text": " ", "timestamp": 1791244438093}
+{"type": "text", "text": "28", "timestamp": 1791244438093}
+{"type": "text", "text": ".", "timestamp": 1791244438093}
+{"type": "text", "text": "036", "timestamp": 1791244438094}
+{"type": "text", "text": "445", "timestamp": 1791244438094}
+{"type": "text", "text": ";", "timestamp": 1791244438221}
+{"type": "text", "text": " site", "timestamp": 1791244438222}
+{"type": "text", "text": "-ret", "timestamp": 1791244438223}
+{"type": "text", "text": "aining", "timestamp": 1791244438224}
+{"type": "text", "text": " fraction", "timestamp": 1791244438225}
+{"type": "text", "text": " ", "timestamp": 1791244438225}
+{"type": "text", "text": "1", "timestamp": 1791244438226}
+{"type": "text", "text": ".", "timestamp": 1791244438227}
+{"type": "text", "text": "0", "timestamp": 1791244438227}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244438319}
+{"type": "text", "text": "  ", "timestamp": 1791244438320}
+{"type": "text", "text": " These", "timestamp": 1791244438321}
+{"type": "text", "text": " native", "timestamp": 1791244438412}
+{"type": "text", "text": " rows", "timestamp": 1791244438436}
+{"type": "text", "text": " specify", "timestamp": 1791244438437}
+{"type": "text", "text": " HE", "timestamp": 1791244438437}
+{"type": "text", "text": "K", "timestamp": 1791244438438}
+{"type": "text", "text": "293", "timestamp": 1791244438438}
+{"type": "text", "text": " cells", "timestamp": 1791244438439}
+{"type": "text", "text": ",", "timestamp": 1791244438439}
+{"type": "text", "text": " treatment", "timestamp": 1791244438540}
+{"type": "text", "text": " “", "timestamp": 1791244438543}
+{"type": "text", "text": "none", "timestamp": 1791244438544}
+{"type": "text", "text": ".”", "timestamp": 1791244438547}
+{"type": "text", "text": " They", "timestamp": 1791244438548}
+{"type": "text", "text": " are", "timestamp": 1791244438548}
+{"type": "text", "text": " not", "timestamp": 1791244438644}
+{"type": "text", "text": " arsen", "timestamp": 1791244438668}
+{"type": "text", "text": "ite", "timestamp": 1791244438670}
+{"type": "text", "text": "-treated", "timestamp": 1791244438670}
+{"type": "text", "text": " HE", "timestamp": 1791244438671}
+{"type": "text", "text": "K", "timestamp": 1791244438672}
+{"type": "text", "text": "293", "timestamp": 1791244438672}
+{"type": "text", "text": "T", "timestamp": 1791244438673}
+{"type": "text", "text": " or", "timestamp": 1791244438755}
+{"type": "text", "text": " matched", "timestamp": 1791244438879}
+{"type": "text", "text": " capture", "timestamp": 1791244438891}
+{"type": "text", "text": " chemistry", "timestamp": 1791244438891}
+{"type": "text", "text": ".", "timestamp": 1791244438988}
+{"type": "text", "text": " They", "timestamp": 1791244439008}
+{"type": "text", "text": " measure", "timestamp": 1791244439009}
+{"type": "text", "text": " terminal", "timestamp": 1791244439009}
+{"type": "text", "text": "-site", "timestamp": 1791244439010}
+{"type": "text", "text": " usage", "timestamp": 1791244439013}
+{"type": "text", "text": ",", "timestamp": 1791244439013}
+{"type": "text", "text": " not", "timestamp": 1791244439013}
+{"type": "text", "text": " poly", "timestamp": 1791244439100}
+{"type": "text", "text": "(A", "timestamp": 1791244439100}
+{"type": "text", "text": ")-", "timestamp": 1791244439109}
+{"type": "text", "text": "tail", "timestamp": 1791244439109}
+{"type": "text", "text": " length", "timestamp": 1791244439109}
+{"type": "text", "text": " or", "timestamp": 1791244439212}
+{"type": "text", "text": " selection", "timestamp": 1791244439234}
+{"type": "text", "text": " efficiency", "timestamp": 1791244439241}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244439244}
+{"type": "text", "text": "  ", "timestamp": 1791244439245}
+{"type": "text", "text": " Source", "timestamp": 1791244439245}
+{"type": "text", "text": ":", "timestamp": 1791244439245}
+{"type": "text", "text": " poly", "timestamp": 1791244439246}
+{"type": "text", "text": "as", "timestamp": 1791244439327}
+{"type": "text", "text": "ite", "timestamp": 1791244439343}
+{"type": "text", "text": "-", "timestamp": 1791244439344}
+{"type": "text", "text": "usage", "timestamp": 1791244439344}
+{"type": "text", "text": ".tsv", "timestamp": 1791244439345}
+{"type": "text", "text": ",", "timestamp": 1791244439450}
+{"type": "text", "text": " rows", "timestamp": 1791244439553}
+{"type": "text", "text": " GSM", "timestamp": 1791244439571}
+{"type": "text", "text": "161", "timestamp": 1791244439572}
+{"type": "text", "text": "416", "timestamp": 1791244439573}
+{"type": "text", "text": "5", "timestamp": 1791244439671}
+{"type": "text", "text": "/G", "timestamp": 1791244439696}
+{"type": "text", "text": "SM", "timestamp": 1791244439697}
+{"type": "text", "text": "161", "timestamp": 1791244439697}
+{"type": "text", "text": "416", "timestamp": 1791244439698}
+{"type": "text", "text": "6", "timestamp": 1791244439698}
+{"type": "text", "text": ".\n", "timestamp": 1791244439699}
+{"type": "text", "text": "  ", "timestamp": 1791244439699}
+{"type": "text", "text": " artifact", "timestamp": 1791244439807}
+{"type": "text", "text": "_c", "timestamp": 1791244439811}
+{"type": "text", "text": "ab", "timestamp": 1791244439811}
+{"type": "text", "text": "9", "timestamp": 1791244439814}
+{"type": "text", "text": "bf", "timestamp": 1791244439815}
+{"type": "text", "text": "da", "timestamp": 1791244439816}
+{"type": "text", "text": "140", "timestamp": 1791244439817}
+{"type": "text", "text": "102", "timestamp": 1791244439818}
+{"type": "text", "text": "516", "timestamp": 1791244439891}
+{"type": "text", "text": "28", "timestamp": 1791244439919}
+{"type": "text", "text": "ff", "timestamp": 1791244439921}
+{"type": "text", "text": "7", "timestamp": 1791244439921}
+{"type": "text", "text": "b", "timestamp": 1791244439922}
+{"type": "text", "text": "8", "timestamp": 1791244439922}
+{"type": "text", "text": "d", "timestamp": 1791244439923}
+{"type": "text", "text": "893", "timestamp": 1791244439924}
+{"type": "text", "text": "fb", "timestamp": 1791244440004}
+{"type": "text", "text": "0", "timestamp": 1791244440025}
+{"type": "text", "text": "eb", "timestamp": 1791244440026}
+{"type": "text", "text": "8", "timestamp": 1791244440029}
+{"type": "text", "text": "ad", "timestamp": 1791244440030}
+{"type": "text", "text": "87", "timestamp": 1791244440030}
+{"type": "text", "text": "d", "timestamp": 1791244440030}
+{"type": "text", "text": "192", "timestamp": 1791244440031}
+{"type": "text", "text": "ee", "timestamp": 1791244440113}
+{"type": "text", "text": "525", "timestamp": 1791244440141}
+{"type": "text", "text": "239", "timestamp": 1791244440142}
+{"type": "text", "text": "ac", "timestamp": 1791244440143}
+{"type": "text", "text": "340", "timestamp": 1791244440143}
+{"type": "text", "text": "1", "timestamp": 1791244440144}
+{"type": "text", "text": "f", "timestamp": 1791244440144}
+{"type": "text", "text": "4", "timestamp": 1791244440145}
+{"type": "text", "text": "b", "timestamp": 1791244440227}
+{"type": "text", "text": "407", "timestamp": 1791244440247}
+{"type": "text", "text": "dd", "timestamp": 1791244440247}
+{"type": "text", "text": "\n\n", "timestamp": 1791244440247}
+{"type": "text", "text": "2", "timestamp": 1791244440248}
+{"type": "text", "text": ".", "timestamp": 1791244440340}
+{"type": "text", "text": " Shared", "timestamp": 1791244440364}
+{"type": "text", "text": " ends", "timestamp": 1791244440365}
+{"type": "text", "text": " do", "timestamp": 1791244440366}
+{"type": "text", "text": " not", "timestamp": 1791244440366}
+{"type": "text", "text": " guarantee", "timestamp": 1791244440368}
+{"type": "text", "text": " identical", "timestamp": 1791244440455}
+{"type": "text", "text": " coding", "timestamp": 1791244440486}
+{"type": "text", "text": " composition", "timestamp": 1791244440486}
+{"type": "text", "text": "\n\n", "timestamp": 1791244440487}
+{"type": "text", "text": "  ", "timestamp": 1791244440487}
+{"type": "text", "text": " In", "timestamp": 1791244440487}
+{"type": "text", "text": " the", "timestamp": 1791244440487}
+{"type": "text", "text": " GT", "timestamp": 1791244440487}
+{"type": "text", "text": "Ex", "timestamp": 1791244440579}
+{"type": "text", "text": " v", "timestamp": 1791244440596}
+{"type": "text", "text": "9", "timestamp": 1791244440596}
+{"type": "text", "text": " filtered", "timestamp": 1791244440597}
+{"type": "text", "text": " F", "timestamp": 1791244440597}
+{"type": "text", "text": "LA", "timestamp": 1791244440598}
+{"type": "text", "text": "IR", "timestamp": 1791244440598}
+{"type": "text", "text": " table", "timestamp": 1791244440598}
+{"type": "text", "text": ",", "timestamp": 1791244440685}
+{"type": "text", "text": " EN", "timestamp": 1791244440706}
+{"type": "text", "text": "ST", "timestamp": 1791244440706}
+{"type": "text", "text": "000", "timestamp": 1791244440706}
+{"type": "text", "text": "003", "timestamp": 1791244440707}
+{"type": "text", "text": "959", "timestamp": 1791244440707}
+{"type": "text", "text": "38", "timestamp": 1791244440707}
+{"type": "text", "text": ".", "timestamp": 1791244440707}
+{"type": "text", "text": "6", "timestamp": 1791244440799}
+{"type": "text", "text": " and", "timestamp": 1791244440821}
+{"type": "text", "text": " EN", "timestamp": 1791244440822}
+{"type": "text", "text": "ST", "timestamp": 1791244440822}
+{"type": "text", "text": "000", "timestamp": 1791244440822}
+{"type": "text", "text": "003", "timestamp": 1791244440822}
+{"type": "text", "text": "122", "timestamp": 1791244440834}
+{"type": "text", "text": "80", "timestamp": 1791244440849}
+{"type": "text", "text": ".", "timestamp": 1791244440915}
+{"type": "text", "text": "7", "timestamp": 1791244440924}
+{"type": "text", "text": " share", "timestamp": 1791244441029}
+{"type": "text", "text": " a", "timestamp": 1791244441055}
+{"type": "text", "text": " terminal", "timestamp": 1791244441056}
+{"type": "text", "text": " exon", "timestamp": 1791244441057}
+{"type": "text", "text": " but", "timestamp": 1791244441057}
+{"type": "text", "text": " have", "timestamp": 1791244441057}
+{"type": "text", "text": " different", "timestamp": 1791244441058}
+{"type": "text", "text": " first", "timestamp": 1791244441058}
+{"type": "text", "text": " ex", "timestamp": 1791244441151}
+{"type": "text", "text": "ons", "timestamp": 1791244441165}
+{"type": "text", "text": ".", "timestamp": 1791244441166}
+{"type": "text", "text": " EN", "timestamp": 1791244441167}
+{"type": "text", "text": "ST", "timestamp": 1791244441167}
+{"type": "text", "text": "000", "timestamp": 1791244441168}
+{"type": "text", "text": "004", "timestamp": 1791244441168}
+{"type": "text", "text": "945", "timestamp": 1791244441169}
+{"type": "text", "text": "11", "timestamp": 1791244441270}
+{"type": "text", "text": ".", "timestamp": 1791244441286}
+{"type": "text", "text": "5", "timestamp": 1791244441288}
+{"type": "text", "text": " shares", "timestamp": 1791244441288}
+{"type": "text", "text": " that", "timestamp": 1791244441289}
+{"type": "text", "text": " terminal", "timestamp": 1791244441290}
+{"type": "text", "text": " exon", "timestamp": 1791244441291}
+{"type": "text", "text": " while", "timestamp": 1791244441291}
+{"type": "text", "text": " om", "timestamp": 1791244441406}
+{"type": "text", "text": "itting", "timestamp": 1791244441409}
+{"type": "text", "text": " canonical", "timestamp": 1791244441410}
+{"type": "text", "text": " coding", "timestamp": 1791244441411}
+{"type": "text", "text": " segments", "timestamp": 1791244441494}
+{"type": "text", "text": " from", "timestamp": 1791244441517}
+{"type": "text", "text": " its", "timestamp": 1791244441518}
+{"type": "text", "text": " internal", "timestamp": 1791244441519}
+{"type": "text", "text": " path", "timestamp": 1791244441520}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244441520}
+{"type": "text", "text": "  ", "timestamp": 1791244441520}
+{"type": "text", "text": " This", "timestamp": 1791244441521}
+{"type": "text", "text": " supports", "timestamp": 1791244441610}
+{"type": "text", "text": " keeping", "timestamp": 1791244441618}
+{"type": "text", "text": " CDS", "timestamp": 1791244441727}
+{"type": "text", "text": " containment", "timestamp": 1791244441744}
+{"type": "text", "text": " separate", "timestamp": 1791244441746}
+{"type": "text", "text": " from", "timestamp": 1791244441855}
+{"type": "text", "text": " end", "timestamp": 1791244441875}
+{"type": "text", "text": " retention", "timestamp": 1791244441876}
+{"type": "text", "text": ".", "timestamp": 1791244441876}
+{"type": "text", "text": " It", "timestamp": 1791244441877}
+{"type": "text", "text": " does", "timestamp": 1791244441877}
+{"type": "text", "text": " not", "timestamp": 1791244441878}
+{"type": "text", "text": " establish", "timestamp": 1791244441878}
+{"type": "text", "text": " stress", "timestamp": 1791244441968}
+{"type": "text", "text": "-induced", "timestamp": 1791244441995}
+{"type": "text", "text": " iso", "timestamp": 1791244441996}
+{"type": "text", "text": "form", "timestamp": 1791244441996}
+{"type": "text", "text": " changes", "timestamp": 1791244441997}
+{"type": "text", "text": ",", "timestamp": 1791244441997}
+{"type": "text", "text": " productive", "timestamp": 1791244441998}
+{"type": "text", "text": " OR", "timestamp": 1791244441998}
+{"type": "text", "text": "Fs", "timestamp": 1791244442081}
+{"type": "text", "text": ",", "timestamp": 1791244442202}
+{"type": "text", "text": " full", "timestamp": 1791244442228}
+{"type": "text", "text": "-length", "timestamp": 1791244442229}
+{"type": "text", "text": " coverage", "timestamp": 1791244442230}
+{"type": "text", "text": " of", "timestamp": 1791244442231}
+{"type": "text", "text": " every", "timestamp": 1791244442231}
+{"type": "text", "text": " assigned", "timestamp": 1791244442232}
+{"type": "text", "text": " read", "timestamp": 1791244442233}
+{"type": "text", "text": ",", "timestamp": 1791244442326}
+{"type": "text", "text": " or", "timestamp": 1791244442352}
+{"type": "text", "text": " correspondence", "timestamp": 1791244442352}
+{"type": "text", "text": " to", "timestamp": 1791244442353}
+{"type": "text", "text": " your", "timestamp": 1791244442354}
+{"type": "text", "text": " three", "timestamp": 1791244442354}
+{"type": "text", "text": " Ref", "timestamp": 1791244442354}
+{"type": "text", "text": "Seq", "timestamp": 1791244442354}
+{"type": "text", "text": " rows", "timestamp": 1791244442461}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244442464}
+{"type": "text", "text": "  ", "timestamp": 1791244442464}
+{"type": "text", "text": " Source", "timestamp": 1791244442464}
+{"type": "text", "text": ":", "timestamp": 1791244442465}
+{"type": "text", "text": " transcript", "timestamp": 1791244442607}
+{"type": "text", "text": "-site", "timestamp": 1791244442607}
+{"type": "text", "text": "-map", "timestamp": 1791244442608}
+{"type": "text", "text": ".tsv", "timestamp": 1791244442609}
+{"type": "text", "text": ",", "timestamp": 1791244442609}
+{"type": "text", "text": " those", "timestamp": 1791244442609}
+{"type": "text", "text": " exact", "timestamp": 1791244442610}
+{"type": "text", "text": " transcript", "timestamp": 1791244442610}
+{"type": "text", "text": " IDs", "timestamp": 1791244442674}
+{"type": "text", "text": ".\n", "timestamp": 1791244442675}
+{"type": "text", "text": "  ", "timestamp": 1791244442692}
+{"type": "text", "text": " artifact", "timestamp": 1791244442693}
+{"type": "text", "text": "_", "timestamp": 1791244442694}
+{"type": "text", "text": "38", "timestamp": 1791244442694}
+{"type": "text", "text": "b", "timestamp": 1791244442694}
+{"type": "text", "text": "1", "timestamp": 1791244442695}
+{"type": "text", "text": "b", "timestamp": 1791244442798}
+{"type": "text", "text": "6", "timestamp": 1791244442820}
+{"type": "text", "text": "b", "timestamp": 1791244442822}
+{"type": "text", "text": "fb", "timestamp": 1791244442822}
+{"type": "text", "text": "321", "timestamp": 1791244442823}
+{"type": "text", "text": "407", "timestamp": 1791244442824}
+{"type": "text", "text": "28", "timestamp": 1791244442824}
+{"type": "text", "text": "b", "timestamp": 1791244442825}
+{"type": "text", "text": "409", "timestamp": 1791244442911}
+{"type": "text", "text": "c", "timestamp": 1791244442949}
+{"type": "text", "text": "513", "timestamp": 1791244442951}
+{"type": "text", "text": "a", "timestamp": 1791244442951}
+{"type": "text", "text": "3", "timestamp": 1791244442952}
+{"type": "text", "text": "b", "timestamp": 1791244442952}
+{"type": "text", "text": "576", "timestamp": 1791244442952}
+{"type": "text", "text": "33", "timestamp": 1791244442953}
+{"type": "text", "text": "eb", "timestamp": 1791244443024}
+{"type": "text", "text": "cca", "timestamp": 1791244443058}
+{"type": "text", "text": "91", "timestamp": 1791244443059}
+{"type": "text", "text": "bae", "timestamp": 1791244443060}
+{"type": "text", "text": "62", "timestamp": 1791244443060}
+{"type": "text", "text": "e", "timestamp": 1791244443060}
+{"type": "text", "text": "99", "timestamp": 1791244443061}
+{"type": "text", "text": "c", "timestamp": 1791244443061}
+{"type": "text", "text": "65", "timestamp": 1791244443140}
+{"type": "text", "text": "f", "timestamp": 1791244443179}
+{"type": "text", "text": "5", "timestamp": 1791244443181}
+{"type": "text", "text": "a", "timestamp": 1791244443182}
+{"type": "text", "text": "795", "timestamp": 1791244443183}
+{"type": "text", "text": "bec", "timestamp": 1791244443189}
+{"type": "text", "text": "1", "timestamp": 1791244443190}
+{"type": "text", "text": "c", "timestamp": 1791244443191}
+{"type": "text", "text": "7", "timestamp": 1791244443266}
+{"type": "text", "text": "c", "timestamp": 1791244443279}
+{"type": "text", "text": "\n\n", "timestamp": 1791244443373}
+{"type": "text", "text": "Con", "timestamp": 1791244443386}
+{"type": "text", "text": "sequence", "timestamp": 1791244443387}
+{"type": "text", "text": " for", "timestamp": 1791244443388}
+{"type": "text", "text": " your", "timestamp": 1791244443493}
+{"type": "text", "text": " sensitivity", "timestamp": 1791244443613}
+{"type": "text", "text": " analysis", "timestamp": 1791244443639}
+{"type": "text", "text": "\n\n", "timestamp": 1791244443640}
+{"type": "text", "text": "Given", "timestamp": 1791244443641}
+{"type": "text", "text": " your", "timestamp": 1791244443642}
+{"type": "text", "text": " stated", "timestamp": 1791244443642}
+{"type": "text", "text": " preparation", "timestamp": 1791244443643}
+{"type": "text", "text": ",", "timestamp": 1791244443644}
+{"type": "text", "text": " CDS", "timestamp": 1791244443730}
+{"type": "text", "text": "-only", "timestamp": 1791244443761}
+{"type": "text", "text": " and", "timestamp": 1791244443762}
+{"type": "text", "text": " transcript", "timestamp": 1791244443763}
+{"type": "text", "text": "-wide", "timestamp": 1791244443763}
+{"type": "text", "text": " RNA", "timestamp": 1791244443763}
+{"type": "text", "text": " counts", "timestamp": 1791244443764}
+{"type": "text", "text": " both", "timestamp": 1791244443764}
+{"type": "text", "text": " come", "timestamp": 1791244443854}
+{"type": "text", "text": " from", "timestamp": 1791244443884}
+{"type": "text", "text": " the", "timestamp": 1791244443885}
+{"type": "text", "text": " same", "timestamp": 1791244443890}
+{"type": "text", "text": " poly", "timestamp": 1791244443890}
+{"type": "text", "text": "(A", "timestamp": 1791244443891}
+{"type": "text", "text": ")-", "timestamp": 1791244443891}
+{"type": "text", "text": "selected", "timestamp": 1791244443891}
+{"type": "text", "text": " material", "timestamp": 1791244443969}
+{"type": "text", "text": ".", "timestamp": 1791244443996}
+{"type": "text", "text": " Agreement", "timestamp": 1791244443996}
+{"type": "text", "text": " can", "timestamp": 1791244443997}
+{"type": "text", "text": " establish", "timestamp": 1791244443997}
+{"type": "text", "text": " robustness", "timestamp": 1791244443997}
+{"type": "text", "text": " to", "timestamp": 1791244443998}
+{"type": "text", "text": " the", "timestamp": 1791244443998}
+{"type": "text", "text": " counted", "timestamp": 1791244444120}
+{"type": "text", "text": " region", "timestamp": 1791244444235}
+{"type": "text", "text": ",", "timestamp": 1791244444271}
+{"type": "text", "text": " but", "timestamp": 1791244444272}
+{"type": "text", "text": " cannot", "timestamp": 1791244444273}
+{"type": "text", "text": " by", "timestamp": 1791244444274}
+{"type": "text", "text": " itself", "timestamp": 1791244444275}
+{"type": "text", "text": " exclude", "timestamp": 1791244444276}
+{"type": "text", "text": " selection", "timestamp": 1791244444276}
+{"type": "text", "text": " bias", "timestamp": 1791244444332}
+{"type": "text", "text": " shared", "timestamp": 1791244444470}
+{"type": "text", "text": " by", "timestamp": 1791244444474}
+{"type": "text", "text": " both", "timestamp": 1791244444475}
+{"type": "text", "text": " denomin", "timestamp": 1791244444481}
+{"type": "text", "text": "ators", "timestamp": 1791244444482}
+{"type": "text", "text": ".", "timestamp": 1791244444482}
+{"type": "text", "text": " Dis", "timestamp": 1791244444483}
+{"type": "text", "text": "agreement", "timestamp": 1791244444483}
+{"type": "text", "text": " establishes", "timestamp": 1791244444682}
+{"type": "text", "text": " denominator", "timestamp": 1791244444693}
+{"type": "text", "text": " dependence", "timestamp": 1791244444694}
+{"type": "text", "text": "—not", "timestamp": 1791244444802}
+{"type": "text", "text": " APA", "timestamp": 1791244444836}
+{"type": "text", "text": ",", "timestamp": 1791244444837}
+{"type": "text", "text": " tail", "timestamp": 1791244444838}
+{"type": "text", "text": " shortening", "timestamp": 1791244444839}
+{"type": "text", "text": ",", "timestamp": 1791244444840}
+{"type": "text", "text": " degradation", "timestamp": 1791244444840}
+{"type": "text", "text": ",", "timestamp": 1791244444841}
+{"type": "text", "text": " or", "timestamp": 1791244444926}
+{"type": "text", "text": " iso", "timestamp": 1791244444951}
+{"type": "text", "text": "form", "timestamp": 1791244444952}
+{"type": "text", "text": " switching", "timestamp": 1791244444952}
+{"type": "text", "text": " as", "timestamp": 1791244444953}
+{"type": "text", "text": " its", "timestamp": 1791244444953}
+{"type": "text", "text": " cause", "timestamp": 1791244444954}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244444954}
+{"type": "text", "text": "Keep", "timestamp": 1791244445047}
+{"type": "text", "text": " the", "timestamp": 1791244445073}
+{"type": "text", "text": " repeated", "timestamp": 1791244445074}
+{"type": "text", "text": " CDS", "timestamp": 1791244445075}
+{"type": "text", "text": " R", "timestamp": 1791244445076}
+{"type": "text", "text": "PF", "timestamp": 1791244445076}
+{"type": "text", "text": " vector", "timestamp": 1791244445077}
+{"type": "text", "text": " as", "timestamp": 1791244445168}
+{"type": "text", "text": " shared", "timestamp": 1791244445176}
+{"type": "text", "text": " evidence", "timestamp": 1791244445288}
+{"type": "text", "text": ",", "timestamp": 1791244445316}
+{"type": "text", "text": " not", "timestamp": 1791244445316}
+{"type": "text", "text": " independent", "timestamp": 1791244445318}
+{"type": "text", "text": " iso", "timestamp": 1791244445318}
+{"type": "text", "text": "form", "timestamp": 1791244445318}
+{"type": "text", "text": " observations", "timestamp": 1791244445318}
+{"type": "text", "text": ".", "timestamp": 1791244445318}
+{"type": "text", "text": " G", "timestamp": 1791244445407}
+{"type": "text", "text": "SE", "timestamp": 1791244445419}
+{"type": "text", "text": "657", "timestamp": 1791244445420}
+{"type": "text", "text": "78", "timestamp": 1791244445525}
+{"type": "text", "text": " can", "timestamp": 1791244445546}
+{"type": "text", "text": " test", "timestamp": 1791244445546}
+{"type": "text", "text": " a", "timestamp": 1791244445546}
+{"type": "text", "text": " separate", "timestamp": 1791244445546}
+{"type": "text", "text": " stress", "timestamp": 1791244445546}
+{"type": "text", "text": " response", "timestamp": 1791244445647}
+{"type": "text", "text": " but", "timestamp": 1791244445665}
+{"type": "text", "text": " cannot", "timestamp": 1791244445666}
+{"type": "text", "text": " validate", "timestamp": 1791244445666}
+{"type": "text", "text": " the", "timestamp": 1791244445759}
+{"type": "text", "text": " acute", "timestamp": 1791244445783}
+{"type": "text", "text": "-", "timestamp": 1791244445784}
+{"type": "text", "text": "ars", "timestamp": 1791244445785}
+{"type": "text", "text": "en", "timestamp": 1791244445786}
+{"type": "text", "text": "ite", "timestamp": 1791244445786}
+{"type": "text", "text": " denominator", "timestamp": 1791244445786}
+{"type": "text", "text": ".\n\n", "timestamp": 1791244445787}
+{"type": "text", "text": "Both", "timestamp": 1791244445871}
+{"type": "text", "text": " reused", "timestamp": 1791244445885}
+{"type": "text", "text": " output", "timestamp": 1791244445885}
+{"type": "text", "text": " hashes", "timestamp": 1791244446047}
+{"type": "text", "text": " matched", "timestamp": 1791244446049}
+{"type": "text", "text": " their", "timestamp": 1791244446058}
+{"type": "text", "text": " registrations", "timestamp": 1791244446059}
+{"type": "text", "text": ".", "timestamp": 1791244446109}
+{"type": "text", "text": " The", "timestamp": 1791244446130}
+{"type": "text", "text": " existing", "timestamp": 1791244446131}
+{"type": "text", "text": " hand", "timestamp": 1791244446132}
+{"type": "text", "text": "off", "timestamp": 1791244446236}
+{"type": "text", "text": ",", "timestamp": 1791244446237}
+{"type": "text", "text": " post", "timestamp": 1791244446238}
+{"type": "text", "text": "_", "timestamp": 1791244446253}
+{"type": "text", "text": "13", "timestamp": 1791244446254}
+{"type": "text", "text": "a", "timestamp": 1791244446255}
+{"type": "text", "text": "1", "timestamp": 1791244446255}
+{"type": "text", "text": "b", "timestamp": 1791244446256}
+{"type": "text", "text": "621", "timestamp": 1791244446350}
+{"type": "text", "text": "cd", "timestamp": 1791244446373}
+{"type": "text", "text": "7", "timestamp": 1791244446374}
+{"type": "text", "text": "e", "timestamp": 1791244446374}
+{"type": "text", "text": "4", "timestamp": 1791244446375}
+{"type": "text", "text": "c", "timestamp": 1791244446375}
+{"type": "text", "text": "348", "timestamp": 1791244446375}
+{"type": "text", "text": "4", "timestamp": 1791244446375}
+{"type": "text", "text": "ee", "timestamp": 1791244446472}
+{"type": "text", "text": "34", "timestamp": 1791244446492}
+{"type": "text", "text": "e", "timestamp": 1791244446493}
+{"type": "text", "text": "533", "timestamp": 1791244446494}
+{"type": "text", "text": "11", "timestamp": 1791244446494}
+{"type": "text", "text": "d", "timestamp": 1791244446495}
+{"type": "text", "text": "ca", "timestamp": 1791244446495}
+{"type": "text", "text": "6", "timestamp": 1791244446496}
+{"type": "text", "text": ",", "timestamp": 1791244446586}
+{"type": "text", "text": " remains", "timestamp": 1791244446614}
+{"type": "text", "text": " applicable", "timestamp": 1791244446620}
+{"type": "text", "text": ";", "timestamp": 1791244446626}
+{"type": "text", "text": " LAB", "timestamp": 1791244446632}
+{"type": "text", "text": "BOOK", "timestamp": 1791244446636}
+{"type": "text", "text": " is", "timestamp": 1791244446703}
+{"type": "text", "text": " updated", "timestamp": 1791244446721}
+{"type": "text", "text": " and", "timestamp": 1791244446722}
+{"type": "text", "text": " synced", "timestamp": 1791244446723}
+{"type": "text", "text": ".", "timestamp": 1791244446723}
+{"type": "text", "text": " No", "timestamp": 1791244446724}
+{"type": "text", "text": " new", "timestamp": 1791244446838}
+{"type": "text", "text": " experiment", "timestamp": 1791244446845}
+{"type": "text", "text": " or", "timestamp": 1791244446865}
+{"type": "text", "text": " screen", "timestamp": 1791244446920}
+{"type": "text", "text": " was", "timestamp": 1791244446957}
+{"type": "text", "text": " run", "timestamp": 1791244446981}
+{"type": "text", "text": ".", "timestamp": 1791244446983}
+{"type": "result", "session_id": "20261005_142928_db43d1", "exit_code": 0, "text": "No verified result in my end/isoform work establishes a PMP22-specific defect in the acute-arsenite RNA denominator. That remains unmeasured—not demonstrated unreliable, but not validated safe either.\n\nExact available evidence\n\n1. Basal HEK293 cleavage measurements\n\n   PolyASite2/GSE66092 PAPERCLIP:\n   GSM1614165: primary terminal TPM 61.594916; site-retaining fraction 1.0.\n   GSM1614166: primary terminal TPM 28.036445; site-retaining fraction 1.0.\n\n   These native rows specify HEK293 cells, treatment “none.” They are not arsenite-treated HEK293T or matched capture chemistry. They measure terminal-site usage, not poly(A)-tail length or selection efficiency.\n\n   Source: polyasite-usage.tsv, rows GSM1614165/GSM1614166.\n   artifact_cab9bfda14010251628ff7b8d893fb0eb8ad87d192ee525239ac3401f4b407dd\n\n2. Shared ends do not guarantee identical coding composition\n\n   In the GTEx v9 filtered FLAIR table, ENST00000395938.6 and ENST00000312280.7 share a terminal exon but have different first exons. ENST00000494511.5 shares that terminal exon while omitting canonical coding segments from its internal path.\n\n   This supports keeping CDS containment separate from end retention. It does not establish stress-induced isoform changes, productive ORFs, full-length coverage of every assigned read, or correspondence to your three RefSeq rows.\n\n   Source: transcript-site-map.tsv, those exact transcript IDs.\n   artifact_38b1b6bfb32140728b409c513a3b57633ebcca91bae62e99c65f5a795bec1c7c\n\nConsequence for your sensitivity analysis\n\nGiven your stated preparation, CDS-only and transcript-wide RNA counts both come from the same poly(A)-selected material. Agreement can establish robustness to the counted region, but cannot by itself exclude selection bias shared by both denominators. Disagreement establishes denominator dependence—not APA, tail shortening, degradation, or isoform switching as its cause.\n\nKeep the repeated CDS RPF vector as shared evidence, not independent isoform observations. GSE65778 can test a separate stress response but cannot validate the acute-arsenite denominator.\n\nBoth reused output hashes matched their registrations. The existing handoff, post_13a1b621cd7e4c3484ee34e53311dca6, remains applicable; LABBOOK is updated and synced. No new experiment or screen was run.", "tokens": {"input": 26507, "output": 4133, "total": 831664, "cache_read": 801024, "cache_write": 0}, "duration_ms": 130704, "timestamp": 1791244447294}

@@ -1,0 +1,46 @@
+"""Inspect new GTF/count schema and relevant primary methods, preserving native rows."""
+
+import csv
+import gzip
+from pathlib import Path
+import re
+from xml.etree import ElementTree as ET
+
+q = Path(__file__).resolve().parents[1]
+s = q / "inputs/sources"
+o = q / "outputs"
+selected = []
+ids = set()
+n = 0
+with gzip.open(s / "gtex-flair-gtf.source", "rt") as f:
+    for line in f:
+        if line.startswith("#"):
+            continue
+        n += 1
+        c = line.rstrip().split("\t")
+        if "ENSG00000109099" in c[-1]:
+            selected.append(line)
+            ids.add(dict(re.findall(r'(\w+) "([^"]+)"', c[-1]))["transcript_id"])
+(o / "flair-PMP22-native.gtf").write_text("".join(selected))
+print("GTF_ROWS", n, "TARGETROWS", len(selected), "TRANSCRIPTS", len(ids))
+print("".join(selected))
+with gzip.open(s / "gtex-flair-counts.source", "rt") as f:
+    reader = csv.reader(f, delimiter="\t")
+    header = next(reader)
+    rows = []
+    for row in reader:
+        if row[0] in ids:
+            rows.append(row)
+with (o / "flair-PMP22-native-counts.tsv").open("w") as f:
+    w = csv.writer(f, delimiter="\t")
+    w.writerow(header)
+    w.writerows(rows)
+print("COUNTHEADER", header, "TARGETROWS", len(rows))
+for r in rows:
+    print(r[0], sum(map(float, r[1:])))
+root = ET.parse(s / "paperclip-bioc.source").getroot()
+text = "\n\n".join(p.findtext("text", "") for p in root.findall(".//passage"))
+(s / "paperclip-bioc.txt").write_text(text)
+for p in text.split("\n\n"):
+    if any(k in p for k in ["CFIm68", "replicate", "siRNA", "GSE", "internal priming"]):
+        print("PAPERCLIP", p)

@@ -1,0 +1,162 @@
+{
+  "GENCORD": {
+    "raw_rows": 9461,
+    "unique_variants": 8593,
+    "duplicates_identical_except_rsid": true,
+    "permutation": {
+      "molecular_trait_object_id": "ENSG00000109099",
+      "molecular_trait_id": "ENSG00000109099",
+      "n_traits": "1",
+      "n_variants": "8593",
+      "variant": "chr17_14720676_G_A",
+      "chromosome": "17",
+      "position": "14720676",
+      "pvalue": "8.37338e-05",
+      "beta": "-0.802839",
+      "p_perm": "0.154845",
+      "p_beta": "0.150664"
+    },
+    "primary_prediction": {
+      "molecular_trait_id": "ENSG00000109099",
+      "chromosome": "17",
+      "position": "15314994",
+      "ref": "A",
+      "alt": "G",
+      "variant": "chr17_15314994_A_G",
+      "ma_samples": "94",
+      "maf": "0.293011",
+      "pvalue": "0.379585",
+      "beta": "0.0800765",
+      "se": "0.0908986",
+      "type": "SNP",
+      "ac": "263",
+      "an": "372",
+      "r2": "0.99976",
+      "molecular_trait_object_id": "ENSG00000109099",
+      "gene_id": "ENSG00000109099",
+      "median_tpm": "11.053",
+      "rsid": "rs2531950",
+      "rsid_aliases": [
+        "rs2531950"
+      ],
+      "alias_rows": 1,
+      "ci95_normal_low": -0.098084756,
+      "ci95_normal_high": 0.258237756
+    },
+    "replication_success": false,
+    "verdict": "Failed significance rule; same direction, not replicated, not effect-size equivalence or demonstrated heterogeneity",
+    "cohort": "Independent newborn cord-derived fibroblasts, source sample_size186; GTEx adult fibroblast transfer limit",
+    "catalogue_model": "Source uniform pipeline; normalized RNA, 6 genotype PCs + 6 expression PCs in official methods; no refitting"
+  },
+  "TwinsUK": {
+    "exact_junction_verdict": "Untestable in available public export; absent target at queried variant is not a tested negative",
+    "export_target_rows": 0,
+    "permutation_other_junction": [
+      {
+        "molecular_trait_object_id": "clu_31787_-",
+        "molecular_trait_id": "17:15260757:15265154:clu_31787_-",
+        "n_traits": "6",
+        "n_variants": "7943",
+        "variant": "chr17_14497953_AG_A",
+        "chromosome": "17",
+        "position": "14497953",
+        "pvalue": "9.72025e-05",
+        "beta": "-1.22475",
+        "p_perm": "0.609391",
+        "p_beta": "0.604277",
+        "line": 32733,
+        "source": "QTD000538.permuted.tsv.gz"
+      }
+    ],
+    "exact_variant_range": {
+      "dataset": "QTD000538",
+      "position1": 15263668,
+      "chromosome": "17",
+      "index_format": 0,
+      "seq_col": 2,
+      "beg_col": 3,
+      "end_col": 3,
+      "header": [
+        "molecular_trait_id",
+        "chromosome",
+        "position",
+        "ref",
+        "alt",
+        "variant",
+        "ma_samples",
+        "maf",
+        "pvalue",
+        "beta",
+        "se",
+        "type",
+        "ac",
+        "an",
+        "r2",
+        "molecular_trait_object_id",
+        "gene_id",
+        "median_tpm",
+        "rsid"
+      ],
+      "chunks": [
+        [
+          5947274114673,
+          5947274130559
+        ]
+      ],
+      "records": [
+        {
+          "molecular_trait_id": "17:15977913:15978044:clu_31797_-",
+          "chromosome": "17",
+          "position": "15263668",
+          "ref": "T",
+          "alt": "C",
+          "variant": "chr17_15263668_T_C",
+          "ma_samples": "294",
+          "maf": "0.490814",
+          "pvalue": "0.606767",
+          "beta": "0.0414396",
+          "se": "0.0804436",
+          "type": "SNP",
+          "ac": "374",
+          "an": "762",
+          "r2": "0.88788",
+          "molecular_trait_object_id": "clu_31797_-",
+          "gene_id": "ENSG00000214941",
+          "median_tpm": "35.547",
+          "rsid": "rs231016",
+          "range_chunk": 0,
+          "chunk_line": 61
+        },
+        {
+          "molecular_trait_id": "17:16000245:16001915:clu_14484_+",
+          "chromosome": "17",
+          "position": "15263668",
+          "ref": "T",
+          "alt": "C",
+          "variant": "chr17_15263668_T_C",
+          "ma_samples": "294",
+          "maf": "0.490814",
+          "pvalue": "0.020373",
+          "beta": "-0.186987",
+          "se": "0.0802673",
+          "type": "SNP",
+          "ac": "374",
+          "an": "762",
+          "r2": "0.88788",
+          "molecular_trait_object_id": "clu_14484_+",
+          "gene_id": "ENSG00000011295",
+          "median_tpm": "32.471",
+          "rsid": "rs231016",
+          "range_chunk": 0,
+          "chunk_line": 62
+        }
+      ],
+      "raw_matching_rows": 2,
+      "unique_rows": 2,
+      "note": "All source rows at the requested variant position, not all gene or chromosome variants. Each HTTP range retained."
+    },
+    "selection_and_relatedness": "Primary Catalogue paper explicitly uses unrelated subset of TwinsUK; do not count all original twins or tissues as independent samples",
+    "cohort_sample_size_from_r7_metadata": 381,
+    "not_substituted": "15260757 acceptor differs by4 bases from15260761; cluster labels do not certify matching features"
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "lock": "outputs/specific/prediction-r002.json",
+  "primary_source": "GSE76027",
+  "array_rows": 21225,
+  "mapped_symbols": 21024,
+  "unmapped_probes": 201,
+  "units_evidence": "inputs/specific/GSM1972986.soft #VALUE explicitly says RMA normalized log2",
+  "marker_set": [
+    "Mpz",
+    "Mbp",
+    "Mag",
+    "Prx",
+    "Plp1",
+    "Cnp",
+    "Mal"
+  ],
+  "array_PCA_variance": [
+    0.5229799586417503,
+    0.24884224191092802,
+    0.14025861669849923,
+    0.057759980146544515,
+    0.03015920260227781,
+    6.60623528518158e-30
+  ],
+  "primary_results": [
+    {
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": -0.6025387200000001,
+      "delta_myelin": -2.177313864714286,
+      "delta_candidate": 0.19820610000000016,
+      "baseline_prediction": -2.759851569782613,
+      "augmented_prediction": -3.00558345152687,
+      "baseline_squared_error": 4.653998731837178,
+      "augmented_squared_error": 5.774623981719046,
+      "SSE_ratio": 1.2407876139320515,
+      "squared_error_difference": 1.1206252498818676,
+      "bootstrap98.333_lo": 0.8543586376654949,
+      "bootstrap98.333_hi": 1.4090302586257257,
+      "validation_conditional_slope": 0.8375420496870892,
+      "validation_partial_r": 0.8254170246254143,
+      "status_under_lock": "contradicted"
+    },
+    {
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": -0.6025387200000001,
+      "delta_myelin": -2.177313864714286,
+      "delta_candidate": 0.13367124200000013,
+      "baseline_prediction": -2.759851569782613,
+      "augmented_prediction": -2.5914005285454738,
+      "baseline_squared_error": 4.653998731837178,
+      "augmented_squared_error": 3.9555712934907725,
+      "SSE_ratio": 0.8499296027803817,
+      "squared_error_difference": -0.6984274383464055,
+      "bootstrap98.333_lo": -1.25089030038681,
+      "bootstrap98.333_hi": -0.18146058934218942,
+      "validation_conditional_slope": 0.5104767449044691,
+      "validation_partial_r": 0.6817651490274734,
+      "status_under_lock": "contradicted"
+    },
+    {
+      "candidate": "Hck",
+      "delta_Pmp22": -0.6025387200000001,
+      "delta_myelin": -2.177313864714286,
+      "delta_candidate": 0.5100209583333335,
+      "baseline_prediction": -2.759851569782613,
+      "augmented_prediction": -2.739692690680683,
+      "baseline_squared_error": 4.653998731837178,
+      "augmented_squared_error": 4.567427094396209,
+      "SSE_ratio": 0.9813984398300869,
+      "squared_error_difference": -0.08657163744096863,
+      "bootstrap98.333_lo": -2.2549745342676704,
+      "bootstrap98.333_hi": 2.2933498861128876,
+      "validation_conditional_slope": 0.22119154329074306,
+      "validation_partial_r": 0.7323942070220347,
+      "status_under_lock": "contradicted"
+    }
+  ],
+  "secondary_results": [
+    {
+      "context": "Hdac3_cnpCre_P6",
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": -0.4369434056514425,
+      "delta_myelin": -0.26290591519895873,
+      "delta_candidate": 0.14047473720958337,
+      "baseline_prediction": -0.33324607651924076,
+      "augmented_prediction": -0.44080792276334607,
+      "SSE_ratio": 0.0013888499515074843,
+      "n_KO": 1,
+      "n_control": 1
+    },
+    {
+      "context": "Hdac3_cnpCre_P6",
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": -0.4369434056514425,
+      "delta_myelin": -0.26290591519895873,
+      "delta_candidate": 0.05011576197597556,
+      "baseline_prediction": -0.33324607651924076,
+      "augmented_prediction": -0.33604922944542504,
+      "SSE_ratio": 0.9466666028242223,
+      "n_KO": 1,
+      "n_control": 1
+    },
+    {
+      "context": "Hdac3_cnpCre_P6",
+      "candidate": "Hck",
+      "delta_Pmp22": -0.4369434056514425,
+      "delta_myelin": -0.26290591519895873,
+      "delta_candidate": -0.15157383139167235,
+      "baseline_prediction": -0.33324607651924076,
+      "augmented_prediction": -0.010631226371450947,
+      "SSE_ratio": 16.901308886420974,
+      "n_KO": 1,
+      "n_control": 1
+    },
+    {
+      "context": "Hdac3_dhhCre_P6",
+      "candidate": "Ppp6r1",
+      "delta_Pmp22": -0.08916567221807625,
+      "delta_myelin": 2.229124705111212,
+      "delta_candidate": 0.05147905410946141,
+      "baseline_prediction": 2.8255243381962645,
+      "augmented_prediction": 2.9070752439900938,
+      "SSE_ratio": 1.0567413845058207,
+      "n_KO": 1,
+      "n_control": 1
+    },
+    {
+      "context": "Hdac3_dhhCre_P6",
+      "candidate": "Gtf2f1",
+      "delta_Pmp22": -0.08916567221807625,
+      "delta_myelin": 2.229124705111212,
+      "delta_candidate": 0.22764902753588867,
+      "baseline_prediction": 2.8255243381962645,
+      "augmented_prediction": 2.40477414942599,
+      "SSE_ratio": 0.7321283000808331,
+      "n_KO": 1,
+      "n_control": 1
+    },
+    {
+      "context": "Hdac3_dhhCre_P6",
+      "candidate": "Hck",
+      "delta_Pmp22": -0.08916567221807625,
+      "delta_myelin": 2.229124705111212,
+      "delta_candidate": 0.2955428971148928,
+      "baseline_prediction": 2.8255243381962645,
+      "augmented_prediction": 1.5766319294368114,
+      "SSE_ratio": 0.32663274443352835,
+      "n_KO": 1,
+      "n_control": 1
+    }
+  ],
+  "hdac3_qc": [
+    {
+      "sample": "cnp-ctrl",
+      "source_rows": 24488,
+      "unique_unambiguous_rows": 23737,
+      "duplicate_symbol_rows_excluded": 751,
+      "asset": "asset_b40424c4092825e14552ed8109b83928",
+      "panel_status": [
+        {
+          "gene_short_name": "Mpz",
+          "FPKM_status": "HIDATA"
+        },
+        {
+          "gene_short_name": "Pmp22",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Cnp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Gtf2f1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mbp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mal",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Hck",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Ppp6r1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Prx",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mag",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Plp1",
+          "FPKM_status": "OK"
+        }
+      ]
+    },
+    {
+      "sample": "cnp-ko",
+      "source_rows": 24488,
+      "unique_unambiguous_rows": 23737,
+      "duplicate_symbol_rows_excluded": 751,
+      "asset": "asset_76eee099494614a6ce6580eb84ec1063",
+      "panel_status": [
+        {
+          "gene_short_name": "Mpz",
+          "FPKM_status": "HIDATA"
+        },
+        {
+          "gene_short_name": "Pmp22",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Cnp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Gtf2f1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mbp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mal",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Hck",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Ppp6r1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Prx",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mag",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Plp1",
+          "FPKM_status": "OK"
+        }
+      ]
+    },
+    {
+      "sample": "dhh-ctrl",
+      "source_rows": 24488,
+      "unique_unambiguous_rows": 23737,
+      "duplicate_symbol_rows_excluded": 751,
+      "asset": "asset_9ba1720163591586269d887cbc43a703",
+      "panel_status": [
+        {
+          "gene_short_name": "Mpz",
+          "FPKM_status": "HIDATA"
+        },
+        {
+          "gene_short_name": "Pmp22",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Cnp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Gtf2f1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mbp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mal",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Hck",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Ppp6r1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Prx",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mag",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Plp1",
+          "FPKM_status": "OK"
+        }
+      ]
+    },
+    {
+      "sample": "dhh-ko",
+      "source_rows": 24488,
+      "unique_unambiguous_rows": 23737,
+      "duplicate_symbol_rows_excluded": 751,
+      "asset": "asset_b6259462cbe161fd612ce2e478a49a60",
+      "panel_status": [
+        {
+          "gene_short_name": "Mpz",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Pmp22",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Cnp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Gtf2f1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mbp",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mal",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Hck",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Ppp6r1",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Prx",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Mag",
+          "FPKM_status": "OK"
+        },
+        {
+          "gene_short_name": "Plp1",
+          "FPKM_status": "OK"
+        }
+      ]
+    }
+  ],
+  "inference_limit": "Zeb2 n3 mice/group, small-n discrete bootstrap729 combinations. HDAC3 n1/library per condition, no replicate uncertainty. Cross-species, assay and state transfer; these do not directly perturb selected candidates. Eed r001 remains untestable."
+}

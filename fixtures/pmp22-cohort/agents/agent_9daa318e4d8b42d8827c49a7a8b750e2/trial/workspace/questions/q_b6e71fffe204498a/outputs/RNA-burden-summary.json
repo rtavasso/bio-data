@@ -1,0 +1,30 @@
+{
+  "posthoc_trigger": "Hba-a1 negative broad residual; atlas may omit blood-derived RNA",
+  "input_blobs": [
+    "a87edeaf32110f77c70d0e07254ee771973718b6167fb18537b1215695586583",
+    "dfb11dd3c12e8354f0bdde8f230ff2e117f0a623b94d89da152eed4e40e26473",
+    "8e5695f911223deeafe42b96a1316a4cbf83049ac965805deff9f159eb7acdc4",
+    "72e88c6e0a6e9198e4c81baa01cec75a0c03ef06332060e9d1e83efffcfe14ad",
+    "bd3b267a01517d3030f9f025a7d64d4a7f7eeaebdeac6aebd22692399fd1ead5",
+    "c45d82d4dde6e7800bb107696f7f2a939ccddb9a1742a5f74c2c99e2eba6fb62",
+    "bb366b5cf400286cf8c22854c064cbdaf5a06085a85f96aa0e8d6c75498f7d9a",
+    "ac2cdc30317647b371729891f74406b68e8a20e23a4af0649566654c800ef2ce"
+  ],
+  "relative_TPM_percent_groupmeans": {
+    "antioxidant4": {
+      "KO": 0.010941495299912576,
+      "WT": 0.002355001311936269
+    },
+    "erythroid": {
+      "KO": 0.0024482488645556624,
+      "WT": 0.0028862513857513903
+    },
+    "myelin": {
+      "KO": 0.7286114405982812,
+      "WT": 2.023459348915395
+    }
+  },
+  "maximum_uniform_inflation_if_all_WT_erythroid_RNA_removed_log2": 4.1640406536187534e-05,
+  "caution": "Relative transcript composition; erythroid marker output may change within cells. Upper uniform shift assumes other transcripts fixed and all specified WT RNA disappears; no cell fractions.",
+  "answer": "Compare computed scale with +2.369 antioxidant score and reference-stable logratio +2.480; cannot identify source cells"
+}

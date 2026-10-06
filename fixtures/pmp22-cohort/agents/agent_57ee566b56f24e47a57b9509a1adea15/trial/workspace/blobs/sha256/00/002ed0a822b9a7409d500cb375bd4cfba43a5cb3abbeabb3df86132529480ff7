@@ -1,0 +1,25 @@
+"""Metadata-only inventory for the newly resolved intervention sources."""
+import json,os,subprocess
+from pathlib import Path
+q=Path(os.environ['BIO_WORKSPACE'])/'questions/q_6a3a0a07fa5d4da1'
+for dataset in ['GSE104324','GSE163132']:
+    result=json.loads((q/f'outputs/resolve-{dataset}.json').read_text()); bundle=result['bundle']
+    for action in ['show','list']:
+        args=['./bin/bio','data',action]+([bundle] if action=='show' else ['--scope',bundle,'--limit','100'])
+        r=subprocess.run(args,capture_output=True,text=True,check=True)
+        (q/f'outputs/{action}-{dataset}.json').write_text(r.stdout)
+        x=json.loads(r.stdout)
+        if action=='list': print(dataset,'ASSETS',x)
+        else:
+            fields={}
+            for p in x['profiles']:
+                f=p.get('facts',{})
+                if f.get('source_record'): print(dataset,'SOURCE',f['source_record'])
+                for item in f.get('related_source_context',[]):
+                    a=item.get('body',{}).get('fields',{})
+                    if a:
+                        key=(a.get('Sample_geo_accession') or a.get('Series_geo_accession') or [item.get('native_id','')])[0]
+                        fields[key]=a
+            (q/f'outputs/fields-{dataset}.json').write_text(json.dumps(fields,indent=2))
+            for key,a in fields.items():
+                print(key,{k:v for k,v in a.items() if k in ['Sample_title','Sample_characteristics_ch1','Sample_data_processing','Sample_treatment_protocol_ch1','Series_overall_design','Series_title','Series_summary']})

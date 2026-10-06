@@ -1,0 +1,314 @@
+{
+  "PAPERCLIP_contrasts_retrospective": [
+    {
+      "context": "HeLa cells",
+      "condition_from_source_title": "si-CFIm68",
+      "control_ids": [
+        "GSM1614171",
+        "GSM1614172"
+      ],
+      "treated_ids": [
+        "GSM1614173",
+        "GSM1614174"
+      ],
+      "n_control_independent_experiments_source": 2,
+      "n_treated_independent_experiments_source": 2,
+      "PMP22_retaining_control": [
+        1.0,
+        1.0
+      ],
+      "PMP22_retaining_treated": [
+        0.9987351039292354,
+        0.9954220299595793
+      ],
+      "PMP22_mean_retaining_delta_percentage_points": -0.29214330555926704,
+      "SERPINE1_distal_control": [
+        0.3785357724881712,
+        0.6374522564943158
+      ],
+      "SERPINE1_distal_treated": [
+        0.08072174733251863,
+        0.2414602552164814
+      ],
+      "SERPINE1_mean_distal_delta_percentage_points": -34.69030132167434,
+      "native_treatment_discrepancies": [
+        {
+          "gsm": "GSM1614174",
+          "title": "PAPERCLIP for si-CFIm68, replicate 2",
+          "treatment": "si-CFIm69"
+        }
+      ],
+      "strict_native_label_sensitivity_n": 1,
+      "strict_native_label_PMP22_delta_percentage_points": -0.12648960707646317
+    },
+    {
+      "context": "HeLa cells",
+      "condition_from_source_title": "si-CstF64/64tau",
+      "control_ids": [
+        "GSM1614171",
+        "GSM1614172"
+      ],
+      "treated_ids": [
+        "GSM1614175",
+        "GSM1614176"
+      ],
+      "n_control_independent_experiments_source": 2,
+      "n_treated_independent_experiments_source": 2,
+      "PMP22_retaining_control": [
+        1.0,
+        1.0
+      ],
+      "PMP22_retaining_treated": [
+        0.9985174775401724,
+        0.9982305332766748
+      ],
+      "PMP22_mean_retaining_delta_percentage_points": -0.16259945915764185,
+      "SERPINE1_distal_control": [
+        0.3785357724881712,
+        0.6374522564943158
+      ],
+      "SERPINE1_distal_treated": [
+        0.7289944935028314,
+        0.8649681561774434
+      ],
+      "SERPINE1_mean_distal_delta_percentage_points": 28.89873103488939,
+      "native_treatment_discrepancies": [],
+      "strict_native_label_sensitivity_n": 2,
+      "strict_native_label_PMP22_delta_percentage_points": -0.16259945915764185
+    },
+    {
+      "context": "LN229 cells",
+      "condition_from_source_title": "si-CFIm68",
+      "control_ids": [
+        "GSM1857615",
+        "GSM1857616"
+      ],
+      "treated_ids": [
+        "GSM1857617",
+        "GSM1857618"
+      ],
+      "n_control_independent_experiments_source": 2,
+      "n_treated_independent_experiments_source": 2,
+      "PMP22_retaining_control": [
+        1.0,
+        1.0
+      ],
+      "PMP22_retaining_treated": [
+        0.9969293752146463,
+        1.0
+      ],
+      "PMP22_mean_retaining_delta_percentage_points": -0.1535312392676902,
+      "SERPINE1_distal_control": [
+        0.7277676941502292,
+        0.7005347575646926
+      ],
+      "SERPINE1_distal_treated": [
+        0.3545232273413106,
+        0.354922283150618
+      ],
+      "SERPINE1_mean_distal_delta_percentage_points": -35.94284706114966,
+      "native_treatment_discrepancies": [],
+      "strict_native_label_sensitivity_n": 2,
+      "strict_native_label_PMP22_delta_percentage_points": -0.1535312392676902
+    },
+    {
+      "context": "LN229 cells",
+      "condition_from_source_title": "si-CstF64/64tau",
+      "control_ids": [
+        "GSM1857615",
+        "GSM1857616"
+      ],
+      "treated_ids": [
+        "GSM1857619",
+        "GSM1857620"
+      ],
+      "n_control_independent_experiments_source": 2,
+      "n_treated_independent_experiments_source": 2,
+      "PMP22_retaining_control": [
+        1.0,
+        1.0
+      ],
+      "PMP22_retaining_treated": [
+        1.0,
+        1.0
+      ],
+      "PMP22_mean_retaining_delta_percentage_points": 0.0,
+      "SERPINE1_distal_control": [
+        0.7277676941502292,
+        0.7005347575646926
+      ],
+      "SERPINE1_distal_treated": [
+        0.8590225618076592,
+        0.8294573501858817
+      ],
+      "SERPINE1_mean_distal_delta_percentage_points": 13.008873013930955,
+      "native_treatment_discrepancies": [],
+      "strict_native_label_sensitivity_n": 2,
+      "strict_native_label_PMP22_delta_percentage_points": 0.0
+    }
+  ],
+  "all6_site_sensitivity": [
+    {
+      "all6_min_tpm": 0.1,
+      "n_libraries": 160,
+      "min_retaining": 0.939393922145742,
+      "n_ge_0.95": 159
+    },
+    {
+      "all6_min_tpm": 1,
+      "n_libraries": 160,
+      "min_retaining": 0.939393922145742,
+      "n_ge_0.95": 159
+    },
+    {
+      "all6_min_tpm": 5,
+      "n_libraries": 156,
+      "min_retaining": 0.939393922145742,
+      "n_ge_0.95": 155
+    }
+  ],
+  "protocol_sensitivity": [
+    {
+      "protocol": "3'-Seq (Mayr)",
+      "n_eligible": 15,
+      "n_ge_0.95": 15,
+      "minimum_retaining": 0.9563758421687778
+    },
+    {
+      "protocol": "3'READS",
+      "n_eligible": 46,
+      "n_ge_0.95": 46,
+      "minimum_retaining": 0.9507299268190237
+    },
+    {
+      "protocol": "3P-Seq",
+      "n_eligible": 4,
+      "n_ge_0.95": 4,
+      "minimum_retaining": 1.0
+    },
+    {
+      "protocol": "A-seq",
+      "n_eligible": 10,
+      "n_ge_0.95": 10,
+      "minimum_retaining": 0.9936651536818706
+    },
+    {
+      "protocol": "DRS",
+      "n_eligible": 11,
+      "n_ge_0.95": 10,
+      "minimum_retaining": 0.939393922145742
+    },
+    {
+      "protocol": "PAPERCLIP",
+      "n_eligible": 22,
+      "n_ge_0.95": 22,
+      "minimum_retaining": 0.9954220299595793
+    },
+    {
+      "protocol": "PAS-Seq",
+      "n_eligible": 1,
+      "n_ge_0.95": 1,
+      "minimum_retaining": 1.0
+    },
+    {
+      "protocol": "PolyA-seq",
+      "n_eligible": 10,
+      "n_ge_0.95": 10,
+      "minimum_retaining": 0.9710144796777319
+    },
+    {
+      "protocol": "QuantSeq_REV",
+      "n_eligible": 16,
+      "n_ge_0.95": 16,
+      "minimum_retaining": 1.0
+    },
+    {
+      "protocol": "SAPAS",
+      "n_eligible": 25,
+      "n_ge_0.95": 25,
+      "minimum_retaining": 0.9930070012188231
+    }
+  ],
+  "K562_DRS_exception_and_companions": [
+    {
+      "sample_label": "SRX275752|DRS|K562|aCP knockdown replicate 1|siRNA aCP",
+      "sample_id_native": "SRX275752",
+      "gsm": "",
+      "protocol_label": "DRS",
+      "source_context": "K562",
+      "source_title": "aCP knockdown replicate 1",
+      "treatment_native": "siRNA aCP",
+      "terminal_tpm": "18.166167",
+      "retaining_tpm": "18.166167",
+      "lacking_tpm": "0.0",
+      "retaining_fraction": 1.0,
+      "all6_terminal_tpm": "18.166167",
+      "all6_retaining_fraction": "1.0",
+      "17:15229780:-": "18.166167",
+      "17:15230714:-": "0.0",
+      "17:15230826:-": "0.0"
+    },
+    {
+      "sample_label": "SRX275753|DRS|K562|aCP knockdown replicate 2|siRNA aCP",
+      "sample_id_native": "SRX275753",
+      "gsm": "",
+      "protocol_label": "DRS",
+      "source_context": "K562",
+      "source_title": "aCP knockdown replicate 2",
+      "treatment_native": "siRNA aCP",
+      "terminal_tpm": "33.817297",
+      "retaining_tpm": "33.817297",
+      "lacking_tpm": "0.0",
+      "retaining_fraction": 1.0,
+      "all6_terminal_tpm": "33.817297",
+      "all6_retaining_fraction": "1.0",
+      "17:15229780:-": "33.817297",
+      "17:15230714:-": "0.0",
+      "17:15230826:-": "0.0"
+    },
+    {
+      "sample_label": "SRX275806|DRS|K562|Control knockdown replicate 1|siRNA control",
+      "sample_id_native": "SRX275806",
+      "gsm": "",
+      "protocol_label": "DRS",
+      "source_context": "K562",
+      "source_title": "Control knockdown replicate 1",
+      "treatment_native": "siRNA control",
+      "terminal_tpm": "38.409238",
+      "retaining_tpm": "38.409238",
+      "lacking_tpm": "0.0",
+      "retaining_fraction": 1.0,
+      "all6_terminal_tpm": "38.409238",
+      "all6_retaining_fraction": "1.0",
+      "17:15229780:-": "38.409238",
+      "17:15230714:-": "0.0",
+      "17:15230826:-": "0.0"
+    },
+    {
+      "sample_label": "SRX275827|DRS|K562|Control knockdown replicate 2|siRNA control",
+      "sample_id_native": "SRX275827",
+      "gsm": "",
+      "protocol_label": "DRS",
+      "source_context": "K562",
+      "source_title": "Control knockdown replicate 2",
+      "treatment_native": "siRNA control",
+      "terminal_tpm": "42.165144",
+      "retaining_tpm": "39.60968",
+      "lacking_tpm": "2.5554640000000006",
+      "retaining_fraction": 0.939393922145742,
+      "all6_terminal_tpm": "42.165144",
+      "all6_retaining_fraction": "0.939393922145742",
+      "17:15229780:-": "39.60968",
+      "17:15230714:-": "2.555464",
+      "17:15230826:-": "0.0"
+    }
+  ],
+  "annotation_counts": {
+    "GENCODE19_transcripts": 8,
+    "GENCODE19_distinct_annotated_threeprime_positions": 7
+  },
+  "native_RBP_sites_checked": 8,
+  "RBP_liftover_checks": "all8 full-length unique single-block, inverse and width checked; source data not a new binding experiment",
+  "novelty": "miR29/deletion and QKI are recovered mechanisms; atlas/FLAIR structures previously public; quantitative retention/perturbation comparison is this question reanalysis, not established novel biology",
+  "independence": "PAPERCLIP HeLa/LN229 are same study/context corroboration; GTEx is separate resource/assay but model-filtered, not unbiased APA replication; K562 cell line occurs in both, not assumed independent donor evidence"
+}

@@ -1,0 +1,62 @@
+{
+  "question": "q_277f20df4b6b47cc",
+  "prediction_sha256": "0344d7d2d0e07d9457ff74d947fc37c79d96f1e1c13922fdfed6a360ae3cba90",
+  "eligibility_pass": true,
+  "status_columns": [],
+  "source_semantics": "RSEM fractional expected counts, TPM, FPKM; symbol suffix native in GENCODE.vM15 source IDs; no source quality flags exported",
+  "mapping_note": "Native source identifier suffix directly supplies symbols; no guessed ortholog or obsolete platform mapping required. One exact native feature per required symbol.",
+  "rows": 53090,
+  "expressed_exploratory": 15128,
+  "positive_all_samples_for_normalization": 20089,
+  "size_factors": {
+    "WT_K1": 0.9966992566297337,
+    "KO_K2": 0.9750663982128733,
+    "KO_L1": 1.049853429637891,
+    "WT_L3": 1.000003767047734,
+    "WT_L4": 1.0146328958440625,
+    "KO_L5": 1.070382556350693,
+    "KO_L8": 1.0501787272961907,
+    "WT_L9": 0.9044753256295177
+  },
+  "library_sums": {
+    "WT_K1": 14766769.719999999,
+    "KO_K2": 13734360.83,
+    "KO_L1": 12962797.87,
+    "WT_L3": 14095724.200000001,
+    "WT_L4": 14742505.7,
+    "KO_L5": 13855365.889999999,
+    "KO_L8": 13390731.84,
+    "WT_L9": 13508751.870000001
+  },
+  "pmp22_log2FC": -1.4958155959584225,
+  "marker_mean_log2FC": -1.4592976509352944,
+  "deltaR": -0.03651561762229827,
+  "deltaR_uncertainty": {
+    "effect": -0.03651561762229827,
+    "se": 0.08324982300047408,
+    "df": 5.937029190879782,
+    "ci95": [
+      -0.24074547608207608,
+      0.16771424083747954
+    ]
+  },
+  "permutation_two_sided_p": 0.6571428571428571,
+  "permutation_assignments": 70,
+  "passes_locked_rule": false,
+  "interpretation": "does not validate locked relative-preservation transfer",
+  "reference_count": 5,
+  "reference_effect_median": -0.15565785625872763,
+  "pmp22_effect_percentile": 0.0,
+  "pca_fraction": [
+    0.5095468397779942,
+    0.17091445339183287,
+    0.10659938909405783,
+    0.06437611218260296,
+    0.05717672822856944,
+    0.05209646611246546,
+    0.039290011212477084,
+    3.2879498766900324e-30
+  ],
+  "prior_exposure": "source mechanistic findings exposed; target quantitative outcomes first inspected after seal; not fully blinded; separate experiments/ages do not establish direct causation",
+  "protein_limitation": "No eligible quantitative protein export established; methods and caption ages conflict. No RNA-protein rate inferred."
+}

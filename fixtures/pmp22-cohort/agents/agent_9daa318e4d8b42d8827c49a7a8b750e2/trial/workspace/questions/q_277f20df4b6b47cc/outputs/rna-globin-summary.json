@@ -1,0 +1,66 @@
+{
+  "fresh_download_exact_byte_match": true,
+  "source_sha256": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+  "globin_selector": "description contains hemoglobin|globin, excludes globin locus|globin regulator; discovered from all-gene ranking, not preselected test",
+  "selected_globin_symbols": [
+    "Hbg1",
+    "Ahsp",
+    "Scgb1d2",
+    "Hbe1",
+    "Scgb2a2",
+    "Hp",
+    "Hbb",
+    "Scgb1c1",
+    "Hba1",
+    "LOC100134871",
+    "LOC689064",
+    "Hbe2",
+    "Scgb1b24",
+    "Hbz",
+    "Scgb3a2",
+    "LOC685157",
+    "Hba-a1",
+    "Mb",
+    "Hbb-b1",
+    "Scgb3a1",
+    "Jup",
+    "Scgb1b30",
+    "Scgb1d4",
+    "Cygb",
+    "Igsf21",
+    "Scgb1a1",
+    "Ngb"
+  ],
+  "globin_count_sum": {
+    "LentiAS-1": 8108,
+    "LentiAS-2": 267475,
+    "LentiGFP-1": 9600,
+    "LentiGFP-2": 8774
+  },
+  "globin_fraction_of_all_gene_counts": {
+    "LentiAS-1": 9.310472151060688e-05,
+    "LentiAS-2": 0.003613339361442049,
+    "LentiGFP-1": 0.0001020604061098377,
+    "LentiGFP-2": 9.121920065406683e-05
+  },
+  "normalization_sensitivity": {
+    "Pmp22": {
+      "original_ratio": 0.885003137400223,
+      "excluding_globin_normalization_ratio": 0.8850654138440409
+    },
+    "Egr2": {
+      "original_ratio": 1.258314189877603,
+      "excluding_globin_normalization_ratio": 1.2583912608440107
+    },
+    "Jun": {
+      "original_ratio": 0.8200465989882203,
+      "excluding_globin_normalization_ratio": 0.820103517880939
+    },
+    "Mtor": {
+      "original_ratio": 1.275105535436072,
+      "excluding_globin_normalization_ratio": 1.2751907107843823
+    }
+  },
+  "finding": "Globin-rich pattern is present in deposited bytes. Normalization sensitivity excludes selected globin features, not biological removal of contamination.",
+  "limits": "Gene counts do not identify read origin, vector sequences, ambient RNA or cell composition. Paralogous globin genes may share mapping ambiguity. No automatic raw reprocessing. No causal contamination diagnosis."
+}

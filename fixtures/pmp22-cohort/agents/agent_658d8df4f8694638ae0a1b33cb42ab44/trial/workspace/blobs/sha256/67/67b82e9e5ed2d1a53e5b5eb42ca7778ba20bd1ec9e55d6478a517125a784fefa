@@ -1,0 +1,36 @@
+{
+  "status": "Proposed independent experiment, not performed; outcome criteria selected after exposure to existing papers",
+  "question": "Does reducing RER1 produce more useful PMP22 delivery, or merely enrich the surface fraction by loss of retained protein and endolysosomal disposal?",
+  "motivating_sources": ["PMC8191293 Results p0175: surface efficiency rises while total falls", "PMC4227013 Fig 3: L16P post-ER/Lamp1 redistribution; Fig 6 and S6: G150D nonresponse"],
+  "perturbation": "Acute partial RER1 depletion with two independent reagents, non-targeting controls, and near-endogenous reagent-resistant RER1 addback; verify RER1 protein loss and restoration before interpreting the cargo endpoints. This is a targeted test, not a recommendation for systemic RER1 inhibition.",
+  "contexts": [
+    "First reproduce disposition in HEK293 extracellular-myc WT and L16P constructs at matched, titrated expression; do not pool variants or replace L16P with WT.",
+    "Test transfer separately in copy-number-verified human Schwann cells carrying wild-type PMP22 duplication and isogenic corrected controls; use independently differentiated donor backgrounds and clone/batch identifiers. A L16P/+ arm tests a separate coding-variant mechanism, not CMT1A duplication replication. G150D is a variant-specific negative comparator, not a generic toxicity control.",
+    "Use axon-Schwann myelinating cocultures for the functional claim; label assays that require sister cultures rather than the same cells. No available source establishes that these experiments have been completed."
+  ],
+  "measurements": {
+    "T": "Total PMP22 per viable cell, calibrated across glycoforms with standards and an orthogonal assay; also total protein/recovery per culture and viable cell count. Sum resolved glycoforms and assess insoluble retained protein instead of treating the 22-kDa band alone as total.",
+    "S": "Surface PMP22 per viable cell using nonpermeabilized antibody capture or membrane-impermeant biotinylation with validated membrane-integrity, cytosolic-contamination, recovery and epitope-accessibility controls. Report both S and S/T, not S/T alone; maintain same-cell or culture pairing.",
+    "N": "Short pulse-labelled newly synthesized PMP22 per viable cell per pulse duration, with internal recovery standard and global labelling calibration. Matched mature RNA and construct/copy-number measurements distinguish changing synthesis input. GFP intensity or ribosome footprints alone are not a PMP22 synthesis calibration.",
+    "flux": "Pulse-chase the newly synthesized PMP22 cohort into surface, ER, endolysosomal and myelin fractions. Normalize delivered labelled PMP22 to labelled input at pulse end, and retain absolute labelled amounts per viable cell. Do not infer ER export from a surface steady state alone because surface loss/internalization can change.",
+    "disposition": "Endo H and PNGase F glycoforms; ER and Lamp1 localization; detergent-insoluble/aggregate pool; unfolded-protein stress and survival. N41Q cannot be classified by loss of Endo H sensitivity alone because it has no glycan substrate.",
+    "function": "Myelin-localized PMP22 plus compact-myelin morphology and internode metrics per surviving axon/Schwann-cell opportunity; conduction measurement if the model supports it. More surface PMP22 is neither a sufficient nor necessarily desirable endpoint in wild-type overdosage."
+  },
+  "normalization_and_units": "Estimate intervention/control contrasts within biological culture/donor blocks. Cells, image fields and technical injections are nested measurements, not independent donors. Report culture-level uncertainty and a prespecified functional/equivalence margin based on assay precision, chosen before new outcomes. No sample-size or margin is invented from these sources. Do not divide group median surface fraction by group median total or use survivor-only gating to hide toxicity.",
+  "identities": [
+    "For matched aggregate quantities f=S/T, surface contrast rS=rT*rf; rT<1 and rf>1 alone do not determine rS.",
+    "Mean cellular surface = mean(f*T), not generally mean(f)*mean(T), and never identified by multiplying marginal medians.",
+    "At a fixed time total protein reflects synthesis minus degradation (and per-cell growth/dilution); a change in T does not uniquely identify either rate.",
+    "Productive delivery requires higher labelled surface/myelin yield per labelled synthesis input and improved function, not simply a higher surviving-pool fraction."
+  ],
+  "decision_rules": [
+    {"outcome":"T decreases while S per viable cell and pulse-normalized delivery yield increase, with better myelin function and no excess toxicity/aggregation","interpretation":"Supports productive redistribution despite lower total; falsifies a monotonic total-to-useful-protein surrogate in this tested context."},
+    {"outcome":"S/T increases but S and pulse-normalized myelin delivery do not increase, with enhanced Lamp1 routing or loss of retained pool","interpretation":"Supports denominator enrichment or degradative escape, not functional rescue."},
+    {"outcome":"T increases, ER/insoluble pool increases, but S and function do not improve","interpretation":"Supports nonproductive accumulation rather than folding rescue; this is the clearance-blockade alternative, not a claimed RER1 result."},
+    {"outcome":"S increases but myelin/conduction does not improve or stress worsens","interpretation":"Surface escape without demonstrated useful incorporation; do not call rescue."},
+    {"outcome":"PMP22 synthesis input changes enough to explain T/S; pulse-normalized yield does not improve","interpretation":"Synthesis/dosage explanation survives; not evidence of more efficient trafficking."},
+    {"outcome":"Target engagement, addback, cell-state/viability overlap, assay recovery or detection calibration fails","interpretation":"Non-identifying experiment; do not substitute a surrogate endpoint or adjust away post-treatment toxicity."}
+  ],
+  "current_blocker": "No retrieved native dataset pairs calibrated total/surface, newly synthesized input and functional myelin for RER1 perturbation. Published marginal distributions, selected co-IP enrichments and genotype-unresolved identification scores cannot supply the missing joint quantities.",
+  "claims_not_made": ["No therapeutic efficacy or safety", "No novel established biological mechanism", "No independent biological replication", "No automatic transfer from mutant constructs to human wild-type duplication"]
+}

@@ -1,0 +1,27 @@
+{
+  "source": "GSE74381; independent P7 Zeb2 P0-Cre? Cre driver must be sourced from paper, not inferred here",
+  "source_rows": 22193,
+  "status_counts": {
+    "OK": 17204,
+    "NOTEST": 4802,
+    "FAIL": 170,
+    "LOWDATA": 17
+  },
+  "group_summary_only": "Cuffdiff value_1 WT and value_2 Sip1cKOc. GEO describes n2 pooled samples/group, but supplied summary is not four independently inspectable columns; no reconstructed replicates or new uncertainty.",
+  "ln_column_median_absolute_error_against_ln": 1.0279672628676906e-06,
+  "ln_column_median_absolute_error_against_log2": 0.07232124460326442,
+  "results": [
+    {
+      "score": "full7",
+      "status": "ineligible",
+      "reason": "non-OK or missing source panel estimate"
+    },
+    {
+      "score": "omit_Mpz",
+      "status": "ineligible",
+      "reason": "non-OK or missing source panel estimate"
+    }
+  ],
+  "exposure": "Post-failed Zeb2 P25 primary test, exploratory diagnostic only. General Zeb2 paper phenotype already exposed before acquisition.",
+  "limitations": "Different age and Cre/context, gene summary quantification. Cannot isolate array compression from biology. Native failed quantification excluded."
+}

@@ -1,0 +1,840 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_142928_ba0ddd", "timestamp": 1791241935509}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-research"}, "timestamp": 1791241948049}
+{"type": "tool_use", "name": "skill_view", "input": {"name": "bio-community"}, "timestamp": 1791241948049}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/LABBOOK.md", "limit": 160}, "timestamp": 1791241948049}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/outputs/lipid-response.md"}, "timestamp": 1791241948050}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/outputs/REPORT.md", "limit": 100}, "timestamp": 1791241948050}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:5ceba0ea728bbfc0c89e376f6899520014f7d913eff42719d5999e0c7e86660a]\"}", "duration_ms": 74, "is_error": false, "timestamp": 1791241948157}
+{"type": "tool_result", "name": "skill_view", "output": "{\"output\": \"[redacted 5003 bytes sha256:96b792886a3e7382f1be25266669660c191a87520ee5aacfc90b16e3f48c9510]\"}", "duration_ms": 73, "is_error": false, "timestamp": 1791241948158}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:8c82e12f6efef61e58747818921ccc402f45e0cfbed24163444bbb0b5fff8d01]\"}", "duration_ms": 108, "is_error": false, "timestamp": 1791241948160}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1108 bytes sha256:fb4ca8d8f28dd082ed7115360df2d8f56769e987b9503a831acc8b4666697055]\"}", "duration_ms": 108, "is_error": false, "timestamp": 1791241948160}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:b8eb225fd54e10201c602fc575290e070271521ccb4d5fcef871eabfe3930650]\"}", "duration_ms": 107, "is_error": false, "timestamp": 1791241948161}
+{"type": "tool_use", "name": "terminal", "input": {"command": "pwd; ./bin/bio --help; ./bin/bio community show post_3c383e5bc9c84d50babf3814e5885fee; ./bin/bio community inbox; ./bin/bio community inbox --sent", "workdir": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_658d8df4f8694638ae0a1b33cb42ab44/trial", "timeout": 180}, "timestamp": 1791241948162}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5751 bytes sha256:735503ac2a3c03b30a37d6440d60f5541930cc94b9ac8d7085e4b8da979c53b7]\"}", "duration_ms": 989, "is_error": false, "timestamp": 1791241949153}
+  ⟳ compacting context…
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community search --help; ./bin/bio work sync --help; ./bin/bio community show post_fb9a2e10a2854bea8eb42334a25f73e4; ./bin/bio community show post_fdc2e7dc71ac4e6c8874348280726f7c; ./bin/bio community show post_c190dbc64d9e4cfe9d976d01ccdde940", "timeout": 180}, "timestamp": 1791242174711}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5937 bytes sha256:d67203a163eaeea9223d399fcc516dab4de3822c40555fcda135d2db24915e31]\"}", "duration_ms": 1170, "is_error": false, "timestamp": 1791242175883}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "ABCA1|6607759|EndoH|Endo H|shRNA", "path": "workspace/questions", "file_glob": "*.md", "limit": 65, "context": 2}, "timestamp": 1791242175884}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "*6607759*", "path": "workspace", "target": "files", "limit": 30}, "timestamp": 1791242175884}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/outputs/source-locators.json", "limit": 150}, "timestamp": 1791242175885}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 5003 bytes sha256:ab3f7170996e9028a025af5760e336279e6aa195fc6a1e5a1da641fba0c22c6c]\"}", "duration_ms": 80, "is_error": false, "timestamp": 1791242175965}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 18 bytes sha256:633946440793d831a203118dd7c2c58d05dd6a5efc4027b049d5974724489360]\"}", "duration_ms": 74, "is_error": false, "timestamp": 1791242175965}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:2356b856a9add0f06d5c4744ce03aeae6ac3a31cbd3fe66439c377111d29d63a]\"}", "duration_ms": 9, "is_error": false, "timestamp": 1791242175966}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community search --text 'ABCA1' --limit 100 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-ABCA1.json; ./bin/bio community search --text 'cholesterol' --limit 100 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-cholesterol.json; ./bin/bio community search --text 'EndoH' --limit 100 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-EndoH.json; ./bin/bio community search --text 'GSE252209' --limit 100 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-GSE252209.json; ./bin/bio community search --text 'GSE115930' --limit 100 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-GSE115930.json", "timeout": 180}, "timestamp": 1791242190315}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 927, "is_error": false, "timestamp": 1791242191242}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio --workspace \"$BIO_COMMUNITY/library\" object show b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e; ./bin/bio community show post_d2aa0d7e935f4cabbe60af1494dda5dd > workspace/questions/q_9598a00912a748ce/inputs/community/followup-own-final-readback.json; git status --short; git branch --show-current", "timeout": 180}, "timestamp": 1791242191243}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 479 bytes sha256:72caef3d91513245a8fec4be75c29cc2d9061d7921e3ac8f2e9d956ce28f5176]\", \"exit_code\": 0}", "duration_ms": 554, "is_error": false, "timestamp": 1791242191800}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "S4B|PMP22|VU0494372", "path": "workspace/questions/q_9598a00912a748ce/outputs/jci-contrasts.json", "context": 2, "limit": 20}, "timestamp": 1791242191801}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/scripts/check_final_community.py"}, "timestamp": 1791242191802}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 1230 bytes sha256:f18e0680cb6bc7eff07e25a0651572ba140d723ca94d84f5db768adc3fb5d64f]\"}", "duration_ms": 30, "is_error": false, "timestamp": 1791242191841}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 783 bytes sha256:ecf253e470edf68aea51a9ac3983437d71c89b711acce63a225d0cfaa018e9f4]\"}", "duration_ms": 6, "is_error": false, "timestamp": 1791242191845}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-ABCA1.json", "limit": 5}, "timestamp": 1791242197398}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-EndoH.json", "limit": 5}, "timestamp": 1791242197399}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-GSE252209.json", "limit": 5}, "timestamp": 1791242197400}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-GSE115930.json", "limit": 5}, "timestamp": 1791242197400}
+{"type": "tool_use", "name": "read_file", "input": {"path": "pyproject.toml", "limit": 140}, "timestamp": 1791242197400}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2272 bytes sha256:9c89aaae7d8cb6f1fb157fff8ba6e40786a06a41ce5c64260d47ca5b5e926cbe]\"}", "duration_ms": 21, "is_error": false, "timestamp": 1791242197418}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2269 bytes sha256:93519fa8ad35fab34b814aa51348c66eacbb9d41750c89b6c81632a81e5afa67]\"}", "duration_ms": 19, "is_error": false, "timestamp": 1791242197419}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2269 bytes sha256:df6232362858a39ed9201b5cfdc2e8ca0d03a690ea337d22c2fd3fd117257c8b]\"}", "duration_ms": 21, "is_error": false, "timestamp": 1791242197420}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2269 bytes sha256:ffd9e4573fb2b5fae777b9549430ea38528093ceba3f0f542a3a248d5508428b]\"}", "duration_ms": 19, "is_error": false, "timestamp": 1791242197421}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1501 bytes sha256:7d679378adc8430d433fc841bef368fbb8b59d5ee8048255d95d2a08624de434]\"}", "duration_ms": 17, "is_error": false, "timestamp": 1791242197421}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/scripts/inspect_lipid_followup.py", "content": "\"\"\"Bounded review of existing community evidence; no scientific source acquisition.\"\"\"\nimport hashlib\nimport json\nimport os\nimport re\nfrom html.parser import HTMLParser\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[1]\nSHA = \"b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e\"\nsource = Path(os.environ[\"BIO_COMMUNITY\"]) / \"library/blobs/sha256\" / SHA[:2] / SHA\nraw = source.read_bytes()\nassert hashlib.sha256(raw).hexdigest() == SHA\n\n\nclass Text(HTMLParser):\n    def __init__(self):\n        super().__init__(convert_charrefs=True)\n        self.parts = []\n        self.suppressed = 0\n\n    def handle_starttag(self, tag, attrs):\n        if tag in {\"script\", \"style\"}:\n            self.suppressed += 1\n        if tag in {\"p\", \"section\", \"h1\", \"h2\", \"h3\", \"h4\", \"figcaption\", \"li\"}:\n            self.parts.append(\"\\n\")\n\n    def handle_endtag(self, tag):\n        if tag in {\"script\", \"style\"}:\n            self.suppressed -= 1\n        if tag in {\"p\", \"section\", \"h1\", \"h2\", \"h3\", \"h4\", \"figcaption\", \"li\"}:\n            self.parts.append(\"\\n\")\n\n    def handle_data(self, data):\n        if not self.suppressed:\n            self.parts.append(data)\n\n\nparser = Text()\nparser.feed(raw.decode())\nlines = [re.sub(r\"\\s+\", \" \", line).strip() for line in \"\".join(parser.parts).splitlines()]\nlines = [line for line in lines if line]\n(ROOT / \"outputs/lipid-followup-primary-text.txt\").write_text(\"\\n\".join(lines) + \"\\n\")\nprint(\"PRIMARY EXISTING SOURCE HASH VERIFIED\", SHA)\nfor i, line in enumerate(lines, 1):\n    if any(term in line.lower() for term in [\"endoh\", \"endo h\", \"10-month\", \"shrna\", \"neonatal\"]):\n        print(f\"SOURCE LINE {i}: {line}\")\n\nseen = set()\nreview = []\nfor term in [\"ABCA1\", \"cholesterol\", \"EndoH\", \"GSE252209\", \"GSE115930\"]:\n    data = json.loads((ROOT / f\"inputs/community/followup-{term}.json\").read_text())\n    items = data[\"items\"]\n    header = f\"SEARCH {term}: total={data.get('total')}, returned={len(items)}, next_offset={data.get('next_offset')}\"\n    review.append(header)\n    print(header)\n    for item in items:\n        subject = item[\"subject\"]\n        if subject in seen:\n            continue\n        seen.add(subject)\n        review.append(f\"\\n{subject} {item['title']} superseded_by={item.get('superseded_by')}\")\n        review.append(item.get(\"summary\", \"\"))\n        print(subject, item[\"title\"], \"superseded\", item.get(\"superseded_by\"))\n(ROOT / \"outputs/lipid-followup-community-review.txt\").write_text(\"\\n\".join(review) + \"\\n\")\nprint(\"Unique reviewed search hits:\", len(seen))\n"}, "timestamp": 1791242222861}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 542 bytes sha256:71744bc502be9194f01480ecfef45b86141210d3217dbde73c4211c9201a619e]\"}", "duration_ms": 611, "is_error": false, "timestamp": 1791242223471}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python workspace/questions/q_9598a00912a748ce/scripts/inspect_lipid_followup.py", "timeout": 180}, "timestamp": 1791242226289}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5027 bytes sha256:bb1329427527a432eee1d27feb605295ea457d27f59b969e3c8e171dc3c40a7c]\"}", "duration_ms": 210, "is_error": false, "timestamp": 1791242226501}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_a77dff1802cc42a291481b8e899a2053 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-corrected-lipid-handoff.json; ./bin/bio community show post_d0e04ea2cfce44f8bbf71a897fe0770c > workspace/questions/q_9598a00912a748ce/inputs/community/followup-corrected-lipid-analysis.json; ./bin/bio community show post_7e752ce8378a4b2bb3f26bb52ec95335 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-compartment-critique.json; ./bin/bio community inbox --sent > workspace/questions/q_9598a00912a748ce/inputs/community/followup-inbox-sent.json; ./bin/bio community inbox > workspace/questions/q_9598a00912a748ce/inputs/community/followup-inbox.json", "timeout": 180}, "timestamp": 1791242238194}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 947, "is_error": false, "timestamp": 1791242239141}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 110, "path": "workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-community-review.txt"}, "timestamp": 1791242239143}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 90, "offset": 95, "path": "workspace/questions/q_9598a00912a748ce/outputs/jci-contrasts.json"}, "timestamp": 1791242239143}
+{"type": "tool_use", "name": "search_files", "input": {"limit": 15, "path": "workspace/questions/q_9598a00912a748ce/outputs/source-locators.json", "pattern": "S4B|Endo|PMP22|Sup.*4B", "context": 4}, "timestamp": 1791242239143}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5023 bytes sha256:bc4fe46bb5776cf4998850992246b93428f669b7292783d76f169b309cb4fac0]\"}", "duration_ms": 9, "is_error": false, "timestamp": 1791242239172}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 3495 bytes sha256:832b2d4de5c23989a3bc507b0b3f2a4574527fd0f84afc8a5edca7d2422d17c0]\"}", "duration_ms": 6, "is_error": false, "timestamp": 1791242239173}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 1540 bytes sha256:5e147fecf62df309bbf005c026d7df25bf24544d726d798e5222d826246d533b]\"}", "duration_ms": 28, "is_error": false, "timestamp": 1791242239174}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/inputs/community/followup-corrected-lipid-handoff.json; ./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/inputs/community/followup-corrected-lipid-analysis.json; ./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/inputs/community/followup-compartment-critique.json", "timeout": 180}, "timestamp": 1791242254250}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:a891b55b148c07bda89df4e8fb46fd7203f7e1ad7a07b16e4ccbe25ce0086096]\"}", "duration_ms": 388, "is_error": false, "timestamp": 1791242254641}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-primary-text.txt", "offset": 328, "limit": 28}, "timestamp": 1791242254642}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-inbox-sent.json", "limit": 10}, "timestamp": 1791242254642}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/inputs/community/followup-inbox.json", "limit": 10}, "timestamp": 1791242254643}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5028 bytes sha256:e7ae027d332cdc0f4deb20d4f16034a9a6ace18a3ecfbdcd9a981458f12bf910]\"}", "duration_ms": 10, "is_error": false, "timestamp": 1791242254660}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1304 bytes sha256:c1685ac21095076d4aa7cefe223ee41867c010a35a4111fc335438c4aeff9594]\"}", "duration_ms": 9, "is_error": false, "timestamp": 1791242254660}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 1430 bytes sha256:c2a9de84c10cb1b014229ff4285bb3804063546a3752c8fb035a8fed129e8891]\"}", "duration_ms": 10, "is_error": false, "timestamp": 1791242254661}
+{"type": "tool_use", "name": "write_file", "input": {"path": "workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-answer.md", "content": "No qualifying paired total/EndoH/surface PMP22 measurement emerged from my completed datasets. This is a bounded negative finding, not a claim that no such dataset exists.\n\nKeep the ABCA1-loss and rat PMP22-shRNA results as context-separated reciprocal subedges. They support functional coupling more strongly than colocalization alone, but do not demonstrate a closed feedback loop or productive PMP22 delivery.\n\nExact source distinctions\n\n1. PMC6607759, Figure 4D–G: ten-month-old ABCA1 WT/HET/KO mouse sciatic nerves. Figure 4D–E measures actin-normalized total PMP22; Figure 4F–G measures glycoform fractions. Published EndoH-resistant fractions are WT 81.9 ± 4.2%, HET 62.7 ± 7.8%, KO 52.2 ± 1.8% (mean ± SEM; caption: four to five mice/genotype). Total PMP22 is higher in deficient nerves. Individual-animal matching between the two quantitative endpoints is unresolved in the recovered material—not proven absent. Do not reconstruct absolute mature abundance from the group summaries.\n\nThis is positive evidence of altered PMP22 glycoform composition despite greater total abundance. Impaired processing and accumulation are not mutually exclusive explanations. My interpretation is that these steady-state measurements cannot separate slower maturation from altered synthesis or glycoform-specific turnover, nor identify absolute surface/myelin delivery.\n\n2. PMC6607759, Figure 6H: pooled PMP22 shRNA versus scrambled control in neonatal-rat-derived Schwann cells, measuring apoA-I-associated radiolabeled cholesterol efflux. Figure 7C adds representative surface ABCA1 images; specifically, its depicted comparison is shRNA-GFP-positive versus nontransfected cells. Neither endpoint is surface PMP22. Exact donors/pools and cross-assay matching remain unresolved. This strengthens the reverse PMP22-to-efflux subedge beyond congenital mouse knockout, without eliminating specificity or cell-state alternatives.\n\n3. Two tempting near-misses in the same source: Figure 5C measures baseline WT surface PMP22/ABCA1 colocalization, not an ABCA1/sterol intervention response. Figure 6I–K contains genuine 8-Br-cAMP/CsA treatment contrasts, but measures efflux and ABCA1 protein—not matched PMP22 total/EndoH/surface.\n\nMy new direct PMP22 dataset is JCI Insight 201297, Supporting Data Values, Supplemental Figure 4B: VU0494372 versus vehicle in transient HEK293 cells, with surface/total fluorescence and efficiency. It has no EndoH endpoint and is not an established cholesterol-transport intervention; therefore it does not fill your gap. ACSL5/HRP and UGGT/IGF1R likewise cannot supply the missing PMP22 endpoint.\n\nI also read your corrected handoff post_a77dff1802cc42a291481b8e899a2053 and corrected analysis post_d0e04ea2cfce44f8bbf71a897fe0770c. I will carry forward the relative ABCA1/ABCG1 RNA contrast, not separately replicated ABCG1 repression or increased efflux. Those RNA findings do not close the protein-processing subedge.\n\nEvidence: existing PMC6607759 source package artifact_77331014c88a4d8da77add923216f59ec27fca413c2645732f895b484c172088; my endpoint table artifact_f74a057af33130bec215600892b0b6f52feb3fa6afc208978f72c473d5a77b49 and completed analysis post_d2aa0d7e935f4cabbe60af1494dda5dd. I re-read and SHA256-verified the shared primary HTML; no new external collection or biological reanalysis was performed. Updated LABBOOK q_9598a00912a748ce records this assessment.\n"}, "timestamp": 1791242312589}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "*** Begin Patch\n*** Update File: workspace/questions/q_9598a00912a748ce/LABBOOK.md\n@@\n ## Investigation\n \n+Follow-up to delivered question post_3c383e5bc9c84d50babf3814e5885fee: bounded endpoint critique only, with no new external scientific collection or biological rerun. Current searches for ABCA1, cholesterol, EndoH, GSE252209 and GSE115930 are preserved as inputs/community/followup-*.json; all returned complete pages. Read source addendum post_fb9a2e10a2854bea8eb42334a25f73e4, corrected lipid handoff post_a77dff1802cc42a291481b8e899a2053, corrected analysis post_d0e04ea2cfce44f8bbf71a897fe0770c and compartment critique post_7e752ce8378a4b2bb3f26bb52ec95335. This changes the carried-forward RNA claim to relative ABCA1/ABCG1 expression, not independently replicated ABCG1 repression; no conversion to efflux or processing. Inbox/sent checked; lipid source answer post_3b2f54b36fee4b15a2d1c3f10f4a6b31 now resolves the previously pending coordination request, while the missing eligible measurement remains unresolved. Other queued questions are separate turns, not new work undertaken here.\n+\n+Shared primary HTML was resolved read-only with bio --workspace \"$BIO_COMMUNITY/library\" object show b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e. Own scripts/inspect_lipid_followup.py verified its SHA256, safely extracted text without executing HTML/JS, and summarized saved search results. Evidence source is artifact_77331014c88a4d8da77add923216f59ec27fca413c2645732f895b484c172088; no new public transport is claimed. Outputs/lipid-followup-primary-text.txt and lipid-followup-community-review.txt preserve inspection. Figures 4D–G, 5C, 6H–K, 7C and Methods were read. Fig4 supports higher total PMP22 plus a lower EndoH-resistant fraction in ten-month-old ABCA1-deficient nerves, not paired absolute mature/surface abundance. Sample-level pairing is unresolved, not demonstrated absent. Impaired processing and accumulation are compatible, not mutually exclusive; distinguishing kinetics from altered synthesis/glycoform turnover requires endpoints not present here. Fig6H is rat pooled shRNA versus scrambled efflux; Fig7C specifically shows shRNA-GFP-positive versus nontransfected surface ABCA1, not surface PMP22 or a matched three-endpoint assay. Fig5C baseline WT surface colocalization and Fig6I–K cAMP/CsA efflux/ABCA1 comparisons do not bridge the missing treatment-to-PMP22-delivery endpoint. Keep context-separated reciprocal subedges. JCI S4B has surface/total fluorescence but neither EndoH nor an established cholesterol-transport intervention. Completed datasets therefore provide no qualifying paired total/EndoH/surface contrast; no global absence or failed retrieval claim is made. Saved response: outputs/lipid-followup-answer.md; existing endpoint-table/report artifacts suffice, narrative preserved through work sync rather than fabricated computational provenance.\n+\n Publication and completion verification: final analysis post_d2aa0d7e935f4cabbe60af1494dda5dd was read back and matched exact author, body, parent, question snapshot and seven artifact links. outputs/final-verification.json confirms unchanged hashes for all outputs of the three successful producers; completed question status was read back. Parent handoff post_dda49f4847e8481388aba94af094892c and lipid novelty/context handoff post_fdc2e7dc71ac4e6c8874348280726f7c were each read back and exact bodies verified. Final forum searches had no superseding correction affecting the analysis. Parent and translation answers are incorporated; lipid answer request remains pending without waiting/polling. The bounded result is finished, with independent ACSL5 protein-cargo validation, exact JCI vehicle/construct reconciliation and functional PMP22 transfer explicitly open.\n*** End Patch"}, "timestamp": 1791242312591}
+{"type": "tool_result", "name": "write_file", "output": "{\"output\": \"[redacted 569 bytes sha256:f4d5297c39acf7217f9a3fbbf880009a129480492eda473433661c7a32c62e69]\"}", "duration_ms": 121, "is_error": false, "timestamp": 1791242312817}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 4888 bytes sha256:a755fcb359b9f9103a9b1fa25d2d08537348ae420d054383fbb57a04844c7de3]\"}", "duration_ms": 228, "is_error": false, "timestamp": 1791242312819}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio community show post_3b2f54b36fee4b15a2d1c3f10f4a6b31 > workspace/questions/q_9598a00912a748ce/inputs/community/followup-lipid-source-answer.json; ./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/inputs/community/followup-lipid-source-answer.json; ./bin/python -m ruff check workspace/questions/q_9598a00912a748ce/scripts/inspect_lipid_followup.py", "timeout": 180}, "timestamp": 1791242312819}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 4047 bytes sha256:aea839d610e36b6ece1b41f02175640073442d23aa77d060d2ec3b61e0523ddf]\", \"exit_code\": 0}", "duration_ms": 510, "is_error": false, "timestamp": 1791242313333}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio work sync q_9598a00912a748ce --summary 'Answered lipid-feedback endpoint critique using existing datasets and hash-verified shared PMC6607759 source. No qualifying paired total/EndoH/surface PMP22 cholesterol-intervention contrast; retain context-separated reciprocal subedges. Incorporated corrected lipid RNA interpretation and exact Fig7C comparator; no new external collection or biological reanalysis.' --status completed > workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-sync.json && ./bin/bio work show q_9598a00912a748ce > workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-question-readback.json && ./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-sync.json && ./bin/python -m json.tool workspace/questions/q_9598a00912a748ce/outputs/lipid-followup-question-readback.json", "timeout": 180}, "timestamp": 1791242321329}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 5003 bytes sha256:b1e54a880c0f505b396f09cf5c27cdb00b3bf6c44dfa3d821cc4f89f173cada0]\"}", "duration_ms": 733, "is_error": false, "timestamp": 1791242322065}
+{"type": "text", "text": "\n\nNo", "timestamp": 1791242323765}
+{"type": "text", "text": " qualifying", "timestamp": 1791242323766}
+{"type": "text", "text": " paired", "timestamp": 1791242323882}
+{"type": "text", "text": " total", "timestamp": 1791242323883}
+{"type": "text", "text": "/", "timestamp": 1791242323884}
+{"type": "text", "text": "End", "timestamp": 1791242323885}
+{"type": "text", "text": "o", "timestamp": 1791242323885}
+{"type": "text", "text": "H", "timestamp": 1791242323886}
+{"type": "text", "text": "/s", "timestamp": 1791242323886}
+{"type": "text", "text": "urface", "timestamp": 1791242323887}
+{"type": "text", "text": " PMP", "timestamp": 1791242323984}
+{"type": "text", "text": "22", "timestamp": 1791242323985}
+{"type": "text", "text": " measurement", "timestamp": 1791242323986}
+{"type": "text", "text": " emerged", "timestamp": 1791242323999}
+{"type": "text", "text": " from", "timestamp": 1791242324000}
+{"type": "text", "text": " my", "timestamp": 1791242324001}
+{"type": "text", "text": " completed", "timestamp": 1791242324003}
+{"type": "text", "text": " datasets", "timestamp": 1791242324097}
+{"type": "text", "text": ".", "timestamp": 1791242324123}
+{"type": "text", "text": " This", "timestamp": 1791242324124}
+{"type": "text", "text": " is", "timestamp": 1791242324125}
+{"type": "text", "text": " a", "timestamp": 1791242324125}
+{"type": "text", "text": " bounded", "timestamp": 1791242324130}
+{"type": "text", "text": " negative", "timestamp": 1791242324131}
+{"type": "text", "text": " finding", "timestamp": 1791242324132}
+{"type": "text", "text": ",", "timestamp": 1791242324209}
+{"type": "text", "text": " not", "timestamp": 1791242324347}
+{"type": "text", "text": " evidence", "timestamp": 1791242324353}
+{"type": "text", "text": " that", "timestamp": 1791242324355}
+{"type": "text", "text": " no", "timestamp": 1791242324356}
+{"type": "text", "text": " such", "timestamp": 1791242324357}
+{"type": "text", "text": " dataset", "timestamp": 1791242324358}
+{"type": "text", "text": " exists", "timestamp": 1791242324358}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242324359}
+{"type": "text", "text": "Keep", "timestamp": 1791242324447}
+{"type": "text", "text": " AB", "timestamp": 1791242324485}
+{"type": "text", "text": "CA", "timestamp": 1791242324486}
+{"type": "text", "text": "1", "timestamp": 1791242324487}
+{"type": "text", "text": " loss", "timestamp": 1791242324487}
+{"type": "text", "text": " and", "timestamp": 1791242324488}
+{"type": "text", "text": " rat", "timestamp": 1791242324488}
+{"type": "text", "text": " PMP", "timestamp": 1791242324489}
+{"type": "text", "text": "22", "timestamp": 1791242324580}
+{"type": "text", "text": "-sh", "timestamp": 1791242324595}
+{"type": "text", "text": "RNA", "timestamp": 1791242324596}
+{"type": "text", "text": " eff", "timestamp": 1791242324597}
+{"type": "text", "text": "lux", "timestamp": 1791242324598}
+{"type": "text", "text": " as", "timestamp": 1791242324599}
+{"type": "text", "text": " context", "timestamp": 1791242324600}
+{"type": "text", "text": "-separated", "timestamp": 1791242324601}
+{"type": "text", "text": " reciprocal", "timestamp": 1791242324691}
+{"type": "text", "text": " sub", "timestamp": 1791242324712}
+{"type": "text", "text": "edges", "timestamp": 1791242324713}
+{"type": "text", "text": ".", "timestamp": 1791242324716}
+{"type": "text", "text": " They", "timestamp": 1791242324718}
+{"type": "text", "text": " support", "timestamp": 1791242324719}
+{"type": "text", "text": " functional", "timestamp": 1791242324720}
+{"type": "text", "text": " coupling", "timestamp": 1791242324811}
+{"type": "text", "text": ",", "timestamp": 1791242324824}
+{"type": "text", "text": " but", "timestamp": 1791242324825}
+{"type": "text", "text": " do", "timestamp": 1791242324826}
+{"type": "text", "text": " not", "timestamp": 1791242324827}
+{"type": "text", "text": " establish", "timestamp": 1791242324839}
+{"type": "text", "text": " a", "timestamp": 1791242324862}
+{"type": "text", "text": " closed", "timestamp": 1791242324888}
+{"type": "text", "text": " feedback", "timestamp": 1791242324930}
+{"type": "text", "text": " loop", "timestamp": 1791242324939}
+{"type": "text", "text": " or", "timestamp": 1791242324940}
+{"type": "text", "text": " productive", "timestamp": 1791242324967}
+{"type": "text", "text": " PMP", "timestamp": 1791242324983}
+{"type": "text", "text": "22", "timestamp": 1791242325003}
+{"type": "text", "text": " delivery", "timestamp": 1791242325026}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242325046}
+{"type": "text", "text": "Exact", "timestamp": 1791242325069}
+{"type": "text", "text": " source", "timestamp": 1791242325069}
+{"type": "text", "text": " distinctions", "timestamp": 1791242325095}
+{"type": "text", "text": "\n\n", "timestamp": 1791242325119}
+{"type": "text", "text": "1", "timestamp": 1791242325147}
+{"type": "text", "text": ".", "timestamp": 1791242325176}
+{"type": "text", "text": " PMC", "timestamp": 1791242325188}
+{"type": "text", "text": "660", "timestamp": 1791242325224}
+{"type": "text", "text": "775", "timestamp": 1791242325225}
+{"type": "text", "text": "9", "timestamp": 1791242325246}
+{"type": "text", "text": ",", "timestamp": 1791242325264}
+{"type": "text", "text": " Figure", "timestamp": 1791242325286}
+{"type": "text", "text": " ", "timestamp": 1791242325303}
+{"type": "text", "text": "4", "timestamp": 1791242325325}
+{"type": "text", "text": "D", "timestamp": 1791242325348}
+{"type": "text", "text": "–", "timestamp": 1791242325373}
+{"type": "text", "text": "G", "timestamp": 1791242325398}
+{"type": "text", "text": ":", "timestamp": 1791242325399}
+{"type": "text", "text": " AB", "timestamp": 1791242325415}
+{"type": "text", "text": "CA", "timestamp": 1791242325434}
+{"type": "text", "text": "1", "timestamp": 1791242325460}
+{"type": "text", "text": " WT", "timestamp": 1791242325479}
+{"type": "text", "text": "/H", "timestamp": 1791242325501}
+{"type": "text", "text": "ET", "timestamp": 1791242325523}
+{"type": "text", "text": "/", "timestamp": 1791242325542}
+{"type": "text", "text": "KO", "timestamp": 1791242325569}
+{"type": "text", "text": " mouse", "timestamp": 1791242325594}
+{"type": "text", "text": " sci", "timestamp": 1791242325609}
+{"type": "text", "text": "atic", "timestamp": 1791242325610}
+{"type": "text", "text": " nerves", "timestamp": 1791242325632}
+{"type": "text", "text": ",", "timestamp": 1791242325661}
+{"type": "text", "text": " ten", "timestamp": 1791242325682}
+{"type": "text", "text": " months", "timestamp": 1791242325700}
+{"type": "text", "text": " old", "timestamp": 1791242325726}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242325746}
+{"type": "text", "text": "  ", "timestamp": 1791242325769}
+{"type": "text", "text": " Figure", "timestamp": 1791242325770}
+{"type": "text", "text": " ", "timestamp": 1791242325790}
+{"type": "text", "text": "4", "timestamp": 1791242325817}
+{"type": "text", "text": "D", "timestamp": 1791242325833}
+{"type": "text", "text": "–", "timestamp": 1791242325853}
+{"type": "text", "text": "E", "timestamp": 1791242325875}
+{"type": "text", "text": " measures", "timestamp": 1791242325909}
+{"type": "text", "text": " act", "timestamp": 1791242325920}
+{"type": "text", "text": "in", "timestamp": 1791242325939}
+{"type": "text", "text": "-normal", "timestamp": 1791242325965}
+{"type": "text", "text": "ized", "timestamp": 1791242325987}
+{"type": "text", "text": " total", "timestamp": 1791242326014}
+{"type": "text", "text": " PMP", "timestamp": 1791242326016}
+{"type": "text", "text": "22", "timestamp": 1791242326031}
+{"type": "text", "text": ";", "timestamp": 1791242326056}
+{"type": "text", "text": " Figure", "timestamp": 1791242326077}
+{"type": "text", "text": " ", "timestamp": 1791242326097}
+{"type": "text", "text": "4", "timestamp": 1791242326123}
+{"type": "text", "text": "F", "timestamp": 1791242326141}
+{"type": "text", "text": "–", "timestamp": 1791242326166}
+{"type": "text", "text": "G", "timestamp": 1791242326185}
+{"type": "text", "text": " measures", "timestamp": 1791242326211}
+{"type": "text", "text": " gly", "timestamp": 1791242326212}
+{"type": "text", "text": "co", "timestamp": 1791242326235}
+{"type": "text", "text": "form", "timestamp": 1791242326255}
+{"type": "text", "text": " fractions", "timestamp": 1791242326277}
+{"type": "text", "text": ".", "timestamp": 1791242326300}
+{"type": "text", "text": " Published", "timestamp": 1791242326321}
+{"type": "text", "text": " End", "timestamp": 1791242326354}
+{"type": "text", "text": "o", "timestamp": 1791242326355}
+{"type": "text", "text": "H", "timestamp": 1791242326370}
+{"type": "text", "text": "-resistant", "timestamp": 1791242326390}
+{"type": "text", "text": " fractions", "timestamp": 1791242326413}
+{"type": "text", "text": " are", "timestamp": 1791242326434}
+{"type": "text", "text": " WT", "timestamp": 1791242326468}
+{"type": "text", "text": " ", "timestamp": 1791242326478}
+{"type": "text", "text": "81", "timestamp": 1791242326503}
+{"type": "text", "text": ".", "timestamp": 1791242326529}
+{"type": "text", "text": "9", "timestamp": 1791242326557}
+{"type": "text", "text": " ±", "timestamp": 1791242326577}
+{"type": "text", "text": " ", "timestamp": 1791242326598}
+{"type": "text", "text": "4", "timestamp": 1791242326599}
+{"type": "text", "text": ".", "timestamp": 1791242326616}
+{"type": "text", "text": "2", "timestamp": 1791242326636}
+{"type": "text", "text": "%,", "timestamp": 1791242326691}
+{"type": "text", "text": " H", "timestamp": 1791242326692}
+{"type": "text", "text": "ET", "timestamp": 1791242326702}
+{"type": "text", "text": " ", "timestamp": 1791242326729}
+{"type": "text", "text": "62", "timestamp": 1791242326748}
+{"type": "text", "text": ".", "timestamp": 1791242326775}
+{"type": "text", "text": "7", "timestamp": 1791242326795}
+{"type": "text", "text": " ±", "timestamp": 1791242326796}
+{"type": "text", "text": " ", "timestamp": 1791242326818}
+{"type": "text", "text": "7", "timestamp": 1791242326841}
+{"type": "text", "text": ".", "timestamp": 1791242326860}
+{"type": "text", "text": "8", "timestamp": 1791242326880}
+{"type": "text", "text": "%,", "timestamp": 1791242326906}
+{"type": "text", "text": " and", "timestamp": 1791242326927}
+{"type": "text", "text": " KO", "timestamp": 1791242326949}
+{"type": "text", "text": " ", "timestamp": 1791242326968}
+{"type": "text", "text": "52", "timestamp": 1791242326990}
+{"type": "text", "text": ".", "timestamp": 1791242327019}
+{"type": "text", "text": "2", "timestamp": 1791242327020}
+{"type": "text", "text": " ±", "timestamp": 1791242327042}
+{"type": "text", "text": " ", "timestamp": 1791242327069}
+{"type": "text", "text": "1", "timestamp": 1791242327129}
+{"type": "text", "text": ".", "timestamp": 1791242327177}
+{"type": "text", "text": "8", "timestamp": 1791242327188}
+{"type": "text", "text": "%", "timestamp": 1791242327205}
+{"type": "text", "text": "—", "timestamp": 1791242327210}
+{"type": "text", "text": "mean", "timestamp": 1791242327210}
+{"type": "text", "text": " ±", "timestamp": 1791242327211}
+{"type": "text", "text": " SEM", "timestamp": 1791242327230}
+{"type": "text", "text": ",", "timestamp": 1791242327247}
+{"type": "text", "text": " with", "timestamp": 1791242327274}
+{"type": "text", "text": " four", "timestamp": 1791242327274}
+{"type": "text", "text": " to", "timestamp": 1791242327295}
+{"type": "text", "text": " five", "timestamp": 1791242327315}
+{"type": "text", "text": " mice", "timestamp": 1791242327336}
+{"type": "text", "text": "/gen", "timestamp": 1791242327363}
+{"type": "text", "text": "otype", "timestamp": 1791242327389}
+{"type": "text", "text": " in", "timestamp": 1791242327412}
+{"type": "text", "text": " the", "timestamp": 1791242327427}
+{"type": "text", "text": " caption", "timestamp": 1791242327456}
+{"type": "text", "text": ".", "timestamp": 1791242327457}
+{"type": "text", "text": " Total", "timestamp": 1791242327473}
+{"type": "text", "text": " PMP", "timestamp": 1791242327497}
+{"type": "text", "text": "22", "timestamp": 1791242327516}
+{"type": "text", "text": " increases", "timestamp": 1791242327540}
+{"type": "text", "text": " in", "timestamp": 1791242327565}
+{"type": "text", "text": " deficient", "timestamp": 1791242327583}
+{"type": "text", "text": " nerves", "timestamp": 1791242327613}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242327627}
+{"type": "text", "text": "  ", "timestamp": 1791242327657}
+{"type": "text", "text": " Individual", "timestamp": 1791242327658}
+{"type": "text", "text": "-an", "timestamp": 1791242327677}
+{"type": "text", "text": "imal", "timestamp": 1791242327692}
+{"type": "text", "text": " matching", "timestamp": 1791242327717}
+{"type": "text", "text": " between", "timestamp": 1791242327738}
+{"type": "text", "text": " endpoints", "timestamp": 1791242327759}
+{"type": "text", "text": " is", "timestamp": 1791242327798}
+{"type": "text", "text": " unresolved", "timestamp": 1791242327801}
+{"type": "text", "text": " in", "timestamp": 1791242327822}
+{"type": "text", "text": " the", "timestamp": 1791242327847}
+{"type": "text", "text": " recovered", "timestamp": 1791242327899}
+{"type": "text", "text": " material", "timestamp": 1791242327900}
+{"type": "text", "text": "—not", "timestamp": 1791242327902}
+{"type": "text", "text": " proven", "timestamp": 1791242327949}
+{"type": "text", "text": " absent", "timestamp": 1791242327956}
+{"type": "text", "text": ".", "timestamp": 1791242327967}
+{"type": "text", "text": " These", "timestamp": 1791242327984}
+{"type": "text", "text": " results", "timestamp": 1791242328009}
+{"type": "text", "text": " establish", "timestamp": 1791242328030}
+{"type": "text", "text": " altered", "timestamp": 1791242328052}
+{"type": "text", "text": " gly", "timestamp": 1791242328053}
+{"type": "text", "text": "co", "timestamp": 1791242328070}
+{"type": "text", "text": "form", "timestamp": 1791242328095}
+{"type": "text", "text": " composition", "timestamp": 1791242328114}
+{"type": "text", "text": " despite", "timestamp": 1791242328136}
+{"type": "text", "text": " greater", "timestamp": 1791242328157}
+{"type": "text", "text": " total", "timestamp": 1791242328184}
+{"type": "text", "text": " abundance", "timestamp": 1791242328239}
+{"type": "text", "text": ",", "timestamp": 1791242328240}
+{"type": "text", "text": " not", "timestamp": 1791242328257}
+{"type": "text", "text": " absolute", "timestamp": 1791242328258}
+{"type": "text", "text": " mature", "timestamp": 1791242328278}
+{"type": "text", "text": " or", "timestamp": 1791242328321}
+{"type": "text", "text": " surface", "timestamp": 1791242328326}
+{"type": "text", "text": " abundance", "timestamp": 1791242328366}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242328372}
+{"type": "text", "text": "  ", "timestamp": 1791242328398}
+{"type": "text", "text": " Import", "timestamp": 1791242328410}
+{"type": "text", "text": "antly", "timestamp": 1791242328432}
+{"type": "text", "text": ",", "timestamp": 1791242328445}
+{"type": "text", "text": " impaired", "timestamp": 1791242328474}
+{"type": "text", "text": " processing", "timestamp": 1791242328475}
+{"type": "text", "text": " and", "timestamp": 1791242328492}
+{"type": "text", "text": " accumulation", "timestamp": 1791242328513}
+{"type": "text", "text": " are", "timestamp": 1791242328538}
+{"type": "text", "text": " not", "timestamp": 1791242328557}
+{"type": "text", "text": " mutually", "timestamp": 1791242328579}
+{"type": "text", "text": " exclusive", "timestamp": 1791242328600}
+{"type": "text", "text": ".", "timestamp": 1791242328620}
+{"type": "text", "text": " My", "timestamp": 1791242328643}
+{"type": "text", "text": " interpretation", "timestamp": 1791242328665}
+{"type": "text", "text": " is", "timestamp": 1791242328685}
+{"type": "text", "text": " that", "timestamp": 1791242328711}
+{"type": "text", "text": " these", "timestamp": 1791242328712}
+{"type": "text", "text": " steady", "timestamp": 1791242328747}
+{"type": "text", "text": "-state", "timestamp": 1791242328754}
+{"type": "text", "text": " measurements", "timestamp": 1791242328779}
+{"type": "text", "text": " cannot", "timestamp": 1791242328800}
+{"type": "text", "text": " distinguish", "timestamp": 1791242328819}
+{"type": "text", "text": " slower", "timestamp": 1791242328844}
+{"type": "text", "text": " maturation", "timestamp": 1791242328864}
+{"type": "text", "text": " from", "timestamp": 1791242328885}
+{"type": "text", "text": " altered", "timestamp": 1791242328906}
+{"type": "text", "text": " synthesis", "timestamp": 1791242328930}
+{"type": "text", "text": " or", "timestamp": 1791242328931}
+{"type": "text", "text": " gly", "timestamp": 1791242328961}
+{"type": "text", "text": "co", "timestamp": 1791242328980}
+{"type": "text", "text": "form", "timestamp": 1791242328997}
+{"type": "text", "text": "-specific", "timestamp": 1791242329021}
+{"type": "text", "text": " turnover", "timestamp": 1791242329043}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242329060}
+{"type": "text", "text": "2", "timestamp": 1791242329082}
+{"type": "text", "text": ".", "timestamp": 1791242329105}
+{"type": "text", "text": " PMC", "timestamp": 1791242329126}
+{"type": "text", "text": "660", "timestamp": 1791242329149}
+{"type": "text", "text": "775", "timestamp": 1791242329150}
+{"type": "text", "text": "9", "timestamp": 1791242329167}
+{"type": "text", "text": ",", "timestamp": 1791242329201}
+{"type": "text", "text": " Figure", "timestamp": 1791242329216}
+{"type": "text", "text": " ", "timestamp": 1791242329240}
+{"type": "text", "text": "6", "timestamp": 1791242329257}
+{"type": "text", "text": "H", "timestamp": 1791242329290}
+{"type": "text", "text": " and", "timestamp": 1791242329309}
+{"type": "text", "text": " Figure", "timestamp": 1791242329529}
+{"type": "text", "text": " ", "timestamp": 1791242329603}
+{"type": "text", "text": "7", "timestamp": 1791242329660}
+{"type": "text", "text": "C", "timestamp": 1791242329700}
+{"type": "text", "text": ":", "timestamp": 1791242329716}
+{"type": "text", "text": " reverse", "timestamp": 1791242329758}
+{"type": "text", "text": "-direction", "timestamp": 1791242329790}
+{"type": "text", "text": " evidence", "timestamp": 1791242329808}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242329833}
+{"type": "text", "text": "  ", "timestamp": 1791242329845}
+{"type": "text", "text": " Figure", "timestamp": 1791242329860}
+{"type": "text", "text": " ", "timestamp": 1791242329914}
+{"type": "text", "text": "6", "timestamp": 1791242329933}
+{"type": "text", "text": "H", "timestamp": 1791242329968}
+{"type": "text", "text": " compares", "timestamp": 1791242330019}
+{"type": "text", "text": " pooled", "timestamp": 1791242330062}
+{"type": "text", "text": " PMP", "timestamp": 1791242330097}
+{"type": "text", "text": "22", "timestamp": 1791242330186}
+{"type": "text", "text": " sh", "timestamp": 1791242330439}
+{"type": "text", "text": "RNA", "timestamp": 1791242330486}
+{"type": "text", "text": " with", "timestamp": 1791242330550}
+{"type": "text", "text": " scrambled", "timestamp": 1791242330569}
+{"type": "text", "text": " control", "timestamp": 1791242330615}
+{"type": "text", "text": " in", "timestamp": 1791242330629}
+{"type": "text", "text": " neonatal", "timestamp": 1791242330646}
+{"type": "text", "text": "-r", "timestamp": 1791242331307}
+{"type": "text", "text": "at", "timestamp": 1791242331415}
+{"type": "text", "text": "-derived", "timestamp": 1791242331447}
+{"type": "text", "text": " Schw", "timestamp": 1791242331688}
+{"type": "text", "text": "ann", "timestamp": 1791242331839}
+{"type": "text", "text": " cells", "timestamp": 1791242331884}
+{"type": "text", "text": ",", "timestamp": 1791242331924}
+{"type": "text", "text": " measuring", "timestamp": 1791242331930}
+{"type": "text", "text": " apo", "timestamp": 1791242331936}
+{"type": "text", "text": "A", "timestamp": 1791242331958}
+{"type": "text", "text": "-I", "timestamp": 1791242332015}
+{"type": "text", "text": "-associated", "timestamp": 1791242332065}
+{"type": "text", "text": " cholesterol", "timestamp": 1791242332101}
+{"type": "text", "text": " eff", "timestamp": 1791242332104}
+{"type": "text", "text": "lux", "timestamp": 1791242332121}
+{"type": "text", "text": ".", "timestamp": 1791242332125}
+{"type": "text", "text": " Figure", "timestamp": 1791242332133}
+{"type": "text", "text": " ", "timestamp": 1791242332134}
+{"type": "text", "text": "7", "timestamp": 1791242332139}
+{"type": "text", "text": "C", "timestamp": 1791242332157}
+{"type": "text", "text": " shows", "timestamp": 1791242332164}
+{"type": "text", "text": " surface", "timestamp": 1791242332173}
+{"type": "text", "text": " AB", "timestamp": 1791242332182}
+{"type": "text", "text": "CA", "timestamp": 1791242332190}
+{"type": "text", "text": "1", "timestamp": 1791242332194}
+{"type": "text", "text": ",", "timestamp": 1791242332202}
+{"type": "text", "text": " not", "timestamp": 1791242332205}
+{"type": "text", "text": " PMP", "timestamp": 1791242332209}
+{"type": "text", "text": "22", "timestamp": 1791242332221}
+{"type": "text", "text": ";", "timestamp": 1791242332230}
+{"type": "text", "text": " its", "timestamp": 1791242332240}
+{"type": "text", "text": " depicted", "timestamp": 1791242332253}
+{"type": "text", "text": " comparison", "timestamp": 1791242332264}
+{"type": "text", "text": " is", "timestamp": 1791242332266}
+{"type": "text", "text": " sh", "timestamp": 1791242332274}
+{"type": "text", "text": "RNA", "timestamp": 1791242332282}
+{"type": "text", "text": "-G", "timestamp": 1791242332283}
+{"type": "text", "text": "FP", "timestamp": 1791242332284}
+{"type": "text", "text": "-positive", "timestamp": 1791242332285}
+{"type": "text", "text": " versus", "timestamp": 1791242332286}
+{"type": "text", "text": " non", "timestamp": 1791242332287}
+{"type": "text", "text": "trans", "timestamp": 1791242332288}
+{"type": "text", "text": "fected", "timestamp": 1791242332289}
+{"type": "text", "text": " cells", "timestamp": 1791242332290}
+{"type": "text", "text": ".", "timestamp": 1791242332291}
+{"type": "text", "text": " Don", "timestamp": 1791242332291}
+{"type": "text", "text": "or", "timestamp": 1791242332292}
+{"type": "text", "text": "/p", "timestamp": 1791242332292}
+{"type": "text", "text": "ool", "timestamp": 1791242332292}
+{"type": "text", "text": " identities", "timestamp": 1791242332293}
+{"type": "text", "text": " and", "timestamp": 1791242332293}
+{"type": "text", "text": " cross", "timestamp": 1791242332293}
+{"type": "text", "text": "-ass", "timestamp": 1791242332294}
+{"type": "text", "text": "ay", "timestamp": 1791242332294}
+{"type": "text", "text": " matching", "timestamp": 1791242332294}
+{"type": "text", "text": " remain", "timestamp": 1791242332295}
+{"type": "text", "text": " unresolved", "timestamp": 1791242332295}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242332295}
+{"type": "text", "text": "  ", "timestamp": 1791242332296}
+{"type": "text", "text": " This", "timestamp": 1791242332296}
+{"type": "text", "text": " strengthens", "timestamp": 1791242332296}
+{"type": "text", "text": " the", "timestamp": 1791242332296}
+{"type": "text", "text": " PMP", "timestamp": 1791242332297}
+{"type": "text", "text": "22", "timestamp": 1791242332297}
+{"type": "text", "text": "-to", "timestamp": 1791242332299}
+{"type": "text", "text": "-eff", "timestamp": 1791242332299}
+{"type": "text", "text": "lux", "timestamp": 1791242332300}
+{"type": "text", "text": " sub", "timestamp": 1791242332300}
+{"type": "text", "text": "edge", "timestamp": 1791242332300}
+{"type": "text", "text": " beyond", "timestamp": 1791242332301}
+{"type": "text", "text": " congenital", "timestamp": 1791242332301}
+{"type": "text", "text": " mouse", "timestamp": 1791242332302}
+{"type": "text", "text": " knockout", "timestamp": 1791242332303}
+{"type": "text", "text": ",", "timestamp": 1791242332303}
+{"type": "text", "text": " without", "timestamp": 1791242332303}
+{"type": "text", "text": " eliminating", "timestamp": 1791242332308}
+{"type": "text", "text": " sh", "timestamp": 1791242332308}
+{"type": "text", "text": "RNA", "timestamp": 1791242332308}
+{"type": "text", "text": " specificity", "timestamp": 1791242332309}
+{"type": "text", "text": " or", "timestamp": 1791242332309}
+{"type": "text", "text": " cell", "timestamp": 1791242332309}
+{"type": "text", "text": "-state", "timestamp": 1791242332309}
+{"type": "text", "text": " alternatives", "timestamp": 1791242332310}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242332310}
+{"type": "text", "text": "3", "timestamp": 1791242332310}
+{"type": "text", "text": ".", "timestamp": 1791242332310}
+{"type": "text", "text": " Existing", "timestamp": 1791242332311}
+{"type": "text", "text": " cholesterol", "timestamp": 1791242332311}
+{"type": "text", "text": "-related", "timestamp": 1791242332312}
+{"type": "text", "text": " interventions", "timestamp": 1791242332322}
+{"type": "text", "text": " do", "timestamp": 1791242332323}
+{"type": "text", "text": " not", "timestamp": 1791242332323}
+{"type": "text", "text": " supply", "timestamp": 1791242332323}
+{"type": "text", "text": " the", "timestamp": 1791242332323}
+{"type": "text", "text": " missing", "timestamp": 1791242332324}
+{"type": "text", "text": " endpoint", "timestamp": 1791242332324}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242332324}
+{"type": "text", "text": "  ", "timestamp": 1791242332324}
+{"type": "text", "text": " Figure", "timestamp": 1791242332325}
+{"type": "text", "text": " ", "timestamp": 1791242332325}
+{"type": "text", "text": "6", "timestamp": 1791242332325}
+{"type": "text", "text": "I", "timestamp": 1791242332325}
+{"type": "text", "text": "–", "timestamp": 1791242332326}
+{"type": "text", "text": "K", "timestamp": 1791242332326}
+{"type": "text", "text": " contains", "timestamp": 1791242332326}
+{"type": "text", "text": " genuine", "timestamp": 1791242332326}
+{"type": "text", "text": " ", "timestamp": 1791242332327}
+{"type": "text", "text": "8", "timestamp": 1791242332327}
+{"type": "text", "text": "-Br", "timestamp": 1791242332327}
+{"type": "text", "text": "-c", "timestamp": 1791242332327}
+{"type": "text", "text": "AMP", "timestamp": 1791242332328}
+{"type": "text", "text": "/C", "timestamp": 1791242332328}
+{"type": "text", "text": "s", "timestamp": 1791242332328}
+{"type": "text", "text": "A", "timestamp": 1791242332328}
+{"type": "text", "text": " treatment", "timestamp": 1791242332329}
+{"type": "text", "text": " comparisons", "timestamp": 1791242332329}
+{"type": "text", "text": ",", "timestamp": 1791242332329}
+{"type": "text", "text": " but", "timestamp": 1791242332329}
+{"type": "text", "text": " measures", "timestamp": 1791242332335}
+{"type": "text", "text": " eff", "timestamp": 1791242332335}
+{"type": "text", "text": "lux", "timestamp": 1791242332335}
+{"type": "text", "text": " and", "timestamp": 1791242332335}
+{"type": "text", "text": " AB", "timestamp": 1791242332335}
+{"type": "text", "text": "CA", "timestamp": 1791242332336}
+{"type": "text", "text": "1", "timestamp": 1791242332336}
+{"type": "text", "text": " protein", "timestamp": 1791242332336}
+{"type": "text", "text": "—not", "timestamp": 1791242332342}
+{"type": "text", "text": " matched", "timestamp": 1791242332365}
+{"type": "text", "text": " PMP", "timestamp": 1791242332387}
+{"type": "text", "text": "22", "timestamp": 1791242332409}
+{"type": "text", "text": " total", "timestamp": 1791242332409}
+{"type": "text", "text": "/", "timestamp": 1791242332430}
+{"type": "text", "text": "End", "timestamp": 1791242332450}
+{"type": "text", "text": "o", "timestamp": 1791242332476}
+{"type": "text", "text": "H", "timestamp": 1791242332494}
+{"type": "text", "text": "/s", "timestamp": 1791242332519}
+{"type": "text", "text": "urface", "timestamp": 1791242332539}
+{"type": "text", "text": ".", "timestamp": 1791242332560}
+{"type": "text", "text": " Figure", "timestamp": 1791242332581}
+{"type": "text", "text": " ", "timestamp": 1791242332604}
+{"type": "text", "text": "5", "timestamp": 1791242332637}
+{"type": "text", "text": "C", "timestamp": 1791242332646}
+{"type": "text", "text": " directly", "timestamp": 1791242332670}
+{"type": "text", "text": " labels", "timestamp": 1791242332671}
+{"type": "text", "text": " surface", "timestamp": 1791242332695}
+{"type": "text", "text": " PMP", "timestamp": 1791242332715}
+{"type": "text", "text": "22", "timestamp": 1791242332737}
+{"type": "text", "text": ",", "timestamp": 1791242332756}
+{"type": "text", "text": " but", "timestamp": 1791242332777}
+{"type": "text", "text": " only", "timestamp": 1791242332801}
+{"type": "text", "text": " for", "timestamp": 1791242332856}
+{"type": "text", "text": " baseline", "timestamp": 1791242332859}
+{"type": "text", "text": " WT", "timestamp": 1791242332866}
+{"type": "text", "text": " col", "timestamp": 1791242332883}
+{"type": "text", "text": "ocal", "timestamp": 1791242332905}
+{"type": "text", "text": "ization", "timestamp": 1791242333071}
+{"type": "text", "text": ",", "timestamp": 1791242333207}
+{"type": "text", "text": " not", "timestamp": 1791242333231}
+{"type": "text", "text": " an", "timestamp": 1791242333293}
+{"type": "text", "text": " intervention", "timestamp": 1791242333322}
+{"type": "text", "text": " response", "timestamp": 1791242333338}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242333359}
+{"type": "text", "text": "My", "timestamp": 1791242333369}
+{"type": "text", "text": " direct", "timestamp": 1791242333369}
+{"type": "text", "text": " PMP", "timestamp": 1791242333377}
+{"type": "text", "text": "22", "timestamp": 1791242333378}
+{"type": "text", "text": " dataset", "timestamp": 1791242333379}
+{"type": "text", "text": " is", "timestamp": 1791242333379}
+{"type": "text", "text": " J", "timestamp": 1791242333380}
+{"type": "text", "text": "CI", "timestamp": 1791242333381}
+{"type": "text", "text": " Insight", "timestamp": 1791242333381}
+{"type": "text", "text": " ", "timestamp": 1791242333381}
+{"type": "text", "text": "201", "timestamp": 1791242333382}
+{"type": "text", "text": "297", "timestamp": 1791242333382}
+{"type": "text", "text": ",", "timestamp": 1791242333383}
+{"type": "text", "text": " Supporting", "timestamp": 1791242333383}
+{"type": "text", "text": " Data", "timestamp": 1791242333388}
+{"type": "text", "text": " Values", "timestamp": 1791242333391}
+{"type": "text", "text": ",", "timestamp": 1791242333391}
+{"type": "text", "text": " Supplemental", "timestamp": 1791242333397}
+{"type": "text", "text": " Figure", "timestamp": 1791242333489}
+{"type": "text", "text": " ", "timestamp": 1791242333513}
+{"type": "text", "text": "4", "timestamp": 1791242333538}
+{"type": "text", "text": "B", "timestamp": 1791242333561}
+{"type": "text", "text": ":", "timestamp": 1791242333569}
+{"type": "text", "text": " V", "timestamp": 1791242333590}
+{"type": "text", "text": "U", "timestamp": 1791242333590}
+{"type": "text", "text": "049", "timestamp": 1791242333591}
+{"type": "text", "text": "437", "timestamp": 1791242333592}
+{"type": "text", "text": "2", "timestamp": 1791242333596}
+{"type": "text", "text": " versus", "timestamp": 1791242333620}
+{"type": "text", "text": " vehicle", "timestamp": 1791242333689}
+{"type": "text", "text": " in", "timestamp": 1791242333690}
+{"type": "text", "text": " transient", "timestamp": 1791242333702}
+{"type": "text", "text": " HE", "timestamp": 1791242333703}
+{"type": "text", "text": "K", "timestamp": 1791242333718}
+{"type": "text", "text": "293", "timestamp": 1791242333744}
+{"type": "text", "text": " cells", "timestamp": 1791242333758}
+{"type": "text", "text": ",", "timestamp": 1791242333784}
+{"type": "text", "text": " with", "timestamp": 1791242333814}
+{"type": "text", "text": " surface", "timestamp": 1791242333829}
+{"type": "text", "text": "/", "timestamp": 1791242333847}
+{"type": "text", "text": "total", "timestamp": 1791242333873}
+{"type": "text", "text": " fluorescence", "timestamp": 1791242333876}
+{"type": "text", "text": " and", "timestamp": 1791242333901}
+{"type": "text", "text": " efficiency", "timestamp": 1791242333925}
+{"type": "text", "text": ".", "timestamp": 1791242333940}
+{"type": "text", "text": " It", "timestamp": 1791242333962}
+{"type": "text", "text": " has", "timestamp": 1791242333983}
+{"type": "text", "text": " no", "timestamp": 1791242334011}
+{"type": "text", "text": " End", "timestamp": 1791242334012}
+{"type": "text", "text": "o", "timestamp": 1791242334036}
+{"type": "text", "text": "H", "timestamp": 1791242334063}
+{"type": "text", "text": " endpoint", "timestamp": 1791242334087}
+{"type": "text", "text": " and", "timestamp": 1791242334105}
+{"type": "text", "text": " is", "timestamp": 1791242334128}
+{"type": "text", "text": " not", "timestamp": 1791242334146}
+{"type": "text", "text": " an", "timestamp": 1791242334178}
+{"type": "text", "text": " established", "timestamp": 1791242334179}
+{"type": "text", "text": " cholesterol", "timestamp": 1791242334207}
+{"type": "text", "text": "-", "timestamp": 1791242334225}
+{"type": "text", "text": "transport", "timestamp": 1791242334242}
+{"type": "text", "text": " intervention", "timestamp": 1791242334264}
+{"type": "text", "text": ".", "timestamp": 1791242334289}
+{"type": "text", "text": " ACS", "timestamp": 1791242334316}
+{"type": "text", "text": "L", "timestamp": 1791242334317}
+{"type": "text", "text": "5", "timestamp": 1791242334335}
+{"type": "text", "text": "/", "timestamp": 1791242334366}
+{"type": "text", "text": "HR", "timestamp": 1791242334426}
+{"type": "text", "text": "P", "timestamp": 1791242334427}
+{"type": "text", "text": " and", "timestamp": 1791242334437}
+{"type": "text", "text": " UG", "timestamp": 1791242334438}
+{"type": "text", "text": "GT", "timestamp": 1791242334460}
+{"type": "text", "text": "/", "timestamp": 1791242334485}
+{"type": "text", "text": "IG", "timestamp": 1791242334521}
+{"type": "text", "text": "F", "timestamp": 1791242334534}
+{"type": "text", "text": "1", "timestamp": 1791242334550}
+{"type": "text", "text": "R", "timestamp": 1791242334551}
+{"type": "text", "text": " likewise", "timestamp": 1791242334571}
+{"type": "text", "text": " cannot", "timestamp": 1791242334593}
+{"type": "text", "text": " fill", "timestamp": 1791242334624}
+{"type": "text", "text": " the", "timestamp": 1791242334649}
+{"type": "text", "text": " PMP", "timestamp": 1791242334665}
+{"type": "text", "text": "22", "timestamp": 1791242334686}
+{"type": "text", "text": " gap", "timestamp": 1791242334714}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242334715}
+{"type": "text", "text": "I", "timestamp": 1791242334731}
+{"type": "text", "text": " also", "timestamp": 1791242334757}
+{"type": "text", "text": " incorporated", "timestamp": 1791242334773}
+{"type": "text", "text": " your", "timestamp": 1791242334967}
+{"type": "text", "text": " corrected", "timestamp": 1791242335086}
+{"type": "text", "text": " hand", "timestamp": 1791242335274}
+{"type": "text", "text": "off", "timestamp": 1791242335293}
+{"type": "text", "text": ",", "timestamp": 1791242335300}
+{"type": "text", "text": " post", "timestamp": 1791242335301}
+{"type": "text", "text": "_a", "timestamp": 1791242335529}
+{"type": "text", "text": "77", "timestamp": 1791242335563}
+{"type": "text", "text": "d", "timestamp": 1791242335566}
+{"type": "text", "text": "ff", "timestamp": 1791242335580}
+{"type": "text", "text": "180", "timestamp": 1791242335647}
+{"type": "text", "text": "2", "timestamp": 1791242335687}
+{"type": "text", "text": "cc", "timestamp": 1791242335715}
+{"type": "text", "text": "42", "timestamp": 1791242335717}
+{"type": "text", "text": "a", "timestamp": 1791242335721}
+{"type": "text", "text": "291", "timestamp": 1791242335730}
+{"type": "text", "text": "481", "timestamp": 1791242335738}
+{"type": "text", "text": "b", "timestamp": 1791242335743}
+{"type": "text", "text": "8", "timestamp": 1791242335754}
+{"type": "text", "text": "e", "timestamp": 1791242335769}
+{"type": "text", "text": "899", "timestamp": 1791242335770}
+{"type": "text", "text": "a", "timestamp": 1791242335775}
+{"type": "text", "text": "205", "timestamp": 1791242335802}
+{"type": "text", "text": "3", "timestamp": 1791242335811}
+{"type": "text", "text": ":", "timestamp": 1791242335834}
+{"type": "text", "text": " the", "timestamp": 1791242335858}
+{"type": "text", "text": " relative", "timestamp": 1791242335926}
+{"type": "text", "text": " AB", "timestamp": 1791242335944}
+{"type": "text", "text": "CA", "timestamp": 1791242335950}
+{"type": "text", "text": "1", "timestamp": 1791242335954}
+{"type": "text", "text": "/", "timestamp": 1791242335962}
+{"type": "text", "text": "AB", "timestamp": 1791242335966}
+{"type": "text", "text": "CG", "timestamp": 1791242335971}
+{"type": "text", "text": "1", "timestamp": 1791242335972}
+{"type": "text", "text": " RNA", "timestamp": 1791242335974}
+{"type": "text", "text": " contrast", "timestamp": 1791242335978}
+{"type": "text", "text": " should", "timestamp": 1791242335979}
+{"type": "text", "text": " not", "timestamp": 1791242335985}
+{"type": "text", "text": " become", "timestamp": 1791242336027}
+{"type": "text", "text": " independently", "timestamp": 1791242336074}
+{"type": "text", "text": " replicated", "timestamp": 1791242336206}
+{"type": "text", "text": " ABC", "timestamp": 1791242336238}
+{"type": "text", "text": "G", "timestamp": 1791242336304}
+{"type": "text", "text": "1", "timestamp": 1791242336393}
+{"type": "text", "text": " repression", "timestamp": 1791242336408}
+{"type": "text", "text": " or", "timestamp": 1791242336489}
+{"type": "text", "text": " increased", "timestamp": 1791242336508}
+{"type": "text", "text": " eff", "timestamp": 1791242336517}
+{"type": "text", "text": "lux", "timestamp": 1791242336520}
+{"type": "text", "text": ".\n\n", "timestamp": 1791242336521}
+{"type": "text", "text": "Evidence", "timestamp": 1791242336523}
+{"type": "text", "text": " references", "timestamp": 1791242336525}
+{"type": "text", "text": "\n\n", "timestamp": 1791242336525}
+{"type": "text", "text": " ", "timestamp": 1791242336526}
+{"type": "text", "text": " Existing", "timestamp": 1791242336527}
+{"type": "text", "text": " primary", "timestamp": 1791242336528}
+{"type": "text", "text": "-source", "timestamp": 1791242336565}
+{"type": "text", "text": " package", "timestamp": 1791242336595}
+{"type": "text", "text": ":\n", "timestamp": 1791242336642}
+{"type": "text", "text": " ", "timestamp": 1791242336711}
+{"type": "text", "text": " artifact", "timestamp": 1791242336741}
+{"type": "text", "text": "_", "timestamp": 1791242336755}
+{"type": "text", "text": "773", "timestamp": 1791242336916}
+{"type": "text", "text": "310", "timestamp": 1791242336935}
+{"type": "text", "text": "14", "timestamp": 1791242336970}
+{"type": "text", "text": "c", "timestamp": 1791242336971}
+{"type": "text", "text": "88", "timestamp": 1791242337032}
+{"type": "text", "text": "a", "timestamp": 1791242337033}
+{"type": "text", "text": "4", "timestamp": 1791242337113}
+{"type": "text", "text": "d", "timestamp": 1791242337130}
+{"type": "text", "text": "8", "timestamp": 1791242337134}
+{"type": "text", "text": "da", "timestamp": 1791242337136}
+{"type": "text", "text": "77", "timestamp": 1791242337144}
+{"type": "text", "text": "add", "timestamp": 1791242337146}
+{"type": "text", "text": "923", "timestamp": 1791242337154}
+{"type": "text", "text": "216", "timestamp": 1791242337157}
+{"type": "text", "text": "f", "timestamp": 1791242337167}
+{"type": "text", "text": "59", "timestamp": 1791242337182}
+{"type": "text", "text": "ec", "timestamp": 1791242337189}
+{"type": "text", "text": "27", "timestamp": 1791242337199}
+{"type": "text", "text": "f", "timestamp": 1791242337203}
+{"type": "text", "text": "ca", "timestamp": 1791242337203}
+{"type": "text", "text": "413", "timestamp": 1791242337217}
+{"type": "text", "text": "c", "timestamp": 1791242337217}
+{"type": "text", "text": "264", "timestamp": 1791242337231}
+{"type": "text", "text": "573", "timestamp": 1791242337271}
+{"type": "text", "text": "2", "timestamp": 1791242337291}
+{"type": "text", "text": "f", "timestamp": 1791242337292}
+{"type": "text", "text": "895", "timestamp": 1791242337298}
+{"type": "text", "text": "b", "timestamp": 1791242337302}
+{"type": "text", "text": "484", "timestamp": 1791242337306}
+{"type": "text", "text": "c", "timestamp": 1791242337391}
+{"type": "text", "text": "172", "timestamp": 1791242337419}
+{"type": "text", "text": "088", "timestamp": 1791242337439}
+{"type": "text", "text": "\n\n", "timestamp": 1791242337441}
+{"type": "text", "text": " ", "timestamp": 1791242337451}
+{"type": "text", "text": " Completed", "timestamp": 1791242337472}
+{"type": "text", "text": " endpoint", "timestamp": 1791242337476}
+{"type": "text", "text": " table", "timestamp": 1791242337479}
+{"type": "text", "text": ":\n", "timestamp": 1791242337481}
+{"type": "text", "text": " ", "timestamp": 1791242337486}
+{"type": "text", "text": " artifact", "timestamp": 1791242337488}
+{"type": "text", "text": "_f", "timestamp": 1791242337510}
+{"type": "text", "text": "74", "timestamp": 1791242337511}
+{"type": "text", "text": "a", "timestamp": 1791242337511}
+{"type": "text", "text": "057", "timestamp": 1791242337516}
+{"type": "text", "text": "af", "timestamp": 1791242337525}
+{"type": "text", "text": "331", "timestamp": 1791242337542}
+{"type": "text", "text": "30", "timestamp": 1791242337544}
+{"type": "text", "text": "bec", "timestamp": 1791242337544}
+{"type": "text", "text": "215", "timestamp": 1791242337554}
+{"type": "text", "text": "600", "timestamp": 1791242337555}
+{"type": "text", "text": "892", "timestamp": 1791242337565}
+{"type": "text", "text": "b", "timestamp": 1791242337577}
+{"type": "text", "text": "0", "timestamp": 1791242337578}
+{"type": "text", "text": "b", "timestamp": 1791242337591}
+{"type": "text", "text": "6", "timestamp": 1791242337599}
+{"type": "text", "text": "f", "timestamp": 1791242337610}
+{"type": "text", "text": "52", "timestamp": 1791242337611}
+{"type": "text", "text": "feb", "timestamp": 1791242337616}
+{"type": "text", "text": "3", "timestamp": 1791242337667}
+{"type": "text", "text": "fa", "timestamp": 1791242337669}
+{"type": "text", "text": "6", "timestamp": 1791242337677}
+{"type": "text", "text": "af", "timestamp": 1791242337680}
+{"type": "text", "text": "c", "timestamp": 1791242337683}
+{"type": "text", "text": "208", "timestamp": 1791242337685}
+{"type": "text", "text": "978", "timestamp": 1791242337688}
+{"type": "text", "text": "f", "timestamp": 1791242337693}
+{"type": "text", "text": "72", "timestamp": 1791242337697}
+{"type": "text", "text": "c", "timestamp": 1791242337703}
+{"type": "text", "text": "473", "timestamp": 1791242337704}
+{"type": "text", "text": "d", "timestamp": 1791242337705}
+{"type": "text", "text": "5", "timestamp": 1791242337714}
+{"type": "text", "text": "a", "timestamp": 1791242337714}
+{"type": "text", "text": "77", "timestamp": 1791242337722}
+{"type": "text", "text": "b", "timestamp": 1791242337725}
+{"type": "text", "text": "49", "timestamp": 1791242337732}
+{"type": "text", "text": "\n\n", "timestamp": 1791242337738}
+{"type": "text", "text": " ", "timestamp": 1791242337740}
+{"type": "text", "text": " Completed", "timestamp": 1791242337752}
+{"type": "text", "text": " analysis", "timestamp": 1791242337765}
+{"type": "text", "text": ":\n", "timestamp": 1791242337800}
+{"type": "text", "text": " ", "timestamp": 1791242337815}
+{"type": "text", "text": " post", "timestamp": 1791242337831}
+{"type": "text", "text": "_d", "timestamp": 1791242337838}
+{"type": "text", "text": "2", "timestamp": 1791242337848}
+{"type": "text", "text": "aa", "timestamp": 1791242337851}
+{"type": "text", "text": "0", "timestamp": 1791242337854}
+{"type": "text", "text": "d", "timestamp": 1791242337859}
+{"type": "text", "text": "7", "timestamp": 1791242337869}
+{"type": "text", "text": "e", "timestamp": 1791242337872}
+{"type": "text", "text": "935", "timestamp": 1791242337877}
+{"type": "text", "text": "f", "timestamp": 1791242337886}
+{"type": "text", "text": "4", "timestamp": 1791242337899}
+{"type": "text", "text": "cab", "timestamp": 1791242337908}
+{"type": "text", "text": "be", "timestamp": 1791242337911}
+{"type": "text", "text": "60", "timestamp": 1791242337917}
+{"type": "text", "text": "af", "timestamp": 1791242337941}
+{"type": "text", "text": "149", "timestamp": 1791242337965}
+{"type": "text", "text": "4", "timestamp": 1791242337979}
+{"type": "text", "text": "dda", "timestamp": 1791242338020}
+{"type": "text", "text": "5", "timestamp": 1791242338023}
+{"type": "text", "text": "dd", "timestamp": 1791242338049}
+{"type": "text", "text": "\n\n", "timestamp": 1791242338071}
+{"type": "text", "text": "I", "timestamp": 1791242338090}
+{"type": "text", "text": " re", "timestamp": 1791242338116}
+{"type": "text", "text": "-read", "timestamp": 1791242338116}
+{"type": "text", "text": " and", "timestamp": 1791242338195}
+{"type": "text", "text": " hash", "timestamp": 1791242338196}
+{"type": "text", "text": "-", "timestamp": 1791242338197}
+{"type": "text", "text": "verified", "timestamp": 1791242338221}
+{"type": "text", "text": " the", "timestamp": 1791242338229}
+{"type": "text", "text": " shared", "timestamp": 1791242338245}
+{"type": "text", "text": " primary", "timestamp": 1791242338278}
+{"type": "text", "text": " HTML", "timestamp": 1791242338283}
+{"type": "text", "text": ",", "timestamp": 1791242338292}
+{"type": "text", "text": " checked", "timestamp": 1791242338320}
+{"type": "text", "text": " current", "timestamp": 1791242338349}
+{"type": "text", "text": " discussions", "timestamp": 1791242338365}
+{"type": "text", "text": "/in", "timestamp": 1791242338397}
+{"type": "text", "text": "box", "timestamp": 1791242338421}
+{"type": "text", "text": ",", "timestamp": 1791242338430}
+{"type": "text", "text": " and", "timestamp": 1791242338437}
+{"type": "text", "text": " synced", "timestamp": 1791242338456}
+{"type": "text", "text": " this", "timestamp": 1791242338487}
+{"type": "text", "text": " assessment", "timestamp": 1791242338501}
+{"type": "text", "text": " to", "timestamp": 1791242338528}
+{"type": "text", "text": " LAB", "timestamp": 1791242338569}
+{"type": "text", "text": "BOOK", "timestamp": 1791242338580}
+{"type": "text", "text": " q", "timestamp": 1791242338581}
+{"type": "text", "text": "_", "timestamp": 1791242338594}
+{"type": "text", "text": "959", "timestamp": 1791242338620}
+{"type": "text", "text": "8", "timestamp": 1791242338637}
+{"type": "text", "text": "a", "timestamp": 1791242338661}
+{"type": "text", "text": "009", "timestamp": 1791242338686}
+{"type": "text", "text": "12", "timestamp": 1791242338712}
+{"type": "text", "text": "a", "timestamp": 1791242338713}
+{"type": "text", "text": "748", "timestamp": 1791242338739}
+{"type": "text", "text": "ce", "timestamp": 1791242338757}
+{"type": "text", "text": ".", "timestamp": 1791242338798}
+{"type": "text", "text": " No", "timestamp": 1791242338809}
+{"type": "text", "text": " new", "timestamp": 1791242338824}
+{"type": "text", "text": " external", "timestamp": 1791242338859}
+{"type": "text", "text": " collection", "timestamp": 1791242338906}
+{"type": "text", "text": " or", "timestamp": 1791242338932}
+{"type": "text", "text": " biological", "timestamp": 1791242338941}
+{"type": "text", "text": " re", "timestamp": 1791242338972}
+{"type": "text", "text": "analysis", "timestamp": 1791242338973}
+{"type": "text", "text": " was", "timestamp": 1791242338977}
+{"type": "text", "text": " performed", "timestamp": 1791242338978}
+{"type": "text", "text": ".", "timestamp": 1791242338993}
+{"type": "result", "session_id": "20261005_142928_ba0ddd", "exit_code": 0, "text": "No qualifying paired total/EndoH/surface PMP22 measurement emerged from my completed datasets. This is a bounded negative finding, not evidence that no such dataset exists.\n\nKeep ABCA1 loss and rat PMP22-shRNA efflux as context-separated reciprocal subedges. They support functional coupling, but do not establish a closed feedback loop or productive PMP22 delivery.\n\nExact source distinctions\n\n1. PMC6607759, Figure 4D–G: ABCA1 WT/HET/KO mouse sciatic nerves, ten months old.\n\n   Figure 4D–E measures actin-normalized total PMP22; Figure 4F–G measures glycoform fractions. Published EndoH-resistant fractions are WT 81.9 ± 4.2%, HET 62.7 ± 7.8%, and KO 52.2 ± 1.8%—mean ± SEM, with four to five mice/genotype in the caption. Total PMP22 increases in deficient nerves.\n\n   Individual-animal matching between endpoints is unresolved in the recovered material—not proven absent. These results establish altered glycoform composition despite greater total abundance, not absolute mature or surface abundance.\n\n   Importantly, impaired processing and accumulation are not mutually exclusive. My interpretation is that these steady-state measurements cannot distinguish slower maturation from altered synthesis or glycoform-specific turnover.\n\n2. PMC6607759, Figure 6H and Figure 7C: reverse-direction evidence.\n\n   Figure 6H compares pooled PMP22 shRNA with scrambled control in neonatal-rat-derived Schwann cells, measuring apoA-I-associated cholesterol efflux. Figure 7C shows surface ABCA1, not PMP22; its depicted comparison is shRNA-GFP-positive versus nontransfected cells. Donor/pool identities and cross-assay matching remain unresolved.\n\n   This strengthens the PMP22-to-efflux subedge beyond congenital mouse knockout, without eliminating shRNA specificity or cell-state alternatives.\n\n3. Existing cholesterol-related interventions do not supply the missing endpoint.\n\n   Figure 6I–K contains genuine 8-Br-cAMP/CsA treatment comparisons, but measures efflux and ABCA1 protein—not matched PMP22 total/EndoH/surface. Figure 5C directly labels surface PMP22, but only for baseline WT colocalization, not an intervention response.\n\nMy direct PMP22 dataset is JCI Insight 201297, Supporting Data Values, Supplemental Figure 4B: VU0494372 versus vehicle in transient HEK293 cells, with surface/total fluorescence and efficiency. It has no EndoH endpoint and is not an established cholesterol-transport intervention. ACSL5/HRP and UGGT/IGF1R likewise cannot fill the PMP22 gap.\n\nI also incorporated your corrected handoff, post_a77dff1802cc42a291481b8e899a2053: the relative ABCA1/ABCG1 RNA contrast should not become independently replicated ABCG1 repression or increased efflux.\n\nEvidence references\n\n  Existing primary-source package:\n  artifact_77331014c88a4d8da77add923216f59ec27fca413c2645732f895b484c172088\n\n  Completed endpoint table:\n  artifact_f74a057af33130bec215600892b0b6f52feb3fa6afc208978f72c473d5a77b49\n\n  Completed analysis:\n  post_d2aa0d7e935f4cabbe60af1494dda5dd\n\nI re-read and hash-verified the shared primary HTML, checked current discussions/inbox, and synced this assessment to LABBOOK q_9598a00912a748ce. No new external collection or biological reanalysis was performed.", "tokens": {"input": 71132, "output": 6964, "total": 833168, "cache_read": 755072, "cache_write": 0}, "duration_ms": 403857, "timestamp": 1791242339367}

@@ -1,0 +1,253 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-astra", "session_id": "20261005_142928_9284ef", "timestamp": 1791238825031}
+{"type": "tool_use", "name": "read_file", "input": {"path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_966e3c97a3e64b28b7199fea566303da/trial/workspace/questions/q_7e888aba063b4092/LABBOOK.md"}, "timestamp": 1791240387615}
+{"type": "tool_use", "name": "search_files", "input": {"pattern": "*arsenite-execution*", "target": "files", "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_966e3c97a3e64b28b7199fea566303da/trial/workspace/questions/q_7e888aba063b4092/outputs", "limit": 20}, "timestamp": 1791240387616}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 5003 bytes sha256:44c53eb0901fcc0354ae0b17118a225a19cd1b1e115384d249a9fcc002dc1d4a]\"}", "duration_ms": 34, "is_error": false, "timestamp": 1791240387686}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 655 bytes sha256:42035c9197e3080f07b02280fb196ba3b55c8b5fb45c847b2aea8c4c86f074cb]\"}", "duration_ms": 69, "is_error": false, "timestamp": 1791240387687}
+{"type": "tool_use", "name": "terminal", "input": {"command": "pwd; printf '\\nBIO_AGENT=%s\\nBIO_WORKSPACE=%s\\n' \"$BIO_AGENT\" \"$BIO_WORKSPACE\"; ./bin/bio community show post_4970c427c59c41bd941b27d7c5c4edbc; ./bin/bio community inbox; ./bin/bio community inbox --sent; git status --short; git branch --show-current", "timeout": 60, "workdir": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_966e3c97a3e64b28b7199fea566303da/trial"}, "timestamp": 1791240387688}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 3334 bytes sha256:16cc391563b1872f8c0aac5d44d6a82a00c7e76e7e7c8a451ebe3199e19b9fd3]\", \"exit_code\": 0}", "duration_ms": 876, "is_error": false, "timestamp": 1791240388567}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_7e888aba063b4092/outputs/arsenite-execution-r001.json"}, "timestamp": 1791240398129}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 55, "path": "workspace/questions/q_7e888aba063b4092/outputs/arsenite-execution-r001.json.stderr"}, "timestamp": 1791240398130}
+{"type": "tool_use", "name": "search_files", "input": {"limit": 10, "path": "workspace/questions/q_7e888aba063b4092/outputs", "pattern": "GSE55195-effects.json", "target": "files"}, "timestamp": 1791240398130}
+{"type": "tool_use", "name": "read_file", "input": {"limit": 60, "path": "workspace/questions/q_7e888aba063b4092/outputs/arsenite-execution-r001.json.stdout"}, "timestamp": 1791240398130}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 164 bytes sha256:b539a8f108622b944ac0749fdd14c5d090b5e4c42c5887f64377b86e3f9c5e17]\"}", "duration_ms": 8, "is_error": false, "timestamp": 1791240398152}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 164 bytes sha256:b539a8f108622b944ac0749fdd14c5d090b5e4c42c5887f64377b86e3f9c5e17]\"}", "duration_ms": 8, "is_error": false, "timestamp": 1791240398152}
+{"type": "tool_result", "name": "search_files", "output": "{\"output\": \"[redacted 18 bytes sha256:633946440793d831a203118dd7c2c58d05dd6a5efc4027b049d5974724489360]\"}", "duration_ms": 21, "is_error": false, "timestamp": 1791240398153}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 164 bytes sha256:b539a8f108622b944ac0749fdd14c5d090b5e4c42c5887f64377b86e3f9c5e17]\"}", "duration_ms": 8, "is_error": false, "timestamp": 1791240398153}
+{"type": "tool_use", "name": "patch", "input": {"mode": "patch", "patch": "*** Begin Patch\n*** Update File: workspace/questions/q_7e888aba063b4092/LABBOOK.md\n@@\n ## Open questions\n Which processed replicated matched RNA/RPF or Input/polysome experiment provides adequate PMP22 coverage and an informative relative interaction? Can a second independent perturbation reproduce the direction without silently changing context? Do RNA end/binding features plausibly explain it rather than a broad membrane/stress program?\n+\n+## Productive-trafficking handoff review\n+Responding to post_4970c427c59c41bd941b27d7c5c4edbc, not restarting or expanding the interrupted primary investigation. Re-read the current notebook, exact question, inbox and sent requests. There is currently no validated PMP22 protein abundance, surface delivery, ER retention, degradation or calibrated nascent-protein result from this fork to supply to q_9598a00912a748ce. The GSE55195 arsenite contrast is a matched RNA/RPF candidate only, not a protein-handling measurement. GSE65778 tunicamycin/ISRIB remains a metadata-selected independent-context candidate, not an executed target result. GSE256237 fails the deposited PMP22 feature-coverage gate; its spike calibration cannot be transferred to either HEK293T experiment.\n+\n+Interruption recovery: outputs/arsenite-execution-r001.json and its stdout/stderr files exist but are empty; GSE55195-effects.json is absent at this review. Therefore no successful quantitative execution or effect estimate is claimed. Preserve the interrupted files; any resumed execution requires a fresh receipt. No new data collected or analysis rerun for this coordination request. Keep the main question unresolved, and keep total/surface abundance distinct from synthesis-versus-clearance attribution. Current RBP and RNA-ends questions remain pending; no courtesy follow-up sent.\n*** End Patch"}, "timestamp": 1791240427061}
+{"type": "tool_result", "name": "patch", "output": "{\"output\": \"[redacted 2787 bytes sha256:5893ecf4980d05da67c3e4c458b6cba60d12d32245cc46ad77cb092ebe1ea2b3]\"}", "duration_ms": 193, "is_error": false, "timestamp": 1791240427255}
+{"type": "tool_use", "name": "terminal", "input": {"command": "pgrep -fl 'analyze_arsenite|run_analysis.py'; ./bin/bio work show q_7e888aba063b4092; ./bin/bio work sync --help", "timeout": 60}, "timestamp": 1791240427255}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 3546 bytes sha256:792a2e59be9c280e47570b4b507bf999fe8beae7a63a28a771552cb7e07bf885]\", \"exit_code\": 0}", "duration_ms": 499, "is_error": false, "timestamp": 1791240427756}
+{"type": "tool_use", "name": "terminal", "input": {"command": "./bin/bio work sync q_7e888aba063b4092 --status open --summary 'Productive-trafficking handoff: no validated PMP22 protein-handling or calibrated synthesis result; matched RNA/RPF candidates remain unresolved, interrupted quantitative run not claimed.' > workspace/questions/q_7e888aba063b4092/outputs/trafficking-handoff-sync-r001.json && ./bin/bio work show q_7e888aba063b4092 > workspace/questions/q_7e888aba063b4092/outputs/trafficking-handoff-readback-r001.json", "timeout": 60}, "timestamp": 1791240433416}
+{"type": "tool_result", "name": "terminal", "output": "{\"output\": \"[redacted 45 bytes sha256:708054e20f8345e96aa29aa3d3ae50e6245e6723619f1f57c1486f2c2ef9c451]\", \"exit_code\": 0}", "duration_ms": 484, "is_error": false, "timestamp": 1791240433901}
+{"type": "tool_use", "name": "read_file", "input": {"path": "workspace/questions/q_7e888aba063b4092/outputs/trafficking-handoff-readback-r001.json"}, "timestamp": 1791240436874}
+{"type": "tool_result", "name": "read_file", "output": "{\"output\": \"[redacted 2089 bytes sha256:556bd63d9688dd88b55071c2f38bb04a0229ff02e0dda157a8598d4c5f908785]\"}", "duration_ms": 4, "is_error": false, "timestamp": 1791240436879}
+{"type": "text", "text": "\n\nNo", "timestamp": 1791240439654}
+{"type": "text", "text": " qualifying", "timestamp": 1791240439778}
+{"type": "text", "text": " PMP", "timestamp": 1791240439779}
+{"type": "text", "text": "22", "timestamp": 1791240439780}
+{"type": "text", "text": " protein", "timestamp": 1791240439780}
+{"type": "text", "text": "-ab", "timestamp": 1791240439781}
+{"type": "text", "text": "undance", "timestamp": 1791240439781}
+{"type": "text", "text": " or", "timestamp": 1791240439782}
+{"type": "text", "text": " handling", "timestamp": 1791240439782}
+{"type": "text", "text": " result", "timestamp": 1791240439899}
+{"type": "text", "text": " is", "timestamp": 1791240439916}
+{"type": "text", "text": " available", "timestamp": 1791240439998}
+{"type": "text", "text": " from", "timestamp": 1791240439999}
+{"type": "text", "text": " my", "timestamp": 1791240440143}
+{"type": "text", "text": " fork", "timestamp": 1791240440144}
+{"type": "text", "text": " yet", "timestamp": 1791240440144}
+{"type": "text", "text": ".", "timestamp": 1791240440145}
+{"type": "text", "text": " My", "timestamp": 1791240440145}
+{"type": "text", "text": " current", "timestamp": 1791240440145}
+{"type": "text", "text": " candidates", "timestamp": 1791240440146}
+{"type": "text", "text": " should", "timestamp": 1791240440254}
+{"type": "text", "text": " not", "timestamp": 1791240440259}
+{"type": "text", "text": " be", "timestamp": 1791240440259}
+{"type": "text", "text": " used", "timestamp": 1791240440260}
+{"type": "text", "text": " to", "timestamp": 1791240440260}
+{"type": "text", "text": " attribute", "timestamp": 1791240440378}
+{"type": "text", "text": " your", "timestamp": 1791240440502}
+{"type": "text", "text": " disposition", "timestamp": 1791240440628}
+{"type": "text", "text": " contrast", "timestamp": 1791240440638}
+{"type": "text", "text": " to", "timestamp": 1791240440642}
+{"type": "text", "text": " synthesis", "timestamp": 1791240440642}
+{"type": "text", "text": " versus", "timestamp": 1791240440651}
+{"type": "text", "text": " clearance", "timestamp": 1791240440657}
+{"type": "text", "text": ".\n\n", "timestamp": 1791240440729}
+{"type": "text", "text": "Relevant", "timestamp": 1791240440737}
+{"type": "text", "text": " source", "timestamp": 1791240440859}
+{"type": "text", "text": " status", "timestamp": 1791240440865}
+{"type": "text", "text": ":\n", "timestamp": 1791240441008}
+{"type": "text", "text": " ", "timestamp": 1791240441009}
+{"type": "text", "text": " G", "timestamp": 1791240441010}
+{"type": "text", "text": "SE", "timestamp": 1791240441011}
+{"type": "text", "text": "551", "timestamp": 1791240441011}
+{"type": "text", "text": "95", "timestamp": 1791240441012}
+{"type": "text", "text": ":", "timestamp": 1791240441013}
+{"type": "text", "text": " HE", "timestamp": 1791240441111}
+{"type": "text", "text": "K", "timestamp": 1791240441148}
+{"type": "text", "text": "293", "timestamp": 1791240441166}
+{"type": "text", "text": "T", "timestamp": 1791240441177}
+{"type": "text", "text": ",", "timestamp": 1791240441183}
+{"type": "text", "text": " ", "timestamp": 1791240441187}
+{"type": "text", "text": "40", "timestamp": 1791240441225}
+{"type": "text", "text": " µ", "timestamp": 1791240441236}
+{"type": "text", "text": "M", "timestamp": 1791240441237}
+{"type": "text", "text": " arsen", "timestamp": 1791240441242}
+{"type": "text", "text": "ite", "timestamp": 1791240441247}
+{"type": "text", "text": " for", "timestamp": 1791240441250}
+{"type": "text", "text": " ", "timestamp": 1791240441255}
+{"type": "text", "text": "30", "timestamp": 1791240441256}
+{"type": "text", "text": " minutes", "timestamp": 1791240441257}
+{"type": "text", "text": " versus", "timestamp": 1791240441257}
+{"type": "text", "text": " untreated", "timestamp": 1791240441336}
+{"type": "text", "text": ";", "timestamp": 1791240441343}
+{"type": "text", "text": " split", "timestamp": 1791240441345}
+{"type": "text", "text": "-", "timestamp": 1791240441352}
+{"type": "text", "text": "lys", "timestamp": 1791240441353}
+{"type": "text", "text": "ate", "timestamp": 1791240441353}
+{"type": "text", "text": " RNA", "timestamp": 1791240441354}
+{"type": "text", "text": "/R", "timestamp": 1791240441354}
+{"type": "text", "text": "PF", "timestamp": 1791240441448}
+{"type": "text", "text": " assays", "timestamp": 1791240441479}
+{"type": "text", "text": " with", "timestamp": 1791240441484}
+{"type": "text", "text": " two", "timestamp": 1791240441485}
+{"type": "text", "text": " independent", "timestamp": 1791240441486}
+{"type": "text", "text": " biological", "timestamp": 1791240441486}
+{"type": "text", "text": " replic", "timestamp": 1791240441487}
+{"type": "text", "text": "ates", "timestamp": 1791240441487}
+{"type": "text", "text": ".", "timestamp": 1791240441567}
+{"type": "text", "text": " This", "timestamp": 1791240441694}
+{"type": "text", "text": " can", "timestamp": 1791240441716}
+{"type": "text", "text": " test", "timestamp": 1791240441722}
+{"type": "text", "text": " relative", "timestamp": 1791240441727}
+{"type": "text", "text": " rib", "timestamp": 1791240441727}
+{"type": "text", "text": "osome", "timestamp": 1791240441728}
+{"type": "text", "text": " occupancy", "timestamp": 1791240441817}
+{"type": "text", "text": " beyond", "timestamp": 1791240441832}
+{"type": "text", "text": " poly", "timestamp": 1791240441833}
+{"type": "text", "text": "(A", "timestamp": 1791240441833}
+{"type": "text", "text": ")+", "timestamp": 1791240441834}
+{"type": "text", "text": " RNA", "timestamp": 1791240441932}
+{"type": "text", "text": " abundance", "timestamp": 1791240441958}
+{"type": "text", "text": ",", "timestamp": 1791240441959}
+{"type": "text", "text": " not", "timestamp": 1791240441959}
+{"type": "text", "text": " completed", "timestamp": 1791240441960}
+{"type": "text", "text": " protein", "timestamp": 1791240441960}
+{"type": "text", "text": " production", "timestamp": 1791240441961}
+{"type": "text", "text": " or", "timestamp": 1791240441961}
+{"type": "text", "text": " trafficking", "timestamp": 1791240442060}
+{"type": "text", "text": ".", "timestamp": 1791240442081}
+{"type": "text", "text": " The", "timestamp": 1791240442082}
+{"type": "text", "text": " interrupted", "timestamp": 1791240442085}
+{"type": "text", "text": " analysis", "timestamp": 1791240442085}
+{"type": "text", "text": " produced", "timestamp": 1791240442087}
+{"type": "text", "text": " no", "timestamp": 1791240442088}
+{"type": "text", "text": " validated", "timestamp": 1791240442088}
+{"type": "text", "text": " effect", "timestamp": 1791240442252}
+{"type": "text", "text": " estimate", "timestamp": 1791240442255}
+{"type": "text", "text": ".\n\n", "timestamp": 1791240442256}
+{"type": "text", "text": " ", "timestamp": 1791240442257}
+{"type": "text", "text": " G", "timestamp": 1791240442257}
+{"type": "text", "text": "SE", "timestamp": 1791240442257}
+{"type": "text", "text": "657", "timestamp": 1791240442258}
+{"type": "text", "text": "78", "timestamp": 1791240442258}
+{"type": "text", "text": ":", "timestamp": 1791240442320}
+{"type": "text", "text": " HE", "timestamp": 1791240442383}
+{"type": "text", "text": "K", "timestamp": 1791240442386}
+{"type": "text", "text": "293", "timestamp": 1791240442396}
+{"type": "text", "text": "T", "timestamp": 1791240442399}
+{"type": "text", "text": ",", "timestamp": 1791240442402}
+{"type": "text", "text": " tun", "timestamp": 1791240442402}
+{"type": "text", "text": "ic", "timestamp": 1791240442402}
+{"type": "text", "text": "amy", "timestamp": 1791240442433}
+{"type": "text", "text": "cin", "timestamp": 1791240442461}
+{"type": "text", "text": " ", "timestamp": 1791240442461}
+{"type": "text", "text": "1", "timestamp": 1791240442464}
+{"type": "text", "text": " µ", "timestamp": 1791240442468}
+{"type": "text", "text": "g", "timestamp": 1791240442469}
+{"type": "text", "text": "/ml", "timestamp": 1791240442470}
+{"type": "text", "text": " for", "timestamp": 1791240442470}
+{"type": "text", "text": " ", "timestamp": 1791240442551}
+{"type": "text", "text": "1", "timestamp": 1791240442571}
+{"type": "text", "text": " hour", "timestamp": 1791240442572}
+{"type": "text", "text": ",", "timestamp": 1791240442573}
+{"type": "text", "text": " with", "timestamp": 1791240442683}
+{"type": "text", "text": "/", "timestamp": 1791240442688}
+{"type": "text", "text": "without", "timestamp": 1791240442802}
+{"type": "text", "text": " ", "timestamp": 1791240442833}
+{"type": "text", "text": "200", "timestamp": 1791240442841}
+{"type": "text", "text": " n", "timestamp": 1791240442841}
+{"type": "text", "text": "M", "timestamp": 1791240442841}
+{"type": "text", "text": " ISR", "timestamp": 1791240442841}
+{"type": "text", "text": "IB", "timestamp": 1791240442841}
+{"type": "text", "text": ".", "timestamp": 1791240442841}
+{"type": "text", "text": " This", "timestamp": 1791240442926}
+{"type": "text", "text": " remains", "timestamp": 1791240442945}
+{"type": "text", "text": " a", "timestamp": 1791240442945}
+{"type": "text", "text": " metadata", "timestamp": 1791240442948}
+{"type": "text", "text": "-selected", "timestamp": 1791240443056}
+{"type": "text", "text": " candidate", "timestamp": 1791240443086}
+{"type": "text", "text": ",", "timestamp": 1791240443090}
+{"type": "text", "text": " not", "timestamp": 1791240443091}
+{"type": "text", "text": " an", "timestamp": 1791240443093}
+{"type": "text", "text": " executed", "timestamp": 1791240443096}
+{"type": "text", "text": " PMP", "timestamp": 1791240443101}
+{"type": "text", "text": "22", "timestamp": 1791240443101}
+{"type": "text", "text": " result", "timestamp": 1791240443200}
+{"type": "text", "text": ".\n\n", "timestamp": 1791240443212}
+{"type": "text", "text": " ", "timestamp": 1791240443217}
+{"type": "text", "text": " G", "timestamp": 1791240443218}
+{"type": "text", "text": "SE", "timestamp": 1791240443220}
+{"type": "text", "text": "256", "timestamp": 1791240443229}
+{"type": "text", "text": "237", "timestamp": 1791240443230}
+{"type": "text", "text": ":", "timestamp": 1791240443230}
+{"type": "text", "text": " the", "timestamp": 1791240443312}
+{"type": "text", "text": " spike", "timestamp": 1791240443332}
+{"type": "text", "text": "-cal", "timestamp": 1791240443333}
+{"type": "text", "text": "ibr", "timestamp": 1791240443336}
+{"type": "text", "text": "ated", "timestamp": 1791240443336}
+{"type": "text", "text": " H", "timestamp": 1791240443337}
+{"type": "text", "text": "CT", "timestamp": 1791240443337}
+{"type": "text", "text": "116", "timestamp": 1791240443338}
+{"type": "text", "text": " experiment", "timestamp": 1791240443431}
+{"type": "text", "text": " failed", "timestamp": 1791240443553}
+{"type": "text", "text": " PMP", "timestamp": 1791240443565}
+{"type": "text", "text": "22", "timestamp": 1791240443690}
+{"type": "text", "text": " coverage", "timestamp": 1791240443713}
+{"type": "text", "text": " in", "timestamp": 1791240443715}
+{"type": "text", "text": " the", "timestamp": 1791240443716}
+{"type": "text", "text": " inspected", "timestamp": 1791240443717}
+{"type": "text", "text": " deposited", "timestamp": 1791240443717}
+{"type": "text", "text": " count", "timestamp": 1791240443818}
+{"type": "text", "text": " table", "timestamp": 1791240443819}
+{"type": "text", "text": ".", "timestamp": 1791240443836}
+{"type": "text", "text": " Its", "timestamp": 1791240443838}
+{"type": "text", "text": " calibration", "timestamp": 1791240443839}
+{"type": "text", "text": " cannot", "timestamp": 1791240443840}
+{"type": "text", "text": " supply", "timestamp": 1791240443840}
+{"type": "text", "text": " a", "timestamp": 1791240443841}
+{"type": "text", "text": " denominator", "timestamp": 1791240443932}
+{"type": "text", "text": " for", "timestamp": 1791240443945}
+{"type": "text", "text": " the", "timestamp": 1791240444072}
+{"type": "text", "text": " HE", "timestamp": 1791240444113}
+{"type": "text", "text": "K", "timestamp": 1791240444116}
+{"type": "text", "text": "293", "timestamp": 1791240444127}
+{"type": "text", "text": "T", "timestamp": 1791240444139}
+{"type": "text", "text": " experiments", "timestamp": 1791240444150}
+{"type": "text", "text": ".\n\n", "timestamp": 1791240444153}
+{"type": "text", "text": "I", "timestamp": 1791240444183}
+{"type": "text", "text": " recorded", "timestamp": 1791240444528}
+{"type": "text", "text": " your", "timestamp": 1791240444535}
+{"type": "text", "text": " endpoint", "timestamp": 1791240444551}
+{"type": "text", "text": " distinction", "timestamp": 1791240444560}
+{"type": "text", "text": " and", "timestamp": 1791240444560}
+{"type": "text", "text": " synced", "timestamp": 1791240444561}
+{"type": "text", "text": " q", "timestamp": 1791240444561}
+{"type": "text", "text": "_", "timestamp": 1791240444564}
+{"type": "text", "text": "7", "timestamp": 1791240444575}
+{"type": "text", "text": "e", "timestamp": 1791240444576}
+{"type": "text", "text": "888", "timestamp": 1791240444580}
+{"type": "text", "text": "aba", "timestamp": 1791240444591}
+{"type": "text", "text": "063", "timestamp": 1791240444602}
+{"type": "text", "text": "b", "timestamp": 1791240444602}
+{"type": "text", "text": "409", "timestamp": 1791240444602}
+{"type": "text", "text": "2", "timestamp": 1791240444602}
+{"type": "text", "text": " as", "timestamp": 1791240444604}
+{"type": "text", "text": " open", "timestamp": 1791240444611}
+{"type": "text", "text": ".", "timestamp": 1791240444611}
+{"type": "text", "text": " No", "timestamp": 1791240444614}
+{"type": "text", "text": " new", "timestamp": 1791240444621}
+{"type": "text", "text": " collection", "timestamp": 1791240444621}
+{"type": "text", "text": " or", "timestamp": 1791240444621}
+{"type": "text", "text": " scope", "timestamp": 1791240444621}
+{"type": "text", "text": " expansion", "timestamp": 1791240444621}
+{"type": "text", "text": " was", "timestamp": 1791240444621}
+{"type": "text", "text": " needed", "timestamp": 1791240444676}
+{"type": "text", "text": " for", "timestamp": 1791240444727}
+{"type": "text", "text": " this", "timestamp": 1791240444781}
+{"type": "text", "text": " hand", "timestamp": 1791240444787}
+{"type": "text", "text": "off", "timestamp": 1791240444790}
+{"type": "text", "text": ".", "timestamp": 1791240444790}
+{"type": "result", "session_id": "20261005_142928_9284ef", "exit_code": 0, "text": "No qualifying PMP22 protein-abundance or handling result is available from my fork yet. My current candidates should not be used to attribute your disposition contrast to synthesis versus clearance.\n\nRelevant source status:\n  GSE55195: HEK293T, 40 µM arsenite for 30 minutes versus untreated; split-lysate RNA/RPF assays with two independent biological replicates. This can test relative ribosome occupancy beyond poly(A)+ RNA abundance, not completed protein production or trafficking. The interrupted analysis produced no validated effect estimate.\n\n  GSE65778: HEK293T, tunicamycin 1 µg/ml for 1 hour, with/without 200 nM ISRIB. This remains a metadata-selected candidate, not an executed PMP22 result.\n\n  GSE256237: the spike-calibrated HCT116 experiment failed PMP22 coverage in the inspected deposited count table. Its calibration cannot supply a denominator for the HEK293T experiments.\n\nI recorded your endpoint distinction and synced q_7e888aba063b4092 as open. No new collection or scope expansion was needed for this handoff.", "tokens": {"input": 8935, "output": 2188, "total": 894963, "cache_read": 883840, "cache_write": 0}, "duration_ms": 1620009, "timestamp": 1791240445040}

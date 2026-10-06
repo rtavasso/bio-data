@@ -1,0 +1,56 @@
+{
+  "revision": 3,
+  "scope": "PMP22 relative coding-region RPF occupancy beyond matched RNA abundance in acute HEK293T stress; no inference of absolute protein flux or Schwann-cell transfer.",
+  "known_baseline": "Parent GSE118660 is footprint-only; GSE90070 chronic polysome response is already RNA-congruent and source-discussed. PMC4383229 and PMC4341466 establish general ISR translational programs, not a highlighted PMP22 mechanism. Exact source counts and novelty audit are registered.",
+  "budget_allocation": "No configured time, turn, request or download caps. After discovery, effort was allocated to a second independent experiment, an attempted calibrated context, source-export comparisons, full-background and count-matched sensitivities, controls, small-sample uncertainty and novelty. No raw processing or model workers were launched.",
+  "stopping_reason": "The bounded matched-count investigation is executed and verified. It nominates a descriptive tunicamycin candidate but does not establish a significant or causal effect. Additional transformed TE tables or unrelated cell contexts cannot resolve its small-n uncertainty, RNA-selection ambiguity or flux/elongation alternatives. A same-condition independent paired experiment with explicit RNA chemistry, positional footprints and calibrated nascent PMP22 is the discriminating follow-up; none is represented by an eligible preserved source here. Broader mTOR screening is possible but a separate exploratory question, not validation of this candidate.",
+  "candidates": [
+    {
+      "id": "pmp22-tunicamycin-rna-rpf-uncoupling",
+      "claim": "In the source-paper GSE65778 paired count matrix, acute tunicamycin produces an exploratory negative relative PMP22 RPF-per-RNA contrast, driven largely by higher RNA without a commensurate relative footprint increase. The point estimate remains negative with ISRIB, unlike canonical ISR control induction; neither persistence nor selective mechanism is established statistically.",
+      "context": "HEK293T, tunicamycin 1 ug/ml for 1 h, with or without ISRIB 200 nM; two source-labeled biological replicates per condition. Source data 1 all-expression constituent count table, not a TE transformation or a join across incompatible GEO exports.",
+      "kind": "biological",
+      "late_peer_review": "RNA-ends answer post_2e1bc2dc8d4047058bf56594f11e3c8b and exact linked artifacts were fetched, hash-verified and read. Basal untreated HEK293 end usage and GTEx model structure cannot validate acute HEK293T RNA selection. CDS versus total-region agreement cannot exclude shared poly(A)-capture bias. Effect estimates unchanged; no extra biological validation.",
+      "rbp_notification_review": "Answer post_fba1ff96d987423aa7300e7192948226 reviewed against exact peak, full perturbation and mapped-containment artifacts. PUM2 has four selected reproducible K562 contacts but no joint RNA-response hit; its own RNA depletion fails the peer gate. The four mapped regions occur in all twelve filtered FLAIR models, which does not establish stress-specific occupancy or isoform function. Retain context-matched UTR/loading hypotheses without assigning a mediator or excluding translation-only regulation. Both peer answer dependencies are now reviewed; numerical estimates and candidate status unchanged.",
+      "rbp_review_artifacts": ["artifact_5edca4e4c4bd89c62c6779dcb242b33a8bc3f88a42b60c9f4897653b3ee20b85", "artifact_6a0119b8ecd1d29ff44d122e74920f2097d6b1c9179ab9572f2237585effc047", "artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7"],
+      "related_peer_artifacts": ["artifact_cab9bfda14010251628ff7b8d893fb0eb8ad87d192ee525239ac3401f4b407dd", "artifact_38b1b6bfb32140728b409c513a3b57633ebcca91bae62e99c65f5a795bec1c7c"],
+      "status": "candidate",
+      "alternatives": [
+        "Changed recruitment/initiation of the analyzed RNA population",
+        "Additional or differently processed RNA that is not comparably represented in coding footprints",
+        "Elongation or ribosome-residence changes without proportional protein completion changes",
+        "Relative-library composition or a broad membrane/stress state response",
+        "Biological and counting variability in a two-replicate experiment"
+      ],
+      "discovery_artifacts": [
+        "artifact_e992a2405f8705ed77daf2643a3f0e299711e8a285dd6031d5a23c61c61057a5",
+        "artifact_0e13bb8c12d68d351bad779f7f48308b3aa491c8b6fb20b579139cb545562afd",
+        "artifact_c61683f804ce14f7efb8876276133a0ba7f5f62f423a439f7dff775d849dba62"
+      ],
+      "prediction_lock": null,
+      "prediction_sha256": null,
+      "validation_mode": "retrospective",
+      "validation_artifacts": [
+        "artifact_ae793a39c8daa31f0cd7e7f9c005646ee81e3b4f6df7db69081fd44f1b0c2d3b",
+        "artifact_b00bd1787de7fb77fea5de3209d8e59206a9b6499eb3bdc6b3ee0e15e7052e9c"
+      ],
+      "validation_result": "Tunicamycin count-sum interaction -1.024680 log2 (Welch 95% CI -5.018910 to +2.969549); median-ratio -1.107399; count-matched percentile 1.570681 among 382 eligible comparators. With ISRIB, interaction -0.812629, with broad uncertainty; cotreatment-minus-tunicamycin +0.212051, CI -0.765333 to +1.189435. Independent arsenite context has weaker interaction -0.270359, CI -2.042931 to +1.502212, and membrane-relative -0.072083: direction agrees but selective magnitude does not generalize convincingly. This is not an equivalence test or proof of no effect.",
+      "independence_assessment": "GSE55195 and GSE65778 are different experiments and laboratories, both HEK293T, with distinct stress/dose/time and RNA processing. Arsenite was analyzed before the tunicamycin candidate was seen, so its retrospective comparison is not untouched validation of that candidate. ISRIB arms share study design and untreated controls; alternative representations and transcript vectors are not independent samples. A directional prediction was written before secondary target exposure in inputs/independent-context-prediction-r001.json, but the sealing helper was not used then and the representation was amended after source-count exposure. No prospective seal or independent validation credit is claimed retrospectively.",
+      "novelty": {
+        "status": "unresolved",
+        "closest_prior_work": [
+          {"source": "PMC4341466 / GSE65778", "locator": "Source data 1 row 8915; paragraphs 35-37 and 69-70; source data 2A-2E", "relationship": "Source counts already measured PMP22. No PMP22 paragraph mention or target in selected source data 2 sheets was found. General ISRIB reversal of canonical ISR controls is known; the candidate RNA-versus-RPF decomposition is this reanalysis, not a new demonstrated mechanism."},
+          {"source": "PMC4383229 / GSE55195", "locator": "Supplement Sheet1 row 10593; methods paragraphs 100-104", "relationship": "PMP22 appears in the broad supplement, not inspected narrative paragraphs. Acute-stress translational remodeling is known; the modest nonselective target result is retained."}
+        ],
+        "searches": [
+          {"query": "PMP22 AND (arsenite OR tunicamycin OR ISRIB OR \"ribosome profiling\")", "date": "2026-10-05", "evidence": "outputs/novelty-discovery.json"},
+          {"query": "PMP22 or peripheral myelin protein 22 in source article paragraphs and full source spreadsheets", "date": "2026-10-05", "evidence": "outputs/novelty-and-representation-audit.json"}
+        ],
+        "limitation": "Three retained primary articles and linked source supplements were inspected; the structured Europe PMC query retained its first 50 hits and is not exhausted. Not all search-hit papers were read. Source-paper absence of discussion does not establish field-wide novelty or priority."
+      },
+      "limitations": "n=2 per condition yields broad parametric Welch intervals; no genome-wide confirmatory discoveries claimed. Native target counts pass the stated coverage gate but selection into the published full-expression universe remains a boundary. Source-paper and GEO exports are not interchangeable; exact GSE65778 poly(A)/depletion selection remains unresolved. Relative normalization, elongation, processing and cell state remain viable. No native PMP22 protein handling or synthesis assay is available in these results.",
+      "next_test": "Repeat tunicamycin +/- ISRIB in independent HEK293T cultures with explicit RNA-selection chemistry, matched isoform-resolved cytoplasmic RNA and CDS footprints, and calibrated nascent PMP22 plus transit/run-off information. Test whether the apparent extra RNA belongs to a poorly translated isoform/pool and whether protein completion per RNA changes when canonical ISR controls are rescued. A parallel Schwann experiment would separately test transfer."
+    }
+  ],
+  "no_candidates_reason": ""
+}

@@ -1,0 +1,39 @@
+conditions ['Ctrl', 'Tg1', 'Tg16', 'Tg16+PERKi']
+{
+  "source_rows": 20234,
+  "columns": 32,
+  "positive_all_samples": 11817,
+  "eligible_min10_all32": 10760,
+  "pmp22_min_raw": 1136,
+  "zero_cells": 203868,
+  "PC_variance": [
+    0.35636419347323983,
+    0.2724228468920934,
+    0.23963013308719922,
+    0.06878316394449416
+  ],
+  "source_semantics": "Deposited integer gene read counts; no quality/status columns. >=10 in all32 eligibility. Missing genes not zero. H fraction >4 ribosomes; paired with cytosolic from same sample.",
+  "units": "Four labelled replicates/condition; source does not document separate donor identities or clearly distinguish biological from technical replicates. Treat inferential intervals/p values as conditional descriptive summaries of replicate variation. No population biological claim.",
+  "normalization": "Median ratio using positive-all genes; CPM sensitivity. Neither establishes absolute translation or global translation restoration without external calibration.",
+  "analysis": "Welch comparison of within-sample log2 H/Input across conditions; no cross-condition pairing; unmoderated descriptive p and BH within each contrast/endpoint; broad selection retrospective, not independent validation.",
+  "context": "MEF; no Schwann transfer, promoter attribution, RNA synthesis versus stability, or direct eIF3d-to-Pmp22 effect identified.",
+  "environment": {
+    "python": "3.12.8 (v3.12.8:2dc476bcb91, Dec  3 2024, 14:43:20) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "platform": "macOS-15.7.2-x86_64-i386-64bit"
+  }
+}
+ gene       method           contrast         endpoint  eligible  log2_effect    ci_low   ci_high  p_descriptive  q_within_contrast_endpoint   loo_min   loo_max  effect_percentile_eligible
+Pmp22 median_ratio              acute        cytosolic      True    -0.973685 -1.147641 -0.799729   1.193047e-04                1.165381e-03 -1.026428 -0.906680                    0.025372
+Pmp22 median_ratio              acute         polysome      True    -1.542820 -1.670102 -1.415537   1.061538e-07                3.518664e-06 -1.596088 -1.486055                    0.039219
+Pmp22 median_ratio              acute relative_loading      True    -0.569135 -0.703353 -0.434916   4.762843e-05                3.694895e-04 -0.631008 -0.518396                    0.266078
+Pmp22 median_ratio   chronic_vs_acute        cytosolic      True    -1.960359 -2.152788 -1.767931   2.921249e-07                9.641916e-06 -2.034192 -1.871228                    0.042751
+Pmp22 median_ratio   chronic_vs_acute         polysome      True    -1.962338 -2.076992 -1.847685   4.505391e-07                8.960814e-06 -2.013228 -1.926483                    0.045632
+Pmp22 median_ratio   chronic_vs_acute relative_loading      True    -0.001979 -0.209906  0.205948   9.812206e-01                9.905508e-01 -0.087921  0.071549                    0.469052
+Pmp22 median_ratio chronic_vs_control        cytosolic      True    -2.934044 -3.094106 -2.773983   8.796800e-07                1.756622e-05 -2.973854 -2.864675                    0.014498
+Pmp22 median_ratio chronic_vs_control         polysome      True    -3.505158 -3.610218 -3.400098   1.190634e-08                7.157106e-07 -3.553359 -3.468496                    0.012082
+Pmp22 median_ratio chronic_vs_control relative_loading      True    -0.571114 -0.778516 -0.363711   1.069526e-03                3.463164e-03 -0.663604 -0.502171                    0.237175
+Pmp22 median_ratio              PERKi        cytosolic      True     2.740196  2.577246  2.903145   4.064507e-06                4.795619e-05  2.681363  2.777849                    0.996561
+Pmp22 median_ratio              PERKi         polysome      True     3.272088  3.213953  3.330224   3.999438e-08                1.075849e-06  3.252252  3.292665                    0.998327
+Pmp22 median_ratio              PERKi relative_loading      True     0.531893  0.318046  0.745739   3.384171e-03                9.165287e-03  0.477243  0.604891                    0.807435

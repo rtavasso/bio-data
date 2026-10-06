@@ -1,0 +1,679 @@
+ORIGINAL ARTIFACT {
+  "title": "PMP22 continuation: lipid-summary-analysis.json",
+  "output": {
+    "blob": "f6c6bf35deab9780016760580e133a704b55f034050b842fffd43a5f384f61d9",
+    "bytes": 7059,
+    "name": "lipid-summary-analysis.json"
+  },
+  "derivation": {
+    "code": [
+      "2f4d6ce8de1282e06ed1f4bc3e050e8cb21d6c41227fd6ff00ed33ad0f32fcfd"
+    ],
+    "command": [],
+    "environment": {
+      "lock": "67e5583f9564da5655a13fc5daad75d08768e48882ea13385efdaeaf89bd7349",
+      "packages": [
+        [
+          "Jinja2",
+          "3.1.6"
+        ],
+        [
+          "MarkupSafe",
+          "3.0.3"
+        ],
+        [
+          "PyYAML",
+          "6.0.3"
+        ],
+        [
+          "Pygments",
+          "2.21.0"
+        ],
+        [
+          "anndata",
+          "0.12.19"
+        ],
+        [
+          "annotated-doc",
+          "0.0.5"
+        ],
+        [
+          "annotated-types",
+          "0.8.0"
+        ],
+        [
+          "anyio",
+          "4.15.1"
+        ],
+        [
+          "array-api-compat",
+          "1.15.0"
+        ],
+        [
+          "asciitree",
+          "0.3.3"
+        ],
+        [
+          "bioframe",
+          "0.8.0"
+        ],
+        [
+          "certifi",
+          "2026.7.22"
+        ],
+        [
+          "charset-normalizer",
+          "3.5.1"
+        ],
+        [
+          "click",
+          "8.5.0"
+        ],
+        [
+          "coloredlogs",
+          "15.0.1"
+        ],
+        [
+          "contourpy",
+          "1.4.0"
+        ],
+        [
+          "cooler",
+          "0.10.4"
+        ],
+        [
+          "cycler",
+          "0.12.1"
+        ],
+        [
+          "cytoolz",
+          "1.1.0"
+        ],
+        [
+          "data-archaeology-workbench",
+          "0.3.0"
+        ],
+        [
+          "defusedxml",
+          "0.7.1"
+        ],
+        [
+          "dill",
+          "0.4.1"
+        ],
+        [
+          "donfig",
+          "0.8.1.post1"
+        ],
+        [
+          "duckdb",
+          "1.5.5"
+        ],
+        [
+          "et_xmlfile",
+          "2.0.0"
+        ],
+        [
+          "fonttools",
+          "4.66.0"
+        ],
+        [
+          "google-crc32c",
+          "1.9.0"
+        ],
+        [
+          "h11",
+          "0.16.0"
+        ],
+        [
+          "h5py",
+          "3.16.0"
+        ],
+        [
+          "httpcore",
+          "1.0.9"
+        ],
+        [
+          "httpx",
+          "0.28.1"
+        ],
+        [
+          "humanfriendly",
+          "10.0"
+        ],
+        [
+          "hypothesis",
+          "6.168.1"
+        ],
+        [
+          "idna",
+          "3.20"
+        ],
+        [
+          "iniconfig",
+          "2.3.0"
+        ],
+        [
+          "kiwisolver",
+          "1.5.1"
+        ],
+        [
+          "legacy-api-wrap",
+          "1.5"
+        ],
+        [
+          "markdown-it-py",
+          "4.2.0"
+        ],
+        [
+          "matplotlib",
+          "3.11.2"
+        ],
+        [
+          "mdurl",
+          "0.1.2"
+        ],
+        [
+          "msgspec",
+          "0.21.1"
+        ],
+        [
+          "multiprocess",
+          "0.70.19"
+        ],
+        [
+          "natsort",
+          "8.4.0"
+        ],
+        [
+          "numcodecs",
+          "0.17.0"
+        ],
+        [
+          "numpy",
+          "2.5.3"
+        ],
+        [
+          "openpyxl",
+          "3.1.5"
+        ],
+        [
+          "packaging",
+          "26.3"
+        ],
+        [
+          "pandas",
+          "2.3.3"
+        ],
+        [
+          "pephubclient",
+          "0.6.0"
+        ],
+        [
+          "peppy",
+          "0.40.8"
+        ],
+        [
+          "pillow",
+          "12.3.0"
+        ],
+        [
+          "pluggy",
+          "1.6.0"
+        ],
+        [
+          "pyBigWig",
+          "0.3.26"
+        ],
+        [
+          "pyarrow",
+          "23.0.1"
+        ],
+        [
+          "pydantic",
+          "2.13.5"
+        ],
+        [
+          "pydantic_core",
+          "2.46.5"
+        ],
+        [
+          "pyfaidx",
+          "0.9.0.4"
+        ],
+        [
+          "pyparsing",
+          "3.3.3"
+        ],
+        [
+          "pytest",
+          "9.1.1"
+        ],
+        [
+          "python-dateutil",
+          "2.9.0.post0"
+        ],
+        [
+          "pytz",
+          "2026.4"
+        ],
+        [
+          "requests",
+          "2.34.2"
+        ],
+        [
+          "rich",
+          "15.0.0"
+        ],
+        [
+          "ruff",
+          "0.16.9"
+        ],
+        [
+          "scipy",
+          "1.18.1"
+        ],
+        [
+          "scverse-misc",
+          "0.1.6"
+        ],
+        [
+          "session-info2",
+          "0.4.2"
+        ],
+        [
+          "shellingham",
+          "1.5.4"
+        ],
+        [
+          "simplejson",
+          "4.1.2"
+        ],
+        [
+          "six",
+          "1.17.0"
+        ],
+        [
+          "sortedcontainers",
+          "2.4.0"
+        ],
+        [
+          "toml",
+          "0.10.2"
+        ],
+        [
+          "toolz",
+          "1.1.0"
+        ],
+        [
+          "typer",
+          "0.27.2"
+        ],
+        [
+          "typing-inspection",
+          "0.4.4"
+        ],
+        [
+          "typing_extensions",
+          "4.16.0"
+        ],
+        [
+          "tzdata",
+          "2026.4"
+        ],
+        [
+          "ubiquerg",
+          "0.9.3"
+        ],
+        [
+          "urllib3",
+          "2.8.0"
+        ],
+        [
+          "zarr",
+          "3.4.0"
+        ]
+      ],
+      "platform": "macOS-15.7.2-x86_64-i386-64bit",
+      "python": "3.12.8",
+      "source": "f3cf8a07415d1d18ffa7420518503266bfc37cf00a6176b6f8f3c86247f601da"
+    },
+    "inputs": [
+      {
+        "blob": "b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e",
+        "role": "input",
+        "selector": {},
+        "source_identity": ""
+      }
+    ],
+    "parameters": {
+      "analysis": "question-local executed script",
+      "source_semantics": "See companion summary; no missing-to-zero imputation"
+    },
+    "references": []
+  }
+}
+
+SOURCE inputs/continuation/PMC6607759.html bytes 297301 sha256 b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e
+
+
+
+
+
+    
+
+
+        
+
+        
+
+        
+
+        
+
+        
+
+
+        
+        
+
+        
+        
+  
+
+
+
+
+  
+
+
+
+
+
+
+  
+  
+    
+
+  
+  
+  @media screen and (min-width: 64em) {
+    div.pmc-wm {
+      background: repeat-y;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='350' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cdefs%3E%3Cfilter x='-.02' y='0' width='1.05' height='1' id='c'%3E%3CfeFlood flood-color='%23FFF'/%3E%3CfeComposite in='SourceGraphic'/%3E%3C/filter%3E%3Ctext id='b' font-family='Helvetica' font-size='11pt' style='opacity:1;fill:%23005ea2;stroke:none;text-anchor:middle' x='175' y='14'%3E%3C/text%3E%3Cpath id='a' style='fill:%23005ea2' d='M0 8h350v3H0z'/%3E%3C/defs%3E%3Cuse xlink:href='%23a' transform='rotate(90 10 10)'/%3E%3Cuse xlink:href='%23b' transform='rotate(90 10 10)' filter='url(%23c)'/%3E%3C/svg%3E");
+      padding-left: 3rem;
+    }
+  }
+
+
+
+  
+
+
+
+        
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+        
+
+        
+
+            PMP22 Regulates Cholesterol Trafficking and ABCA1-Mediated Cholesterol Efflux - PMC
+        
+
+
+        
+        
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+
+
+    
+        
+
+    
+
+    
+
+    
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+    
+
+    
+
+        
+    
+
+      Skip to main content
+    
+
+
+
+        
+            
+
+
+
+    
+
+        
+
+            
+
+                
+
+                    
+
+                
+
+
+                
+
+                    
+
+                        An official website of the United States government
+                    
+
+                    
+Here's how you know
+
+                
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+HEADINGS ['PERMALINK', 'PMP22 Regulates Cholesterol Trafficking and ABCA1-Mediated Cholesterol Efflux', 'Abstract', 'Introduction', 'Materials and Methods', 'Results', 'Discussion', 'Footnotes', 'References', 'ACTIONS', 'PERMALINK', 'RESOURCES']
+
+SOURCE inputs/upstream/PMC6623163.html bytes 21274 sha256 f409ca91a367a1795e1515be65c80cf3a0f6e9ca3c6c2c014d2583a025aac0f9
+window['ppConfig'] = {productName: 'RecaptchaChallengePageUi', deleteIsEnforced:  true , sealIsEnforced:  true , heartbeatRate:  0.5 , periodicReportingRateMillis:  60000.0 , disableAllReporting:  false };(function(){'use strict';function k(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function l(a){var b=typeof Symbol!="undefined"&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if(typeof a.length=="number")return{next:k(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}var m=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+function n(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var p=n(this);function q(a,b){if(b)a:{var c=p;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&b!=null&&m(c,a,{configurable:!0,writable:!0,value:b})}}
+q("Object.is",function(a){return a?a:function(b,c){return b===c?b!==0||1/b===1/c:b!==b&&c!==c}});q("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(c<0&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+q("String.prototype.includes",function(a){return a?a:function(b,c){if(this==null)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular ex
+HEADINGS []
+
+SOURCE inputs/upstream/PMC6623163.xml bytes 150 sha256 37669e33963e54daaade7891715c5b4d2b5cd2480b03289cb9eb8ca3e4054c3a
+{"timestamp":"2026-09-29T20:41:09.587+00:00","status":500,"error":"Internal Server Error","path":"/europepmc/webservices/rest/PMC6623163/fullTextXML"}
+
+SOURCE inputs/upstream/PMC6623163-biocc.json bytes 6148 sha256 3acc5f4c51ec704cd708d3379196db9f66442a96c9bf275773710e0de0196b52
+NON-JSON RESPONSE [Error] : No result can be found. <BR><HR><B> - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//[pmcoa|pubmed].cgi/[BioC_JSON|BioC_XML]/[PMIDs|PMCIDs]/[UNICODE|ASCII] </B><BR>&nbsp;&nbsp;&nbsp;&nbsp;Functions: Extracting pubmed abstracts or PMC full texts in BioC format.<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [pmcoa]: PMC full texts (open access subset)<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [pubmed]: PubMed abstracts<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [UNICODE]: Output in unicode<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [ASCII]: Output in ascii<BR>&nbsp;&nbsp;&nbsp;&nbsp;Examples:<BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//pubmed.cgi/bioc_json/17299597,17299598/ascii <BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//pmcoa.cgi/BioC_xml/17299597,17299598/unicode <BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//pmcoa.cgi/bioc_json/PMC1790863,PMC1790864/unicode <BR><BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//supplmat.cgi/[BioC_JSON|BioC_XML]/[PMIDs|PMCIDs]/[# of SM|LIST] <BR>&nbsp;&nbsp;&nbsp;&nbsp;Functions: Extracting PMC open access supplementary material (SM) in BioC format.<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [# of SM]: The # of SM files of the article. It can be reached from <num>#</num> by LIST option.<BR>&nbsp;&nbsp;&nbsp;&nbsp; - [LIST]: Lists all supplementary filenames of the requested articles. <BR>&nbsp;&nbsp;&nbsp;&nbsp;Examples:<BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//supplmat.cgi/bioc_xml/32419307/1 <BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful//supplmat.cgi/bioc_xml/32419307/all <BR>&nbsp;&nbsp;&nbsp;&nbsp; - https://www.ncbi.nlm.nih.gov/research/bionlp/RESTf
+
+FDFT1 ZIP bytes 71599407 sha256 934fe99bbdccca00a285fc092bc03f26f1e72282fe35eadfc7ebb51b777b5738
+SELECTABLE MEMBER ADVS-13-e20323-s001.zip 55527737 55544085
+SELECTABLE MEMBER ADVS-13-e20323-s002.docx 13734804 13577671
+FDFT1 OLD INVENTORY [
+  {
+    "name": "RAW DATA of blots.pdf",
+    "size": 4824874,
+    "compressed": 4600210
+  },
+  {
+    "name": "RAW DATA of Microscope Images.pdf",
+    "size": 51615713,
+    "compressed": 50480242
+  },
+  {
+    "name": "Cell Line Authentication STR Profiling.pdf",
+    "size": 484935,
+    "compressed": 446627
+  }
+]
+RECEIPT PMC6623163.html.json {"url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6623163/", "started": "2026-09-29T20:42:09.207236+00:00", "bytes": 21274, "status": "downloaded_unvalidated", "http_status": 200, "final_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6623163/", "content_type": "text/html; charset=utf-8", "sha256": "f409ca91a367a1795e1515be65c80cf3a0f6e9ca3c6c2c014d2583a025aac0f9", "finished": "2026-09-29T20:42:09.558669+00:00"}
+RECEIPT PMC6623163.xml.json {"url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML", "started": "2026-09-29T20:41:08.347744+00:00", "bytes": 150, "status": "failed", "http_status": 500, "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML", "content_type": "application/json", "sha256": "37669e33963e54daaade7891715c5b4d2b5cd2480b03289cb9eb8ca3e4054c3a", "error": "500 Server Error:  for url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6623163/fullTextXML", "finished": "2026-09-29T20:41:09.625335+00:00"}
+RECEIPT PMC6623163-biocc.json.json {"url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6623163/unicode", "started": "2026-09-29T20:43:35.633425+00:00", "bytes": 6148, "status": "downloaded_unvalidated", "http_status": 200, "final_url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6623163/unicode", "content_type": "text/html", "sha256": "3acc5f4c51ec704cd708d3379196db9f66442a96c9bf275773710e0de0196b52", "finished": "2026-09-29T20:43:35.930028+00:00"}
+RECEIPT FDFT1-supplements.zip.json {"url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13042600/supplementaryFiles", "started": "2026-09-29T20:43:35.911310+00:00", "bytes": 71599407, "status": "downloaded_unvalidated", "http_status": 200, "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13042600/supplementaryFiles", "content_type": "application/zip", "sha256": "934fe99bbdccca00a285fc092bc03f26f1e72282fe35eadfc7ebb51b777b5738", "finished": "2026-09-29T20:49:12.266205+00:00"}
+CONTINUATION RECEIPT 50 {"url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6607759/", "path": "inputs/continuation/PMC6607759.html", "started": "2026-09-28T01:37:14.614549+00:00", "bytes": 297301, "status": 200, "sha256": "b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e"}

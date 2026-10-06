@@ -1,0 +1,47 @@
+{
+  "sample_records": 12,
+  "donor_labels": [
+    "AAL",
+    "BAR",
+    "BON",
+    "ETT",
+    "JIM",
+    "LEY",
+    "MAR"
+  ],
+  "groups": {
+    "CTDP1": {
+      "arrays": 4,
+      "donor_labels": [
+        "BON",
+        "MAR"
+      ]
+    },
+    "PMP22_Leu16Pro": {
+      "arrays": 2,
+      "donor_labels": [
+        "JIM"
+      ]
+    },
+    "PMP22_duplication": {
+      "arrays": 2,
+      "donor_labels": [
+        "BAR"
+      ]
+    },
+    "normal": {
+      "arrays": 4,
+      "donor_labels": [
+        "AAL",
+        "ETT",
+        "LEY"
+      ]
+    }
+  },
+  "metadata_disagreements": [
+    "GSM178752"
+  ],
+  "eligible_dosage_donors": 1,
+  "expression_analysis_performed": false,
+  "limitation": "Quick-view measurement rows incomplete; donor metadata usable. Mixed reference pool and repeated cultures are not extra donors. No promoter or protein endpoint."
+}

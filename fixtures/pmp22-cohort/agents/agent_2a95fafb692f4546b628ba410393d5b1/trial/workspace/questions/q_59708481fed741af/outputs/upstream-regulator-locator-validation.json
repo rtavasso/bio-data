@@ -1,0 +1,72 @@
+{
+  "artifact": "artifact_477e4096f5ef253d79ffbd7dfa1b68b941a59881a8a1e2e8863cc7158315edb3",
+  "artifact_readback_verified": true,
+  "producer_verified": true,
+  "source_checks": [
+    {
+      "sheet": "Control vs PTENKO",
+      "checked_rows": [
+        {
+          "symbol": "Egr2",
+          "row": 434,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        },
+        {
+          "symbol": "Sox10",
+          "row": 4959,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        }
+      ]
+    },
+    {
+      "sheet": "Control vs TSC1KO",
+      "checked_rows": [
+        {
+          "symbol": "Egr2",
+          "row": 684,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        },
+        {
+          "symbol": "Sox10",
+          "row": 13209,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        }
+      ]
+    },
+    {
+      "sheet": "Control vs RaptorKO",
+      "checked_rows": [
+        {
+          "symbol": "Egr2",
+          "row": 1375,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        },
+        {
+          "symbol": "Sox10",
+          "row": 9491,
+          "sample_columns": "U:BD",
+          "finite_numeric": true
+        }
+      ]
+    },
+    {
+      "member": "elife-29241-fig4-data1.xlsx",
+      "age_labels": [
+        "E17.5",
+        "P1",
+        "P5",
+        "P14",
+        "P24"
+      ],
+      "B3_M7_finite_numeric": true,
+      "same_animals_as_RNA_not_established": true
+    }
+  ],
+  "effects_computed": false,
+  "formulas_executed": false
+}

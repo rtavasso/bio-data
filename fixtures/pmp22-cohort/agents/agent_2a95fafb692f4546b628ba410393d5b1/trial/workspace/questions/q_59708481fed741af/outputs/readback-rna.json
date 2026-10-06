@@ -1,0 +1,396 @@
+{
+  "created": "2026-10-05T17:53:14.866365+00:00",
+  "derivation_key": "338c4aec3241ae54fd68c39d3eb1dfd5362f42666add24ce941a04589e9e6526",
+  "id": "artifact_c2f6362168a0124b57c1e807a598b73005ed36f8c4f609b5be6743047d88faec",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "c38865806651e105fba32d0d8544c3a7dd60042973559667f63463f6ddafd3fa"
+      ],
+      "command": [],
+      "environment": {
+        "lock": "67e5583f9564da5655a13fc5daad75d08768e48882ea13385efdaeaf89bd7349",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.3"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "anndata",
+            "0.12.19"
+          ],
+          [
+            "annotated-doc",
+            "0.0.5"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "anyio",
+            "4.15.1"
+          ],
+          [
+            "array-api-compat",
+            "1.15.0"
+          ],
+          [
+            "asciitree",
+            "0.3.3"
+          ],
+          [
+            "bioframe",
+            "0.8.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.1"
+          ],
+          [
+            "click",
+            "8.5.0"
+          ],
+          [
+            "coloredlogs",
+            "15.0.1"
+          ],
+          [
+            "contourpy",
+            "1.4.0"
+          ],
+          [
+            "cooler",
+            "0.10.4"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "cytoolz",
+            "1.1.0"
+          ],
+          [
+            "data-archaeology-workbench",
+            "0.3.0"
+          ],
+          [
+            "defusedxml",
+            "0.7.1"
+          ],
+          [
+            "dill",
+            "0.4.1"
+          ],
+          [
+            "donfig",
+            "0.8.1.post1"
+          ],
+          [
+            "duckdb",
+            "1.5.5"
+          ],
+          [
+            "et_xmlfile",
+            "2.0.0"
+          ],
+          [
+            "fonttools",
+            "4.66.0"
+          ],
+          [
+            "google-crc32c",
+            "1.9.0"
+          ],
+          [
+            "h11",
+            "0.16.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "httpcore",
+            "1.0.9"
+          ],
+          [
+            "httpx",
+            "0.28.1"
+          ],
+          [
+            "humanfriendly",
+            "10.0"
+          ],
+          [
+            "hypothesis",
+            "6.168.1"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "iniconfig",
+            "2.3.0"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "legacy-api-wrap",
+            "1.5"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "msgspec",
+            "0.21.1"
+          ],
+          [
+            "multiprocess",
+            "0.70.19"
+          ],
+          [
+            "natsort",
+            "8.4.0"
+          ],
+          [
+            "numcodecs",
+            "0.17.0"
+          ],
+          [
+            "numpy",
+            "2.5.3"
+          ],
+          [
+            "openpyxl",
+            "3.1.5"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pandas",
+            "2.3.3"
+          ],
+          [
+            "pephubclient",
+            "0.6.0"
+          ],
+          [
+            "peppy",
+            "0.40.8"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "pluggy",
+            "1.6.0"
+          ],
+          [
+            "pyBigWig",
+            "0.3.26"
+          ],
+          [
+            "pyarrow",
+            "23.0.1"
+          ],
+          [
+            "pydantic",
+            "2.13.5"
+          ],
+          [
+            "pydantic_core",
+            "2.46.5"
+          ],
+          [
+            "pyfaidx",
+            "0.9.0.4"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "pytest",
+            "9.1.1"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "pytz",
+            "2026.4"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "ruff",
+            "0.16.9"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "scverse-misc",
+            "0.1.6"
+          ],
+          [
+            "session-info2",
+            "0.4.2"
+          ],
+          [
+            "shellingham",
+            "1.5.4"
+          ],
+          [
+            "simplejson",
+            "4.1.2"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sortedcontainers",
+            "2.4.0"
+          ],
+          [
+            "toml",
+            "0.10.2"
+          ],
+          [
+            "toolz",
+            "1.1.0"
+          ],
+          [
+            "typer",
+            "0.27.2"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "tzdata",
+            "2026.4"
+          ],
+          [
+            "ubiquerg",
+            "0.9.3"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "zarr",
+            "3.4.0"
+          ]
+        ],
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "python": "3.12.8",
+        "source": "bfa1d4dfb10491811a958fb0d1e5071f8d3f691cb7eef35e77cd8f8e151c1e12"
+      },
+      "inputs": [
+        {
+          "blob": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+          "role": "input",
+          "selector": {},
+          "source_identity": "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a"
+        },
+        {
+          "blob": "cc3f098b687c26493f4095548b1f9822259f92ac30f26ef5b5d470b5ec8f924b",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "1650cb9585c67f40cb0ecaddac12cfb1753a345fa8cf012cd23be332dd89a798",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "contrast": "AS_minus_GFP",
+        "inference": "descriptive_only",
+        "normalizations": [
+          "source",
+          "CPM",
+          "median-ratio-all-positive"
+        ]
+      },
+      "references": [
+        "f779d8b2ba404439b0616bf2007e89f11cdb1ce0be4f9e4f2998fab1a387bcc9"
+      ]
+    },
+    "derivation_key": "338c4aec3241ae54fd68c39d3eb1dfd5362f42666add24ce941a04589e9e6526",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "635e05c8cfbb0772a2b24e97f471beef74eec08b206199ade13665159b5ba5df",
+      "bytes": 13766,
+      "name": "GSE201623-audit.json"
+    },
+    "output_role": "rna-endpoint-audit",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Retrospective descriptive effects; 17949 numeric features after preserving one embedded header. Two labelled libraries per arm, not verified independent donors; no nascent/protein/mediation inference.",
+    "title": "GSE201623 endpoint-discordance audit: source-verified Egr2, Jun and Pmp22 steady-state RNA"
+  },
+  "manifest_blob": "ab91db5436423cf9345820f747207ea2efb37976acdc51101f0818c71f1cbc01",
+  "output_blob": "635e05c8cfbb0772a2b24e97f471beef74eec08b206199ade13665159b5ba5df",
+  "output_role": "rna-endpoint-audit",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_2a95fafb692f4546b628ba410393d5b1/trial/workspace/blobs/sha256/63/635e05c8cfbb0772a2b24e97f471beef74eec08b206199ade13665159b5ba5df",
+  "questions": [
+    {
+      "question_id": "q_59708481fed741af",
+      "relationship": "produced"
+    }
+  ]
+}

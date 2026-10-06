@@ -1,0 +1,163 @@
+{
+  "revision": 3,
+  "scope": "Continuation of q_277f20df4b6b47cc; Egr2-AS discrepancy, quantitative accessibility and neglected RNA/protein regulation. Human Schwann scope preferred, species and endpoints separated.",
+  "status": "in_progress",
+  "stopping_reason": "Investigation continues within 3600-second, 150-request, 1-GiB new-download budget",
+  "items": [
+    {
+      "id": "egr2-as-discrepancy",
+      "priority": "high",
+      "question": "Why do deposited Egr2/Jun RNA directions oppose a simple antisense repair-state model?",
+      "alternatives": [
+        "sample/column mapping or processing error",
+        "endpoint/time/context dependence",
+        "published model not reproduced"
+      ],
+      "readout": "Sample-level metadata, full transcriptome QC, source supplementary measurements",
+      "assets": [
+        "GSE201623",
+        "inputs/continuation/PMC11592338.xml"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_31e1c90e596912f0da91fc5259bd28c0a3485f0a8c15515b37c277e76b77d4c9",
+        "artifact_55b8f0b280341bb4f289f705f6809159d9f4209bd60967c273df257b27bb92ba"
+      ],
+      "finding": "Fresh deposit matches inherited bytes exactly. Egr2 1.258x/Jun 0.820x persists under CPM and all pairwise comparisons. Protein/activity assays oppose steady-state RNA direction; cultures are not mapped across endpoints. Hemoglobin outlier mainly AS2, negligible effect on median-ratio normalization.",
+      "limitation": "",
+      "next_action": "Audit original 2017 antisense study for nascent/steady-state/protein distinction and vector context; retain causal discrepancy.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "quantitative-accessibility",
+      "priority": "high",
+      "question": "Does Egr2-AS alter quantitative accessibility at Egr2/Jun/Pmp22 and genome-wide?",
+      "alternatives": [
+        "local chromatin response",
+        "global state change",
+        "peak-selection artifact"
+      ],
+      "readout": "Per-sample counts or continuous signal with sourced assembly",
+      "assets": [
+        "GSE201627",
+        "inputs/continuation/egr2-repo-tree.json",
+        "GSE122776",
+        "inputs/continuation/GSM3484775.tdf",
+        "inputs/continuation/GSM3484776.tdf"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "running",
+      "artifacts": [],
+      "finding": "Independent processed quantitative ATAC tracks acquired and decoded. All 33,105 RefSeq promoter/site windows measured; 3,288 meet >=90% observed-coverage criterion in both tracks. Pmp22 promoter windows show lower tKO/sKO signal, unlike expected RNA induction. No causality: n=1/genotype and DRG/tumor labels differ.",
+      "limitation": "",
+      "next_action": "Validate unzoomed TDF parser and common-base integration; compare local Pmp22 effects with broad promoter shift. Keep Egr2-AS fragment-count matrix blocker distinct.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "rna-protein-branch",
+      "priority": "high",
+      "question": "Which post-transcriptional mechanisms explain RNA/protein divergence?",
+      "alternatives": [
+        "miRNA-dependent RNA decay or translation",
+        "protein retention/clearance",
+        "transcriptional change"
+      ],
+      "readout": "Processed perturbation or kinetic measurements with RNA/protein endpoints",
+      "assets": [
+        "PMC8191293",
+        "PXD023091",
+        "inputs/continuation/PMC8191293-mmc2.xlsx"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_10f3e34bf6c450de642c25e440e8d195ca7ba508e5cf84e170027ef13c5a71a6",
+        "artifact_c30116363838ac218b965a4b0e5ccc5420e5df8f0b6bb4f9d7b47ba00a96ca4a"
+      ],
+      "finding": "Computed all 670 selected co-IP entries (515 unique proteins, 40 in all variant lists); LMAN1, TMED9, ERGIC3, CANX among strongest L16P/WT shared-list enrichment differences. Source KO shows interaction not sufficient for trafficking control; UGGT1 acts despite not being detected.",
+      "limitation": "Replicate-level reanalysis blocked: PRIDE SEARCH files 1.18-1.88 GB each, exceeding 512 MiB cap; selected summaries do not encode unlisted values.",
+      "next_action": "Retain selected-list caveat; obtain small processed TMT channel matrix if available in future.",
+      "blocker_evidence": [
+        "inputs/continuation/PXD023091-files.json",
+        "inputs/continuation/PMC8191293-mmc2.xlsx"
+      ]
+    },
+    {
+      "id": "tead-mediation",
+      "priority": "high",
+      "question": "Are direct TEAD and EGR2-mediated routes distinguishable?",
+      "alternatives": [
+        "direct cis regulation",
+        "EGR2 mediation",
+        "shared cell-state response"
+      ],
+      "readout": "TEAD perturbation and rescue readouts",
+      "assets": [
+        "inputs/continuation/PMC5181599.html"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "Full text confirms direct enhancer motif effects and developmental Yap/Taz effects. P20 Pmp22 Prom1 reduction with Egr2 RNA not significantly different supports separate route; quantitative mediation remains unresolved.",
+      "limitation": "Study supplies TEAD knockdown, YAP/TAZ genotypes and motif reporters, but no matched EGR2 rescue/clamp. Reporter motif Figure 8 uses eight technical replicates; cannot infer fraction mediated by EGR2.",
+      "next_action": "Need factorial TEAD perturbation with EGR2 rescue and endogenous promoter readouts; no amount of re-fitting existing separated assays identifies mediation fraction.",
+      "blocker_evidence": [
+        "inputs/continuation/PMC5181599.html",
+        "outputs/source-text/PMC5181599.txt"
+      ]
+    },
+    {
+      "id": "human-cis-dosage",
+      "priority": "high",
+      "question": "What human evidence transfers to promoter/copy-number regulation?",
+      "alternatives": [
+        "cis dosage effect",
+        "cell-state composition",
+        "species-specific regulation"
+      ],
+      "readout": "Human Schwann genotype-aware measurements",
+      "assets": [
+        "GSE7423",
+        "GPL1708"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "running",
+      "artifacts": [],
+      "finding": "12 arrays represent 7 donors; BAR duplication and JIM L16P are distinct genotypes, each one donor. Two PMP22 probes show ~25.6x versus ~2.66x duplication/control contrast; no promoter labels justified.",
+      "limitation": "",
+      "next_action": "Audit actual channel intensities and broad culture-state patterns; do not infer dosage coefficient or pool unlike variants.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "lipid-hormonal-frontier",
+      "priority": "medium",
+      "question": "Does metabolic state feed back onto PMP22?",
+      "alternatives": [
+        "feedback",
+        "downstream consequence"
+      ],
+      "readout": "independent metabolic perturbation with PMP22 endpoint",
+      "assets": [],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "open",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "",
+      "next_action": "Retain frontier pending higher-priority analyses",
+      "blocker_evidence": []
+    }
+  ]
+}

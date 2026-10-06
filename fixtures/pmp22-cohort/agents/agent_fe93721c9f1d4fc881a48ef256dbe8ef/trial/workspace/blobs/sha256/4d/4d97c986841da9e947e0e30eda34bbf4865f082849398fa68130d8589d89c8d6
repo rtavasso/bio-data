@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-29",
+  "scope": "Five EuropePMC exact mechanism/context searches plus primary-source inspection. Broader PMP22 query first100 of217, explicitly incomplete. No global priority claim.",
+  "searches": [
+    {
+      "query": "TITLE_ABS:(Schwann AND (NRF2 OR Nqo1 OR antioxidant) AND (mTOR OR Tsc1 OR Pten))",
+      "date": "2026-09-29",
+      "evidence": "inputs/upstream/novelty-mtor-antioxidant.json",
+      "hitCount": 5,
+      "returned": 5,
+      "truncated": false
+    },
+    {
+      "query": "TITLE_ABS:((Nae1 OR neddylation) AND (Schwann OR myelination) AND (Nrf2 OR Nqo1 OR Slc7a11 OR antioxidant))",
+      "date": "2026-09-29",
+      "evidence": "inputs/upstream/novelty-nae1-abstract.json",
+      "hitCount": 0,
+      "returned": 0,
+      "truncated": false
+    },
+    {
+      "query": "(Nae1 OR neddylation) AND (Schwann OR myelination) AND (Nrf2 OR Nqo1 OR Slc7a11 OR antioxidant)",
+      "date": "2026-09-29",
+      "evidence": "inputs/upstream/novelty-nae1-antioxidant.json",
+      "hitCount": 42,
+      "returned": 42,
+      "truncated": false
+    },
+    {
+      "query": "TITLE_ABS:((PMP22 OR \"peripheral myelin protein 22\") AND (NRF2 OR NFE2L2 OR neddylation OR Nae1))",
+      "date": "2026-09-29",
+      "evidence": "inputs/upstream/novelty-pmp22-abstract.json",
+      "hitCount": 3,
+      "returned": 3,
+      "truncated": false
+    },
+    {
+      "query": "(PMP22 OR \"peripheral myelin protein 22\") AND (NRF2 OR NFE2L2 OR neddylation OR Nae1)",
+      "date": "2026-09-29",
+      "evidence": "inputs/upstream/novelty-pmp22-antioxidant.json",
+      "hitCount": 217,
+      "returned": 100,
+      "truncated": true
+    }
+  ],
+  "claims": [
+    {
+      "claim": "Neddylation regulates Schwann EGR2 persistence and multiple myelination pathways",
+      "novelty": "known",
+      "sources": [
+        "PMC11014456 Fig5-8"
+      ],
+      "difference": "Repaired upstream blind spot; not new biology"
+    },
+    {
+      "claim": "Neddylation inhibition can stabilize NRF2 and induce antioxidant genes",
+      "novelty": "known",
+      "sources": [
+        "PMC5658359 Fig5",
+        "PMC8168556 Fig4-5",
+        "PMC11252818 Fig1"
+      ],
+      "difference": "Primary evidence in non-Schwann systems; no direct transfer assumed"
+    },
+    {
+      "claim": "Nae1-loss Pmp22 RNA is not relatively preserved against seven myelin genes",
+      "novelty": "not_found_in_scoped_search",
+      "sources": [
+        "PMC11014456 Fig4 and Results",
+        "PMC5589416 Fig3",
+        "inherited Zeb2 analysis"
+      ],
+      "difference": "New independently tested transfer rejection, not unique gene mechanism"
+    },
+    {
+      "claim": "Eligible four-gene antioxidant module is stronger in Nae1 loss than in TSC1/PTEN despite shared Pmp22/myelin suppression",
+      "novelty": "not_found_in_scoped_search",
+      "sources": [
+        "PMC11014456 Fig5A already compares these expression signatures",
+        "PMC5589416 Fig3 source data",
+        "PMC5658359 Fig5",
+        "PMC8168556 Fig4"
+      ],
+      "difference": "New exact comparative inference; five-gene lock untestable, reduced panel retrospective; not proof of NRF2 causality"
+    },
+    {
+      "claim": "Antioxidant intervention can alter peripheral myelin/PMP22 endpoints",
+      "novelty": "known",
+      "sources": [
+        "PMC5802790 Fig3",
+        "PMC13360480 Fig4-5; no NRF2 necessity experiment",
+        "32980538 abstract only"
+      ],
+      "difference": "Precludes claiming antioxidant-PMP22 relationship in general is new; contexts and interventions differ"
+    }
+  ],
+  "limitation": "Primary abstracts only for non-PMC curcumin papers; selected full-text passages plus supplied entire JATS for closest sources. No exhaustive downstream citation/secondary-data-use audit. No novel causal regulator established. PMC6944556 full text not successfully retrieved and is not evidence for a claim. Browser confirmation uses primary studies, no new independent outcomes.",
+  "inaccessible_sources": [
+    {
+      "pmcid": "PMC6944556",
+      "routes": [
+        "EuropePMC fullTextXML HTTP500 JSON error",
+        "NCBI BioC HTTP200 text/html anti-bot page, not JSON"
+      ],
+      "used_as_positive_evidence": false,
+      "receipts": [
+        "inputs/upstream/receipts/PMC6944556.xml.json",
+        "inputs/upstream/receipts/PMC6944556-BioC.json.json"
+      ]
+    }
+  ]
+}

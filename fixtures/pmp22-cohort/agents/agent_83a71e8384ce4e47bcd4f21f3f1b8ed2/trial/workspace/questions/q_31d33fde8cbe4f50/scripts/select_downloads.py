@@ -1,0 +1,17 @@
+"""Print selected official download records and structured literature hits."""
+
+import json
+from pathlib import Path
+
+q = Path(__file__).resolve().parents[1]
+s = q / "inputs/sources"
+x = json.loads((s / "gtex-file-list.source").read_text())
+for row in x:
+    if any(k in json.dumps(row).lower() for k in ["long_read", "long-read", "flair", "nanopore", "v9"]):
+        print(json.dumps(row))
+schema = json.loads((s / "gtex-openapi.source").read_text())["components"]["schemas"]
+for name in ["AvailableProjects", "File", "OpenAccessFilesMetadata"]:
+    print("SCHEMA", name, json.dumps(schema[name]))
+x = json.loads((s / "paperclip-literature.source").read_text())
+for r in x["resultList"]["result"]:
+    print(r.get("pmcid"), r.get("pmid"), r["title"])

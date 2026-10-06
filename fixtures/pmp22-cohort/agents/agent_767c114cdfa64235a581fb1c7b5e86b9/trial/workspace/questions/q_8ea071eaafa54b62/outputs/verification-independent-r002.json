@@ -1,0 +1,78 @@
+{
+  "all_checks_passed": true,
+  "analysis_execution_receipt_sha256": "e0dff2360fdbfde345a891aae368e5e972adba7669dfcf65369c9658fdaabbbe",
+  "rows": 288737,
+  "expected_background_rows": 288737,
+  "pmp22_endpoint_rows": 13,
+  "source_BH_reconstructed_genes": 10132,
+  "maximum_source_BH_discrepancy": 2.6645352591003757e-15,
+  "tcam_ratio_warning_count": 11,
+  "ratio_warning_examples": [
+    {
+      "sheet": "Cuffdiff_RIP-PUM1_vs_RIP-IgG=2x",
+      "source_row": {
+        "test_id": "XLOC_006492",
+        "gene_id": "XLOC_006492",
+        "gene": "SLC38A1",
+        "locus": "chr12:46576839-46663495",
+        "sample_1": "RIP-PUM1",
+        "sample_2": "RIP-IgG",
+        "status": "FAIL",
+        "value_1": 665.581,
+        "value_2": 172.789,
+        "log2(fold_change)": 0,
+        "test_stat": 0,
+        "p_value": 1,
+        "q_value": 1,
+        "significant": "no"
+      },
+      "absolute_log2_ratio_discrepancy": 1.94560287383803
+    },
+    {
+      "sheet": "Cuffdiff_RIP-PUM1_vs_RIP-IgG=2x",
+      "source_row": {
+        "test_id": "XLOC_012564",
+        "gene_id": "XLOC_012564",
+        "gene": "ZNF532",
+        "locus": "chr18:56530060-56653709",
+        "sample_1": "RIP-PUM1",
+        "sample_2": "RIP-IgG",
+        "status": "FAIL",
+        "value_1": 157.105,
+        "value_2": 64.3445,
+        "log2(fold_change)": 0,
+        "test_stat": 0,
+        "p_value": 1,
+        "q_value": 1,
+        "significant": "no"
+      },
+      "absolute_log2_ratio_discrepancy": 1.2878403553369044
+    },
+    {
+      "sheet": "Cuffdiff_RIP-PUM1_vs_TCam-2=2x",
+      "source_row": {
+        "test_id": "XLOC_006492",
+        "gene_id": "XLOC_006492",
+        "gene": "SLC38A1",
+        "locus": "chr12:46576839-46663495",
+        "sample_1": "TCAM2",
+        "sample_2": "RIP-PUM1",
+        "status": "FAIL",
+        "value_1": 74.8446,
+        "value_2": 715.695,
+        "log2(fold_change)": 0,
+        "test_stat": 0,
+        "p_value": 1,
+        "q_value": 1,
+        "significant": "no"
+      },
+      "absolute_log2_ratio_discrepancy": 3.2573747652760736
+    }
+  ],
+  "source_equivalence_threshold_log2": 0.8073549220576041,
+  "pmp22_relative_persistence_fold_ci95": [
+    0.9290892890429582,
+    1.5097633671321964
+  ],
+  "caution": "Checks validate extraction/computation and source consistency, not causal truth, raw-count fit, or cell-context transfer."
+}

@@ -1,0 +1,614 @@
+{
+  "revision": 4,
+  "scope": {
+    "target": "PMP22",
+    "endpoint": [
+      "promoter output",
+      "RNA abundance",
+      "functional protein abundance"
+    ],
+    "species_context": "Human Schwann cells prioritized; other species and states kept distinct",
+    "assumptions": "All initial edges are recalled, unverified hypotheses. No completeness claim."
+  },
+  "nodes": [
+    {
+      "id": "dosage",
+      "label": "PMP22 copy number / cis architecture",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "promoters",
+      "label": "PMP22 P1/P2 promoter output",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "rna",
+      "label": "PMP22 RNA abundance",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "protein",
+      "label": "PMP22 folded surface/myelin protein",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "sox",
+      "label": "SOX10 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "egr",
+      "label": "EGR2 activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "axon",
+      "label": "Axonal NRG1 / ERBB signaling",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "camp",
+      "label": "cAMP / PKA / differentiation",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "chromatin",
+      "label": "Chromatin / enhancer activity",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mir",
+      "label": "miRNA / RNA stability",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "qc",
+      "label": "ER quality control / proteasome / autophagy",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "injury",
+      "label": "Injury / c-JUN repair state",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "mechanical",
+      "label": "Mechanical signals / YAP TAZ",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "as",
+      "label": "EGR2 antisense RNA",
+      "kind": "regulatory state"
+    },
+    {
+      "id": "tead",
+      "label": "TEAD1 activity",
+      "kind": "transcription factor activity"
+    },
+    {
+      "id": "yy1",
+      "label": "YY1 signaling-dependent activity",
+      "kind": "transcription factor activity"
+    },
+    {
+      "id": "ezh",
+      "label": "EZH2-associated repressive chromatin",
+      "kind": "chromatin complex"
+    },
+    {
+      "id": "wdr",
+      "label": "WDR5-associated active chromatin",
+      "kind": "chromatin complex"
+    },
+    {
+      "id": "jun",
+      "label": "C-JUN / AP-1 activity",
+      "kind": "repair-state activity"
+    },
+    {
+      "id": "lipid",
+      "label": "Cholesterol trafficking / ABCA1 efflux",
+      "kind": "downstream physiology"
+    },
+    {
+      "id": "mir_up",
+      "label": "miR-29 biogenesis and loading",
+      "kind": "upstream unresolved control"
+    },
+    {
+      "id": "hormone",
+      "label": "Hormonal metabolic and pharmacological inputs",
+      "kind": "unresolved branch"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "dosage",
+      "target": "rna",
+      "mechanism": "Dosage-dependent expression",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e2",
+      "source": "sox",
+      "target": "promoters",
+      "mechanism": "Promoter/enhancer activation",
+      "context": "Rat sciatic nerve binding context and rat S16 SOX10-loss TSS data",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "source": "egr",
+      "target": "promoters",
+      "mechanism": "Myelination transcription",
+      "context": "Rodent myelination enhancer studies",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3298281/",
+          "locator": "indexed primary-paper Results excerpt",
+          "basis": "EGR2/SOX10 motif perturbations reduce enhancer activity; reporter evidence is not complete endogenous human causality."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e4",
+      "source": "axon",
+      "target": "egr",
+      "mechanism": "Signal-dependent differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e5",
+      "source": "camp",
+      "target": "egr",
+      "mechanism": "Differentiation-dependent induction",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e6",
+      "source": "chromatin",
+      "target": "promoters",
+      "mechanism": "Accessible cis elements",
+      "context": "Rodent endogenous distal enhancer deletion",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://academic.oup.com/hmg/article/27/16/2830/4996744",
+          "locator": "indexed primary-paper Results excerpt",
+          "basis": "Deletion reduces Pmp22 transcription, preferentially P1."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e7",
+      "source": "promoters",
+      "target": "rna",
+      "mechanism": "Transcription",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e8",
+      "source": "mir",
+      "target": "rna",
+      "mechanism": "Post-transcriptional repression",
+      "context": "Cultured Schwann cells; human fibroblast validation separately",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2713384/",
+          "locator": "indexed primary-paper Results excerpt",
+          "basis": "miR-29a affects endogenous and reporter PMP22 RNA/protein; post-transcriptional mechanism."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e9",
+      "source": "rna",
+      "target": "protein",
+      "mechanism": "Translation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e10",
+      "source": "qc",
+      "target": "protein",
+      "mechanism": "Folding trafficking and degradation",
+      "context": "Cultured wild-type and mutant PMP22; L16P retention context",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4227013/",
+          "locator": "indexed primary-paper Results excerpt",
+          "basis": "ERAD, calnexin and RER1 affect handling; mutation-specific effects are not generalized."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e11",
+      "source": "injury",
+      "target": "egr",
+      "mechanism": "Repair/myelination antagonism",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e12",
+      "source": "mechanical",
+      "target": "egr",
+      "mechanism": "Mechanosensitive differentiation",
+      "context": "Unverified; context to be audited",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e13",
+      "source": "as",
+      "target": "egr",
+      "mechanism": "Antisense modulation",
+      "context": "Mechanism supported in published nascent/chromatin experiments; simple prediction not reproduced in GSE201623 steady-state gene counts",
+      "status": "contested",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "source": "tead",
+      "target": "promoters",
+      "mechanism": "Direct enhancer regulation",
+      "context": "Rodent Schwann-cell and nerve experiments",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5181599/",
+          "locator": "indexed primary-paper Results/Discussion excerpt",
+          "basis": "Tead1 binding, loss-of-function and motif mutation support PMP22 enhancer regulation; full-text open blocked by reCAPTCHA."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e15",
+      "source": "tead",
+      "target": "egr",
+      "mechanism": "Egr2 enhancer regulation provides indirect route to PMP22",
+      "context": "Rodent Schwann-cell and nerve experiments",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5181599/",
+          "locator": "indexed primary-paper Results/Discussion excerpt",
+          "basis": "Tead1 binding, loss-of-function and motif mutation support PMP22 enhancer regulation; full-text open blocked by reCAPTCHA."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e16",
+      "source": "mechanical",
+      "target": "tead",
+      "mechanism": "YAP/TAZ coactivation of TEAD, upstream mechanical dependency to resolve",
+      "context": "Activity/localization not inferred from gene counts",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5181599/",
+          "locator": "indexed primary-paper Results/Discussion excerpt",
+          "basis": "Tead1 binding, loss-of-function and motif mutation support PMP22 enhancer regulation; full-text open blocked by reCAPTCHA."
+        }
+      ]
+    },
+    {
+      "id": "e17",
+      "source": "camp",
+      "target": "promoters",
+      "mechanism": "cAMP-dependent Pmp22 TSS abundance increase",
+      "context": "Primary rat Schwann cells; does not identify sole mediator",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        }
+      ]
+    },
+    {
+      "id": "e18",
+      "source": "axon",
+      "target": "yy1",
+      "mechanism": "Neuregulin-ErbB2/3 signaling regulates YY1-associated antisense control",
+      "context": "Rat Schwann cells in Egr2-AS study",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e19",
+      "source": "yy1",
+      "target": "as",
+      "mechanism": "Signaling-dependent Egr2-AS regulation",
+      "context": "Rat Schwann cells; not a universally positive signal",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e20",
+      "source": "as",
+      "target": "ezh",
+      "mechanism": "Scaffold-associated recruitment to Egr2 promoter",
+      "context": "Rat Schwann cells; published biochemical/chromatin evidence",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e21",
+      "source": "ezh",
+      "target": "egr",
+      "mechanism": "H3K27me3-associated transcriptional repression",
+      "context": "Nascent/chromatin endpoint differs from current steady-state RNA",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e22",
+      "source": "as",
+      "target": "wdr",
+      "mechanism": "Scaffold-associated active chromatin regulation",
+      "context": "Rat Schwann cells",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "id": "e23",
+      "source": "wdr",
+      "target": "jun",
+      "mechanism": "H3K4me3 targeting at C-JUN promoter",
+      "context": "Published chromatin result; current Jun RNA direction is discordant",
+      "status": "supported",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        }
+      ]
+    },
+    {
+      "id": "e24",
+      "source": "as",
+      "target": "rna",
+      "mechanism": "Indirect effect through cell state versus direct cis change",
+      "context": "Pmp22 RNA lower descriptively; mediation unresolved",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        }
+      ]
+    },
+    {
+      "id": "e25",
+      "source": "protein",
+      "target": "lipid",
+      "mechanism": "PMP22 influences cholesterol trafficking and ABCA1-mediated efflux",
+      "context": "Primary study of PMP22 perturbation; not reverse causality",
+      "status": "hypothesis",
+      "evidence": [
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6607759/",
+          "locator": "indexed primary-paper Results excerpt",
+          "basis": "PMP22 loss/interaction affects lipid trafficking and efflux."
+        }
+      ],
+      "audit_note": "Inherited excerpt-only support downgraded pending primary-text audit; not biological rejection."
+    },
+    {
+      "id": "e26",
+      "source": "lipid",
+      "target": "promoters",
+      "mechanism": "Possible lipid feedback onto expression",
+      "context": "Not established by ABCA1 consequence data",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e27",
+      "source": "mir_up",
+      "target": "mir",
+      "mechanism": "miR-29 transcription processing and RISC loading",
+      "context": "Upstream controller unresolved in relevant Schwann states",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "e28",
+      "source": "hormone",
+      "target": "promoters",
+      "mechanism": "Potential context-dependent transcriptional regulation",
+      "context": "Not audited within request budget",
+      "status": "hypothesis",
+      "evidence": []
+    }
+  ],
+  "frontier": [
+    {
+      "node": "as",
+      "question": "Why do steady-state Egr2 and Jun counts disagree with the simple repression/repair prediction?",
+      "priority": "Highest",
+      "reason": "Causal mediation claim would otherwise be misleading; verify sample mapping, time and protein/nascent RNA",
+      "status": "investigated"
+    },
+    {
+      "node": "promoters",
+      "question": "Which human P1/P2 outputs change after Egr2-AS perturbation?",
+      "priority": "High",
+      "reason": "rn5 TSS and rn6 ATAC are separate experiments; no promoter transfer assumed",
+      "status": "open"
+    },
+    {
+      "node": "tead",
+      "question": "How much PMP22 response is direct versus mediated through EGR2?",
+      "priority": "High",
+      "reason": "Combine EGR2 rescue with TEAD activity/localization and enhancer perturbation",
+      "status": "open"
+    },
+    {
+      "node": "qc",
+      "question": "Does functional myelin-localized protein track RNA under dosage or point mutation?",
+      "priority": "High",
+      "reason": "Pair pulse-chase with localization; variant-specific retention",
+      "status": "deferred"
+    },
+    {
+      "node": "mir_up",
+      "question": "What changes miR-29 production and AGO loading across injury and differentiation?",
+      "priority": "High",
+      "reason": "Post-transcriptional alternative not tested by gene counts",
+      "status": "deferred"
+    },
+    {
+      "node": "lipid",
+      "question": "Is there feedback from cholesterol handling to PMP22 transcription?",
+      "priority": "Medium",
+      "reason": "Downstream ABCA1 effect is not proof of a feedback loop",
+      "status": "deferred"
+    },
+    {
+      "node": "hormone",
+      "question": "Which hormonal/metabolic/drug effects are direct and reproducible in human Schwann cells?",
+      "priority": "Medium",
+      "reason": "Incomplete literature coverage at bounded stopping point",
+      "status": "deferred"
+    },
+    {
+      "node": "dosage",
+      "question": "How do human copy number and cis variants alter promoter-resolved output?",
+      "priority": "High",
+      "reason": "Rodent evidence does not establish allele-specific human effect sizes",
+      "status": "open"
+    }
+  ],
+  "changes": [
+    {
+      "reason": "First collection establishes promoter-resolved SOX10/cAMP responses and broadens beyond transcription; retains Egr2-AS discrepancy rather than forcing a causal chain.",
+      "evidence": [
+        {
+          "source": "GSE139321; asset_f7b45493c97bcbf69f884f50fb111ee5",
+          "locator": "source rows 817,824; outputs/tss-regulatory-panel.tsv",
+          "basis": "Pmp22 TSS clusters increase with cAMP and decrease after SOX10 loss in distinct rat culture experiments; 5-prime RNA proxy, indirect effects possible."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        },
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "reason": "Blind-spot audit pursued direct versus state-mediated chromatin alternatives with four processed ATAC peak files; expanded upstream YY1/antisense and downstream lipid/proteostasis branches. Peak calls do not resolve the RNA discrepancy.",
+      "evidence": [
+        {
+          "source": "GSE201627",
+          "locator": "outputs/atac-promoter-summary.tsv; outputs/atac-method.json",
+          "basis": "rn6 RefSeq window overlaps: Egr2 and Jun peaks present all libraries; selected Pmp22 window no called peak. No differential-accessibility conclusion."
+        },
+        {
+          "source": "GSE201623; artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+          "locator": "outputs/egr2-as-regulatory-panel.tsv; outputs/rna-normalization.json",
+          "basis": "Descriptive AS/GFP ratios: Pmp22 0.885; Egr2 1.258; Jun 0.820. No significance or promoter-specific claim."
+        },
+        {
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11592338/",
+          "locator": "Abstract; Methods 2.1; Results; GEO GSE201623 summary",
+          "basis": "NRG-ErbB2/3-YY1 controls Egr2-AS; chromatin scaffold at Egr2/C-JUN reported. Gene-level RNA result here does not reproduce the simple expected state signature."
+        }
+      ]
+    },
+    {
+      "reason": "Continuation kickoff: preserve inherited r003; audit excerpt-only support and prioritize Egr2-AS design/RNA discrepancy, quantitative ATAC and neglected post-transcriptional mechanisms before further collection.",
+      "evidence": [
+        {
+          "source": "LABBOOK.md",
+          "locator": "inherited stopping boundary",
+          "basis": "Inherited analyses retained, not claimed as new."
+        }
+      ]
+    }
+  ]
+}

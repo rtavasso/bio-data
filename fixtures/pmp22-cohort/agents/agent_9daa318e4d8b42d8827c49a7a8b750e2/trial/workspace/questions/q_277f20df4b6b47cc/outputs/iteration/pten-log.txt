@@ -1,0 +1,46 @@
+{
+  "duplicates": [
+    {
+      "a": {
+        "panel": "7B",
+        "group": "WT",
+        "source_row": 6,
+        "vector": [
+          0.87433012,
+          0.85189646,
+          0.7890152,
+          0.8534972,
+          0.63014249,
+          0.81002687
+        ]
+      },
+      "b": {
+        "panel": "7B",
+        "group": "HNPP",
+        "source_row": 8,
+        "vector": [
+          0.87433012,
+          0.85189646,
+          0.7890152,
+          0.8534972,
+          0.63014249,
+          0.81002687
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "7A source supplies4 WT,5 PTENhKO,5 CMT1A,4 double mutant, but Figure7 legend states5 double mutant. Missing5th not imputed.",
+    "7B six-gene vector WT worksheet row6 exactly equals HNPP row8, so animal independence cannot be established from table. No arbitrary correction; removal of either vector is only sensitivity.",
+    "Source reports normalized qPCR with Rplp0/Ppia controls; Ct/animal IDs absent; no pairing inferred across genes or panels.",
+    "No PMP22 RNA/protein endpoint after PTEN intervention here; no reverse transcriptional feedback established.",
+    "Selected six genes, not a broad assay. Descriptive CI assumes independent values and is not a remedy for source unit uncertainty."
+  ]
+}
+panel   gene             a     b sensitivity  n_a  n_b  arithmetic_mean_a  arithmetic_mean_b  ratio_means  log2_geometric_effect  descriptive_ci_low  descriptive_ci_high
+   7A   pten PTENhKOxCMT1A CMT1A         all    4    5           0.679792           1.323416     0.513664              -0.946750           -1.260058            -0.633442
+   7A nrg1-i PTENhKOxCMT1A CMT1A         all    4    5          48.817503          48.504998     1.006443              -0.178042           -1.675899             1.319816
+   7A   ngfr PTENhKOxCMT1A CMT1A         all    4    5           3.705484           3.016235     1.228513               0.222000           -0.652158             1.096158
+   7A   sox2 PTENhKOxCMT1A CMT1A         all    4    5           1.814787           1.652069     1.098493               0.094125           -0.559421             0.747671
+   7A  hmgcr PTENhKOxCMT1A CMT1A         all    4    5           0.553456           0.454625     1.217390               0.241000           -0.619876             1.101876
+   7A pou3f1 PTENhKOxCMT1A CMT1A         all    4    5           1.517158           1.680671     0.902709              -0.172500           -0.993162             0.648162

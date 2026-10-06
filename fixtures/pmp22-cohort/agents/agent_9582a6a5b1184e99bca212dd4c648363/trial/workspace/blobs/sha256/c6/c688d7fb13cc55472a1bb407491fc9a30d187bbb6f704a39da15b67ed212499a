@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "question": "q_8e562da8efda47b3",
+  "request_post": "post_fd76a69fce5f44ae8900b2e3083c6c4c",
+  "source_question": "q_277f20df4b6b47cc",
+  "purpose": "Selective unchanged scientific-source access; no scientific rerun",
+  "files": [
+    {
+      "member": "sources/PMC3298281.html",
+      "sha256": "88ad18a9f5b8c45e7d59ae183ff4c97d6348ca60b9cd460a6399c04ac03f650d",
+      "bytes": 239580,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/continuation/PMC3298281.html",
+      "article_id": "PMC3298281",
+      "title": "Distal enhancers upstream of the Charcot-Marie-Tooth type 1A disease gene PMP22 - PMC",
+      "source_representation": "exact saved full-text HTML",
+      "substantive_sections_present": true,
+      "transport_evidence": "historical reconciled/incomplete ledger entry only; current hash is not a historical HTTP receipt"
+    },
+    {
+      "member": "sources/PMC7322568.html",
+      "sha256": "72fe05dae929f3ac87e20d85bc7340f3a33fc604e41076c989af11734d08e7ac",
+      "bytes": 224310,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/continuation/PMC7322568.html",
+      "article_id": "PMC7322568",
+      "title": "Pmp22 super-enhancer deletion causes tomacula formation and conduction block in peripheral nerves - PMC",
+      "source_representation": "exact saved full-text HTML",
+      "substantive_sections_present": true,
+      "transport_evidence": "historical reconciled/incomplete ledger entry only; current hash is not a historical HTTP receipt"
+    },
+    {
+      "member": "sources/PMC5181599.html",
+      "sha256": "7b0a5fe4f9c5cdee5f5c45046457dc74a9716945bb88f7aff0f982ce844280ac",
+      "bytes": 266978,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/continuation/PMC5181599.html",
+      "article_id": "PMC5181599",
+      "title": "Tead1 regulates the expression of Peripheral Myelin Protein 22 during Schwann cell development - PMC",
+      "source_representation": "exact saved full-text HTML",
+      "substantive_sections_present": true,
+      "transport_evidence": "inherited complete HTTP receipt with matching saved hash"
+    },
+    {
+      "member": "provenance/source-receipts.redacted.json",
+      "sha256": "5663a3cbcb593f3fce3d4212e1792c1206715115e4aa8fbf08eec1a2680c2e47",
+      "bytes": 2936,
+      "origin": "selected inherited transport entries"
+    },
+    {
+      "member": "sources/GSE139321_Schwann_Cell_Tn5Prime_GEO_Processed.txt",
+      "sha256": "fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5",
+      "bytes": 1331549,
+      "origin": "asset_f7b45493c97bcbf69f884f50fb111ee5",
+      "source_representation": "native tab-delimited text, all source rows and tokens unchanged"
+    },
+    {
+      "member": "sources/GSE139321_Schwann_Cell_Tn5Prime_GEO_Processed.txt.gz",
+      "sha256": "db25ebe101852035d5375434e71c7297c54289ca85a76cefee1b45f8a8bc6144",
+      "bytes": 561929,
+      "origin": "asset_bfb7964142cde09a93a524f3b7ecb0b0",
+      "source_representation": "exact existing compressed parent; decompression equals native text"
+    },
+    {
+      "member": "provenance/tss-source-context.json",
+      "sha256": "9f15a98a1a1fbfa82d7d9e6c970c061cc656a80fadfa533c27098446f77354df",
+      "bytes": 31701,
+      "origin": "local catalog readback; not a newly acquired HTTP response"
+    }
+  ],
+  "tss_structure": {
+    "data_rows": 4993,
+    "source_columns": [
+      "TSS Chr",
+      "TSS Start",
+      "TSS End",
+      "TSS id",
+      "Gene Symbol",
+      "TSS Strand",
+      "H3K4me3 Chr",
+      "H3K4me3 Start",
+      "H3K4me3 End",
+      "SOX10 Chr",
+      "SOX10 Start",
+      "SOX10 End",
+      "Sciatic Nerve 1 RPM",
+      "Sciatic Nerve 2 RPM",
+      "Primary Schwann Cell Control 1 RPM",
+      "Primary Schwann Cell Control 2 RPM",
+      "Primary Schwann Cell Control 3 RPM",
+      "Primary Schwann Cell cAMP 1 RPM",
+      "Primary Schwann Cell cAMP 2 RPM",
+      "Primary Schwann Cell cAMP 3 RPM",
+      "Primary SC cAMP vs Control log2FC",
+      "Primary SC cAMP vs Control FDR-corrected P-value",
+      "S16 Parental 1 RPM",
+      "S16 Parental 2 RPM",
+      "S16 delSOX10 1-1 RPM",
+      "S16 delSOX10 1-2 RPM",
+      "S16 delSOX10 2-1 RPM",
+      "S16 delSOX10 2-2 RPM",
+      "S16 delSOX10 vs Parental log2FC",
+      "S16 delSOX10 vs Parental FDR-corrected P-value"
+    ],
+    "rpm_column_count": 14,
+    "rpm_columns": [
+      "Sciatic Nerve 1 RPM",
+      "Sciatic Nerve 2 RPM",
+      "Primary Schwann Cell Control 1 RPM",
+      "Primary Schwann Cell Control 2 RPM",
+      "Primary Schwann Cell Control 3 RPM",
+      "Primary Schwann Cell cAMP 1 RPM",
+      "Primary Schwann Cell cAMP 2 RPM",
+      "Primary Schwann Cell cAMP 3 RPM",
+      "S16 Parental 1 RPM",
+      "S16 Parental 2 RPM",
+      "S16 delSOX10 1-1 RPM",
+      "S16 delSOX10 1-2 RPM",
+      "S16 delSOX10 2-1 RPM",
+      "S16 delSOX10 2-2 RPM"
+    ],
+    "Pmp22_labelled_rows": 22,
+    "focal_locators": [
+      {
+        "tss_id": "5439",
+        "gene_symbol": "Pmp22",
+        "native_text_line_1based_including_header": 817,
+        "original_line_sha256": "a9c6705fa8d505989e97f7b108d3efed2049c8d29bb0ef5ddef8271408747f87",
+        "chromosome_token": "chr10",
+        "start_token": "49316968",
+        "end_token": "49317054",
+        "strand_token": "+"
+      },
+      {
+        "tss_id": "5446",
+        "gene_symbol": "Pmp22",
+        "native_text_line_1based_including_header": 824,
+        "original_line_sha256": "cbfcca563f7be482814db810a29fd51d6691dff0625ec7af0cf39ca4c60c9897",
+        "chromosome_token": "chr10",
+        "start_token": "49319494",
+        "end_token": "49319573",
+        "strand_token": "+"
+      }
+    ],
+    "header_lines": 1,
+    "source_units": "Source-labelled RPM, not raw counts; source contrast/FDR columns unchanged.",
+    "assembly": "rn5 as explicitly recorded in preserved source metadata",
+    "coordinate_policy": "Start/end/strand tokens preserved; no BED conversion, transcript assignment or human liftOver.",
+    "sample_policy": "Individual library-labelled columns, not a new donor-independence claim.",
+    "worksheet_policy": "Peer worksheet lines 818/825 are attributed to that separate representation, not assumed equal to native text lines 817/824."
+  },
+  "native_parent_identity": {
+    "compressed_sha256": "db25ebe101852035d5375434e71c7297c54289ca85a76cefee1b45f8a8bc6144",
+    "uncompressed_sha256": "fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5",
+    "decompression_byte_identity": true
+  },
+  "historical_panel_locator": {
+    "artifact": "artifact_6d29032908e5607507672edc51c6d6fa6a282a4e0bd0e2e37924be0bfde43fea",
+    "path": "questions/q_277f20df4b6b47cc/outputs/tss-regulatory-panel.tsv",
+    "sha256": "a6dfdabbe22f0e3d66fe0da3b0a3863496c7ae1078eabb88ce41156f90e5fed2",
+    "source_row_definition": "1-based physical native-text line, includes one header"
+  },
+  "PMC6077802": {
+    "included": false,
+    "status": "No inherited complete article file located",
+    "searched": [
+      "original question filenames",
+      "local data/artifact text indexes",
+      "workspace blob PMC/DOI matches"
+    ],
+    "matches_disposition": "Other papers cite it; fetched peer derivations contain metadata, failure receipts, curation and thesis text, not an inherited exact full-article file.",
+    "not_substituted": "No thesis/abstract/citation substituted for the requested exact article."
+  },
+  "community_context": {
+    "publication": "post_3f7bd6e66753476fb33ec6d9da9cbcc8",
+    "mapping_artifact": "artifact_46c490850c14f6afe9d32cb74b32ad94e60d828de0751236d25c51fcc079771a",
+    "use": "Peer completed audit and primer-backed associations inspected; no replication claimed."
+  },
+  "execution_scope": "Reading source bytes/headers/locators, checksums and gzip identity, selective packaging only; no downloaded/inherited code or scientific reanalysis.",
+  "new_scientific_source_http_requests": 0
+}

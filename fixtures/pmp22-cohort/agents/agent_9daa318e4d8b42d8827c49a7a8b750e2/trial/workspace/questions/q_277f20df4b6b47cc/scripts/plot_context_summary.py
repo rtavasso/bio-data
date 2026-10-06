@@ -1,0 +1,15 @@
+from pathlib import Path
+import pandas as pd,numpy as np,json
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+Q=Path(__file__).resolve().parents[1];O=Q/'outputs/context-audit'
+f=pd.read_csv(O/'shared-gene-effects.tsv',sep='\t',index_col=0);ref=f[(f.MEF_control>=10)&(f.NIH_control>=10)&f.unfloored_2h&(f.baseline_max_abs_log2distance<=1)].drop(index='Pmp22');late=pd.read_csv(O/'late-cluster-baseline-matched-members.tsv',sep='\t',index_col=0);follow=json.loads((O/'followup-summary.json').read_text());counts=pd.read_csv(O/'counts-reference-summary.tsv',sep='\t');summary=json.loads((O/'summary-r001.json').read_text())
+fig,ax=plt.subplots(2,2,figsize=(12,9));blue='#337da0';red='#c34e3b'
+ax[0,0].scatter(ref.NIH_log2FC_2h,ref.MEF_log2FC_2h,s=8,alpha=.35,c=blue);ax[0,0].scatter(f.loc['Pmp22','NIH_log2FC_2h'],f.loc['Pmp22','MEF_log2FC_2h'],s=130,marker='*',c=red,label='Pmp22');ax[0,0].axhline(0,c='gray',lw=.7);ax[0,0].axvline(0,c='gray',lw=.7);ax[0,0].set(xlabel='NIH3T3 2h log2 fold change (TPM)',ylabel='MEF WT 2h log2 fold change (TPM)',title='A. 1,276 baseline-matched references');ax[0,0].legend()
+late_delta=np.log2(late.MEF_2h.clip(lower=4)/late.MEF_control)-np.log2(late.NIH_2h.clip(lower=4)/late.NIH_control)
+ax[0,1].hist(ref.delta_2h,bins=25,density=True,color=blue,alpha=.55,label='All matched genes');ax[0,1].hist(late_delta,bins=12,density=True,histtype='step',lw=2,color='#bd971e',label='42 matched late-cluster genes');ax[0,1].axvline(f.loc['Pmp22','delta_2h'],c=red,lw=2,label='Pmp22');ax[0,1].set(xlabel='MEF minus NIH3T3 log2 fold change',ylabel='Gene distribution density',title='B. Published program partly explains difference');ax[0,1].legend(fontsize=8)
+ys=[summary['primary']['pmp22_minus_reference_median'],follow['primary_clip4']['median_relative_Pmp22'],counts.iloc[0].Pmp22_relative_residual,counts.iloc[2].Pmp22_relative_residual];ax[1,0].barh(['TPM (>4 eligibility)','TPM (baseline only, floor 4)','Expected counts: CPM','Expected counts: median ratio'],ys,color=blue);ax[1,0].set(xlim=(0,2.2),xlabel='Pmp22 difference minus reference median (log2)',title='C. Count normalization preserves the departure');
+for i,y in enumerate(ys):ax[1,0].text(y+.03,i,f'{y:.3f}',va='center')
+t=pd.DataFrame(follow['genotype_Pmp22']);ax[1,1].plot(t.time_h,t.WT_log2FC,'o-',c=blue,label='PERK WT MEFs');ax[1,1].plot(t.time_h,t.KO_log2FC,'s--',c=red,label='PERK KO MEFs');ax[1,1].axhline(0,c='gray',lw=.7);ax[1,1].set(xlabel='Thapsigargin duration (hours)',ylabel='Pmp22 log2 fold change (TPM)',title='D. Late relative increase persists in PERK KO');ax[1,1].legend(fontsize=8)
+fig.suptitle('Pmp22 stress response: unusual context difference, unresolved causal route',fontsize=14);fig.text(.5,.012,'Retrospective; one library per condition. MEF 1 μM vs NIH3T3 200 nM. Footprints combine RNA abundance and ribosome occupancy.',ha='center',fontsize=9);fig.tight_layout(rect=[0,.04,1,.96]);fig.savefig(O/'context-summary-r002.png',dpi=180);fig.savefig(O/'context-summary-r002.pdf');plt.close(fig)

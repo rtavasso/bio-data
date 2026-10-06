@@ -1,0 +1,39 @@
+{
+  "target_rows": 48,
+  "target_all_quality_pass": true,
+  "target_ineligible_rows": [],
+  "flag_eligibility": "Conservative: saturation/nonuniformity/population/manual flags0; positive-and-significant/well-above-background1; positive finite processed signal. Agilent flag definitions source audit retained.",
+  "control_provenance": "WT four arrays include2 ATF4WT and2 PERKWT filenames. PERKKO GSM1202409 filename Mock24h differs from12h treatment files. eIF2alphaAA has no source-labelled matchedWT set; donor/line independence and batch exchangeability unestablished.",
+  "interpretation": "Native flags test quantification failure; they cannot repair mixed control provenance. Initial frozen primary numerical rule remains failed; causal genetic interpretation additionally unresolved. Subset contrasts are exploratory sensitivity, not replacement validation.",
+  "median_centered_native_limit": "Median centering across eligible noncontrol probe signals is an alternative descriptive normalization, not reproduction of unspecified deposited centering/normalization.",
+  "no_promoter_assignment": true
+}
+                     method                       contrast         probe  n_a  n_b  log2_effect  pairwise_min  pairwise_max
+             deposited_log2                 WT_ATF4_subset A_55_P2040168    2    2     0.712379      0.284661      1.140097
+             deposited_log2                 WT_ATF4_subset A_55_P2040170    2    2    -0.246984     -0.657107      0.163138
+             deposited_log2                 WT_PERK_subset A_55_P2040168    2    2    -0.684833     -0.825818     -0.543848
+             deposited_log2                 WT_PERK_subset A_55_P2040170    2    2    -1.062335     -1.122206     -1.002465
+             deposited_log2                         PERKKO A_55_P2040168    2    2     0.171287      0.033571      0.309003
+             deposited_log2                         PERKKO A_55_P2040170    2    2     0.889536      0.531434      1.247639
+             deposited_log2 PERKKO_without_Mock24_filename A_55_P2040168    2    1     0.050928      0.033571      0.068285
+             deposited_log2 PERKKO_without_Mock24_filename A_55_P2040170    2    1     1.033805      0.819971      1.247639
+             deposited_log2                         ATF4KO A_55_P2040168    2    2     0.038149     -0.792566      0.868864
+             deposited_log2                         ATF4KO A_55_P2040170    2    2     0.013324     -0.738432      0.765079
+             deposited_log2                   Fv2E_PERK_AP A_55_P2040168    2    2    -0.889356     -1.152701     -0.626011
+             deposited_log2                   Fv2E_PERK_AP A_55_P2040170    2    2    -1.035257     -1.151042     -0.919472
+             deposited_log2                   eIF2alpha_AA A_55_P2040168    2    2     0.689260      0.473278      0.905243
+             deposited_log2                   eIF2alpha_AA A_55_P2040170    2    2     1.405440      1.311961      1.498919
+native_median_centered_log2                 WT_ATF4_subset A_55_P2040168    2    2     1.167854      0.876831      1.458876
+native_median_centered_log2                 WT_ATF4_subset A_55_P2040170    2    2     0.208490     -0.100128      0.517108
+native_median_centered_log2                 WT_PERK_subset A_55_P2040168    2    2    -1.217992     -1.285929     -1.150055
+native_median_centered_log2                 WT_PERK_subset A_55_P2040170    2    2    -1.595495     -1.691227     -1.499762
+native_median_centered_log2                         PERKKO A_55_P2040168    2    2     0.263512     -0.489795      1.016820
+native_median_centered_log2                         PERKKO A_55_P2040170    2    2     0.981763      0.296606      1.666919
+native_median_centered_log2 PERKKO_without_Mock24_filename A_55_P2040168    2    1    -0.199344     -0.489795      0.091107
+native_median_centered_log2 PERKKO_without_Mock24_filename A_55_P2040170    2    1     0.783534      0.296606      1.270461
+native_median_centered_log2                         ATF4KO A_55_P2040168    2    2    -0.113536     -1.496760      1.269688
+native_median_centered_log2                         ATF4KO A_55_P2040170    2    2    -0.138361     -1.735796      1.459074
+native_median_centered_log2                   Fv2E_PERK_AP A_55_P2040168    2    2    -1.052188     -1.340625     -0.763752
+native_median_centered_log2                   Fv2E_PERK_AP A_55_P2040170    2    2    -1.198089     -1.399572     -0.996605
+native_median_centered_log2                   eIF2alpha_AA A_55_P2040168    2    2     0.350074     -0.029769      0.729917
+native_median_centered_log2                   eIF2alpha_AA A_55_P2040170    2    2     1.066253      0.879945      1.252560

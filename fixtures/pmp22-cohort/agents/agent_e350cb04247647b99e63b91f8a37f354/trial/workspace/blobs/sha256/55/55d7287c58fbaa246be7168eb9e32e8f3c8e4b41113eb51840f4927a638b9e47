@@ -1,0 +1,853 @@
+{
+  "question": "q_6a3a0a07fa5d4da1",
+  "stage": "exploratory discovery, before independent validation",
+  "panel_spec_sha256": "6a69de9578a208fc92c8b8069261c1e5b2ade8559f8b41247f3eb6de4dac2a1c",
+  "inputs": {
+    "7f8b8f20b3fd13166075450994acd62bf4bcbc610818f79e917a50856a4247fb": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/7f/7f8b8f20b3fd13166075450994acd62bf4bcbc610818f79e917a50856a4247fb",
+    "8872eddcf1a76d1cd9e488788e9840b9c22a23d200d78eb650cebf7f07cc38d1": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/88/8872eddcf1a76d1cd9e488788e9840b9c22a23d200d78eb650cebf7f07cc38d1",
+    "a6ccf0bf22f596a2562e7ff0c2d88581d05604758b83386be49bcbb96f59da4c": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/a6/a6ccf0bf22f596a2562e7ff0c2d88581d05604758b83386be49bcbb96f59da4c",
+    "fd6c6d77c76b3bc1fda6749358639d75a47d3ea09998f3eafdbf77b2d549d71e": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/fd/fd6c6d77c76b3bc1fda6749358639d75a47d3ea09998f3eafdbf77b2d549d71e",
+    "bb93d26d09f4278044706d348bf36c406bdfd011fac8b28db9ca57a248c890f5": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/bb/bb93d26d09f4278044706d348bf36c406bdfd011fac8b28db9ca57a248c890f5",
+    "c2cadace0b78a5e1b3485898899cfd28c0be425888774facb6c6626f282d36c3": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/c2/c2cadace0b78a5e1b3485898899cfd28c0be425888774facb6c6626f282d36c3",
+    "2ebee0ef64f1f6815f8ede96290bfeb96d82f596509453c6735df3ec5c8e4e75": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_57ee566b56f24e47a57b9509a1adea15/trial/workspace/blobs/sha256/2e/2ebee0ef64f1f6815f8ede96290bfeb96d82f596509453c6735df3ec5c8e4e75"
+  },
+  "universes": [
+    {
+      "dataset": "GSE177037",
+      "features": 31010,
+      "samples": 16,
+      "all_zero_features": 5751,
+      "normalization_positive_genes": 14100,
+      "library_sums": {
+        "IL6172": 14013386.649999985,
+        "IL6173": 12570421.719999997,
+        "IL6174": 15521421.920000035,
+        "IL6175": 10460774.409999982,
+        "IL6176": 15771854.280000003,
+        "IL6177": 27502542.599999998,
+        "IL6178": 18385021.250000034,
+        "IL6179": 20044372.38999999,
+        "IL6180": 18636569.060000036,
+        "IL6181": 16529890.350000028,
+        "IL6182": 15542111.939999986,
+        "IL6183": 17188042.770000037,
+        "IL6184": 17798362.200000007,
+        "IL6185": 12301351.380000005,
+        "IL6186": 13342980.239999976,
+        "IL6187": 13242603.789999986
+      },
+      "semantics": "native RSEM expected counts; full provided symbol-level universe; fraction values retained",
+      "noninteger_values": 42508,
+      "panels_present": {
+        "myelin7": [
+          "Mpz",
+          "Mbp",
+          "Mag",
+          "Prx",
+          "Plp1",
+          "Cnp",
+          "Mal"
+        ],
+        "identity4": [
+          "Sox10",
+          "S100b",
+          "Erbb3",
+          "Dhh"
+        ],
+        "proliferation6": [
+          "Mki67",
+          "Top2a",
+          "Pcna",
+          "Ccnb1",
+          "Cdk1",
+          "Mcm2"
+        ],
+        "stress6": [
+          "Atf3",
+          "Jun",
+          "Ddit3",
+          "Hspa5",
+          "Hmox1",
+          "Nqo1"
+        ]
+      },
+      "target_present": true
+    },
+    {
+      "dataset": "GSE104324",
+      "features": 17327,
+      "samples": 6,
+      "all_zero_features": 4198,
+      "normalization_positive_genes": 10551,
+      "library_sums": {
+        "GSM2795457": 7696590.0,
+        "GSM2795459": 6821590.0,
+        "GSM2795461": 12454177.0,
+        "GSM2795458": 7755396.0,
+        "GSM2795460": 8846267.0,
+        "GSM2795462": 15475018.0
+      },
+      "semantics": "native htseq-count gene counts; excluded __ special counters from gene library size only; complete measured genes retained",
+      "noninteger_values": 0,
+      "panels_present": {
+        "myelin7": [
+          "Mpz",
+          "Mbp",
+          "Mag",
+          "Prx",
+          "Plp1",
+          "Cnp",
+          "Mal"
+        ],
+        "identity4": [
+          "Sox10",
+          "S100b",
+          "Erbb3",
+          "Dhh"
+        ],
+        "proliferation6": [
+          "Mki67",
+          "Top2a",
+          "Pcna",
+          "Ccnb1",
+          "Cdk1",
+          "Mcm2"
+        ],
+        "stress6": [
+          "Atf3",
+          "Jun",
+          "Ddit3",
+          "Hspa5",
+          "Hmox1",
+          "Nqo1"
+        ]
+      },
+      "target_present": true
+    }
+  ],
+  "contrasts": [
+    {
+      "dataset": "GSE177037",
+      "contrast": "Schwann Cell_d3_vs_naive",
+      "control": [
+        "IL6172",
+        "IL6173"
+      ],
+      "treated": [
+        "IL6176",
+        "IL6177"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 14075.08805237805,
+        "Mpz": 10508.048645145596,
+        "Mbp": 3057.60164447897,
+        "Mag": 125.1125180121066,
+        "Prx": 589.5010323946981,
+        "Plp1": 2288.0678033407185,
+        "Cnp": 679.6997960478461,
+        "Mal": 1093.5391361068587,
+        "Sox10": 168.6362302448303,
+        "S100b": 624.7618542302049,
+        "Erbb3": 1025.5919627057892,
+        "Dhh": 143.71618845427884,
+        "Mki67": 382.78468238815185,
+        "Top2a": 190.13758635393816,
+        "Pcna": 121.09818920755775,
+        "Ccnb1": 14.71621976621486,
+        "Cdk1": 16.153429905712223,
+        "Mcm2": 14.698104103693975,
+        "Atf3": 698.5993060947922,
+        "Jun": 1152.0425800250446,
+        "Ddit3": 22.581847138334886,
+        "Hspa5": 2803.9478851350095,
+        "Hmox1": 21.404952726922364,
+        "Nqo1": 6.833737477530166
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -3.857768975653185,
+        "ci_low": -4.2618937703260915,
+        "ci_high": -3.453644180980278,
+        "df": 1.1834416556877931
+      },
+      "myelin7": {
+        "effect": -3.1621113683980013,
+        "ci_low": -3.4482346414278933,
+        "ci_high": -2.8759880953681094,
+        "df": 1.1811959473787932,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.4307190599815751,
+        "ci_low": 0.13060975825177285,
+        "ci_high": 0.7308283617113773,
+        "df": 1.7300413960009875,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 1.2489024161485052,
+        "ci_low": 0.46314217055658047,
+        "ci_high": 2.03466266174043,
+        "df": 1.4253332481805834,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": -0.7647234611964153,
+        "ci_low": -1.161907309845521,
+        "ci_high": -0.36753961254730966,
+        "df": 1.0558991401363533,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -0.695657607255185,
+        "ci_low": -0.8136629641750714,
+        "ci_high": -0.5776522503352985,
+        "df": 1.1888810197117465
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -0.695657607255185,
+        "ci_low": -0.8136629641750714,
+        "ci_high": -0.5776522503352985,
+        "df": 1.1888810197117465
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -1.1525369914881693,
+        "Mbp": -1.7547969977352063,
+        "Mag": 2.00359767201409,
+        "Prx": 2.188460818129026,
+        "Plp1": -2.580555614653438,
+        "Cnp": -3.803529041022288,
+        "Mal": 0.22975690396970494
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "contrast": "Schwann Cell_d5_vs_naive",
+      "control": [
+        "IL6172",
+        "IL6173"
+      ],
+      "treated": [
+        "IL6180",
+        "IL6181"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 14075.08805237805,
+        "Mpz": 10508.048645145596,
+        "Mbp": 3057.60164447897,
+        "Mag": 125.1125180121066,
+        "Prx": 589.5010323946981,
+        "Plp1": 2288.0678033407185,
+        "Cnp": 679.6997960478461,
+        "Mal": 1093.5391361068587,
+        "Sox10": 168.6362302448303,
+        "S100b": 624.7618542302049,
+        "Erbb3": 1025.5919627057892,
+        "Dhh": 143.71618845427884,
+        "Mki67": 382.78468238815185,
+        "Top2a": 190.13758635393816,
+        "Pcna": 121.09818920755775,
+        "Ccnb1": 14.71621976621486,
+        "Cdk1": 16.153429905712223,
+        "Mcm2": 14.698104103693975,
+        "Atf3": 698.5993060947922,
+        "Jun": 1152.0425800250446,
+        "Ddit3": 22.581847138334886,
+        "Hspa5": 2803.9478851350095,
+        "Hmox1": 21.404952726922364,
+        "Nqo1": 6.833737477530166
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -2.965128726940234,
+        "ci_low": -3.0692584599513184,
+        "ci_high": -2.86099899392915,
+        "df": 1.3233702111108732
+      },
+      "myelin7": {
+        "effect": -2.010910441232083,
+        "ci_low": -2.2590327154783276,
+        "ci_high": -1.762788166985838,
+        "df": 1.217793035423177,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.8334104781793421,
+        "ci_low": 0.5489300680866334,
+        "ci_high": 1.1178908882720509,
+        "df": 1.238356629307325,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 1.2044241427884694,
+        "ci_low": 0.5420310472802863,
+        "ci_high": 1.8668172382966526,
+        "df": 1.7142359464700925,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": -0.8556248130475987,
+        "ci_low": -4.255800375078344,
+        "ci_high": 2.544550748983147,
+        "df": 1.0009482214032412,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -0.9542182857081531,
+        "ci_low": -1.3547222825821077,
+        "ci_high": -0.5537142888341985,
+        "df": 1.0280661238452935
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -0.9542182857081531,
+        "ci_low": -1.3547222825821077,
+        "ci_high": -0.5537142888341985,
+        "df": 1.0280661238452935
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -0.8273779018615226,
+        "Mbp": -1.1676192840428143,
+        "Mag": -0.18666662239628806,
+        "Prx": 0.014723313379457537,
+        "Plp1": -1.9277065128546402,
+        "Cnp": -3.1514181438851523,
+        "Mal": 0.5665371517039022
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "contrast": "Schwann Cell_d7_vs_naive",
+      "control": [
+        "IL6172",
+        "IL6173"
+      ],
+      "treated": [
+        "IL6184",
+        "IL6185"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 14075.08805237805,
+        "Mpz": 10508.048645145596,
+        "Mbp": 3057.60164447897,
+        "Mag": 125.1125180121066,
+        "Prx": 589.5010323946981,
+        "Plp1": 2288.0678033407185,
+        "Cnp": 679.6997960478461,
+        "Mal": 1093.5391361068587,
+        "Sox10": 168.6362302448303,
+        "S100b": 624.7618542302049,
+        "Erbb3": 1025.5919627057892,
+        "Dhh": 143.71618845427884,
+        "Mki67": 382.78468238815185,
+        "Top2a": 190.13758635393816,
+        "Pcna": 121.09818920755775,
+        "Ccnb1": 14.71621976621486,
+        "Cdk1": 16.153429905712223,
+        "Mcm2": 14.698104103693975,
+        "Atf3": 698.5993060947922,
+        "Jun": 1152.0425800250446,
+        "Ddit3": 22.581847138334886,
+        "Hspa5": 2803.9478851350095,
+        "Hmox1": 21.404952726922364,
+        "Nqo1": 6.833737477530166
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -1.517777250932543,
+        "ci_low": -3.2522050846935926,
+        "ci_high": 0.21665058282850702,
+        "df": 1.0175107861406163
+      },
+      "myelin7": {
+        "effect": -1.1512437638671464,
+        "ci_low": -3.3332240272348614,
+        "ci_high": 1.0307364995005686,
+        "df": 1.0057139076072628,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.8527292429831448,
+        "ci_low": 0.48243246689596375,
+        "ci_high": 1.2230260190703257,
+        "df": 1.062054172808327,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.9202729507664404,
+        "ci_low": -0.04205605204088336,
+        "ci_high": 1.8826019535737641,
+        "df": 1.2260400017868331,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": -0.9565815204615102,
+        "ci_low": -2.086790803626485,
+        "ci_high": 0.1736277627034648,
+        "df": 1.0083216080126924,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -0.36653348706539646,
+        "ci_low": -0.7520960258450433,
+        "ci_high": 0.019029051714250345,
+        "df": 1.0300473729712207
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -0.36653348706539646,
+        "ci_low": -0.7520960258450433,
+        "ci_high": 0.019029051714250345,
+        "df": 1.0300473729712207
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -0.2938591802080843,
+        "Mbp": -0.2763470547801399,
+        "Mag": -0.029654640020153167,
+        "Prx": -0.053604349318123745,
+        "Plp1": -1.1753389686987834,
+        "Cnp": -1.6570936684986135,
+        "Mal": 0.9201634520661424
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "contrast": "Whole Nerve_d3_vs_naive",
+      "control": [
+        "IL6174",
+        "IL6175"
+      ],
+      "treated": [
+        "IL6178",
+        "IL6179"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 31286.40694243784,
+        "Mpz": 21756.352839301842,
+        "Mbp": 10437.152929393826,
+        "Mag": 71.0990374080534,
+        "Prx": 1150.2337986632797,
+        "Plp1": 651.0890817569607,
+        "Cnp": 313.66265350907565,
+        "Mal": 1783.7609576554376,
+        "Sox10": 66.20362421146285,
+        "S100b": 2443.7713540971695,
+        "Erbb3": 186.08580837691494,
+        "Dhh": 103.73447011289059,
+        "Mki67": 60.5024098331154,
+        "Top2a": 35.13554413562158,
+        "Pcna": 54.832072175395695,
+        "Ccnb1": 4.02032331879895,
+        "Cdk1": 5.8595344013831046,
+        "Mcm2": 7.884805987330244,
+        "Atf3": 7.714627400310077,
+        "Jun": 28.777222516906704,
+        "Ddit3": 6.42693035942275,
+        "Hspa5": 582.6502242592821,
+        "Hmox1": 4.970100144948724,
+        "Nqo1": 12.059924542963383
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -5.38064109459523,
+        "ci_low": -6.439638130670945,
+        "ci_high": -4.3216440585195155,
+        "df": 1.8002632198264263
+      },
+      "myelin7": {
+        "effect": -4.049989831606438,
+        "ci_low": -4.895014914893379,
+        "ci_high": -3.2049647483194974,
+        "df": 1.8782995874105384,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.07996755176750892,
+        "ci_low": -1.0626486756063729,
+        "ci_high": 0.9027135720713549,
+        "df": 1.0085434181778643,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 3.182463594334167,
+        "ci_low": 2.970359234728761,
+        "ci_high": 3.394567953939573,
+        "df": 1.9019350561267585,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": 1.5699739819769238,
+        "ci_low": 1.3266097504213776,
+        "ci_high": 1.81333821353247,
+        "df": 1.0269284932165599,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -1.330651262988792,
+        "ci_low": -1.991084084527163,
+        "ci_high": -0.6702184414504213,
+        "df": 1.1489101707752487
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -1.330651262988792,
+        "ci_low": -1.991084084527163,
+        "ci_high": -0.6702184414504213,
+        "df": 1.1489101707752487
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -0.871748190956116,
+        "Mbp": -0.9223041580767113,
+        "Mag": 1.0270643526075265,
+        "Prx": 1.8785955352699064,
+        "Plp1": -5.103802671615723,
+        "Cnp": -5.215048402889927,
+        "Mal": -0.10731530526050648
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "contrast": "Whole Nerve_d5_vs_naive",
+      "control": [
+        "IL6174",
+        "IL6175"
+      ],
+      "treated": [
+        "IL6182",
+        "IL6183"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 31286.40694243784,
+        "Mpz": 21756.352839301842,
+        "Mbp": 10437.152929393826,
+        "Mag": 71.0990374080534,
+        "Prx": 1150.2337986632797,
+        "Plp1": 651.0890817569607,
+        "Cnp": 313.66265350907565,
+        "Mal": 1783.7609576554376,
+        "Sox10": 66.20362421146285,
+        "S100b": 2443.7713540971695,
+        "Erbb3": 186.08580837691494,
+        "Dhh": 103.73447011289059,
+        "Mki67": 60.5024098331154,
+        "Top2a": 35.13554413562158,
+        "Pcna": 54.832072175395695,
+        "Ccnb1": 4.02032331879895,
+        "Cdk1": 5.8595344013831046,
+        "Mcm2": 7.884805987330244,
+        "Atf3": 7.714627400310077,
+        "Jun": 28.777222516906704,
+        "Ddit3": 6.42693035942275,
+        "Hspa5": 582.6502242592821,
+        "Hmox1": 4.970100144948724,
+        "Nqo1": 12.059924542963383
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -4.826862738149501,
+        "ci_low": -6.457777137590888,
+        "ci_high": -3.1959483387081136,
+        "df": 1.2026541868969831
+      },
+      "myelin7": {
+        "effect": -3.0658497733482797,
+        "ci_low": -4.01586802089659,
+        "ci_high": -2.11583152579997,
+        "df": 1.258656163005578,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.46452263359586965,
+        "ci_low": -0.06469474370879669,
+        "ci_high": 0.993740010900536,
+        "df": 1.958175708130002,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 2.683447531143896,
+        "ci_low": 2.15364286269426,
+        "ci_high": 3.213252199593532,
+        "df": 1.3465590772995335,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": 1.0996576654442043,
+        "ci_low": 0.65755711818,
+        "ci_high": 1.5417582127084086,
+        "df": 1.0087828715179892,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -1.7610129648012216,
+        "ci_low": -2.447707525894905,
+        "ci_high": -1.0743184037075384,
+        "df": 1.1234529676067626
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -1.7610129648012216,
+        "ci_low": -2.447707525894905,
+        "ci_high": -1.0743184037075384,
+        "df": 1.1234529676067626
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -0.6885154593162435,
+        "Mbp": -0.6881889071001117,
+        "Mag": -1.5308212426589831,
+        "Prx": 0.1455765190973004,
+        "Plp1": -4.585324640128979,
+        "Cnp": -5.060611003861911,
+        "Mal": 0.08079398036037055
+      }
+    },
+    {
+      "dataset": "GSE177037",
+      "contrast": "Whole Nerve_d7_vs_naive",
+      "control": [
+        "IL6174",
+        "IL6175"
+      ],
+      "treated": [
+        "IL6186",
+        "IL6187"
+      ],
+      "unit": "two pooled libraries per arm; >=10 nerves/pool; cross-pool donor overlap unresolved",
+      "n_control": 2,
+      "n_treated": 2,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 31286.40694243784,
+        "Mpz": 21756.352839301842,
+        "Mbp": 10437.152929393826,
+        "Mag": 71.0990374080534,
+        "Prx": 1150.2337986632797,
+        "Plp1": 651.0890817569607,
+        "Cnp": 313.66265350907565,
+        "Mal": 1783.7609576554376,
+        "Sox10": 66.20362421146285,
+        "S100b": 2443.7713540971695,
+        "Erbb3": 186.08580837691494,
+        "Dhh": 103.73447011289059,
+        "Mki67": 60.5024098331154,
+        "Top2a": 35.13554413562158,
+        "Pcna": 54.832072175395695,
+        "Ccnb1": 4.02032331879895,
+        "Cdk1": 5.8595344013831046,
+        "Mcm2": 7.884805987330244,
+        "Atf3": 7.714627400310077,
+        "Jun": 28.777222516906704,
+        "Ddit3": 6.42693035942275,
+        "Hspa5": 582.6502242592821,
+        "Hmox1": 4.970100144948724,
+        "Nqo1": 12.059924542963383
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -2.9980906488117363,
+        "ci_low": -4.055288226064572,
+        "ci_high": -1.9408930715589001,
+        "df": 1.8068345681720674
+      },
+      "myelin7": {
+        "effect": -1.6826145845113771,
+        "ci_low": -2.7153196802963167,
+        "ci_high": -0.6499094887264376,
+        "df": 1.1922043962225901,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.4936972707758329,
+        "ci_low": -0.18514330506959653,
+        "ci_high": 1.1725378466212624,
+        "df": 1.7715260892998692,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 1.9425934747774019,
+        "ci_low": 1.4998592221198652,
+        "ci_high": 2.3853277274349383,
+        "df": 1.4246985536004504,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": 1.02999820533213,
+        "ci_low": 0.18777818915791633,
+        "ci_high": 1.8722182215063436,
+        "df": 1.0024844854248456,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -1.31547606430036,
+        "ci_low": -1.860503165503106,
+        "ci_high": -0.770448963097614,
+        "df": 1.8242747621026285
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -1.31547606430036,
+        "ci_low": -1.860503165503106,
+        "ci_high": -0.770448963097614,
+        "df": 1.8242747621026285
+      },
+      "conditional_exact_permutation_p": 0.3333333333333333,
+      "target_vs_each_myelin": {
+        "Mpz": -0.3874920518495406,
+        "Mbp": -0.023841277699454544,
+        "Mag": -1.6056990015509705,
+        "Prx": -0.40129120421809095,
+        "Plp1": -3.4281308498065695,
+        "Cnp": -3.3737097042582915,
+        "Mal": 0.011831639280394768
+      }
+    },
+    {
+      "dataset": "GSE104324",
+      "contrast": "soluble_NRG1_10nM_6h",
+      "control": [
+        "GSM2795457",
+        "GSM2795459",
+        "GSM2795461"
+      ],
+      "treated": [
+        "GSM2795458",
+        "GSM2795460",
+        "GSM2795462"
+      ],
+      "unit": "three independent experiments stated in GEO; donor/pair map unresolved; unpaired analysis",
+      "n_control": 3,
+      "n_treated": 3,
+      "primary_eligible": true,
+      "missing": [],
+      "baseline_floor_failures": [],
+      "control_mean_cpm": {
+        "Pmp22": 1640.1874945348425,
+        "Mpz": 5473.311602819998,
+        "Mbp": 29.484635154083673,
+        "Mag": 24.24245449435644,
+        "Prx": 110.70085691365922,
+        "Plp1": 1894.1007756818374,
+        "Cnp": 2076.591773643085,
+        "Mal": 16.690432437329804,
+        "Sox10": 887.7903094360335,
+        "S100b": 1383.322454494158,
+        "Erbb3": 780.7805368619793,
+        "Dhh": 280.28735562632215,
+        "Mki67": 12.277362047577009,
+        "Top2a": 14.475247107721122,
+        "Pcna": 96.72184376203195,
+        "Ccnb1": 8.85219528184935,
+        "Cdk1": 10.972138124090142,
+        "Mcm2": 29.683853092351168,
+        "Atf3": 62.30134306672935,
+        "Jun": 359.0821760016037,
+        "Ddit3": 28.461964408484818,
+        "Hspa5": 1727.2083320843192,
+        "Hmox1": 59.02485860412225,
+        "Nqo1": 477.7401683247493
+      },
+      "exploratory_panel": null,
+      "uncertainty": "Welch 95% conditional on independent library pools/culture preparations; no animal-level CI; exploratory and small-n, no multiplicity claim",
+      "Pmp22": {
+        "effect": -1.5724949900267742,
+        "ci_low": -3.257247432161452,
+        "ci_high": 0.11225745210790383,
+        "df": 3.9388793500958044
+      },
+      "myelin7": {
+        "effect": -0.9128928213291339,
+        "ci_low": -3.009197278463762,
+        "ci_high": 1.1834116358054945,
+        "df": 3.9996884571067115,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.13164947744148314,
+        "ci_low": -1.7395315815241672,
+        "ci_high": 1.476232626641201,
+        "df": 3.9938733996051834,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.03855510017342034,
+        "ci_low": -0.9846511691993909,
+        "ci_high": 1.0617613695462316,
+        "df": 3.752794013177729,
+        "coverage": 6
+      },
+      "stress6": {
+        "effect": -0.6729559825938312,
+        "ci_low": -1.1266593395664555,
+        "ci_high": -0.21925262562120695,
+        "df": 3.6519555889453104,
+        "coverage": 6
+      },
+      "myelin7_selectivity": {
+        "effect": -0.6596021686976399,
+        "ci_low": -1.615490852461725,
+        "ci_high": 0.29628651506644543,
+        "df": 3.942351253483563
+      },
+      "selectivity_endpoint": "myelin7",
+      "primary_selectivity": {
+        "effect": -0.6596021686976399,
+        "ci_low": -1.615490852461725,
+        "ci_high": 0.29628651506644543,
+        "df": 3.942351253483563
+      },
+      "conditional_exact_permutation_p": 0.2,
+      "target_vs_each_myelin": {
+        "Mpz": -1.1656523201652023,
+        "Mbp": -0.5182936482254421,
+        "Mag": -0.4223157136136457,
+        "Prx": -0.6050036867171174,
+        "Plp1": -0.8518623295932047,
+        "Cnp": -1.2497004757450767,
+        "Mal": 0.1956129931762085
+      }
+    }
+  ]
+}

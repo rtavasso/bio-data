@@ -1,0 +1,792 @@
+{
+  "tags": {
+    "cv": 3,
+    "cvList": 1,
+    "cvParam": 3659267,
+    "Role": 2,
+    "ContactRole": 2,
+    "SoftwareName": 1,
+    "AnalysisSoftware": 1,
+    "AnalysisSoftwareList": 1,
+    "Provider": 1,
+    "Affiliation": 1,
+    "Person": 1,
+    "Organization": 1,
+    "AuditCollection": 1,
+    "Seq": 6979,
+    "DBSequence": 6979,
+    "PeptideSequence": 46291,
+    "Modification": 14483,
+    "Peptide": 46291,
+    "PeptideEvidence": 49444,
+    "SequenceCollection": 1,
+    "InputSpectra": 19,
+    "SearchDatabaseRef": 1,
+    "SpectrumIdentification": 1,
+    "InputSpectrumIdentifications": 1,
+    "ProteinDetection": 1,
+    "AnalysisCollection": 1,
+    "SearchType": 1,
+    "AdditionalSearchParams": 1,
+    "SearchModification": 2,
+    "ModificationParams": 1,
+    "SiteRegexp": 1,
+    "EnzymeName": 1,
+    "Enzyme": 1,
+    "Enzymes": 1,
+    "FragmentTolerance": 1,
+    "ParentTolerance": 1,
+    "Threshold": 2,
+    "SpectrumIdentificationProtocol": 1,
+    "ProteinDetectionProtocol": 1,
+    "AnalysisProtocolCollection": 1,
+    "FileFormat": 21,
+    "SourceFile": 1,
+    "userParam": 1,
+    "DatabaseName": 1,
+    "SearchDatabase": 1,
+    "SpectrumIDFormat": 19,
+    "SpectraData": 19,
+    "Inputs": 1,
+    "Measure": 2,
+    "FragmentationTable": 1,
+    "PeptideEvidenceRef": 1481522,
+    "SpectrumIdentificationItem": 1210960,
+    "SpectrumIdentificationResult": 1207977,
+    "SpectrumIdentificationList": 1,
+    "SpectrumIdentificationItemRef": 1481522,
+    "PeptideHypothesis": 1481522,
+    "ProteinDetectionHypothesis": 5417,
+    "ProteinAmbiguityGroup": 5342,
+    "ProteinDetectionList": 1,
+    "AnalysisData": 1,
+    "DataCollection": 1,
+    "BibliographicReference": 3,
+    "MzIdentML": 1
+  },
+  "params": [
+    {
+      "accession": "MS:1001267",
+      "name": "software vendor",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001946",
+      "name": "PEAKS Studio",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001271",
+      "name": "researcher",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1000589",
+      "name": "contact email",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001088",
+      "name": "protein description",
+      "occurrences": 6979
+    },
+    {
+      "accession": "UNIMOD:4",
+      "name": "Carbamidomethyl",
+      "occurrences": 11773
+    },
+    {
+      "accession": "UNIMOD:35",
+      "name": "Oxidation",
+      "occurrences": 2712
+    },
+    {
+      "accession": "MS:1001083",
+      "name": "ms-ms search",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001211",
+      "name": "parent mass type mono",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001251",
+      "name": "Trypsin",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001412",
+      "name": "search tolerance plus value",
+      "occurrences": 2
+    },
+    {
+      "accession": "MS:1001413",
+      "name": "search tolerance minus value",
+      "occurrences": 2
+    },
+    {
+      "accession": "MS:1001494",
+      "name": "no threshold",
+      "occurrences": 2
+    },
+    {
+      "accession": "MS:1001107",
+      "name": "data stored in database",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001348",
+      "name": "FASTA format",
+      "occurrences": 1
+    },
+    {
+      "accession": "",
+      "name": "SP_Mouse",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001062",
+      "name": "Mascot MGF file",
+      "occurrences": 19
+    },
+    {
+      "accession": "MS:1000774",
+      "name": "multiple peak list nativeID format",
+      "occurrences": 19
+    },
+    {
+      "accession": "MS:1001225",
+      "name": "product ion m/z",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001227",
+      "name": "product ion m/z error",
+      "occurrences": 1
+    },
+    {
+      "accession": "MS:1001950",
+      "name": "PEAKS:peptideScore",
+      "occurrences": 1210960
+    },
+    {
+      "accession": "MS:1002815",
+      "name": "inverse reduced ion mobility",
+      "occurrences": 1207977
+    },
+    {
+      "accession": "MS:1000894",
+      "name": "retention time",
+      "occurrences": 1207977
+    },
+    {
+      "accession": "MS:1001951",
+      "name": "PEAKS:proteinScore",
+      "occurrences": 5417
+    },
+    {
+      "accession": "MS:1001093",
+      "name": "sequence coverage",
+      "occurrences": 5417
+    }
+  ],
+  "software": [
+    {
+      "tag": "AnalysisSoftware",
+      "attributes": {
+        "id": "ANALYSIS_SOFTWARE_PEAKS_1",
+        "name": "PEAKS Studio",
+        "version": "10.6 (2020-10-15)",
+        "uri": "http://www.bioinformaticssolutions.com/peaks"
+      },
+      "text": "\n       \n         \n           \n         \n       \n       \n         \n       \n    ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001267",
+            "name": "software vendor",
+            "cvRef": "PSI-MS"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001946",
+            "name": "PEAKS Studio",
+            "cvRef": "PSI-MS"
+          },
+          "text": null
+        }
+      ]
+    }
+  ],
+  "search_databases": [
+    {
+      "tag": "SearchDatabase",
+      "attributes": {
+        "numDatabaseSequences": "17239",
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PEAKS_10.0/FastaDB/SP_Mouse_Sep2016.fasta",
+        "id": "SEARCHDATABASE_1",
+        "name": "SP_Mouse"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001348",
+            "cvRef": "PSI-MS",
+            "name": "FASTA format"
+          },
+          "text": null
+        },
+        {
+          "tag": "userParam",
+          "attributes": {
+            "name": "SP_Mouse"
+          },
+          "text": null
+        }
+      ]
+    }
+  ],
+  "spectra": [
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_1_Slot1-28_12-20-2019_5826.mgf",
+        "id": "SPECTRADATA_1"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_2_Slot1-29_12-21-2019_5828.mgf",
+        "id": "SPECTRADATA_2"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_3_Slot1-30_12-21-2019_5830.mgf",
+        "id": "SPECTRADATA_3"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_4_Slot1-31_12-21-2019_5832.mgf",
+        "id": "SPECTRADATA_4"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_5_Slot1-32_12-21-2019_5834.mgf",
+        "id": "SPECTRADATA_5"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_6_Slot1-33_12-21-2019_5836.mgf",
+        "id": "SPECTRADATA_6"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_7_Slot1-34_12-21-2019_5838.mgf",
+        "id": "SPECTRADATA_7"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_8_Slot1-35_12-21-2019_5840.mgf",
+        "id": "SPECTRADATA_8"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_9_Slot1-36_12-21-2019_5842.mgf",
+        "id": "SPECTRADATA_9"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_10_Slot1-37_12-21-2019_5844.mgf",
+        "id": "SPECTRADATA_10"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_11_Slot1-38_12-21-2019_5846.mgf",
+        "id": "SPECTRADATA_11"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_12_Slot1-39_12-22-2019_5848.mgf",
+        "id": "SPECTRADATA_12"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_13_Slot1-40_12-22-2019_5850.mgf",
+        "id": "SPECTRADATA_13"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_14_Slot1-41_12-22-2019_5852.mgf",
+        "id": "SPECTRADATA_14"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_15_Slot1-42_12-22-2019_5854.mgf",
+        "id": "SPECTRADATA_15"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_16_Slot1-43_12-22-2019_5856.mgf",
+        "id": "SPECTRADATA_16"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_17_Slot1-44_12-22-2019_5858.mgf",
+        "id": "SPECTRADATA_17"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_18_Slot1-45_12-22-2019_5860.mgf",
+        "id": "SPECTRADATA_18"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    },
+    {
+      "tag": "SpectraData",
+      "attributes": {
+        "location": "file:/C:/Users/proteomica.CICBIOGUNE/PeaksExports/191227_191205A_Ashwin%20samples_PEAKS_21/191205A_AW_19_Slot1-46_12-22-2019_5862.mgf",
+        "id": "SPECTRADATA_19"
+      },
+      "text": "\n         \n           \n         \n         \n           \n         \n      ",
+      "children": [
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1001062",
+            "cvRef": "PSI-MS",
+            "name": "Mascot MGF file"
+          },
+          "text": null
+        },
+        {
+          "tag": "cvParam",
+          "attributes": {
+            "accession": "MS:1000774",
+            "cvRef": "PSI-MS",
+            "name": "multiple peak list nativeID format"
+          },
+          "text": null
+        }
+      ]
+    }
+  ],
+  "target_db": [],
+  "quantitative_parameter_examples": []
+}

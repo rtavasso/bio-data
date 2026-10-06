@@ -1,0 +1,122 @@
+{
+  "scope": "Selected inherited HTTP receipts; not requests executed in this session.",
+  "parent": "questions/q_277f20df4b6b47cc/inputs/continuation/transport.json",
+  "parent_sha256": "c47d8bf39b110f99b084e2f6935cdf5be03a85a3377fb715c83b51515605125a",
+  "redaction": "Header allowlist only; cookies/session headers and unrelated requests omitted. Original ledger unchanged locally.",
+  "entries": [
+    {
+      "original_json_pointer": "/entries/3",
+      "receipt": {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4227013/fullTextXML",
+        "path": "inputs/continuation/PMC4227013.xml",
+        "started": "2026-09-28T01:08:32.200037+00:00",
+        "bytes": 104861,
+        "status": 200,
+        "sha256": "e3c5db97f751cf5772314eb541259991781141b059af37fc1d475c5ea7740aea",
+        "completed": true,
+        "headers": {
+          "Content-Type": "application/xml",
+          "Date": "Mon, 28 Sep 2026 01:08:33 GMT",
+          "Transfer-Encoding": "chunked"
+        }
+      },
+      "local_byte_identity_verified": true,
+      "omitted_header_names": [
+        "Vary",
+        "strict-transport-security",
+        "Connection",
+        "Set-Cookie"
+      ]
+    },
+    {
+      "original_json_pointer": "/entries/20",
+      "receipt": {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8191293/fullTextXML",
+        "path": "inputs/continuation/PMC8191293.xml",
+        "started": "2026-09-28T01:10:33.881496+00:00",
+        "bytes": 197363,
+        "status": 200,
+        "sha256": "522273ef6e6c936c23560f67e97be252e77a7e6783e020cbccbbe82673cdc707",
+        "completed": true,
+        "headers": {
+          "Content-Type": "application/xml",
+          "Date": "Mon, 28 Sep 2026 01:10:34 GMT",
+          "Transfer-Encoding": "chunked"
+        }
+      },
+      "local_byte_identity_verified": true,
+      "omitted_header_names": [
+        "Vary",
+        "strict-transport-security",
+        "Connection",
+        "Set-Cookie"
+      ]
+    },
+    {
+      "original_json_pointer": "/entries/21",
+      "receipt": {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8191293/supplementaryFiles",
+        "path": "inputs/continuation/PMC8191293-supplementary.zip",
+        "started": "2026-09-28T01:10:35.363261+00:00",
+        "bytes": 3053986,
+        "status": 200,
+        "sha256": "6116f53c4df0f09042934911a1f5bcedf10d0c10a7989b2197a5b741fffc416f",
+        "completed": true,
+        "headers": {
+          "Content-Type": "application/zip",
+          "Date": "Mon, 28 Sep 2026 01:10:36 GMT",
+          "Transfer-Encoding": "chunked",
+          "Content-Disposition": "attachment; filename=\"PMC8191293_SupplementaryFiles.zip\""
+        }
+      },
+      "local_byte_identity_verified": true,
+      "omitted_header_names": [
+        "Vary",
+        "strict-transport-security",
+        "Connection",
+        "Set-Cookie"
+      ]
+    },
+    {
+      "original_json_pointer": "/entries/24",
+      "receipt": {
+        "url": "https://www.ebi.ac.uk/pride/ws/archive/v2/projects/PXD023091/files",
+        "path": "inputs/continuation/PXD023091-files.json",
+        "started": "2026-09-28T01:14:18.544790+00:00",
+        "bytes": 35149,
+        "status": 200,
+        "sha256": "dbe736093e2e493ccc36c21b281c6edab5d6316970f1693d595a0f996c5c847b",
+        "completed": true,
+        "headers": {
+          "Content-Type": "application/json",
+          "transfer-encoding": "chunked"
+        }
+      },
+      "local_byte_identity_verified": true,
+      "omitted_header_names": [
+        "Vary",
+        "Cache-Control",
+        "strict-transport-security",
+        "total_records",
+        "Expires",
+        "Pragma",
+        "X-XSS-Protection",
+        "X-Content-Type-Options",
+        "Connection",
+        "X-Frame-Options",
+        "Referrer-Policy"
+      ]
+    }
+  ],
+  "native_workbook_origin": {
+    "archive": "questions/q_277f20df4b6b47cc/inputs/continuation/PMC8191293-supplementary.zip",
+    "archive_sha256": "6116f53c4df0f09042934911a1f5bcedf10d0c10a7989b2197a5b741fffc416f",
+    "member": "mmc2.xlsx",
+    "member_crc32": 169918611,
+    "member_sha256": "8f70d8ae1836a57ee1ab4251493a3463223bd2a157036451eaf99c3eb0c5177f",
+    "bytes": 62458,
+    "exact_match": true,
+    "checked_now_not_historical_extraction_receipt": true
+  },
+  "workbook_request": "No separate workbook HTTP request is claimed; byte identity to ZIP member verified."
+}

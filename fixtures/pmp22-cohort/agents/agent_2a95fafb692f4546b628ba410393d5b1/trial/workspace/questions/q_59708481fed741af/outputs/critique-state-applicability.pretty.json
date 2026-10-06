@@ -1,0 +1,111 @@
+{
+  "created": "2026-10-05T17:55:49.361638+00:00",
+  "derivation_key": "1c6ec36b055b095e1a6683b6b59535ed32da2873a7b90d2761651f0e6fa4aefd",
+  "id": "artifact_4ff60999836e7eab2357d2cacf5bcf809eb7be65e7b8c5db094fdbbcc3dc73ce",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "5b4de1e31dad4f5c023a084a0e0b97216d275a82050187a4a36ff40cd91f3ed2"
+      ],
+      "command": [],
+      "environment": {
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "python": "3.12.8 (v3.12.8:2dc476bcb91, Dec  3 2024, 14:43:19) [Clang 13.0.0 (clang-1300.0.29.30)]",
+        "scipy": "1.18.1"
+      },
+      "inputs": [
+        {
+          "blob": "692cfdeb980d54fe5a3baeb4bd76ec6d5c92943d372a318aa76d9e2eac8f23e2",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "35adb42d1247bafdd5a1586ede6a45c64befdf93d3a93b44ef9e8cf8f7ea1e4d",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "0234e874b034a0d850046dca4493025e8662496384a0ddcfc2779ed8c0514192",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "01f489480e8eac4e8e90970436aaf83ba4254b12d79a6d6d63bf61acd594ba44",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c8dd2e9444f9f128bdfd51dfb3caad42fa3a469904c6e548e5e13ec5549cb6e0",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "41d4b0f1751c3319e83244d2e1c2065c63b39e23f3685887aed50afe438f1f82",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4905084f5db89ba5bfdcb3d68821eb82e62740bc574b429faecad960237775b7",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "97346c435e332d809322247b90f7c7aded6bb61d0b2c1fe9415ef55e2cbaf3d3",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4028de96728e9163034376d53175b9631822d5ecf14dfa8d22a71bc9da69ca86",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "gene_rna_not_promoter": true,
+        "judgments": "agent-authored; native fields preserved"
+      },
+      "references": [
+        "4296d51010d7307b3b38927b32203f189e0dea521660f2a0c41d28928785b24d"
+      ]
+    },
+    "derivation_key": "1c6ec36b055b095e1a6683b6b59535ed32da2873a7b90d2761651f0e6fa4aefd",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "533760ced004a35e62dc9e8d00aaf37e1deb95a49d894ccb2d251f3b21359533",
+      "bytes": 5548,
+      "name": "applicability.tsv"
+    },
+    "output_role": "context-applicability-tsv",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Source-backed bounded audit; null/unknown units retained; no cell-fraction fit or genotype-matched P7 causal inference.",
+    "title": "PMP22 eight-context applicability and blocked inference table"
+  },
+  "manifest_blob": "163765138f1b867d35172cb10aef63cd8288f2d98728a44c19a20c5628699641",
+  "output_blob": "533760ced004a35e62dc9e8d00aaf37e1deb95a49d894ccb2d251f3b21359533",
+  "output_role": "context-applicability-tsv",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/library/blobs/sha256/53/533760ced004a35e62dc9e8d00aaf37e1deb95a49d894ccb2d251f3b21359533",
+  "questions": []
+}

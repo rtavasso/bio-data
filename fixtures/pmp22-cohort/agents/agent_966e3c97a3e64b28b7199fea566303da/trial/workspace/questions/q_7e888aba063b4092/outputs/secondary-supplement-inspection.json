@@ -1,0 +1,356 @@
+[
+  {
+    "member": "elife05033s002.xlsx",
+    "sha256": "fde5c1d31a56005a7f801db940c8415d082368abf051abe5f3adb978ed4f5953",
+    "sheets": [
+      {
+        "sheet": "source data 2A",
+        "rows": 83,
+        "cols": 5,
+        "first_rows": [
+          [
+            "Figure 1- source data 2A. Significant translational changes in Tm-treated cells",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "List of genes that change more than twofold in translational efficiency after 1 hr of Tm treatment. mRNA (Tm/UT) represents log2-fold changes in mRNA levels between Tm and untreated samples, and Ribo-Seq (Tm/UT) represents log2-fold changes in RPFs between Tm- and un-treated samples (UT). Only genes with a log2-fold change >|1| and a FDR-corrected p-value <0.1 were included in the table. Known ISR-translational targets are highlighted in pink and targets containing previously identified uORFs are highlighted in green. ",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            "mRNA-seq (Tm/UT)",
+            "P value",
+            "Ribo-seq",
+            "Gene"
+          ],
+          [
+            null,
+            null,
+            null,
+            "(Tm/UT)",
+            null
+          ]
+        ]
+      },
+      {
+        "sheet": "source data 2B",
+        "rows": 12,
+        "cols": 5,
+        "first_rows": [
+          [
+            "Figure 1-source data 2B. ISR-translational targets containing previously identified uORFs",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "List of genes that change more than twofold in translational efficiency after 1 hr of Tm treatment and contain previously identified uORFs. Ribo-Seq (Tm/UT) represents log2-fold changes in RPFs between Tm- and un-treated samples (UT).",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "Ribo-seq (Tm/UT)",
+            "Gene",
+            "Description",
+            "uORF",
+            "Function/expression"
+          ],
+          [
+            2.02,
+            "SLC35A4",
+            "solute carrier family 35",
+            "ATG initiated",
+            "putative UDP-sugar transporter"
+          ]
+        ]
+      },
+      {
+        "sheet": "source data 2C",
+        "rows": 14,
+        "cols": 5,
+        "first_rows": [
+          [
+            "Figure 1- source data 2C. Significant translational changes in Tm + ISRIB-treated cells",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "List of genes that change more than twofold in translational efficiency after 1 hr of Tm and ISRIB treatment. mRNA [(Tm + ISRIB)/UT] represents log2-fold changes in mRNA levels between Tm and ISRIB-treated and untreated samples and Ribo-Seq [(Tm + ISRIB)/UT)] represents log2-fold changes in RPFs between Tm and ISRIB-treated and untreated samples. Only genes with a log2-fold change >|1| and a FDR-corrected p-value < 0.1 were included in the table. ",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            "mRNA-seq ",
+            "P value",
+            "Ribo-seq ",
+            "Gene"
+          ],
+          [
+            null,
+            "(Tm + ISRIB)/UT",
+            null,
+            "(Tm + ISRIB)/UT",
+            null
+          ]
+        ]
+      },
+      {
+        "sheet": "source data 2D",
+        "rows": 8,
+        "cols": 5,
+        "first_rows": [
+          [
+            "Figure 1- source data 2D.  Significant translational changes in ISRIB-treated cells",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "List of genes that change more than twofold in translational efficiency after 1 hr of ISRIB treatment. mRNA (ISRIB/UT) represents log2-fold changes in mRNA levels between ISRIB-treated and untreated samples and Ribo-Seq (ISRIB/UT) represents log2-fold changes in RPFs between ISRIB-treated and untreated samples. Only genes with a log2-fold change >|1| and a FDR-corrected p-value < 0.1 were included in the table. ",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            "mRNA-seq (ISRIB/UT)",
+            "P value",
+            "Ribo-seq (ISRIB/UT)",
+            "Gene"
+          ],
+          [
+            "uc010bvu.2",
+            0.513867146,
+            0.027632272,
+            -1.099938853,
+            "AK310228"
+          ]
+        ]
+      },
+      {
+        "sheet": "source data 2E",
+        "rows": 20,
+        "cols": 8,
+        "first_rows": [
+          [
+            "Figure 1 \u2013 source data 2E. Alignment of sequencing libraries.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "Total number of reads and the percentage of reads for both mRNA-seq and ribo-seq libraries that align to the genome and ORF for all conditions (UT, Tm, Tm + ISRIB, ISRIB) and for each replicate.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "Sample",
+            "Type",
+            "Condition",
+            "Replicate",
+            "Raw reads",
+            "Aligned reads",
+            "ORF reads",
+            "ORF/aligned"
+          ],
+          [
+            1,
+            "mrna",
+            "untr",
+            "a",
+            47176512,
+            44355561,
+            12689528,
+            0.2861
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "member": "elife05033s001.xlsx",
+    "sha256": "d988ee5a093738fb3dd5cd0b041548c0b8459c57ceb1fa26eacbdebd9124464e",
+    "sheets": [
+      {
+        "sheet": "expression table tm isrib no ps",
+        "rows": 10943,
+        "cols": 20,
+        "first_rows": [
+          [
+            null,
+            null,
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "mRNA-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            "ribo-reads",
+            null,
+            null
+          ],
+          [
+            null,
+            "size",
+            "isrib_a_hek",
+            "isrib_b_hek",
+            "tm_a_hek",
+            "tm_b_hek",
+            "tmisrib_a_hek",
+            "tmisrib_b_hek",
+            "untr_a_hek",
+            "untr_b_hek",
+            "ribo_isrib_a",
+            "ribo_isrib_b",
+            "ribo_tm_a",
+            "ribo_tm_b",
+            "ribo_tmisrib_a",
+            "ribo_tmisrib_b",
+            "ribo_untr_a",
+            "ribo_untr_b",
+            "gene",
+            "desc"
+          ],
+          [
+            "uc021oei.1",
+            136,
+            44,
+            60,
+            29,
+            40,
+            54,
+            121,
+            73,
+            59,
+            3,
+            1,
+            2,
+            1,
+            16,
+            11,
+            10,
+            0,
+            "LOC388312",
+            "Homo sapiens cDNA FLJ45445 fis, clone BRSSN2013696."
+          ],
+          [
+            "uc001abw.1",
+            662,
+            570,
+            499,
+            515,
+            542,
+            911,
+            1422,
+            635,
+            626,
+            172,
+            220,
+            159,
+            95,
+            228,
+            237,
+            306,
+            472,
+            "SAMD11",
+            "Homo sapiens sterile alpha motif domain containing 11 (SAMD11), mRNA."
+          ],
+          [
+            "uc001abz.4",
+            730,
+            3633,
+            2671,
+            2815,
+            3611,
+            5685,
+            7581,
+            3350,
+            3431,
+            1916,
+            2618,
+            1980,
+            1371,
+            2447,
+            2573,
+            3354,
+            5116,
+            "NOC2L",
+            "Homo sapiens nucleolar complex associated 2 homolog (S. cerevisiae) (NOC2L), mRNA."
+          ]
+        ]
+      }
+    ]
+  }
+]

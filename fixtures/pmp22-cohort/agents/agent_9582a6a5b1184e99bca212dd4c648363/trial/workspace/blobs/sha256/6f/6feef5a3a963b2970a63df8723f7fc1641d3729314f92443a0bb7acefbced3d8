@@ -1,0 +1,83 @@
+# PMP22 regulatory system: upstream perturbation continuation
+
+Question: q_277f20df4b6b47cc. Scope: what existing data establish about upstream and non-transcriptional regulation, and whether new analysis establishes an unrecognized relationship. This report distinguishes inherited work, published biology, new executed tests, and unresolved mechanisms. No novel causal PMP22 regulator was established.
+
+## Main conclusion
+
+PMP22 is regulated at distinct levels: locus dosage/cis control and promoter/enhancer activation; upstream signaling and regulator-protein stability; RNA abundance/stability and ribosome association; and folding, glycosylation, trafficking and degradation. A change at one level does not identify the cause of a change at another. Gene-level RNA is not promoter output, protein abundance is not synthesis, and surface localization is not functional myelin assembly.
+
+The strongest new inference is a negative transfer result: the inherited Zeb2-associated relative preservation of Pmp22 is not a generic response to disrupted developmental myelination. In an independently selected Nae1-deficient nerve RNA dataset, Pmp22 declines with a prespecified myelin panel, not above it. An exploratory follow-up finds that similar myelin/Pmp22 suppression can coexist with substantially different antioxidant RNA programs. This argues against treating all myelination-disrupting perturbations as equivalent regulatory states, without proving antioxidant mediation of PMP22.
+
+## What the existing system supports
+
+1. Direct transcriptional control: SOX10/EGR2 occupancy plus enhancer mutagenesis supports direct action at the PMP22 locus, beyond expression correlation. Intronic and distal cis elements complement P1/P2 promoters (PMC3100536, PMC3298281; inherited mechanism map). TEAD1/YAP/TAZ, YY1, chromatin and differentiation pathways also participate, but direct versus EGR2-mediated contributions are not quantified by the available bulk RNA experiments. Human allele/promoter-specific effects remain unresolved in the inherited donor-limited array.
+
+2. Upstream regulator-protein control: the Nae1 study establishes neddylation-dependent myelination, EGR2 protein persistence, altered c-Jun/Sox2, and mTOR/YAP-associated responses (PMC11014456, especially Figures5–8). This is published biology, not a discovery of this continuation. EGR2 stability offers a concrete reason regulator RNA alone is an incomplete view of the system. The source does not establish a direct neddylation site on PMP22 or its turnover.
+
+3. Post-transcriptional control: miR-29a/3′UTR/AGO2 experiments support PMP22 RNA/protein repression in specified Schwann-cell contexts (PMID19170179; PMC6920087). Inherited IRE1-dependent RNA-loss evidence is from fibroblasts (PMC2728407), not proof of human Schwann-cell transfer. Inherited polysome/footprint analyses give opposing responses in different stress/cell contexts and do not justify a universal translation rule.
+
+4. Protein handling: glycosylation, calnexin, UGGT1, RER1 and degradation influence PMP22 folding and trafficking (PMC8191293). In particular, UGGT1 loss can reduce trafficking and total protein: association with quality control is not automatically inhibitory. The inherited co-IP analysis is a selected interaction universe, not a complete list of regulators.
+
+5. Metabolic/redox context: in LXR-deficient adult nerves, antioxidant treatment restored PMP22/MPZ protein and altered myelin phenotypes, while the developmental P21 knockout comparison lacked these deficits (PMC5802790, Figures2–3). This supports context-sensitive protein endpoints, not a direct NRF2-to-PMP22 promoter edge. The 2026 primary capsaicin study reports opposite Pmp22 responses with versus without nitrosative stress and no test of NRF2 necessity (PMC13360480). Therefore the general relationship between oxidative responses and PMP22 is already known; it is not a novelty claim here.
+
+## Inherited findings retained, not counted as new
+
+The question's prior scripts, snapshots and catalog artifacts remain unchanged. They include: Zeb2 relative-preservation analysis; the failed out-of-context Hck predictor; Egr2-AS RNA versus nascent-transcription inconsistencies and a globin-rich sample anomaly; promoter/donor limitations in GSE7423; selected co-IP protein-quality-control data; opposing fibroblast stress/ribosome responses; and IRE1/RIDD evidence. New-work credit applies only to the upstream continuation and analyses under outputs/upstream/. The historical bounded transport/time budgets are not current restrictions.
+
+## Discovery and experiment selection
+
+A bounded mechanism/assay discovery was conducted without requiring PMP22: neddylation, mTOR, cholesterol/FDFT1, QKI/RNA binding, proteasome, glucose/insulin, sterol receptors, retinoids/progesterone, and matched nerve RNA/proteome concepts. Query bytes, results and source receipts are under inputs/upstream/. The indirect-discovery guide was used to evaluate incidental measurements rather than merely unfamiliar accessions.
+
+The chosen source, GSE241269/PMC11014456, was collected to study neddylation in developmental/regenerative myelination. Its new use is a locked test of relative Pmp22 preservation and, subsequently, a broad-response-driven antioxidant comparison. These are independent of the inherited Zeb2 experiment, not independent proof that Nae1 is a regulator (already the source's conclusion).
+
+Familiar Egr2-AS/Zeb2 sources were compared with Nae1, TSC1/PTEN/Raptor, QKI, FDFT1 and proteomics alternatives in decision-r002.md. QKI RNA-binding alone cannot identify translation; its matched RNA-seq accession remained unlocated. The inspected FDFT1 source did not provide a sample-level deposited broad matrix for the proposed effect analysis. PXD043917 offered direct protein relevance but failed quantitative-export and age prerequisites; no raw reprocessing was substituted. The original purpose, route and intended reuse are preserved in the notebook/queue.
+
+## Test 1: independent Nae1-loss RNA test
+
+Data: GSE241269, eight native RSEM gene-result files, four WT and four Nae1 cKO P7 mouse sciatic nerves. Biological units are source mouse nerve libraries, not genes or technical sequencing reads; independence/unknown litter structure remains a limitation. Count semantics are expected counts, not integer read counts. Human-ortholog annotations were not used to relabel species.
+
+Before outcome inspection, prediction-r001.json was sealed. The primary statistic was within-sample log2(Pmp22 +0.5) minus the mean log2 amount of Mpz, Mbp, Mag, Prx, Plp1, Cnp and Mal; success required a KO-minus-WT difference at least +1 with the declared uncertainty rule. Eligibility passed for all locked genes. Median-ratio normalization and whole-transcriptome QC were executed, together with source TPM and count sensitivities.
+
+Results:
+
+- Pmp22 log2 KO/WT = -1.4958.
+- Seven-marker mean = -1.4593.
+- Relative difference = -0.0365, Welch 95% interval [-0.2407, +0.1677].
+
+The +1 relative-preservation prediction fails. This is an informative independent transfer rejection, not proof of exact equality or absence of residual regulation. Data remain bulk developmental mouse nerve, not a human CMT1A dose model.
+
+Registered RNA artifact: artifact_1123b0484f0be58e323e908acbde06d4bd2378473bb961b7e36871afa225e274. Main outputs: nae1-RNA-summary.json, nae1-all-effects.tsv, nae1-all-log2normalized.tsv and source/native-count/QC files in this directory.
+
+## Test 2: consequential antioxidant anomaly
+
+The new broad Nae1 screen motivated this branch; Nqo1 and Slc7a11 were conspicuous, while myelin/sterol programs fell. The comparison was not restricted to known PMP22 regulators. Antioxidant targets were selected from primary neddylation studies (PMC5658359 Figure5; PMC8168556 Figures4–5), not by choosing favorable mTOR gene values.
+
+Independent comparator: Figlia2017 Figure3 source data, PRJEB20661, originally collected to study mTOR timing in myelination. P5 TSC1, PTEN and Raptor cKOs and developmental controls are separate from P7 Nae1 mice; three libraries/group and shared controls are not nine control animals. ENA numeric aliases support the native Dev column map; source-wide count/effect agreement excluding tested panels corroborates it (correlations >0.999). The Dev prefix itself is not explicitly named by ENA, so sample intervals are conditional on this mapping. Primary comparator effects use native source log2 ratios.
+
+The frozen five-gene test is UNTESTABLE. Osgin1 baseline minima are 1 expected count in Nae1 and 9.412 normalized counts in Figlia, below the locked >=10 floor. Source isPresent flags remain TRUE: selected-out for our rule is different from missing or failed measurement. Although all numerical directional criteria pass, they cannot override failed eligibility.
+
+Explicitly post-hoc eligible four-gene analysis (Nqo1, Hmox1, Gclc, Gclm):
+
+    Perturbation   Antioxidant mean log2 change (95% CI)   Pmp22 log2 change
+    Nae1 loss      +2.369 [2.038, 2.699]                    -1.496
+    TSC1 loss      -0.054 [-0.249, 0.141]                  -2.557
+    PTEN loss      -0.198 [-0.409, 0.013]                  -1.961
+    Raptor loss    -0.048 [-0.277, 0.181]                  -0.499
+
+These sample-level intervals describe each source, not a pooled cross-study intervention. Excluding discovery gene Nqo1 leaves Nae1 +1.527 versus TSC1 +0.085, PTEN -0.185 and Raptor -0.060. Sample deletion, gene deletion and alternate normalization were examined. Comparisons retain 12,496 shared unambiguous features and source-defined mTOR modules; shared TSC1/PTEN effects and distinct antioxidant signals are both reported. None of the genes are treated as biological replicates. Whole-matrix ranks are descriptive, not multiplicity-corrected evidence of discovery.
+
+Interpretation: the eligible antioxidant signature is not reproduced at the same scale by these two mTOR-hyperactivation perturbations, despite shared Pmp22/myelin suppression. It is not merely a one-gene/low-baseline anomaly. Nevertheless, different ages, Cre drivers, mixtures, strain/cohort factors and bulk compositional changes can explain source differences. RNA induction does not prove nuclear NRF2 activity, ROS burden, ferroptosis, antioxidant efficacy or NRF2-mediated repression of PMP22. The reduced panel does not rescue the locked test.
+
+## Exact novelty and the overturning experiment
+
+Neddylation-to-NRF2 activation in other cell types, neddylation-to-Schwann differentiation, and redox-to-PMP22 endpoints are already published. The Nae1 source itself already compared its transcriptome with mTOR perturbations. The scoped primary-source audit did not locate the exact relative-preservation rejection or eligible antioxidant-module separation reported here; that is not a global priority claim. Five EuropePMC searches include a truncated broad search, and inaccessible sources are explicit in novelty-audit.json. Actual retrieval provenance is the direct HTTP/EuropePMC/ENA/PRIDE and managed-fetch receipts; an unsupported hand-authored browser-confirmation ledger was retracted and is not evidence. No novel causal regulator is claimed.
+
+The key discriminating experiment is a matched, time-resolved Schwann-cell system with Nae1 perturbation, NRF2 loss/blockade and the double perturbation, with matched controls/rescue and mTOR comparator. Measure cell identity/composition, nuclear NRF2/target engagement, EGR2 protein, promoter-specific nascent Pmp22 RNA, total RNA, synthesis/decay, total protein and surface/myelin-localized PMP22. If Nae1's antioxidant program vanishes after NRF2 loss but its Pmp22 reduction remains, that supports a parallel/compensatory response rather than mediation. If blocking NRF2 rescues Pmp22 under matched differentiation without restoring EGR2, mediation becomes plausible. If age- and state-matching eliminates the cross-source difference, the proposed separation is overturned. This test is not present in the inspected data.
+
+## Limits, completeness and stopping boundary
+
+High-priority selected branches have either an executed measurement analysis or source-evidenced blockers in investigations.json. Protein amounts cannot be recovered from identification scores: the inspected mzIdentML contains identification evidence, not genotype-resolved LFQ abundance. Its mouse search database/PEAKS metadata resolve two repository errors but not the P7 caption versus P15 methods/PRIDE conflict. No protein half-life, translation efficiency or direct-promoter result is fabricated.
+
+The original broad mechanism question remains open where available assays lack causal contrasts, especially human promoter-specific output, direct versus EGR2-mediated upstream effects, source-matched RNA/protein/turnover, and the antioxidant epistasis test. The analysis is stopping because further reading or another expression signature would not identify these causal edges, not because of a time/download cap. Medium-priority untested human hormonal generalization remains explicitly unfinished. Application code, repository skills and evaluation files were not changed; no new agent/evaluation was launched.
+
+Reproducibility: ordinary analysis scripts are in scripts/upstream_*.py; immutable raw files and receipts in inputs/upstream/; sealed plans and revisions retained. Current map, queue, discovery records, evidence coverage and LABBOOK.md are updated and catalog-synced. See validation.json and final-registration.json for executed validation and reusable artifact IDs.

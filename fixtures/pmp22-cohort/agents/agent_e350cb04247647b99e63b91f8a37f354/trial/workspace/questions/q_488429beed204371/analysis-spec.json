@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "question": "q_488429beed204371",
+  "plan_post": "post_ca20ac06270346509a8fdffec7e08914",
+  "prior_exposure": "Source fitted edgeR directions exposed; retrospective extension, not blinded independent test",
+  "native_sha256": "fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5",
+  "assembly": "rn5",
+  "boundary_convention": "Native unconverted tokens, not asserted BED coordinates",
+  "focal": {"P1": "5439", "P2": "5446"},
+  "positional_midpoint_radii": [100, 250, 500],
+  "low_signal": [{"method":"none","constant":0}, {"method":"add","constant":0.1}, {"method":"add","constant":0.5}, {"method":"add","constant":1}, {"method":"floor","constant":0.1}, {"method":"floor","constant":0.5}, {"method":"floor","constant":1}],
+  "comparators": {"myelin": ["Mpz","Mbp","Mag","Prx","Plp1","Cnp","Mal"], "context": ["Sox10","Egr2","Jun","S100b"], "reference_candidates": ["Actb","Gapdh","Iars"], "promoter_diversity": ["Arpc1a","Chn2","Ddr1","Gas7"]},
+  "comparators_methods": ["all_selected_clusters_sum", "control_dominant_cluster"],
+  "absolute_endpoint": "RPM difference and ratio of arithmetic group means; not molecules per cell",
+  "relative_endpoint": "Change in equally weighted mean within-library log2(P1/P2), and mean P1/(P1+P2)",
+  "uncertainty": ["SD_CV_range", "leave_one_library", "all_cross_library_comparisons_nonindependent", "clone_label_family_strata"],
+  "prohibited_interpretations": ["RPM count likelihood", "donor significance", "factorial cAMP by SOX10", "treatment-paired subjects", "P2 invariant", "nascent initiation", "direct cis mechanism", "full transcript composition", "whole transcriptome universe"]
+}

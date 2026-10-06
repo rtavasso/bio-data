@@ -1,0 +1,684 @@
+{
+  "revision": 18,
+  "scope": "Continuation of q_277f20df4b6b47cc; Egr2-AS discrepancy, quantitative accessibility and neglected RNA/protein regulation. Human Schwann scope preferred, species and endpoints separated. New scoped task: regulator prediction beyond myelin program and independent perturbation validation. New iteration: PERK/ISR matched RNA and translation endpoints, genetic/control provenance, granule partition, PTEN metabolic intervention.",
+  "status": "in_progress",
+  "stopping_reason": "Audit continuation executing new shared-time baseline-matched footprint comparison; inherited work receives no new credit.",
+  "items": [
+    {
+      "id": "egr2-as-discrepancy",
+      "priority": "high",
+      "question": "Why do deposited Egr2/Jun RNA directions oppose a simple antisense repair-state model?",
+      "alternatives": [
+        "sample/column mapping or processing error",
+        "endpoint/time/context dependence",
+        "published model not reproduced"
+      ],
+      "readout": "Sample-level metadata, full transcriptome QC, source supplementary measurements",
+      "assets": [
+        "GSE201623",
+        "inputs/continuation/PMC11592338.xml"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_31e1c90e596912f0da91fc5259bd28c0a3485f0a8c15515b37c277e76b77d4c9",
+        "artifact_55b8f0b280341bb4f289f705f6809159d9f4209bd60967c273df257b27bb92ba",
+        "artifact_deb9119bc1be3ad7801b2d0106faba53be680c06ae9f9bb794c9f753a624d52c"
+      ],
+      "finding": "Fresh deposit matches inherited bytes exactly. Egr2 1.258x/Jun 0.820x persists under CPM and all pairwise comparisons. Protein/activity assays oppose steady-state RNA direction; cultures are not mapped across endpoints. Hemoglobin outlier mainly AS2, negligible effect on median-ratio normalization.",
+      "limitation": "Source time/context supports a plausible explanation, not a demonstrated reconciliation; RNA, protein and nascent endpoints are not mapped to matched cultures.",
+      "next_action": "Obtain sample-linked 48h nascent RNA, steady-state RNA and EGR2/C-JUN protein or clarify sample-to-figure mapping. Supplemental 2017 detailed methods blocked by two distinct routes.",
+      "blocker_evidence": [
+        "inputs/continuation/PMC5800313-supplement.pdf",
+        "inputs/continuation/PMC5800313-supplementary.zip",
+        "inputs/continuation/GSE201623.soft",
+        "outputs/assay-endpoint-audit.tsv"
+      ]
+    },
+    {
+      "id": "quantitative-accessibility",
+      "priority": "high",
+      "question": "What independent quantitative accessibility measurements illuminate PMP22 cis regulation?",
+      "alternatives": [
+        "local chromatin response",
+        "global state change",
+        "peak-selection artifact"
+      ],
+      "readout": "Per-sample counts or continuous signal with sourced assembly",
+      "assets": [
+        "GSE201627",
+        "inputs/continuation/egr2-repo-tree.json",
+        "GSE122776",
+        "inputs/continuation/GSM3484775.tdf",
+        "inputs/continuation/GSM3484776.tdf"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_1fd59c333921fbc45620f8d25d4c2f60007fbe1914b73d14448138dc9b2415ff",
+        "artifact_dd199a4eef0624d98fb58ce7522964fd54fc4870885d62b3864c7b348f1f3a86"
+      ],
+      "finding": "33,105 promoter/site windows evaluated; 3,288 >=90% observed coverage in both. Pmp22 common-base log2 tKO/sKO -0.447, -0.626, -0.718; RUNX site -0.111. Broad promoter median -0.450, so local reduction is not uniquely PMP22-specific.",
+      "limitation": "n=1/genotype, differing DRG/tumor source labels and no matched genotype inference; independent of Egr2-AS perturbation.",
+      "next_action": "Seek replicate-level same-context processed ATAC counts; do not use this experiment as replication of Egr2-AS.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "rna-protein-branch",
+      "priority": "high",
+      "question": "Which post-transcriptional mechanisms explain RNA/protein divergence?",
+      "alternatives": [
+        "miRNA-dependent RNA decay or translation",
+        "protein retention/clearance",
+        "transcriptional change"
+      ],
+      "readout": "Processed perturbation or kinetic measurements with RNA/protein endpoints",
+      "assets": [
+        "PMC8191293",
+        "PXD023091",
+        "inputs/continuation/PMC8191293-mmc2.xlsx"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_10f3e34bf6c450de642c25e440e8d195ca7ba508e5cf84e170027ef13c5a71a6",
+        "artifact_c30116363838ac218b965a4b0e5ccc5420e5df8f0b6bb4f9d7b47ba00a96ca4a"
+      ],
+      "finding": "Computed all 670 selected co-IP entries (515 unique proteins, 40 in all variant lists); LMAN1, TMED9, ERGIC3, CANX among strongest L16P/WT shared-list enrichment differences. Source KO shows interaction not sufficient for trafficking control; UGGT1 acts despite not being detected.",
+      "limitation": "Replicate-level reanalysis blocked: PRIDE SEARCH files 1.18-1.88 GB each, exceeding 512 MiB cap; selected summaries do not encode unlisted values.",
+      "next_action": "Retain selected-list caveat; obtain small processed TMT channel matrix if available in future.",
+      "blocker_evidence": [
+        "inputs/continuation/PXD023091-files.json",
+        "inputs/continuation/PMC8191293-mmc2.xlsx"
+      ]
+    },
+    {
+      "id": "tead-mediation",
+      "priority": "high",
+      "question": "Are direct TEAD and EGR2-mediated routes distinguishable?",
+      "alternatives": [
+        "direct cis regulation",
+        "EGR2 mediation",
+        "shared cell-state response"
+      ],
+      "readout": "TEAD perturbation and rescue readouts",
+      "assets": [
+        "inputs/continuation/PMC5181599.html"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "Full text confirms direct enhancer motif effects and developmental Yap/Taz effects. P20 Pmp22 Prom1 reduction with Egr2 RNA not significantly different supports separate route; quantitative mediation remains unresolved.",
+      "limitation": "Study supplies TEAD knockdown, YAP/TAZ genotypes and motif reporters, but no matched EGR2 rescue/clamp. Reporter motif Figure 8 uses eight technical replicates; cannot infer fraction mediated by EGR2.",
+      "next_action": "Need factorial TEAD perturbation with EGR2 rescue and endogenous promoter readouts; no amount of re-fitting existing separated assays identifies mediation fraction.",
+      "blocker_evidence": [
+        "inputs/continuation/PMC5181599.html",
+        "outputs/source-text/PMC5181599.txt"
+      ]
+    },
+    {
+      "id": "human-cis-dosage",
+      "priority": "high",
+      "question": "What human evidence transfers to promoter/copy-number regulation?",
+      "alternatives": [
+        "cis dosage effect",
+        "cell-state composition",
+        "species-specific regulation"
+      ],
+      "readout": "Human Schwann genotype-aware measurements",
+      "assets": [
+        "GSE7423",
+        "GPL1708"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_802fb4f1b41b9c0af192d9c1eab7b24c92ab08f27d5d9d1d3b10088acee3ea6f",
+        "artifact_f672f4cd05cabe3572ac8f5392e04b1aef42132d080173ca51938e1b501645cc"
+      ],
+      "finding": "12 arrays/7 donors; BAR duplication and JIM L16P each one donor. Source log10 ratios/channel intensities confirmed. Two PMP22 probes yield 25.6x vs2.66x BAR/normal; broad BAR/JIM contrast correlation .812.",
+      "limitation": "Donor, culture, nerve site and mutation cannot be separated; no promoter-resolved dosage coefficient.",
+      "next_action": "Need independent duplication/control donors, probe sequence/isoform validation and endogenous P1/P2 readouts.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "lipid-hormonal-frontier",
+      "priority": "medium",
+      "question": "What reciprocal PMP22/ABCA1 protein relationship is measured, and does it establish transcriptional feedback?",
+      "alternatives": [
+        "feedback",
+        "downstream consequence"
+      ],
+      "readout": "independent metabolic perturbation with PMP22 endpoint",
+      "assets": [
+        "inputs/continuation/PMC6607759.html"
+      ],
+      "prerequisites": [
+        "Audit material, source sample labels, assay endpoint and feature universe"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703"
+      ],
+      "finding": "Source total PMP22 in ABCA1KO rises1.53x while endoH-resistant fraction falls81.9% to52.2%. Executed summary-product reconstruction yields resistant index.975, illustrating total versus processed endpoint distinction; not a paired measurement or formal null.",
+      "limitation": "Replicate covariance and promoter/RNA response to ABCA1loss absent from these endpoints; lipid-to-transcription feedback not demonstrated.",
+      "next_action": "Acquire paired per-animal RNA, total/processed protein and independent cholesterol perturbation before asserting a closed feedback loop.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "egr2-specific-quantitative-atac",
+      "priority": "high",
+      "question": "Does Egr2-AS change quantitative promoter accessibility?",
+      "alternatives": [
+        "direct regulatory effect",
+        "state/context or measurement explanation"
+      ],
+      "readout": "Per-library promoter counts or continuous tracks",
+      "assets": [
+        "inputs/continuation/GSE201624-series.soft",
+        "inputs/continuation/GSE201627.soft",
+        "inputs/continuation/egr2-repo-tree.json",
+        "outputs/source-text/egr2-supp-figures.txt",
+        "inputs/continuation/PMC11592338.xml"
+      ],
+      "prerequisites": [
+        "Audit material, sample identity and endpoint"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "GEO supplies four narrowPeak lists, not promoter count matrix described in Methods. Superseries Hi-C matrices are a different assay. Supplement has IGV images; pinned GitHub tree supplies scripts, not the matrix.",
+      "next_action": "Request processed featureCounts promoter matrix and sample metadata; raw ATAC processing requires separate scope.",
+      "blocker_evidence": [
+        "inputs/continuation/GSE201624-series.soft",
+        "inputs/continuation/GSE201627.soft",
+        "inputs/continuation/egr2-repo-tree.json",
+        "outputs/source-text/egr2-supp-figures.txt",
+        "inputs/continuation/PMC11592338.xml"
+      ]
+    },
+    {
+      "id": "mir29-endogenous-loading",
+      "priority": "high",
+      "question": "What controls endogenous miR29 biogenesis and AGO loading across injury?",
+      "alternatives": [
+        "direct regulatory effect",
+        "state/context or measurement explanation"
+      ],
+      "readout": "Matched miRNA/AGO-bound PMP22 and upstream perturbation",
+      "assets": [
+        "inputs/continuation/PMC2713384.html",
+        "outputs/audited-source-passages.json"
+      ],
+      "prerequisites": [
+        "Audit material, sample identity and endpoint"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "Upstream state dependence is supported; exact production versus loading contribution remains unidentified.",
+      "limitation": "Primary paper measures growth-state miRNA, Dicer perturbation and engineered AGO2/miR29 coexpression; no same-sample endogenous injury AGO loading matrix. Ten nerve samples pooled for injury, so technical triplicates cannot estimate between-animal loading variance.",
+      "next_action": "Locate independent small-RNA plus AGO-IP/CLIP with matched injury state, or obtain underlying culture microarray matrix before broad reanalysis.",
+      "blocker_evidence": [
+        "inputs/continuation/PMC2713384.html",
+        "outputs/audited-source-passages.json"
+      ]
+    },
+    {
+      "id": "g3bp-rna-stability",
+      "priority": "high",
+      "question": "Does G3BP1 act through PMP22 RNA half-life?",
+      "alternatives": [
+        "direct regulatory effect",
+        "state/context or measurement explanation"
+      ],
+      "readout": "RNA abundance and actinomycin-D half-life",
+      "assets": [
+        "inputs/continuation/PMC3866477.xml",
+        "inputs/continuation/PMC3866477-1476-4598-12-156-S2.pdf"
+      ],
+      "prerequisites": [
+        "Audit material, sample identity and endpoint"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_47634bfaf41bb410e7f044fc447372591099061bdbf46123d69b2fbd7f8cabb3"
+      ],
+      "finding": "RNA induction accompanied by source mean half-lives4.4h control/4.2h siG3BP1; no demonstrated stabilization mechanism.",
+      "limitation": "MCF7 cancer cells; selected array contrasts and source summary kinetics; not a Schwann transfer.",
+      "next_action": "Test matched nascent transcription and decay in appropriate Schwann material.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "matched-human-protein",
+      "priority": "high",
+      "question": "Does dosage RNA predict myelin-localized endogenous protein?",
+      "alternatives": [
+        "direct regulatory effect",
+        "state/context or measurement explanation"
+      ],
+      "readout": "Matched human RNA, synthesis/decay and localization",
+      "assets": [
+        "inputs/continuation/GSE7423-matrix.txt.gz",
+        "inputs/continuation/GSM178757-quick.soft",
+        "inputs/continuation/PMC8191293.xml"
+      ],
+      "prerequisites": [
+        "Audit material, sample identity and endpoint"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Human GSE7423 measures proliferating-culture RNA only; protein study uses tagged HEK293 constructs with selected co-IP. These materials cannot be paired into a human dosage-to-functional-protein estimate.",
+      "next_action": "Acquire a donor-matched human Schwann RNA/protein/localization series; retain variant-specific predictions.",
+      "blocker_evidence": [
+        "inputs/continuation/GSE7423-matrix.txt.gz",
+        "inputs/continuation/GSM178757-quick.soft",
+        "inputs/continuation/PMC8191293.xml"
+      ]
+    },
+    {
+      "id": "runx-matched-study-rna",
+      "priority": "high",
+      "question": "Do processed bulk RNA measurements support the reported Pmp22 response and contextualize lower ATAC signal?",
+      "alternatives": [
+        "promoter-specific route",
+        "broad tissue or state change"
+      ],
+      "readout": "GSE122774 processed RNA counts and sample metadata",
+      "assets": [
+        "GSE122774",
+        "inputs/continuation/PMC6482019.xml"
+      ],
+      "prerequisites": [
+        "Verify n3 genotype mapping; bulk versus sorted material; count semantics"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_150748bb898aa760ccab2afdc58f2e772053d1b1a4deea08a64149c6944f17eb",
+        "artifact_38c610eb0e717b7d293273f1914970a1e5f378522e5aed3cebdb9e5908e14182",
+        "artifact_416e110e543807cbbd1c58f6847d2ac20507f1e6b669534adb47c41d33f8ac28"
+      ],
+      "finding": "24,062 gene rows; Pmp22 2.308x median-ratio and2.207xCPM; all9 pairwise increases. Mpz2.820x/Mbp2.475x; Egr2/Sox10 smaller with pairwise ranges crossing1. Within-group sample-title/file-header swaps identified and preserved.",
+      "limitation": "Bulk RNA tissue annotations and genotype detail differ across GEO/paper; n3 does not remove tissue/state confounding. No transcript count matrix or cross-assay animal identity.",
+      "next_action": "Clarify sample map and obtain Kallisto transcript abundances to test P1/P2 estimates; do not pair bulkRNA to sortedATAC by label guesswork.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "hormonal-metabolic-coverage",
+      "priority": "medium",
+      "question": "Which hormonal or metabolic regulators directly control human Schwann PMP22?",
+      "alternatives": [
+        "direct promoter effect",
+        "state-dependent indirect effect"
+      ],
+      "readout": "Independent perturbation with promoter-resolved and protein endpoints",
+      "assets": [],
+      "prerequisites": [
+        "Match species/cell state and genotype"
+      ],
+      "status": "deferred",
+      "artifacts": [],
+      "finding": "No new hormonal experiment analyzed in this continuation. Lipid/ABCA1 branch investigated separately.",
+      "limitation": "Broad scope exceeds this time-bounded investigation; retained unfinished, not absence of regulation.",
+      "next_action": "Target primary hormone/metabolic perturbation datasets after resolving matched Egr2-AS endpoints.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "specific-discovery",
+      "priority": "high",
+      "question": "Which broad measured regulator candidates predict Pmp22 beyond a fixed myelin score?",
+      "alternatives": [
+        "general myelination response",
+        "candidate-specific association",
+        "state/composition or selection artifact"
+      ],
+      "readout": "Residual regression, leave-timepoint-out prediction and baseline comparison",
+      "assets": [
+        "GSE177037",
+        "GSE201623",
+        "GSE139321",
+        "GSE122774"
+      ],
+      "prerequisites": [
+        "Audit units and sample identities; retain prior exposure"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_b3ce20de2a945d71e047e29d3cb9f0e78eb9c8d6edde36ce83d0e349ec13b207",
+        "artifact_6a192de763de3b4b67d50cf649125b6c3d5b46b5b6cca2b3a53c4c83da9d036d"
+      ],
+      "finding": "Three negative candidate predictors selected from1119 regulator annotations; myelin baseline R2=.981. Small residual, strong selection risk.",
+      "limitation": "No causal regulator identification; keyword annotation not complete regulator ontology.",
+      "next_action": "See candidate next_test and report frontier; do not recycle exposed validation as fresh evidence.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "specific-validation",
+      "priority": "high",
+      "question": "Do locked candidate directions and coefficients transfer to Eed perturbation?",
+      "alternatives": [
+        "general myelination response",
+        "candidate-specific association",
+        "state/composition or selection artifact"
+      ],
+      "readout": "Within-time KO-WT differences; myelin-only versus augmented prediction",
+      "assets": [
+        "GSE106969",
+        "GSE76027",
+        "GSE93159"
+      ],
+      "prerequisites": [
+        "Audit units and sample identities; retain prior exposure"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_abee146fb898851d7990ccc5bce8cd7853e6998cdf03f02523f02a63ec2a88ed",
+        "artifact_85aed229a693e3179f275f0e6fb776c3bfe0219711340d2413e69f11a6b982b6"
+      ],
+      "finding": "All three fail sealed primary Zeb2 prediction. Eed untestable; HDAC3 seven-marker test ineligible due HIDATA.",
+      "limitation": "Rat/mouse, injury/development and assay differences; no direct candidate intervention.",
+      "next_action": "See candidate next_test and report frontier; do not recycle exposed validation as fresh evidence.",
+      "blocker_evidence": [
+        "outputs/specific/eed-source-integrity.json"
+      ]
+    },
+    {
+      "id": "specific-alternatives",
+      "priority": "high",
+      "question": "Are signals explained by injury phase, composition or target leverage?",
+      "alternatives": [
+        "general myelination response",
+        "candidate-specific association",
+        "state/composition or selection artifact"
+      ],
+      "readout": "Timepoint withholding, marker sensitivity, non-Schwann signatures, matched endpoint specificity",
+      "assets": [
+        "GSE177037",
+        "GSE106969"
+      ],
+      "prerequisites": [
+        "Audit units and sample identities; retain prior exposure"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_6f797bbcef77a9252d5173bb9f74a78d4ba16bcfa1bc32dc40de5d6eeb1f1801",
+        "artifact_3ebf128cc9f9ce751af988291985092b9ab42a4182d77b7c148e8d603bd291a4",
+        "artifact_5328bf59395ab082d075d4757ef7e47b40e2a867680992f67a45be9fb12a1171",
+        "artifact_3466987f4a59d9656f698e796ea7d45830f5b8cf66ff3d08b10efe8d84829517"
+      ],
+      "finding": "Timing attenuates associations; Mpz/Cnp share residual prediction; primary genotype-adjusted signs remain positive; some sample-omission slopes unstable.",
+      "limitation": "Immune score does not remove discovery associations; Hck enrichment is not proof of contamination.",
+      "next_action": "See candidate next_test and report frontier; do not recycle exposed validation as fresh evidence.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "specific-novelty",
+      "priority": "high",
+      "question": "What was already reported and what distinct claim remains?",
+      "alternatives": [
+        "general myelination response",
+        "candidate-specific association",
+        "state/composition or selection artifact"
+      ],
+      "readout": "Primary-text and exact candidate search audit",
+      "assets": [],
+      "prerequisites": [
+        "Audit units and sample identities; retain prior exposure"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_2e30424a97fb38ffdfe2bc22218aac5d1f3bf5739b03e47b055bf2fbc125a14c",
+        "artifact_1276b53abcc38aefa11264ce5733e2aa3ca3536c078ae9e3d10724fe7634a4ee"
+      ],
+      "finding": "Known Egr2/NAB-to-Hck relation provides shared upstream explanation; no novel specific mechanism claimed.",
+      "limitation": "Scoped source/abstract audit, not exhaustive priority claim.",
+      "next_action": "See candidate next_test and report frontier; do not recycle exposed validation as fresh evidence.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "specific-platform-context",
+      "priority": "high",
+      "question": "Could array compression or linear baseline misspecification explain failed candidate transfer?",
+      "alternatives": [
+        "measurement scale compression",
+        "nonlinear shared myelination response",
+        "context-specific predictor failure"
+      ],
+      "readout": "Quadratic myelin discovery baseline and independent Zeb2 RNAseq summary diagnostic",
+      "assets": [
+        "GSE74381"
+      ],
+      "prerequisites": [
+        "FPKM status audit; no invented per-sample replication from summary estimates"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_c1212370e0e53e61f483bcb7761e9cbbe91b09d525456bd03aef0a86665cdce7",
+        "artifact_b5e2633fe304bd87d0fe77f96784b580aca2ae0e777a2f050603bce97259afc1",
+        "artifact_fd4f9f1f18ea83c43f8ebaf6e286bd72f51a277ad191f2b96ee184adaa5bd81e"
+      ],
+      "finding": "Quadratic myelin baseline worsens held-state error; Pmp22 highest array signal. Independent Zeb2 RNAseq files conflict and have failed myelin estimates.",
+      "limitation": "Cannot distinguish platform compression from age/context using mismatched source encodings; no reconstructed sample independence.",
+      "next_action": "See candidate next_test and report frontier; do not recycle exposed validation as fresh evidence.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "isr-matched-fractions",
+      "priority": "high",
+      "question": "Separate PMP22 RNA abundance from relative polysome recruitment under chronic stress and PERK inhibition",
+      "alternatives": [
+        "RNA-driven congruent change",
+        "fraction-specific translational change",
+        "global compositional normalization artifact"
+      ],
+      "readout": "Matched cytosolic and polysome RNA counts across four conditions",
+      "assets": [
+        "GSE90070",
+        "inputs/iteration/PMC5730339.html"
+      ],
+      "prerequisites": [
+        "Verify source sample pairing, count universe and eligibility",
+        "Do not infer absolute translation without spike-ins"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_df5691d1f08e2b71ecf9b199e6fadeb335dd8c1407e252b13faf66dde3327bbd",
+        "artifact_0d579289aa448728cf11043efa6ea0911798598999a52adf4f08bc9c183472be",
+        "artifact_db92f27542906427e8cba255935ec8a4fb7a23bcf2e13823a92f190f6dcec7b1"
+      ],
+      "finding": "Pmp2216h/control RNA-2.934 andpolysome-3.505log2; latePERKi+2.740/+3.272, relative-loading+.532. Chronic/acute changes congruent. Normalization and sample-deletion directions stable. Known source relationship reproduced.",
+      "limitation": "Relative compositional fractions; 4 labelled replicates not verified independent donors; no absolute protein synthesis.",
+      "next_action": "Matched Schwann nascent/RNA/polysome/protein timecourse with calibrated recovery",
+      "blocker_evidence": []
+    },
+    {
+      "id": "isr-genetic-validation",
+      "priority": "high",
+      "question": "Is Pmp22 stress repression PERK/eIF2alpha-dependent rather than an inhibitor-specific effect?",
+      "alternatives": [
+        "PERK/eIF2alpha route",
+        "PERKi off-target restoration",
+        "global stress or genotype adaptation"
+      ],
+      "readout": "Genotype-by-stress Pmp22 RNA contrast; orthogonal footprint follow-up",
+      "assets": [
+        "GSE49598",
+        "GSE118660"
+      ],
+      "prerequisites": [
+        "Frozen prediction",
+        "Probe/source eligibility",
+        "Sample independence limitations"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_42c9de6a8e381d79e2e5595d0359701acdd7c220e0c2304f013de827fe697c13",
+        "artifact_25483ce01df78fdb04c8c569747719b805b8891d9c2b3a9ca6ecf25d1c8ce543",
+        "artifact_7f2beb1433eeaffa11b8eca1af240df15f50602fceb73d5863d060cbf36bb82e"
+      ],
+      "finding": "Frozen primary criteria fail (WT median-.320, discordant probes). Mutant interactions positive but mixed WT-source provenance prevents clean genetic inference. Secondary footprints contradict suppression: MEFWT8h+1.238log2TPM.",
+      "limitation": "Genetic-array source control ambiguity; footprint n1 and no matchedRNA. No rescue by post hoc strata.",
+      "next_action": "Clarify WT line/time controls, then obtain matched perturbation/rescue cultures",
+      "blocker_evidence": []
+    },
+    {
+      "id": "pten-metabolic-state-separation",
+      "priority": "high",
+      "question": "Does PTEN reduction separate metabolic RNA from differentiation-state responses in Pmp22-transgenic nerves?",
+      "alternatives": [
+        "shared differentiation shift",
+        "metabolic response separable from differentiation",
+        "source endpoint insufficient"
+      ],
+      "readout": "Figure7 source qPCR across four mouse genotypes",
+      "assets": [
+        "PMC10940316",
+        "https://static-content.springer-cdn.com/esm/art%3A10.1038%2Fs44321-023-00019-5/MediaObjects/44321_2023_19_MOESM7_ESM.zip"
+      ],
+      "prerequisites": [
+        "Inspect native format and group/animal units",
+        "No execution of downloaded code"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_1092edd510743d4761066019de032b42b42e11b5abab1f43a05436c0df661d59",
+        "artifact_51823a6d4ec5fe8507d136423e73616fd32223c1ec5f5308b6934fe7b7048408",
+        "artifact_b1d57db7225229798fd087fbe1d047f6e5003a5cbb03037008efaede1a72987d"
+      ],
+      "finding": "Pten halves but Hmgcr1.217x and differentiation-marker ratios do not convincingly establish separate metabolic rescue. Source count discrepancy and exact cross-group six-gene duplicate discovered.",
+      "limitation": "Selected6-gene qPCR; 4double-mutant sourcevalues vs5caption, duplicatedWT/HNPP vector; no PMP22 endpoint afterPTEN intervention.",
+      "next_action": "Obtain animal IDs and corrected native Ct export; matched PMP22RNA/protein for reversefeedback",
+      "blocker_evidence": []
+    },
+    {
+      "id": "isr-assay-discordance",
+      "priority": "high",
+      "question": "Why do Pmp22 footprints rise while heavy-polysome RNA falls in distinct Tg MEF experiments?",
+      "alternatives": [
+        "assay occupancy/fraction distinction",
+        "RNA induction in different culture",
+        "source mapping or dose/context effect"
+      ],
+      "readout": "Matched RNA/Ribo alternate study and source representation audit",
+      "assets": [
+        "GSE103667",
+        "GSE118660",
+        "GSE90070"
+      ],
+      "prerequisites": [
+        "Inspect dose/time/source semantics and sample units",
+        "Keep exposed results retrospective"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+        "artifact_06d255cfd560659d7e66f9e481b3e2d69c7a756f41dd1cc7bf209e68234c49dc",
+        "artifact_c1afc335b427efba1513ae84ed8afbaed6e76fb8cbd03266291a606134557700"
+      ],
+      "finding": "Native TableS5 reproduces MEF footprint increase and NIH3T3 decrease. Pmp22late-cluster membership already published. Same-assay context reversal means assay distinction alone cannot explain discordance.",
+      "limitation": "Cell/dose/time changes confounded; NIH3T3latepoint7h inGEO/methods vs8h inTableS5; 25date-like sourcegene labels not mapped.",
+      "next_action": "Same cells/dose/time measured with matched RNA, heavy polysomes, footprints and synthesis",
+      "blocker_evidence": []
+    },
+    {
+      "id": "granule-partition",
+      "priority": "high",
+      "question": "Does Pmp22 translational suppression coincide with relative RNA-granule recruitment?",
+      "alternatives": [
+        "granule recruitment accompanies suppression",
+        "suppression without preferential granule recruitment",
+        "normalization cannot identify absolute partition"
+      ],
+      "readout": "GSE90869 cytoplasmic/RG fraction counts with spike eligibility audit",
+      "assets": [
+        "GSE90869",
+        "GSE103667",
+        "PMC6359928"
+      ],
+      "prerequisites": [
+        "Source units and spike normalization",
+        "Source fraction pairing",
+        "Do not treat repeated transcript mappings as replication"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_c55d56b3e685e46563bc889eb86bdd0482ac192cfb4ac5f5e9bd0fa334978be7",
+        "artifact_ae54d5fdb57a1bbb1d70b0c4b12b99626bd74def386432ba019d9762d5e286f3",
+        "artifact_0a513083b1c6cdced58df364d3460001393c80e68f2ca04102e3ba79843fbd2f"
+      ],
+      "finding": "Pmp22 TE source values decline in both replicates; relative granule changes-.313,-.291,+.440log2 across3ERreplicates. No reproducible preferential recruitment, absolute partition unidentifiable. Broad9309gene comparison executed.",
+      "limitation": "Spike calibrator counts absent; nativeTableS2 unavailable byPMC, EPMCAPI and EPMCarticle routes. TEfile scale incompletely documented. Same-study orthogonal assays, not independent validation.",
+      "next_action": "Acquire native spike-normalized TableS2/normalization factors; test PMP22localization with matched translation",
+      "blocker_evidence": [
+        "inputs/iteration/Namkoong-supplements.zip",
+        "inputs/iteration/Namkoong-TableS2.xlsx",
+        "inputs/iteration/transport.json",
+        "outputs/iteration/granule-gap.json"
+      ]
+    },
+    {
+      "id": "genetic-array-source-quality",
+      "priority": "high",
+      "question": "Do source probe flags or mixed WT origins explain the genetic array discrepancy?",
+      "alternatives": [
+        "probe quantification problem",
+        "WT line/batch heterogeneity",
+        "biological transcript differences"
+      ],
+      "readout": "Agilent processed feature flags and filename-defined control strata",
+      "assets": [
+        "GSE49598-supplementary-sample-TXT"
+      ],
+      "prerequisites": [
+        "Preserve initial frozen results",
+        "No raw scanner processing or downloaded code execution"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_7f2beb1433eeaffa11b8eca1af240df15f50602fceb73d5863d060cbf36bb82e",
+        "artifact_0610cd7517ae25cb1979de37ad848eef521b136035f45beda2c3bd79ffd78478",
+        "artifact_7133e5ae15ee5ecf9aecd82c93a730411d096a5a42e81c5fbcb4573f1a9a80b1"
+      ],
+      "finding": "All48 target cells pass nativeconservative flags. WT_PERK source subset declines-.685/-1.062; WT_ATF4 subset+.712/-.247. Native normalization retains PERKWT decline. Quantification failure does not explain control heterogeneity.",
+      "limitation": "Filename-defined strata are exploratory; untreatedKOtime24h ambiguity and unmatched eIF2alphaWT persist. Earlierfinite-only broadexport superseded byqualitymaskedr002.",
+      "next_action": "Clarify control provenance and independent culture identities; no claim of direct promoter/isoform specificity",
+      "blocker_evidence": []
+    },
+    {
+      "id": "footprint-context-distinctiveness",
+      "priority": "high",
+      "question": "Is Pmp22 context reversal distinctive relative to compatible baseline-matched footprints?",
+      "alternatives": [
+        "Pmp22-selective context regulation",
+        "broad context response",
+        "baseline abundance/floor or compositional artifact"
+      ],
+      "readout": "Within-context relative footprint TPM log2 changes at shared2h; late8vs7h secondary",
+      "assets": [
+        "GSE118660",
+        "blob:7740f1a5d816fd8a98a17e67e6c6621ca438c5afd14addb62309f9148f3c6dc7",
+        "blob:8b837d3c0a48e869522484f68d0837994ee9c932e2dac52ef6dd5f679b6928d7"
+      ],
+      "prerequisites": [
+        "Design inspected: n1, doses/cell types jointly change",
+        "Outcome-independent two-context baseline matching"
+      ],
+      "status": "ready",
+      "artifacts": [],
+      "finding": "",
+      "limitation": "Retrospective; no independent biological replication, no absolute translation or RNA adjustment.",
+      "next_action": "Execute scripts/analyze_footprint_context.py per decision-r001.md",
+      "blocker_evidence": []
+    }
+  ]
+}

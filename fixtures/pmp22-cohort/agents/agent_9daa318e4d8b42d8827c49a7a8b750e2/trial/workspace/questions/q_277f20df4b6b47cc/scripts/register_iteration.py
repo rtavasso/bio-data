@@ -1,0 +1,12 @@
+from pathlib import Path
+import json,subprocess,sys
+q=Path(__file__).resolve().parents[1];o=q/'outputs/iteration';bio=Path.cwd()/'bin/bio'
+def run(args):
+ r=subprocess.run([str(bio),*map(str,args)],capture_output=True,text=True,check=True);return json.loads(r.stdout)
+code=sys.argv[1];inputs=sys.argv[2].split(',');files=sys.argv[3:]; hashes=[]
+for p in inputs:hashes.append(run(['object','add',q/p])['blob'])
+ledger=o/'registrations.json';d=json.loads(ledger.read_text()) if ledger.exists() else []
+for p in files:
+ a=['register',q/p,'--question',q.name,'--code',q/'scripts'/code,'--title','PMP22 new ISR iteration: '+Path(p).name,'--output-role','iteration-'+Path(p).stem+'-'+Path(p).suffix.lstrip('.'),'--parameters',json.dumps({'analysis':'executed question-local script','scope':'endpoint/context restrictions in companion summary'})]
+ for h in hashes:a+=['--input',h]
+ r=run(a);d.append({'file':p,'code':code,'inputs':hashes,'receipt':r});ledger.write_text(json.dumps(d,indent=2));print(p,r.get('id',r.get('artifact_id',r)))

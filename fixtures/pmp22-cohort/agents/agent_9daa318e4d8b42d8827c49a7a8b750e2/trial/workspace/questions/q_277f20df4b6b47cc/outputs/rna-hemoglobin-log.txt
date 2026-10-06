@@ -1,0 +1,68 @@
+{
+  "selector": "description begins hemoglobin or beta globin or beta-globin; excludes secretoglobins/plakoglobin and globin-associated proteins",
+  "symbols": [
+    "Hbg1",
+    "Hbe1",
+    "Hbb",
+    "Hba1",
+    "LOC100134871",
+    "LOC689064",
+    "Hbe2",
+    "Hbz",
+    "Hba-a1",
+    "Hbb-b1"
+  ],
+  "raw_sums": {
+    "LentiAS-1": 953,
+    "LentiAS-2": 259574,
+    "LentiGFP-1": 620,
+    "LentiGFP-2": 462
+  },
+  "fractions": {
+    "LentiAS-1": 1.0943364528812082e-05,
+    "LentiAS-2": 0.003506604173874039,
+    "LentiGFP-1": 6.591401227927019e-06,
+    "LentiGFP-2": 4.8031993050124085e-06
+  },
+  "PCA_variance_excluding_hemoglobin": [
+    0.5081849678885455,
+    0.3479057986647058,
+    0.14390923344674864,
+    1.1997911268398807e-29
+  ],
+  "PCA_coordinates_excluding_hemoglobin": {
+    "LentiAS-1": [
+      -23.987706238819886,
+      13.480071578367017
+    ],
+    "LentiAS-2": [
+      -7.229743359755442,
+      -23.21386760846936
+    ],
+    "LentiGFP-1": [
+      13.494802960254738,
+      4.016926092972685
+    ],
+    "LentiGFP-2": [
+      17.72264663832061,
+      5.716869937129674
+    ]
+  },
+  "ratios_excluding_hemoglobin": {
+    "Pmp22": 0.8850617120854705,
+    "Egr2": 1.2583886783183422,
+    "Jun": 0.8201002610206732
+  },
+  "interpretation": "Extreme group means largely reflect AS2 globin counts; AS1 is not similarly dominated. No coherent Gata1/Klf1/Tal1/Slc4a1/Alas2 erythroid program in panel. This weakens a broad erythroid-cell expansion explanation but does not identify source. Count-table totals and genes cannot establish cell identities or read provenance."
+}
+     #Geneid  LentiAS-1  LentiAS-2  LentiGFP-1  LentiGFP-2  AS1_over_GFPmean  AS2_over_GFPmean
+        Hbg1          0       3225           0           0               NaN               inf
+        Hbe1          5      14618           1          10          0.978236       3332.482237
+         Hbb        323     125355         240         140          1.818040        822.145543
+        Hba1          0          0           0           0               NaN               NaN
+LOC100134871         22      15382          22          23          1.047372        853.290922
+   LOC689064        343      14265         175         144          2.301964        111.553274
+        Hbe2          9       1089           9           2          1.746275        246.209069
+         Hbz         93      22786          69          42          1.792230        511.664162
+      Hba-a1         74      23616          51          38          1.779573        661.754013
+      Hbb-b1         84      39238          53          63          1.551924        844.703312

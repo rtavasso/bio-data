@@ -1,0 +1,385 @@
+{
+  "prediction_sha256": "85de99cb1c385a5b72eb0eccec4cf5be21b58a87ea0f9df2472c78f2b1b0c11f",
+  "criteria": {
+    "eligible": false,
+    "nae1_mean_gt1": true,
+    "nae1_four_positive": true,
+    "TSC1KO_antioxidant_lt1": true,
+    "TSC1KO_separation_ge1": true,
+    "TSC1KO_pmp22_negative": true,
+    "TSC1KO_myelin_negative": true,
+    "PTENKO_antioxidant_lt1": true,
+    "PTENKO_separation_ge1": true,
+    "PTENKO_pmp22_negative": true,
+    "PTENKO_myelin_negative": true
+  },
+  "passes_locked_rule": false,
+  "status": "untestable",
+  "panel_scores": [
+    {
+      "study": "TSC1KO",
+      "panel": "antioxidant",
+      "n_genes": 5,
+      "source_effect": 0.19015800000000002,
+      "effect": 0.21005549814946,
+      "ci95": [
+        -0.008356676956264242,
+        0.42846767325518426
+      ],
+      "df": 3.484741868568292
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "myelin",
+      "n_genes": 7,
+      "source_effect": -1.5140428571428572,
+      "effect": -1.4917180851045995,
+      "ci95": [
+        -1.6976448217123772,
+        -1.2857913484968218
+      ],
+      "df": 3.1138076236619265
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "Pmp22",
+      "n_genes": 1,
+      "source_effect": -2.572,
+      "effect": -2.556838559849016,
+      "ci95": [
+        -3.0037220858011167,
+        -2.1099550338969153
+      ],
+      "df": 3.442091938676475
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "sterol",
+      "n_genes": 7,
+      "source_effect": -1.3728,
+      "effect": -1.3491024692992042,
+      "ci95": [
+        -1.5780053816309076,
+        -1.1201995569675007
+      ],
+      "df": 3.6095056690338616
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "immune",
+      "n_genes": 5,
+      "source_effect": -0.09051600000000001,
+      "effect": -0.0764658016713966,
+      "ci95": [
+        -0.4882062218639618,
+        0.3352746185211686
+      ],
+      "df": 3.506159704791882
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "fibroblast",
+      "n_genes": 4,
+      "source_effect": -0.732725,
+      "effect": -0.7123798741793586,
+      "ci95": [
+        -0.9644814974404372,
+        -0.4602782509182799
+      ],
+      "df": 2.8179650404411327
+    },
+    {
+      "study": "TSC1KO",
+      "panel": "other_regulators",
+      "n_genes": 12,
+      "source_effect": 0.12663,
+      "effect": 0.14516452974858574,
+      "ci95": [
+        -0.09917874926935408,
+        0.3895078087665256
+      ],
+      "df": 2.060956166450419
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "antioxidant",
+      "n_genes": 5,
+      "source_effect": 0.09613400000000001,
+      "effect": 0.07029368650615098,
+      "ci95": [
+        -0.23916747993038462,
+        0.37975485294268657
+      ],
+      "df": 3.6043169988350074
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "myelin",
+      "n_genes": 7,
+      "source_effect": -0.6646885714285714,
+      "effect": -0.6792808274753384,
+      "ci95": [
+        -0.8376021254094443,
+        -0.5209595295412324
+      ],
+      "df": 3.627288779519747
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "Pmp22",
+      "n_genes": 1,
+      "source_effect": -0.482,
+      "effect": -0.49883404503872697,
+      "ci95": [
+        -0.8519344294834996,
+        -0.14573366059395432
+      ],
+      "df": 3.9168135259985477
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "sterol",
+      "n_genes": 7,
+      "source_effect": -0.7370971428571428,
+      "effect": -0.7602187825422249,
+      "ci95": [
+        -1.2107864607671333,
+        -0.30965110431731646
+      ],
+      "df": 2.5686288982066627
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "immune",
+      "n_genes": 5,
+      "source_effect": -0.21100399999999997,
+      "effect": -0.22593495693362264,
+      "ci95": [
+        -0.5429635238534091,
+        0.09109360998616378
+      ],
+      "df": 3.987309403082264
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "fibroblast",
+      "n_genes": 4,
+      "source_effect": 0.37639999999999996,
+      "effect": 0.3582356641977036,
+      "ci95": [
+        0.04281474247473038,
+        0.6736565859206768
+      ],
+      "df": 2.5694108518789887
+    },
+    {
+      "study": "RaptorKO",
+      "panel": "other_regulators",
+      "n_genes": 12,
+      "source_effect": -0.10168416666666664,
+      "effect": -0.14324887890539628,
+      "ci95": [
+        -0.31549177023331176,
+        0.028994012422519228
+      ],
+      "df": 2.1183011488627037
+    },
+    {
+      "study": "PTENKO",
+      "panel": "antioxidant",
+      "n_genes": 5,
+      "source_effect": 0.053478000000000005,
+      "effect": 0.04831315890090515,
+      "ci95": [
+        -0.17106108026578468,
+        0.267687398067595
+      ],
+      "df": 3.609621580632359
+    },
+    {
+      "study": "PTENKO",
+      "panel": "myelin",
+      "n_genes": 7,
+      "source_effect": -1.131342857142857,
+      "effect": -1.1341149202623466,
+      "ci95": [
+        -1.3091451900609632,
+        -0.9590846504637301
+      ],
+      "df": 3.417920121359763
+    },
+    {
+      "study": "PTENKO",
+      "panel": "Pmp22",
+      "n_genes": 1,
+      "source_effect": -1.958,
+      "effect": -1.96144946643442,
+      "ci95": [
+        -2.2839879370052225,
+        -1.6389109958636172
+      ],
+      "df": 3.9998142706000466
+    },
+    {
+      "study": "PTENKO",
+      "panel": "sterol",
+      "n_genes": 7,
+      "source_effect": -1.2186142857142859,
+      "effect": -1.2194554795831163,
+      "ci95": [
+        -1.4110543515979355,
+        -1.027856607568297
+      ],
+      "df": 3.94992344814943
+    },
+    {
+      "study": "PTENKO",
+      "panel": "immune",
+      "n_genes": 5,
+      "source_effect": -0.372094,
+      "effect": -0.37558886288262716,
+      "ci95": [
+        -0.655280145878801,
+        -0.09589757988645331
+      ],
+      "df": 3.6739699993404953
+    },
+    {
+      "study": "PTENKO",
+      "panel": "fibroblast",
+      "n_genes": 4,
+      "source_effect": -0.302437,
+      "effect": -0.3070875309845036,
+      "ci95": [
+        -0.43319556783298496,
+        -0.18097949413602224
+      ],
+      "df": 3.9999210611543816
+    },
+    {
+      "study": "PTENKO",
+      "panel": "other_regulators",
+      "n_genes": 12,
+      "source_effect": 0.06931666666666668,
+      "effect": 0.06615617643764793,
+      "ci95": [
+        -0.004002351442191424,
+        0.13631470431748727
+      ],
+      "df": 2.573304342706852
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "antioxidant",
+      "n_genes": 5,
+      "source_effect": 2.807585847011111,
+      "effect": 2.8075858470111115,
+      "ci95": [
+        2.395937699183418,
+        3.219233994838805
+      ],
+      "df": 5.881905806761784
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "myelin",
+      "n_genes": 7,
+      "source_effect": -1.459297650935293,
+      "effect": -1.4592976509352944,
+      "ci95": [
+        -1.7194125665842093,
+        -1.1991827352863795
+      ],
+      "df": 4.666640885053065
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "Pmp22",
+      "n_genes": 1,
+      "source_effect": -1.4958155959584225,
+      "effect": -1.4958155959584225,
+      "ci95": [
+        -1.9250443142289744,
+        -1.0665868776878706
+      ],
+      "df": 4.379319712417772
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "sterol",
+      "n_genes": 7,
+      "source_effect": -1.5218959150382767,
+      "effect": -1.5218959150382787,
+      "ci95": [
+        -1.7100252264980822,
+        -1.3337666035784752
+      ],
+      "df": 4.69580815386352
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "immune",
+      "n_genes": 5,
+      "source_effect": 0.8189569733304237,
+      "effect": 0.8189569733304243,
+      "ci95": [
+        0.6897915907588884,
+        0.9481223559019601
+      ],
+      "df": 5.24570304054442
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "fibroblast",
+      "n_genes": 4,
+      "source_effect": 0.44796315225067884,
+      "effect": 0.4479631522506775,
+      "ci95": [
+        0.25259805582309913,
+        0.6433282486782559
+      ],
+      "df": 5.842639197104461
+    },
+    {
+      "study": "Nae1KO",
+      "panel": "other_regulators",
+      "n_genes": 12,
+      "source_effect": 0.29606140726741864,
+      "effect": 0.29606140726741614,
+      "ci95": [
+        0.20846394793037817,
+        0.38365886660445414
+      ],
+      "df": 4.676101820164114
+    }
+  ],
+  "shared_feature_count": 12496,
+  "source_mtor_programs": [
+    {
+      "name": "mTORC1-induced genes",
+      "source_genes": 110,
+      "shared_genes": 103,
+      "median_effects": {
+        "TSC1KO": 1.062,
+        "RaptorKO": -0.8173,
+        "PTENKO": 0.8156,
+        "Nae1KO": -0.08944133908511098,
+        "Nae1_minus_hyper_mTOR": -1.038819617458352
+      }
+    },
+    {
+      "name": "mTORC1-repressed genes",
+      "source_genes": 131,
+      "shared_genes": 122,
+      "median_effects": {
+        "TSC1KO": -0.96445,
+        "RaptorKO": 0.56175,
+        "PTENKO": -0.7457,
+        "Nae1KO": 0.1518363865973953,
+        "Nae1_minus_hyper_mTOR": 1.032098435600942
+      }
+    }
+  ],
+  "interpretation_limit": "Comparative signature, not proof of NRF2 activity, cell autonomy, antioxidant mediation or novelty. Same three Figlia controls reused. P5/P7, drivers and composition differ; intervals conditional on sample map.",
+  "mapping": "ENA numeric aliases corroborated by all-feature contrast agreement excluding tested panels; Dev prefix link remains inferred, not explicit ENA library name. Primary uses source contrast, sample estimates secondary."
+}

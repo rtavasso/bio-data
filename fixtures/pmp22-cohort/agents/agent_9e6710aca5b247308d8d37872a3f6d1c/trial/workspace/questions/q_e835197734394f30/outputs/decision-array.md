@@ -1,0 +1,11 @@
+# Pre-analysis decision: GSE165206
+
+Question q_e835197734394f30. This decision follows metadata inspection, before reading target expression values.
+
+There are six deposited array samples, one each for stiff/soft, large/small spreading area, elongated/non-elongated (GSM5028218 through GSM5028223). The paper uses RT4-D6P2T; GEO specifies rat, passage5 and two days before RNA isolation. Do not count technical imaging cells, wells or sample-file suffixes as independent transcriptome replicates. No EGR2 clamp, endogenous cis mutation or early nascent endpoint exists in this deposit.
+
+A descriptive extraction is justified to check actual incidental Pmp22/Egr2/state measurements and detection, not to estimate mediation or differential-expression significance. Retain all deposited probes and all detection p-values. The platform is GPL23040. Native VALUE is labelled Quantification; paper Methods4.6 says RMA and log2 transformation. Therefore raw deposited values are primary; differences may be labelled source-scale differences and only conditionally interpreted as log2 changes consistent with published processing, not independently verified normalization. No renormalization or raw CEL processing.
+
+Before analysis, selected panel: Pmp22, Egr2, Jun, Sox10, Mpz, Mbp, Mag, Prx, Sox2, Ngfr, Pou3f1, Yap1, Wwtr1, Tead1, Erbb2, Erbb3. Retain every exact-symbol probe (including ambiguous mappings with explicit labels), missing annotations and explicit zero separately. Primary contrast stiff minus soft; other two are descriptive sensitivity/context contrasts, not replicates. No p-values, confidence intervals, regression adjustment or biological 'no effect' claims. Preserve detection values; flag p<0.05 only as an analyst-defined screening annotation, not the authors' established inclusion rule. A low-detection Pmp22 observation blocks interpreting its directional contrast. Inspect whole-universe distributions and sample-table integrity.
+
+GSE147285 age and cell-selection mismatch, GSE294160 pooled developmental labels, and GSE79115 genotype/tissue-pool ambiguity prevent them from supplying the requested controlled mechanical/NRG cis test. Additional normal atlas normalization would not fix these missing experimental endpoints.

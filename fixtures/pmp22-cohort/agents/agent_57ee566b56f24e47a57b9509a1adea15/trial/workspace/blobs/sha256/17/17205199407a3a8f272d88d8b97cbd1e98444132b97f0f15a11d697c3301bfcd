@@ -1,0 +1,25 @@
+"""Build reusable ranked contrast resources from actual computed products and explicit judgments."""
+import csv,json,os
+from pathlib import Path
+Q=Path(os.environ['BIO_WORKSPACE'])/'questions/q_6a3a0a07fa5d4da1';O=Q/'outputs'
+judgments=json.loads((Q/'inputs/experiment-judgments.json').read_text());robust=json.loads((O/'robustness-and-core5.json').read_text());rows=[];experiments=[];library_sets={}
+for stage in ['screen','array','validation']:
+    obj=json.loads((O/f'{stage}-summary.json').read_text())
+    for r in obj['contrasts']:
+        ds=r.get('dataset',obj.get('dataset'));name=r['contrast'];j=judgments[ds];e=r.get('primary_selectivity',r.get('selectivity'))
+        rr={'family_rank':4 if ds=='GSE108231' and name.startswith('raptorKO_vs') else j['family_rank'],'dataset':ds,'contrast':name,'analysis_role':r.get('role','exploratory'),'scale':'native normalized-intensity difference; log base unverified' if stage=='array' else 'log2(CPM+0.1) contrast','n_control':r['n_control'],'n_treated':r['n_treated'],'pmp22_effect':r['Pmp22']['effect'],'myelin7_effect':r['myelin7']['effect'],'relative_effect':e['effect'] if e else None,'relative_ci_low':e['ci_low'] if e else None,'relative_ci_high':e['ci_high'] if e else None,'identity4_effect':r['identity4']['effect'],'identity_coverage':r['identity4']['coverage'],'proliferation_effect':r['proliferation6']['effect'],'proliferation_coverage':r['proliferation6']['coverage'],'stress_effect':r['stress6']['effect'],'stress_coverage':r['stress6']['coverage'],'above_background_eligibility':'unverified for arrays' if stage=='array' else str(r['primary_eligible']),'control_samples':';'.join(r['control']),'treated_samples':';'.join(r['treated']),**j}
+        rr['family_rank']=4 if ds=='GSE108231' and name.startswith('raptorKO_vs') else j['family_rank']
+        rg=next(z for z in robust if z['dataset']==ds and z['contrast']==name);rr['posthoc_core5_effect']=rg['posthoc_core5_effect'];rr['robustness_json']=json.dumps({k:v for k,v in rg.items() if k.endswith('_range')});rows.append(rr)
+        library_sets.setdefault(ds,set()).update(r['control']+r['treated'])
+    if stage=='validation':
+        r=obj['genotype_by_injury'];e=r['selectivity'];j=judgments['GSE108231']
+        rr={k:None for k in rows[0]};rr.update(family_rank=4,dataset='GSE108231',contrast='genotype_by_injury',analysis_role='exploratory difference of paired injury effects',scale='log2(CPM+0.1) contrast',n_control=3,n_treated=3,pmp22_effect=r['Pmp22']['effect'],myelin7_effect=r['myelin7']['effect'],relative_effect=e['effect'],relative_ci_low=e['ci_low'],relative_ci_high=e['ci_high'],**{k:v for k,v in j.items() if k!='family_rank'});rows.append(rr)
+for ds,j in judgments.items():
+    experiments.append({'dataset':ds,'unique_assay_samples':len(library_sets[ds]),'executed_contrasts':sum(r['dataset']==ds for r in rows),**j})
+rows.sort(key=lambda r:(r['family_rank'],r['dataset'],r['contrast']))
+keys=list(dict.fromkeys(k for r in rows for k in r))
+with (O/'ranked-candidates.tsv').open('w') as f:w=csv.DictWriter(f,fieldnames=keys,delimiter='\t');w.writeheader();w.writerows(rows)
+with (O/'experiment-contrasts.tsv').open('w') as f:w=csv.DictWriter(f,fieldnames=list(experiments[0]),delimiter='\t');w.writeheader();w.writerows(experiments)
+summary={'datasets':len(library_sets),'unique_assay_samples_total':sum(len(x) for x in library_sets.values()),'unique_assay_samples_by_dataset':{k:len(v) for k,v in library_sets.items()},'contrast_rows':len(rows),'warning':'assay samples include RNA-seq libraries and microarrays, not independent donors; shared controls, paired sides and source reanalyses do not count as independent replication; no cross-scale effect pooling','primary_independent_validation':json.loads((O/'validation-summary.json').read_text())['primary_decision']}
+(O/'contrast-resource-summary.json').write_text(json.dumps(summary,indent=2));print(summary)
+for r in rows: print(r['family_rank'],r['dataset'],r['contrast'],'Pmp22',r['pmp22_effect'],'myelin',r['myelin7_effect'],'relative',r['relative_effect'],'identity/cycle/stress',r['identity4_effect'],r['proliferation_effect'],r['stress_effect'])

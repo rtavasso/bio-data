@@ -1,0 +1,28 @@
+{
+  "candidate_id": "isr-pmp22-genetic-dependence",
+  "claim": "Chronic ER-stress repression of Pmp22 RNA depends on PERK/eIF2alpha signaling in MEFs",
+  "context": "Discovery GSE90070 MEF thapsigargin 16h with last4h PERKi; validation GSE49598 MEF tunicamycin12h genetic interventions. Separate secondary GSE118660 Tg ribosome footprints. No Schwann transfer.",
+  "baseline_model": "Stress represses Pmp22 RNA irrespective of PERK; PERKi restoration could be off-target. Compare genotype-specific stress effects rather than baseline expression.",
+  "discovery_sources": [
+    "GSE90070_dataCount.csv.gz",
+    "PMC5730339"
+  ],
+  "validation_sources": [
+    "GSE49598",
+    "GPL10787",
+    "GSE118660"
+  ],
+  "prior_exposure": "GSE90070 full counts and results inspected retrospectively; source already reports PMP22 congruent repression. GSE49598 metadata only, four WT and two mutant replicates/condition, no sample tables read. GSE118660 series metadata only. PMC6416471 passages expose general PERK-dependent ER-target repression and secondary use of GSE49598, but no target-specific outcome read. Model prior knowledge possible; not fully blind. These accessions not used in inherited question.",
+  "prediction": "Primary: WT Pmp22 log2(Tun12h/untreated)<=-0.5; PERK knockout and eIF2alpha-S51A each alleviate suppression by >=0.5log2 versus WT. Secondary directional ribosome footprint suppression in WT at8h vs0h and alleviation in PERK-KO; absence of matched RNA means not translation-efficiency validation. ATF4KO and Fv2E-PERK contrasts exploratory only.",
+  "analysis_plan": "Verify deposited signal units/normalization and platform gene-probe mapping before arithmetic. Use all unambiguous Pmp22 probes with finite positive eligible signals in all required samples, report each and median probe log2 effect. Exclude source-flagged unreliable values, no zero filling. Four WT, two PERK-KO and two S51A labelled replicates per condition; no donor independence assumption. Within-genotype log2 mean differences, genotype-by-stress difference. No biological-population p-values from ambiguous replicate provenance. Include all source rows for broad context after primary endpoint. If file is already log2, do not log again. For GSE118660 use source expected counts/TPM with sourced gene identifiers, nonzero counts and abundance checks; n1 means descriptive only.",
+  "success_rule": "All three primary directional/magnitude criteria pass and all eligible unambiguous Pmp22 probes agree in direction; primary is support in declared MEF context only. Secondary separately reported.",
+  "failure_rule": "Eligible required probes/metadata absent makes test untestable; WT suppression absent or either PERK/eIF2alpha interaction <=0 contradicts proposed transferable direction. Partial positive interactions below0.5 or discordant probes are inconclusive/threshold failure. Do not revise thresholds after inspection.",
+  "confounder_checks": [
+    "Probe specificity and source quantification flags",
+    "Changed stressor and duration; genetic adaptation versus acute pharmacology",
+    "Global normalization and cell viability",
+    "Separate control baselines for mutant lines",
+    "No independent donor assumption and no Schwann transfer"
+  ],
+  "selection_and_multiplicity": "Single preselected Pmp22 hypothesis from source-known response; two required genetic interactions form conjunctive primary rule. Secondary footprint check and ATF4/sufficiency controls do not rescue failed primary. Broad feature analyses exploratory, no additional validated claims."
+}

@@ -1,0 +1,3 @@
+# Can axonal NRG1/ERBB and mechanical YAP/TAZ-TEAD inputs alter PMP22 cis output beyond EGR2 and differentiation?
+
+Can axonal NRG1/ERBB and mechanical YAP/TAZ-TEAD inputs alter PMP22 cis output beyond EGR2 and differentiation?

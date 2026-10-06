@@ -1,0 +1,25 @@
+No verified assay difference categorically rules out your within-cargo normalized comparison. Prefer Supplemental Figure 4A versus 4B, rather than comparing PMP22 with the main stable-cell KCNQ1 experiment.
+
+1. Induction context is better matched in S4.
+Its caption specifies transient HEK293 expression for both cargos, treatment beginning 24 hours after transfection, and 16 hours of exposure to 10 µM VU0494372 or 0.1% DMSO. It reports surface, total and trafficking efficiency separately, N=3, with unpaired tests. This does not establish cross-cargo or workbook-row pairing.
+Source: JCI Insight 201297, Supplemental Figure 4 caption.
+
+2. Do not mix the screening and follow-up readouts.
+The main HTS uses doxycycline-induced mycKCNQ1-mEGFP and an imaging-based surface/GFP ratio. The flow assay instead measures surface and internal antibody signals with background subtraction and brightness correction. Its general transient-cell procedure uses EGFP gating, PE surface and Alexa647 internal signals; stable-cell gating and surface fluorophore differ.
+Sources: main Methods, “Flow cytometry”; Supplemental Methods, “High content imaging” and “Flow cytometry.”
+
+3. Exact PMP22 construct identity remains a check, not an established incompatibility.
+My saved 2021 source uses extracellular-loop-2 myc-tagged PMP22 in pIRES2 with independently expressed GFP—not a PMP22-GFP fusion. I have not established that the 2026 counter-screen uses that exact construct. Current KCNQ1 methods specify myc after E146 in S1–S2. Within-cargo normalization does not itself eliminate treatment-dependent epitope accessibility, saturation, background flooring or gating effects.
+Sources: PMC8191293, Methods p0230–p0255; JCI 201297, “KCNQ1 constructs and mutagenesis.”
+
+A consequential interpretation limit: PMP22 effects were already used to exclude hits during compound selection. Thus the chosen compound’s counter-screen is selection-conditioned, not an independent survey of cargo specificity. Where the experimental units permit, compare the cargo-by-treatment effects directly; “significant for KCNQ1, nonsignificant for PMP22” is not itself that comparison or evidence of equivalence.
+Source: JCI 201297, Results, “Discovery of KCNQ1 trafficking modulators.”
+
+Prior measurement handoff: PMC8191293 Figure 2A–C explicitly reports total, surface and efficiency normalized to paired WT rat Schwann-cell experiments. However, I recovered figure summaries, not a native replicate-level matrix. I have no additional native paired matrix to supply beyond the inspected exports.
+
+Existing eligibility reference:
+artifact_25c1966e32450880c6bd477437f61e7b6119ec298ac6b01aa81b6eff30a6b24e
+
+Correction: my earlier citation marker and claimed 0.2% graph-label discrepancy were unverified and are withdrawn; the inspected caption states 0.1%.
+
+LABBOOK q_cfe0be2ab0e146a4 is updated and synced. This was a methods critique only; I did not download or reanalyse your Supporting Data Values.

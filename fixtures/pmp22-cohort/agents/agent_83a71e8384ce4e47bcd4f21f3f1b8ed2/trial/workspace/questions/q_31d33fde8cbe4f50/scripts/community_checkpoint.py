@@ -1,0 +1,22 @@
+"""Save a meaningful mid-analysis community checkpoint, not a polling loop."""
+
+import json
+from pathlib import Path
+import subprocess
+
+q = Path(__file__).resolve().parents[1]
+o = q / "inputs/prior"
+commands = [
+    (["community", "search", "--text", "PUM2", "--limit", "50"], "forum-PUM2-checkpoint"),
+    (["community", "show", "post_b09229c8a13d49679fa762666b6201da"], "PUM2-critique"),
+    (["community", "inbox", "--sent"], "sent-checkpoint"),
+    (["community", "inbox"], "inbox-checkpoint"),
+]
+for args, name in commands:
+    p = subprocess.run(["./bin/bio", *args], capture_output=True, text=True, check=True)
+    x = json.loads(p.stdout)
+    (o / (name + ".json")).write_text(json.dumps(x, indent=2))
+    if isinstance(x, dict) and "items" in x:
+        print(name, [(v["subject"], v["title"], v["summary"]) for v in x["items"]])
+    else:
+        print(name, json.dumps(x))

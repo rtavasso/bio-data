@@ -1,0 +1,382 @@
+{
+  "question": "q_cfe0be2ab0e146a4",
+  "type": "Native scalar eligibility audit of an already exposed selected export; not a new regulator screen",
+  "source_blob": "8f70d8ae1836a57ee1ab4251493a3463223bd2a157036451eaf99c3eb0c5177f",
+  "counts_by_sheet": {
+    "WT": 56,
+    "N41Q": 485,
+    "L16P": 129
+  },
+  "selected_rows_total": 670,
+  "unique_accessions_union": 515,
+  "accessions_common_to_all_sheets": 40,
+  "formula_cells": [],
+  "nontext_gene_cells": [
+    {
+      "sheet": "N41Q",
+      "cell": "C13",
+      "accession": "A6NL28",
+      "literal_value": 5,
+      "cell_type": "n",
+      "treatment": "preserved, not repaired or used as gene symbol; accession retained"
+    },
+    {
+      "sheet": "L16P",
+      "cell": "C108",
+      "accession": "A6NL28",
+      "literal_value": 5,
+      "cell_type": "n",
+      "treatment": "preserved, not repaired or used as gene symbol; accession retained"
+    }
+  ],
+  "source_filter": "Q<0.1 and mean log2 IP/mock>0.2; six biological IP replicates per construct across four TMT6 batches; heatmap method additionally requires identification in >=3 replicates",
+  "universe": "Filtered WT/N41Q/L16P lists, not the full measured proteome, six replicate intensities, or perturbation-response universe",
+  "candidate_presence": [
+    {
+      "gene": "CANX",
+      "sheet": "WT",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "WT",
+          "source_row": 2,
+          "accession": "P27824",
+          "description": "Calnexin OS",
+          "gene_source_value": "CANX",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.06674477478525874,
+          "mean_log2_ip_over_mock": 1.1743934447815991,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "CANX",
+      "sheet": "N41Q",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "N41Q",
+          "source_row": 356,
+          "accession": "P27824",
+          "description": "Calnexin OS",
+          "gene_source_value": "CANX",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.062599726339641,
+          "mean_log2_ip_over_mock": 0.36027303793287196,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "CANX",
+      "sheet": "L16P",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "L16P",
+          "source_row": 3,
+          "accession": "P27824",
+          "description": "Calnexin OS=Homo sapiens GN=CANX PE=1 SV=2",
+          "gene_source_value": "CANX",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.021765099577424556,
+          "mean_log2_ip_over_mock": 2.0101455393232626,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "LMAN1",
+      "sheet": "WT",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "WT",
+          "source_row": 10,
+          "accession": "P49257",
+          "description": "Protein ERGIC-53 OS",
+          "gene_source_value": "LMAN1",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.0213704160989262,
+          "mean_log2_ip_over_mock": 0.7062937885946267,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "LMAN1",
+      "sheet": "N41Q",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "N41Q",
+          "source_row": 162,
+          "accession": "P49257",
+          "description": "Protein ERGIC-53 OS",
+          "gene_source_value": "LMAN1",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.008939084818193457,
+          "mean_log2_ip_over_mock": 0.6694093473049149,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "LMAN1",
+      "sheet": "L16P",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "L16P",
+          "source_row": 4,
+          "accession": "P49257",
+          "description": "Protein ERGIC-53 OS=Homo sapiens GN=LMAN1 PE=1 SV=2",
+          "gene_source_value": "LMAN1",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.020567040202832173,
+          "mean_log2_ip_over_mock": 1.6320668049685703,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "RER1",
+      "sheet": "WT",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "RER1",
+      "sheet": "N41Q",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "RER1",
+      "sheet": "L16P",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "UGGT1",
+      "sheet": "WT",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "UGGT1",
+      "sheet": "N41Q",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "UGGT1",
+      "sheet": "L16P",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "TMED9",
+      "sheet": "WT",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "WT",
+          "source_row": 54,
+          "accession": "Q9BVK6",
+          "description": "Transmembrane emp24 domain-containing protein 9 OS",
+          "gene_source_value": "TMED9",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.05860353719333966,
+          "mean_log2_ip_over_mock": 0.2686008882977669,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "TMED9",
+      "sheet": "N41Q",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "N41Q",
+          "source_row": 444,
+          "accession": "Q9BVK6",
+          "description": "Transmembrane emp24 domain-containing protein 9 OS",
+          "gene_source_value": "TMED9",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.06641169359202968,
+          "mean_log2_ip_over_mock": 0.2551944878958592,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "TMED9",
+      "sheet": "L16P",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "L16P",
+          "source_row": 18,
+          "accession": "Q9BVK6",
+          "description": "Transmembrane emp24 domain-containing protein 9 OS=Homo sapiens GN=TMED9 PE=1 SV=2",
+          "gene_source_value": "TMED9",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.04856008764513497,
+          "mean_log2_ip_over_mock": 1.1925887244718776,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "ERGIC3",
+      "sheet": "WT",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "WT",
+          "source_row": 57,
+          "accession": "Q9Y282",
+          "description": "Endoplasmic reticulum-Golgi intermediate compartment protein 3 OS",
+          "gene_source_value": "ERGIC3",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.09096742353617711,
+          "mean_log2_ip_over_mock": 0.2378971726316769,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "ERGIC3",
+      "sheet": "N41Q",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "N41Q",
+          "source_row": 369,
+          "accession": "Q9Y282",
+          "description": "Endoplasmic reticulum-Golgi intermediate compartment protein 3 OS",
+          "gene_source_value": "ERGIC3",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.06729206219384488,
+          "mean_log2_ip_over_mock": 0.3415175040739051,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "ERGIC3",
+      "sheet": "L16P",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "L16P",
+          "source_row": 25,
+          "accession": "Q9Y282",
+          "description": "Endoplasmic reticulum-Golgi intermediate compartment protein 3 OS=Homo sapiens GN=ERGIC3 PE=1 SV=1",
+          "gene_source_value": "ERGIC3",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.029454273908864407,
+          "mean_log2_ip_over_mock": 1.0873294825734712,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "SYVN1",
+      "sheet": "WT",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "SYVN1",
+      "sheet": "N41Q",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "SYVN1",
+      "sheet": "L16P",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "AMFR",
+      "sheet": "WT",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "AMFR",
+      "sheet": "N41Q",
+      "status": "present_in_selected_export",
+      "native_rows": [
+        {
+          "sheet": "N41Q",
+          "source_row": 248,
+          "accession": "Q9UKV5",
+          "description": "E3 ubiquitin-protein ligase AMFR OS",
+          "gene_source_value": "AMFR",
+          "gene_cell_type": "s",
+          "gene_eligible_as_symbol": true,
+          "q_value": 0.06427300027742774,
+          "mean_log2_ip_over_mock": 0.5147112111932683,
+          "measurement_status": "selected_enriched_interactor; not total protein or surface abundance"
+        }
+      ],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    },
+    {
+      "gene": "AMFR",
+      "sheet": "L16P",
+      "status": "not_in_selected_export; not measured absence",
+      "native_rows": [],
+      "functional_interpretation": "Requires perturbation/localization assay; IP enrichment is neither affinity nor function"
+    }
+  ],
+  "not_identified": [
+    "Unfiltered measured feature universe",
+    "Replicate paired total/surface data",
+    "RER1/UGGT1-dependent flux",
+    "Myelin/conduction function",
+    "Absolute synthesis or degradation rates",
+    "Variant-difference uncertainty"
+  ],
+  "interpretation": "The 670 rows are sheet entries, not 670 distinct regulators. Gene token 5 stays numeric. Missing selected rows are neither measured zeros nor evidence of biological absence. No enrichment recalculation or raw processing performed."
+}

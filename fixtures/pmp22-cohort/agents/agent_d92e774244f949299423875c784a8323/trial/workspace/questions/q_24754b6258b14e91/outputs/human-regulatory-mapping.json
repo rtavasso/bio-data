@@ -1,0 +1,289 @@
+{
+  "chain_source": "inputs/public/hg18ToHg38.over.chain.gz",
+  "sha256": "5dce497acbdaee42ba03e00726bec895e69c5f22a15b7f2522e87d04d852f9aa",
+  "operation": "direct exact single-chain-block interval mapping; not cross-species lift; no mapping of rat response",
+  "rows": [
+    {
+      "name": "P2_reporter",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15106498,
+      "source_end_literal": 15106933,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC3100536; peer-confirmed; source not in reused ZIP",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15262456,
+          "mapped_end0": 15262891
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15262455,
+          "mapped_end0": 15262891
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15262455,
+      "outer_end0": 15262891,
+      "core_start0": 15262456,
+      "core_end0": 15262891,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    },
+    {
+      "name": "intronic_short",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15091959,
+      "source_end_literal": 15092201,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC5181599 Methods Luciferase assays",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15247917,
+          "mapped_end0": 15248159
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15247916,
+          "mapped_end0": 15248159
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15247916,
+      "outer_end0": 15248159,
+      "core_start0": 15247917,
+      "core_end0": 15248159,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    },
+    {
+      "name": "intronic_large",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15090965,
+      "source_end_literal": 15092611,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC3100536; peer-confirmed; source not in reused ZIP",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15246923,
+          "mapped_end0": 15248569
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15246922,
+          "mapped_end0": 15248569
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15246922,
+      "outer_end0": 15248569,
+      "core_start0": 15246923,
+      "core_end0": 15248569,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    },
+    {
+      "name": "A_distal",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15253855,
+      "source_end_literal": 15254150,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC3298281 Methods Transfection assays",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15409813,
+          "mapped_end0": 15410108
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15409812,
+          "mapped_end0": 15410108
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15409812,
+      "outer_end0": 15410108,
+      "core_start0": 15409813,
+      "core_end0": 15410108,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    },
+    {
+      "name": "B_distal",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15250013,
+      "source_end_literal": 15250409,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC3298281 Methods Transfection assays",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15405971,
+          "mapped_end0": 15406367
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15405970,
+          "mapped_end0": 15406367
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15405970,
+      "outer_end0": 15406367,
+      "core_start0": 15405971,
+      "core_end0": 15406367,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    },
+    {
+      "name": "C_distal",
+      "source_assembly": "hg18",
+      "source_chromosome": "chr17",
+      "source_start_literal": 15221688,
+      "source_end_literal": 15222096,
+      "source_convention": "unspecified; analyze both 0-half-open and 1-closed",
+      "source": "PMC3298281 Methods Transfection assays",
+      "hypothesis_zero_half_open": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15377646,
+          "mapped_end0": 15378054
+        }
+      ],
+      "hypothesis_one_closed": [
+        {
+          "t0": 8665939,
+          "t1": 15284249,
+          "q0": 8821897,
+          "q1": 15440207,
+          "qchr": "chr17",
+          "qstrand": "+",
+          "qsize": 83257441,
+          "chain": "18",
+          "line": 23800,
+          "mapped_start0": 15377645,
+          "mapped_end0": 15378054
+        }
+      ],
+      "assembly": "GRCh38",
+      "chromosome": "chr17",
+      "outer_start0": 15377645,
+      "outer_end0": 15378054,
+      "core_start0": 15377646,
+      "core_end0": 15378054,
+      "mapping_orientation": "+",
+      "source_strand": "not explicitly specified"
+    }
+  ]
+}

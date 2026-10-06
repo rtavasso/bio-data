@@ -1,0 +1,148 @@
+{
+  "revision": 1,
+  "scope": {
+    "target": "PMP22",
+    "endpoint": "Total RNA and antioxidant RNA contrast, not promoter output/protein",
+    "context": "GSE241269 P7 mouse whole nerve versus Figlia2017 P5 mTOR conditional knockouts; references assessed separately",
+    "assumptions": "No causal or cross-species transfer assumed"
+  },
+  "nodes": [
+    {
+      "id": "perturbation",
+      "label": "Nae1 or mTOR perturbation",
+      "kind": "hypothesized_variable"
+    },
+    {
+      "id": "state",
+      "label": "Schwann developmental/repair state",
+      "kind": "hypothesized_variable"
+    },
+    {
+      "id": "mixture",
+      "label": "Relative cell and RNA composition",
+      "kind": "hypothesized_variable"
+    },
+    {
+      "id": "antioxidant",
+      "label": "Antioxidant RNA abundance",
+      "kind": "hypothesized_variable"
+    },
+    {
+      "id": "pmp22",
+      "label": "Pmp22 total RNA",
+      "kind": "hypothesized_variable"
+    },
+    {
+      "id": "nrf2",
+      "label": "NRF2 activity (unmeasured)",
+      "kind": "hypothesized_variable"
+    }
+  ],
+  "edges": [
+    {
+      "id": "perturbation-state",
+      "source": "perturbation",
+      "target": "state",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "perturbation-mixture",
+      "source": "perturbation",
+      "target": "mixture",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "state-antioxidant",
+      "source": "state",
+      "target": "antioxidant",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "mixture-antioxidant",
+      "source": "mixture",
+      "target": "antioxidant",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "state-pmp22",
+      "source": "state",
+      "target": "pmp22",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "mixture-pmp22",
+      "source": "mixture",
+      "target": "pmp22",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "perturbation-nrf2",
+      "source": "perturbation",
+      "target": "nrf2",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "nrf2-antioxidant",
+      "source": "nrf2",
+      "target": "antioxidant",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    },
+    {
+      "id": "nrf2-pmp22",
+      "source": "nrf2",
+      "target": "pmp22",
+      "mechanism": "Competing explanation to audit",
+      "context": "Initial hypothesis, not established by recalled knowledge",
+      "status": "hypothesis",
+      "evidence": []
+    }
+  ],
+  "frontier": [
+    {
+      "node": "state",
+      "question": "Can this explain the source contrast?",
+      "priority": "High",
+      "reason": "Unresolved in inherited investigation",
+      "status": "open"
+    },
+    {
+      "node": "mixture",
+      "question": "Can this explain the source contrast?",
+      "priority": "High",
+      "reason": "Unresolved in inherited investigation",
+      "status": "open"
+    },
+    {
+      "node": "nrf2",
+      "question": "Can this explain the source contrast?",
+      "priority": "High",
+      "reason": "Unresolved in inherited investigation",
+      "status": "open"
+    }
+  ],
+  "changes": []
+}

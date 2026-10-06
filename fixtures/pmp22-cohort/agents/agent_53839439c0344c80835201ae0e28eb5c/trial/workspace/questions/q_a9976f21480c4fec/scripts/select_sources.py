@@ -1,0 +1,35 @@
+"""Locate published immutable sources by manifest; copy only selected readable evidence."""
+
+import json
+import os
+from pathlib import Path
+
+Q = Path(__file__).resolve().parents[1]
+LIB = Path(os.environ['BIO_COMMUNITY']) / 'library' / 'blobs' / 'sha256'
+
+def load(h):
+    return json.loads((LIB / h[:2] / h).read_text())
+
+def walk(x):
+    if isinstance(x, dict):
+        yield x
+        for v in x.values():
+            yield from walk(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from walk(v)
+
+hashes = ['eebf29a5ebae3ce0fba441f460140d106ae3734bb491d4c35768b64d881f170f', '23f94e75dab1ce2b57cda1ca09d1552867e8608357dd04e88572f0bcdbe907bf', '64c4b850716399cd6d4ace83150146a127950c2c41c8480bd5237501d8a13656']
+terms = ['2713384', '6920087', '2728407', '3866477', 'context-audit', '11014456', '5800313', '11592338']
+selected = []
+for manifest in hashes:
+    data = load(manifest)
+    print('MANIFEST', manifest, list(data))
+    (Q / 'inputs' / 'prior' / f'{manifest}.json').write_text(json.dumps(data, indent=2))
+    for d in walk(data):
+        fields = {k: v for k, v in d.items() if isinstance(v, (str, int))}
+        if any(t in str(fields) for t in terms):
+            print(fields)
+            selected.append({'manifest': manifest, **fields})
+(Q / 'inputs' / 'prior' / 'source-candidates.json').write_text(json.dumps(selected, indent=2))
+print('Candidates', len(selected))

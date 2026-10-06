@@ -1,0 +1,181 @@
+{
+  "question": "q_f18c7d9ffcb841e8",
+  "source_question": "q_277f20df4b6b47cc",
+  "request": "post_a37ef5629cc842b39412d0876de9172b",
+  "purpose": "Selective immutable evidence access; no scientific rerun or summary-product recalculation",
+  "files": [
+    {
+      "member": "sources/PMC6607759.html",
+      "sha256": "b55936c627d1258eb98aeee04f0f6fb86affc5969b3fd289d25a0ae37fdbd32e",
+      "bytes": 297301,
+      "origin": "questions/q_277f20df4b6b47cc/inputs/continuation/PMC6607759.html",
+      "representation": "complete inherited primary HTML, not a challenge page"
+    },
+    {
+      "member": "original-results/lipid-summary-analysis.json",
+      "sha256": "f6c6bf35deab9780016760580e133a704b55f034050b842fffd43a5f384f61d9",
+      "bytes": 7059,
+      "origin": "artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703"
+    },
+    {
+      "member": "provenance/artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703.json",
+      "sha256": "2a2b3f7f1b88d62314ef22cb1320ce096b93151cdeb9741def86f108791a6426",
+      "bytes": 3644,
+      "origin": "current catalog readback of original unchanged derivation"
+    },
+    {
+      "member": "original-code/analyze_lipid_summary.py",
+      "sha256": "2f4d6ce8de1282e06ed1f4bc3e050e8cb21d6c41227fd6ff00ed33ad0f32fcfd",
+      "bytes": 2801,
+      "origin": "artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703",
+      "execution": "not executed"
+    },
+    {
+      "member": "original-results/lipid-protein-summary-derived.tsv",
+      "sha256": "9647fcf667ce9201da18778680c6418f88fb2aefd678312484496068080d7aae",
+      "bytes": 330,
+      "origin": "artifact_961f827f456b43b1bba5244a03377e38263a866c77600d42e4c2bc1773c1880e"
+    },
+    {
+      "member": "provenance/artifact_961f827f456b43b1bba5244a03377e38263a866c77600d42e4c2bc1773c1880e.json",
+      "sha256": "51c4dc7b7a04c1bd0a8381d88afa1f5dc5dae6c2cc01a84303168bf339771213",
+      "bytes": 3669,
+      "origin": "current catalog readback of original unchanged derivation"
+    },
+    {
+      "member": "inherited/outputs/upstream/FDFT1-data-inventory.json",
+      "sha256": "0d6088b7e37f45ca0fc73f7068387c196e48abe80f9707e9319da1d909af6487",
+      "bytes": 314,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/upstream/FDFT1-data-inventory.json",
+      "scope": "exact historical bytes; not a new execution of the inherited producer"
+    },
+    {
+      "member": "inherited/outputs/upstream/FDFT1-archive-inventory.json",
+      "sha256": "c11c764564b7b4d15d43a80028416515ca90825d0e55705681446840eb1de1d5",
+      "bytes": 2295,
+      "origin": "questions/q_277f20df4b6b47cc/outputs/upstream/FDFT1-archive-inventory.json",
+      "scope": "exact historical bytes; not a new execution of the inherited producer"
+    },
+    {
+      "member": "inherited/scripts/upstream_inventory.py",
+      "sha256": "eb3fe921d817d13f6110ccd638ec0f84f6544e1d3a63a083aed44678dc01e12e",
+      "bytes": 1684,
+      "origin": "questions/q_277f20df4b6b47cc/scripts/upstream_inventory.py",
+      "scope": "exact historical bytes; not a new execution of the inherited producer"
+    },
+    {
+      "member": "provenance/original-registration-excerpts.json",
+      "sha256": "0741ea63d708608f5dad6556d6b65f5b5be27931344ff64003c5b04069aecce3",
+      "bytes": 1480,
+      "origin": "selected original registration receipts"
+    },
+    {
+      "member": "verification/archive-inspection.json",
+      "sha256": "e17cde1aee77f53fd30964bb0ed33f349e992040110b5c1bcec815ce216f6826",
+      "bytes": 1195,
+      "origin": "current local byte/representation inspection"
+    },
+    {
+      "member": "verification/inspection-execution-r001.json",
+      "sha256": "ff1cc4ed7059e90e8247cbc029e1b2e47fabe3709dce37235857e7a30a2e793a",
+      "bytes": 1418,
+      "origin": "current local byte/representation inspection"
+    },
+    {
+      "member": "verification/pmc6623163-candidate-inspection.json",
+      "sha256": "1134c68eb428f6efadcd5d8b86d23f9104f295199ea57251df44254cc89ca3d3",
+      "bytes": 8148,
+      "origin": "current local byte/representation inspection"
+    },
+    {
+      "member": "verification/candidate-article-identities.txt",
+      "sha256": "293da9c8845e09679d410bddded6bfce1bc7d3c8633e51ecb8c4f12ef652e044",
+      "bytes": 500,
+      "origin": "current local byte/representation inspection"
+    },
+    {
+      "member": "verification/inspect_archives.py",
+      "sha256": "977a99fde17a586564a4abeb363f812d8eb1d98325b33db3221694f2ece48245",
+      "bytes": 5381,
+      "origin": "current archive inspection code"
+    },
+    {
+      "member": "provenance/source-receipts.redacted.json",
+      "sha256": "2a74d2b53c07944c119de5a512a92f23d379f4d306a1f55d8583ac044614d154",
+      "bytes": 4394,
+      "origin": "selected inherited receipts"
+    }
+  ],
+  "original_artifacts": [
+    {
+      "artifact": "artifact_fe204b5545a6f3da42b0147511661caa5b1a4398f1dc1c7cb07ba45fbf47e703",
+      "output": {
+        "blob": "f6c6bf35deab9780016760580e133a704b55f034050b842fffd43a5f384f61d9",
+        "bytes": 7059,
+        "name": "lipid-summary-analysis.json"
+      },
+      "original_command": []
+    },
+    {
+      "artifact": "artifact_961f827f456b43b1bba5244a03377e38263a866c77600d42e4c2bc1773c1880e",
+      "output": {
+        "blob": "9647fcf667ce9201da18778680c6418f88fb2aefd678312484496068080d7aae",
+        "bytes": 330,
+        "name": "lipid-protein-summary-derived.tsv"
+      },
+      "original_command": []
+    }
+  ],
+  "availability": {
+    "PMC6607759": "Exact requested saved full text included.",
+    "PMC6623163": {
+      "full_text_located": false,
+      "saved_responses": [
+        {
+          "path": "questions/q_277f20df4b6b47cc/inputs/upstream/PMC6623163.xml",
+          "sha256": "37669e33963e54daaade7891715c5b4d2b5cd2480b03289cb9eb8ca3e4054c3a",
+          "bytes": 150,
+          "disposition": "HTTP500 JSON error, not article XML",
+          "exported_as_primary": false
+        },
+        {
+          "path": "questions/q_277f20df4b6b47cc/inputs/upstream/PMC6623163.html",
+          "sha256": "f409ca91a367a1795e1515be65c80cf3a0f6e9ca3c6c2c014d2583a025aac0f9",
+          "bytes": 21274,
+          "disposition": "HTTP200 reCAPTCHA challenge, not primary article",
+          "exported_as_primary": false
+        },
+        {
+          "path": "questions/q_277f20df4b6b47cc/inputs/upstream/PMC6623163-biocc.json",
+          "sha256": "3acc5f4c51ec704cd708d3379196db9f66442a96c9bf275773710e0de0196b52",
+          "bytes": 6148,
+          "disposition": "HTTP200 non-JSON BioC no-result response",
+          "exported_as_primary": false
+        }
+      ],
+      "search_scope": "Named local files, local data/artifact catalogs and 24 PMC-ID blob hits inspected; article-like hits are PMC5802790 and a TEAD paper. Peer primary abstract is not substituted for full text.",
+      "new_source_requests": 0
+    },
+    "FDFT1": {
+      "outer_archive_sha256": "934fe99bbdccca00a285fc092bc03f26f1e72282fe35eadfc7ebb51b777b5738",
+      "outer_archive_included": false,
+      "nested_archive_sha256": "83b22d2be654b39e6a5d619975dcc86aefc0821d0759adfe6fe4a56fbc24f212",
+      "nested_archive_included": false,
+      "native_docx": {
+        "name": "ADVS-13-e20323-s002.docx",
+        "sha256": "de7858aa28dcacdef574de4606ad45491a1ae7b90bc4c77dd75b96da9253aa03",
+        "bytes": 13734804,
+        "delivery": "separate optional artifact; not in this core ZIP"
+      },
+      "inventory": "Exact original nested/outer inventories preserved and checked against actual archive directory entries.",
+      "matrix_limit": "Nested ZIP has blot-image PDF, microscopy-image PDF and STR PDF; DOCX has figures/reagents/primers. No sample-level genotype RNA matrix supplied, and no inference of PMP22 absence or zero."
+    }
+  },
+  "scientific_limits": "Original descriptive group-summary product remains unpaired, without covariance/uncertainty or a formal null test; not absolute surface, functional myelin or transcriptional feedback.",
+  "provenance_limits": "Original lipid command arrays are empty. Native DOCX archive identity was checked in this session, separately from inherited acquisition. Large archives are omitted; hashes/inventories/receipts retained. No fabricated retrospective producer receipt.",
+  "current_peer_context": {
+    "post": "post_78aab10c0b084ef89511249f43fe0180",
+    "artifact": "artifact_eefcd493a7872cd9f1c9da722ef0e88fa5d5464ad2f05c9a5cbe21b5e2350478",
+    "use": "Completed endpoint/age/context audit inspected; no reanalysis or independent replication."
+  }
+}

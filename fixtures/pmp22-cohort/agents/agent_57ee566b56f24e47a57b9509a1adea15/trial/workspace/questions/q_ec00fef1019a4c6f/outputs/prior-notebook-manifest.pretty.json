@@ -1,0 +1,113 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "artifact_0ce2aca3b3d0f1f6230aa21d5cd4d5997c63cfeb0dc870e047a34cf245817e7f",
+      "relationship": "reused"
+    },
+    {
+      "artifact_id": "artifact_1672b945cd8d4febc10a87f3df372d28cb0bbae5727e0811c86756b8f18ef431",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_28a277b67654ceff5c977172b94f655a45ce72807109749fa80c1eff51e1e5f6",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_2e238de5cfb83f577560fc4a97640ecb723c627ccd593b9d31166d8683427cfd",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_3389edf2a0c2adda1ce887d8cbde0ae5f4b92f8ff795f9df8706216684a02657",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_38df20aae1fea7c91df45595395e4e420e947e21f7c1557264c8b74f54b124f5",
+      "relationship": "reused"
+    },
+    {
+      "artifact_id": "artifact_3e8a5962ea8daf5a1236132ff94992c86388a8390854318b23565a91a418a7f8",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_4387fd6cbf38dd0b0e68ac2c44c0b4b634f5bf1639993e4e195509c2bc440e57",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_57c94fbb77368291cb905eb370a0c840d9e6f450f07c624061a2dc905777d4f8",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_5c4769b623de2e8dcc556a0fcda9f102053de4f58d5ce39dc5977f0b266cd3c5",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_643ef9424a83bef52cbd66162f4c1002a88e9547ab9d946365217fc5d916a860",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_67f1a8f71cf2a4978144bdf321e65bd485c719476e2a0a4c281a61f319c1e3eb",
+      "relationship": "reused"
+    },
+    {
+      "artifact_id": "artifact_6fbeafac5c0f4a801f087f13454c78b57c0b4f189ff70cac1fad5c70da1fdbdf",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_80153e193888f8727ae9f2edf5f9b476abfce2115d70b76cd50bec3825cf053c",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_86fa02867f7d4e0e9b2210042a96103fa4787ce9436590120b72e00c9a234533",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_8dc2fce773d6d041027001284499dfbeef0f5b1cb70f7865def470ba311e7ca1",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_9fa8e63f8eedf991c571bfa19fddf9d965b5ad86af67bf1ac83251767096547f",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_9fbeb73951af28e17422c75b9d098904df35647fe38389102ca6e3e6441beec6",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_b4dfde41fd704e205fd6c84357f9e3cc3eb4293b1fb71ca475199852b3a18744",
+      "relationship": "produced"
+    },
+    {
+      "artifact_id": "artifact_cf14cda0f514a5bfad505daa46f56be382ca83f46a523d05f1fff58a3023527e",
+      "relationship": "produced"
+    }
+  ],
+  "files": {
+    "LABBOOK.md": "b3db6b0a6ad238d5216f1398c25e8a62d887fcccb2105adac7677c9e54bdd10a",
+    "QUESTION.md": "1d88a122bdb32b121ba6eefd74b5d4f626c5f947df1721e5e0a6ffda6682ba56",
+    "scripts/acquire_selected.py": "d326936c6d52ab3d878e5c677d8e96981b665eb172cea674c2d74150a7f3777b",
+    "scripts/analyze_composition.py": "0f88d1dc5e5929399d8997161c07818da4e9d9032eee3f30e8ba7e98d69c5c84",
+    "scripts/analyze_rna_burden.py": "ed7e999aa2b863eed0d045ca5acc37f85b3eb939afd064f0670be42784a41713",
+    "scripts/analyze_state.py": "e38104f01f84f54242f7fa4c1426f0bfc963c0c7d48be6d006e9cd0a2dd81aa0",
+    "scripts/consolidate_evidence.py": "0d3d8bab34e9194b4e53fcfb01bffc035d04c22897c83b4f0830f3eebbb6ac67",
+    "scripts/fetch_source.py": "7636f17edf737c400d399773e06cd73342a3d31eb4e3fcc7a0ad1b1aa7cd1d0b",
+    "scripts/finalize_handoff.py": "6b825b04e576ea160e22f9cef0ac6e0e19738f8d2fb05f3f5ca94276e0d1db98",
+    "scripts/inspect_cell_inputs.py": "a33e0a99a1554f2b40d96747137f1d22c0da863b01c591610ca48773f897263c",
+    "scripts/inspect_reference_inventory.py": "d3fe43cce4500397fc03c2435314119391808dedd0f6a36c4388cee29d4cd81a",
+    "scripts/inspect_snat_metadata.py": "38195dadb1e48c788bbf8e84a0a81079d20a3296c6a73c2a40bc656f289ecbc8",
+    "scripts/inspect_transport_receipts.py": "ca12535ed02b56141cba2a340385aedbc195787b8dccb50db64fc1d270695244",
+    "scripts/inspect_transport_schema.py": "fa5ff4bfc19f623af41fef184bb7f2d8b38d62ed95aca1705c91c57b9ee0ac91",
+    "scripts/inspect_workbooks.py": "a07d458784f51173e0ea3c390c6cf7010b2ae6d2f5f333fe3adefe61826c9bb2",
+    "scripts/intake_audit.py": "4b103229ec2cc9983add4d33eb6dc723ed8d3c76a559845bf7da77cde26ed237",
+    "scripts/package_analysis.py": "3d7e3a22fa8ee1a20b63fe085c4e77de77cce23a620e4dfaca93deca07affd4c",
+    "scripts/prepare_matrices.py": "e462049c014ce9f83295f1dda59afb4d2fda785fc65a096f530821d5050f01b1",
+    "scripts/register_results.py": "f7c5b72bd8f7ad544e8e6fe90efd7f0a81651a385125434fa366e137a18822bd",
+    "scripts/robustness_audit.py": "c50c3accd379060b85ea34e6d03e90e6bca3fd1e667ca4450714c2369c33ba92",
+    "scripts/start.py": "51cea55e83507f4143ce296e83f9a89abcd11d83723205c5be141a0a067fd6af",
+    "scripts/xls_values.py": "a29c67899c89477f628b9ade1e5f5b23c41371e03b0c3449e6d009ffc2832d31"
+  },
+  "question": "q_b6e71fffe204498a",
+  "question_path": "questions/q_b6e71fffe204498a",
+  "status": "completed",
+  "summary": "PMP22 composition/development follow-up: normal purified/state references do not reproduce the Nae1 antioxidant RNA rise; broad state overlap is partial, actual cell composition and NRF2 mediation remain unidentified. Executed reference/bulk/mixture/repair sensitivities, retained negative/untestable inherited outcomes, consolidated evidence index and verified bundle.",
+  "title": "Can cell composition or developmental state explain the prior PMP22 antioxidant RNA contrast?"
+}

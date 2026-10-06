@@ -1,0 +1,512 @@
+{
+  "input_sha256": "b3d15fe88a6a680290cb57a382ac93c9f5451966d5d20b58bfa2994b0ddcb580",
+  "prepared_sha256": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+  "source_strings_and_rows_all_exact": true,
+  "prepared_rows": 17950,
+  "feature_rows": 17949,
+  "globally_positive_rows": 13610,
+  "excluded_nonmeasurement_rows": [
+    {
+      "#Geneid": "Geneid",
+      "LentiAS-1": "LentiAS-1",
+      "LentiAS-2": "LentiAS-for-RNAseq-2_S49.featureCounts",
+      "LentiGFP-1": "LentiGFP-for-RNAseq-1_S46.featureCounts",
+      "LentiGFP-2": "LentiGFP-for-RNAseq-2_S47.featureCounts",
+      "description": "description",
+      "__source_row": 1472
+    }
+  ],
+  "column_order": [
+    "LentiAS-1",
+    "LentiAS-2",
+    "LentiGFP-1",
+    "LentiGFP-2"
+  ],
+  "column_sums": [
+    87084735,
+    74024323,
+    94061942,
+    96185890
+  ],
+  "median_ratio_factors": [
+    1.004354007583586,
+    0.8619472156083663,
+    1.069604571007908,
+    1.0818718505617906
+  ],
+  "zero_counts_per_column": [
+    3024,
+    3132,
+    2974,
+    2907
+  ],
+  "labelled_pair_log1p_correlations": {
+    "LentiAS-1__LentiAS-2": 0.9901528817422769,
+    "LentiGFP-1__LentiGFP-2": 0.992225357486961
+  },
+  "top_ten_count_contributors": {
+    "LentiAS-1": [
+      {
+        "gene": "Rpph1",
+        "count": 3921312,
+        "fraction": 0.04502869532760248
+      },
+      {
+        "gene": "Dnajc5",
+        "count": 1004591,
+        "fraction": 0.011535787529238046
+      },
+      {
+        "gene": "Rn7sl1",
+        "count": 949677,
+        "fraction": 0.010905206291320746
+      },
+      {
+        "gene": "Vim",
+        "count": 917733,
+        "fraction": 0.010538391142833472
+      },
+      {
+        "gene": "Ahnak",
+        "count": 772926,
+        "fraction": 0.008875562404823302
+      },
+      {
+        "gene": "Rn7sl1&1",
+        "count": 433700,
+        "fraction": 0.004980206921454145
+      },
+      {
+        "gene": "Sparc",
+        "count": 404673,
+        "fraction": 0.004646887884541418
+      },
+      {
+        "gene": "Cadm4",
+        "count": 373769,
+        "fraction": 0.004292015127565124
+      },
+      {
+        "gene": "Psap",
+        "count": 333561,
+        "fraction": 0.0038303038988405946
+      },
+      {
+        "gene": "Postn",
+        "count": 332660,
+        "fraction": 0.0038199576538873316
+      }
+    ],
+    "LentiAS-2": [
+      {
+        "gene": "Rpph1",
+        "count": 2836368,
+        "fraction": 0.038316703011252125
+      },
+      {
+        "gene": "Vim",
+        "count": 887176,
+        "fraction": 0.011984925549403539
+      },
+      {
+        "gene": "Ahnak",
+        "count": 705528,
+        "fraction": 0.009531029415831335
+      },
+      {
+        "gene": "Rn7sl1",
+        "count": 695950,
+        "fraction": 0.00940163951246133
+      },
+      {
+        "gene": "Dnajc5",
+        "count": 428811,
+        "fraction": 0.0057928391996236155
+      },
+      {
+        "gene": "Cadm4",
+        "count": 379371,
+        "fraction": 0.005124950619271452
+      },
+      {
+        "gene": "Sparc",
+        "count": 341373,
+        "fraction": 0.004611632854784771
+      },
+      {
+        "gene": "Rn7sl1&1",
+        "count": 334025,
+        "fraction": 0.004512368184711396
+      },
+      {
+        "gene": "Psap",
+        "count": 313534,
+        "fraction": 0.004235553765213091
+      },
+      {
+        "gene": "Postn",
+        "count": 269102,
+        "fraction": 0.0036353186235826835
+      }
+    ],
+    "LentiGFP-1": [
+      {
+        "gene": "Rpph1",
+        "count": 4347242,
+        "fraction": 0.04621680041434824
+      },
+      {
+        "gene": "Rn7sl1",
+        "count": 992308,
+        "fraction": 0.010549516402712587
+      },
+      {
+        "gene": "Dnajc5",
+        "count": 941393,
+        "fraction": 0.010008224155099839
+      },
+      {
+        "gene": "Vim",
+        "count": 837634,
+        "fraction": 0.008905131897021646
+      },
+      {
+        "gene": "Ahnak",
+        "count": 761852,
+        "fraction": 0.008099471303707508
+      },
+      {
+        "gene": "Postn",
+        "count": 575606,
+        "fraction": 0.006119435637422838
+      },
+      {
+        "gene": "Cadm4",
+        "count": 511850,
+        "fraction": 0.0054416269653458785
+      },
+      {
+        "gene": "Rn7sl1&1",
+        "count": 473167,
+        "fraction": 0.005030376685184748
+      },
+      {
+        "gene": "Sparc",
+        "count": 469286,
+        "fraction": 0.004989116639756385
+      },
+      {
+        "gene": "Psap",
+        "count": 391877,
+        "fraction": 0.004166158933865091
+      }
+    ],
+    "LentiGFP-2": [
+      {
+        "gene": "Rpph1",
+        "count": 4921750,
+        "fraction": 0.051169147574555894
+      },
+      {
+        "gene": "Rn7sl1",
+        "count": 1041987,
+        "fraction": 0.010833054619549707
+      },
+      {
+        "gene": "Ahnak",
+        "count": 958192,
+        "fraction": 0.009961876944736905
+      },
+      {
+        "gene": "Vim",
+        "count": 786983,
+        "fraction": 0.008181896533888702
+      },
+      {
+        "gene": "Postn",
+        "count": 609113,
+        "fraction": 0.006332664801458925
+      },
+      {
+        "gene": "Cadm4",
+        "count": 503633,
+        "fraction": 0.005236038258834014
+      },
+      {
+        "gene": "Rn7sl1&1",
+        "count": 482295,
+        "fraction": 0.005014196988768311
+      },
+      {
+        "gene": "Sparc",
+        "count": 471992,
+        "fraction": 0.004907081485652417
+      },
+      {
+        "gene": "Dnajc5",
+        "count": 463665,
+        "fraction": 0.00482050953627398
+      },
+      {
+        "gene": "Psap",
+        "count": 401746,
+        "fraction": 0.004176766467514102
+      }
+    ]
+  },
+  "target_results": [
+    {
+      "gene": "Egr2",
+      "status": "measured_positive",
+      "source_row": 1208,
+      "description": "early growth response 2",
+      "LentiAS-1": 5364,
+      "LentiAS-2": 4057,
+      "LentiGFP-1": 4591,
+      "LentiGFP-2": 3995,
+      "raw_log2_AS_over_GFP": 0.13389403126358884,
+      "CPM_log2_AS_over_GFP": 0.3656340488572424,
+      "median_ratio_log2_AS_over_GFP": 0.33149219533610913
+    },
+    {
+      "gene": "Pmp22",
+      "status": "measured_positive",
+      "source_row": 6729,
+      "description": "peripheral myelin protein 22",
+      "LentiAS-1": 220643,
+      "LentiAS-2": 201051,
+      "LentiGFP-1": 267997,
+      "LentiGFP-2": 282624,
+      "raw_log2_AS_over_GFP": -0.3848631389502733,
+      "CPM_log2_AS_over_GFP": -0.1407043951805458,
+      "median_ratio_log2_AS_over_GFP": -0.17624552522424877
+    },
+    {
+      "gene": "Mpz",
+      "status": "measured_positive",
+      "source_row": 8637,
+      "description": "myelin protein zero",
+      "LentiAS-1": 145836,
+      "LentiAS-2": 63666,
+      "LentiGFP-1": 79116,
+      "LentiGFP-2": 74898,
+      "raw_log2_AS_over_GFP": 0.44390251755029214,
+      "CPM_log2_AS_over_GFP": 0.6460203204769248,
+      "median_ratio_log2_AS_over_GFP": 0.6133640413072363
+    },
+    {
+      "gene": "Mbp",
+      "status": "measured_positive",
+      "source_row": 16252,
+      "description": "myelin basic protein",
+      "LentiAS-1": 3677,
+      "LentiAS-2": 3281,
+      "LentiGFP-1": 2760,
+      "LentiGFP-2": 3041,
+      "raw_log2_AS_over_GFP": 0.26237105963398655,
+      "CPM_log2_AS_over_GFP": 0.5056546687320318,
+      "median_ratio_log2_AS_over_GFP": 0.4700134308682963
+    },
+    {
+      "gene": "Mag",
+      "status": "measured_positive",
+      "source_row": 7248,
+      "description": "myelin-associated glycoprotein",
+      "LentiAS-1": 3626,
+      "LentiAS-2": 3004,
+      "LentiGFP-1": 4875,
+      "LentiGFP-2": 4910,
+      "raw_log2_AS_over_GFP": -0.561562980514216,
+      "CPM_log2_AS_over_GFP": -0.32334462386051666,
+      "median_ratio_log2_AS_over_GFP": -0.35837563682543033
+    },
+    {
+      "gene": "Prx",
+      "status": "measured_positive",
+      "source_row": 17716,
+      "description": "periaxin",
+      "LentiAS-1": 49948,
+      "LentiAS-2": 41133,
+      "LentiGFP-1": 44005,
+      "LentiGFP-2": 46444,
+      "raw_log2_AS_over_GFP": 0.010045578689665859,
+      "CPM_log2_AS_over_GFP": 0.2482911223623302,
+      "median_ratio_log2_AS_over_GFP": 0.21309643240004209
+    },
+    {
+      "gene": "Plp1",
+      "status": "measured_positive",
+      "source_row": 11122,
+      "description": "proteolipid protein 1",
+      "LentiAS-1": 228143,
+      "LentiAS-2": 187924,
+      "LentiGFP-1": 208331,
+      "LentiGFP-2": 217225,
+      "raw_log2_AS_over_GFP": -0.03253312553469496,
+      "CPM_log2_AS_over_GFP": 0.20562851742651744,
+      "median_ratio_log2_AS_over_GFP": 0.1704808297562713
+    },
+    {
+      "gene": "Cnp",
+      "status": "measured_positive",
+      "source_row": 6728,
+      "description": "2',3'-cyclic nucleotide 3' phosphodiesterase",
+      "LentiAS-1": 273604,
+      "LentiAS-2": 245984,
+      "LentiGFP-1": 290395,
+      "LentiGFP-2": 287142,
+      "raw_log2_AS_over_GFP": -0.15254526416845107,
+      "CPM_log2_AS_over_GFP": 0.09030839774893536,
+      "median_ratio_log2_AS_over_GFP": 0.055067407905433914
+    },
+    {
+      "gene": "Mal",
+      "status": "measured_positive",
+      "source_row": 13862,
+      "description": "mal, T-cell differentiation protein",
+      "LentiAS-1": 14528,
+      "LentiAS-2": 11749,
+      "LentiGFP-1": 9816,
+      "LentiGFP-2": 9794,
+      "raw_log2_AS_over_GFP": 0.4222110395145683,
+      "CPM_log2_AS_over_GFP": 0.6589456833419448,
+      "median_ratio_log2_AS_over_GFP": 0.6240350345210474
+    },
+    {
+      "gene": "Jun",
+      "status": "measured_positive",
+      "source_row": 16169,
+      "description": "Jun proto-oncogene, AP-1 transcription factor subunit",
+      "LentiAS-1": 78468,
+      "LentiAS-2": 81462,
+      "LentiGFP-1": 118479,
+      "LentiGFP-2": 107919,
+      "raw_log2_AS_over_GFP": -0.501420625536123,
+      "CPM_log2_AS_over_GFP": -0.25080916451517005,
+      "median_ratio_log2_AS_over_GFP": -0.2862222019626582
+    },
+    {
+      "gene": "Sox2",
+      "status": "measured_positive",
+      "source_row": 3028,
+      "description": "SRY box 2",
+      "LentiAS-1": 31259,
+      "LentiAS-2": 26704,
+      "LentiGFP-1": 29945,
+      "LentiGFP-2": 31553,
+      "raw_log2_AS_over_GFP": -0.08540722615836384,
+      "CPM_log2_AS_over_GFP": 0.15496860804662155,
+      "median_ratio_log2_AS_over_GFP": 0.11965362503060147
+    },
+    {
+      "gene": "Mtor",
+      "status": "measured_positive",
+      "source_row": 4998,
+      "description": "mechanistic target of rapamycin kinase",
+      "LentiAS-1": 6709,
+      "LentiAS-2": 6748,
+      "LentiGFP-1": 6627,
+      "LentiGFP-2": 5607,
+      "raw_log2_AS_over_GFP": 0.13746064127687962,
+      "CPM_log2_AS_over_GFP": 0.3856320543953951,
+      "median_ratio_log2_AS_over_GFP": 0.3506166581816173
+    },
+    {
+      "gene": "Yap1",
+      "status": "measured_positive",
+      "source_row": 3847,
+      "description": "yes-associated protein 1",
+      "LentiAS-1": 6305,
+      "LentiAS-2": 6341,
+      "LentiGFP-1": 7867,
+      "LentiGFP-2": 7100,
+      "raw_log2_AS_over_GFP": -0.2431039505555856,
+      "CPM_log2_AS_over_GFP": 0.005578536279621006,
+      "median_ratio_log2_AS_over_GFP": -0.02968940433927697
+    },
+    {
+      "gene": "Nae1",
+      "status": "measured_positive",
+      "source_row": 17841,
+      "description": "NEDD8 activating enzyme E1 subunit 1",
+      "LentiAS-1": 3958,
+      "LentiAS-2": 3073,
+      "LentiGFP-1": 4879,
+      "LentiGFP-2": 4789,
+      "raw_log2_AS_over_GFP": -0.459487578622082,
+      "CPM_log2_AS_over_GFP": -0.22525939391001978,
+      "median_ratio_log2_AS_over_GFP": -0.2599648146043042
+    },
+    {
+      "gene": "Zeb2",
+      "status": "measured_positive",
+      "source_row": 5872,
+      "description": "zinc finger E-box binding homeobox 2",
+      "LentiAS-1": 83629,
+      "LentiAS-2": 75677,
+      "LentiGFP-1": 91114,
+      "LentiGFP-2": 99385,
+      "raw_log2_AS_over_GFP": -0.2579828198602197,
+      "CPM_log2_AS_over_GFP": -0.013958336788159626,
+      "median_ratio_log2_AS_over_GFP": -0.04960843157194402
+    },
+    {
+      "gene": "Hba-a1",
+      "status": "measured_positive",
+      "source_row": 10509,
+      "description": "hemoglobin alpha, adult chain 1",
+      "LentiAS-1": 74,
+      "LentiAS-2": 23616,
+      "LentiGFP-1": 51,
+      "LentiGFP-2": 38,
+      "raw_log2_AS_over_GFP": 8.056257147161196,
+      "CPM_log2_AS_over_GFP": 8.414859316823755,
+      "median_ratio_log2_AS_over_GFP": 8.374025682791881
+    },
+    {
+      "gene": "Hba-a2",
+      "status": "measured_zero_present",
+      "source_row": 8495,
+      "description": "-",
+      "LentiAS-1": 0,
+      "LentiAS-2": 0,
+      "LentiGFP-1": 1,
+      "LentiGFP-2": 2,
+      "raw_log2_AS_over_GFP": null,
+      "CPM_log2_AS_over_GFP": null,
+      "median_ratio_log2_AS_over_GFP": null
+    },
+    {
+      "gene": "Hbb",
+      "status": "measured_positive",
+      "source_row": 5283,
+      "description": "hemoglobin subunit beta",
+      "LentiAS-1": 323,
+      "LentiAS-2": 125355,
+      "LentiGFP-1": 240,
+      "LentiGFP-2": 140,
+      "raw_log2_AS_over_GFP": 8.369516993440042,
+      "CPM_log2_AS_over_GFP": 8.726357389976815,
+      "median_ratio_log2_AS_over_GFP": 8.686436764505032
+    },
+    {
+      "gene": "Hbb-b1",
+      "status": "measured_positive",
+      "source_row": 11260,
+      "description": "hemoglobin, beta adult major chain",
+      "LentiAS-1": 84,
+      "LentiAS-2": 39238,
+      "LentiGFP-1": 53,
+      "LentiGFP-2": 63,
+      "raw_log2_AS_over_GFP": 8.40506808648445,
+      "CPM_log2_AS_over_GFP": 8.76762385336373,
+      "median_ratio_log2_AS_over_GFP": 8.724949045486206
+    },
+    {
+      "gene": "Hbb-b2",
+      "status": "not_in_supplied_table",
+      "source_row": null
+    }
+  ],
+  "interpretation_limit": "Descriptive relative steady-state RNA only. No p-values, CIs, independent donors, EGR2 half-life, or Pmp22 initiation inference."
+}

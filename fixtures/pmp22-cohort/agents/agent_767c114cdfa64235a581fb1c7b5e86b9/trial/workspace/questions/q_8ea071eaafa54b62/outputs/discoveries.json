@@ -1,0 +1,79 @@
+{
+  "revision": 2,
+  "scope": "PMP22 RBP binding plus perturbation: complete ENCORE screen and independent processed PUM/CNOT endpoint audit in K562, HepG2, TCam-2, HCT116 and HEK293. No raw processing or cell-context transfer.",
+  "known_baseline": "Inherited miR29/IRE1 and G3BP1 are prior findings, not discovery. QKI-PMP22 isoform changes are published in PMC13234107; primer-specific mechanism unresolved. PMID19605561 abstract already explicitly describes CNOT7/8-PMP22 repression. PUM source supplements already contain the re-examined measurements. See LABBOOK.md and outputs/novelty-focused-r001.json.",
+  "budget_allocation": "Completed full eligible ENCORE screen, batch sensitivity and three independent processed resources; prioritized native full backgrounds, uncertainty, source controls, endpoint distinctions and exact peer-artifact reuse over raw processing. No time/request cap is asserted. Disk reserve was enforced during acquisition.",
+  "stopping_reason": "The authorized bounded analysis is complete: strict joint nomination remains empty; an independent locked fate prediction fails; a conditional PUM1 abundance association is retained without relaxing binding criteria; positive CNOT abundance effects are already known at pathway level. Further discrimination requires same-context transcript-end/functional-site tests or repair of the BruChase source export, rather than more selection of convenient positive rows. Late peer evidence establishes positive Pum1/Pum2/Tia1/Igf2bp2/Snd1 transcript coverage in rat Schwann cultures, not protein activity or expressed-site/functional transfer. Qki remains unmapped. Prior ledger revision preserved as object39359bf59ba3ef2eefb67cf1224af978d830ae7bcb73a31f9f550175f760ca19.",
+  "no_candidates_reason": "No validated strict joint binding-plus-abundance candidate; the records below distinguish an unresolved hypothesis, a conditional abundance association and a reproduced known pathway response.",
+  "candidates": [
+    {
+      "id": "pmp22-pum-persistence",
+      "claim": "Combined PUM1/PUM2 depletion increases PMP22 labeled-RNA persistence in HEK293 cells.",
+      "context": "GSE145237 HEK293; 48h dual RNAi, 30min BrU pulse, 0/6h chase, four biological culture replicates per arm/time. Prior binding lead was PUM2 in K562, not HEK293 site occupancy.",
+      "kind": "biological",
+      "status": "unresolved",
+      "alternatives": ["Nonproductive binding", "Cell-context-dependent action", "Modest persistence effect below the test's support", "Nascent-output or indirect responses", "Source export error"],
+      "discovery_artifacts": ["artifact_6a0119b8ecd1d29ff44d122e74920f2097d6b1c9179ab9572f2237585effc047", "artifact_5edca4e4c4bd89c62c6779dcb242b33a8bc3f88a42b60c9f4897653b3ee20b85"],
+      "prediction_lock": "outputs/predictions/pmp22-pum-persistence-r001.json",
+      "prediction_sha256": "d3623d23b558af6a5fd2a7228c91a86dd96fe494f8097f09f794e5d2a7f4b951",
+      "validation_mode": "prospective",
+      "validation_artifacts": ["artifact_ca00bd84b629ae7f80c6896d8cddb5f531c33ec8241f6fe99994b0e4d02b99ee", "artifact_779f4542f3154e93b42e157e59949383da2b50a7704a66aa4966704979b3a532"],
+      "validation_result": "Frozen positive-FDR rule failed: deposited interaction +0.2441 log2, 95% Wald CI[-0.1061,0.5943], p0.1719, q0.5606. Source feature class NOEFFECT at its 1.75-fold practical threshold. This is failed support, not significant opposite direction or global absence of action.",
+      "independence_assessment": "Seal preceded first inspection of this target coefficient row and has unchanged bytes. Source paper-wide outcomes were known and model prior exposure cannot be excluded. Different study/assay/cell context from K562; it tests transportability, not exact single-PUM2 replication. No shared-control sign-count or donor-independence claim.",
+      "novelty": {
+        "status": "known",
+        "closest_prior_work": [{"source": "PMC7566576 / GSE145237", "locator": "Supplemental Bru_seq_and_BruChase_seq_model_coefficients.tsv, PMP22; features_for_machine_learning.tsv, PMP22", "relationship": "Measurements and NOEFFECT/BOUND annotations were already public; new contribution is the executed screen-linked failure of a declared prediction, not new biological data."}],
+        "searches": [{"query": "(PMP22 OR peripheral myelin protein 22) AND (PUM1 OR PUM2 OR Pumilio)", "date": "2026-10-05", "evidence": "outputs/novelty-focused-r001.json"}],
+        "limitation": "Search metadata and inspected supplements are bounded; this is not a claim of global novelty or absence of prior target studies."
+      },
+      "limitations": "All five time-term fields duplicate interaction fields in every source row; report interaction as deposited, not independently refitted kinetics. Relative persistence is not an absolute decay constant. No directly measured Schwann transfer.",
+      "next_test": "Obtain corrected source coefficients/processed labeled-count design, then test adequately depleted PUM1/2 and endogenous PMP22 site disruption in the same defined cell context with labeled-RNA persistence and verified transcript ends. A reproducible site-dependent positive interaction would challenge the present negative nomination."
+    },
+    {
+      "id": "pum1-tcam-conditional-abundance",
+      "claim": "PUM1 depletion is associated with modestly increased PMP22 abundance after the study's final four-hour ActD exposure in TCam-2.",
+      "context": "GSE123016; control GSM3490755/56/57 and PUM1 GSM3490758/59/60; three biological culture transfections per arm, 72h RNAi. Full Cuffdiff tables, not significant lists alone.",
+      "kind": "biological",
+      "status": "supported_in_scope",
+      "alternatives": ["Different starting abundance before ActD", "Indirect or state response", "Changed processing", "Weak/nonproductive association", "Paralog counterregulation"],
+      "discovery_artifacts": ["artifact_6a0119b8ecd1d29ff44d122e74920f2097d6b1c9179ab9572f2237585effc047"],
+      "prediction_lock": null,
+      "prediction_sha256": null,
+      "validation_mode": "retrospective",
+      "validation_artifacts": ["artifact_846caefc1fb2760cf47e458fe0745e309566d4a1845b78cf4a4d512f4704e0f2", "artifact_ef49fc9532ce9a0758b33f58cec688bbcd8adb1d24de56af70b6a01834f1fbaa"],
+      "validation_result": "PMP22 +0.393787 log2(KD/control), raw p0.00105, source q0.0150862; PUM2 +0.244258,q0.189761. PUM1 RIP/IgG +1.7785log2 but RIP/total +0.589082, below source twofold requirement; strict joint candidate fails. HCT116 single-PUM1 q1 and dual-PUM q0.3405 do not establish independent abundance replication.",
+      "independence_assessment": "Separate study/context from ENCORE. TCam sample pilot and supplement rows were inspected before this result audit; no prospective credit. Single-PUM contrasts share the same study controls; Cuffdiff estimates are source computations, not refitted counts.",
+      "novelty": {
+        "status": "known",
+        "closest_prior_work": [{"source": "PMC7226987 / GSE123016", "locator": "Supplemental Tables S7 and S9, complete Cuffdiff PMP22 rows", "relationship": "Conditional abundance measurement and subthreshold binding-background comparison already existed incidentally; reanalysis connects them to the current RBP question without claiming first discovery."}],
+        "searches": [{"query": "(PMP22 OR peripheral myelin protein 22) AND (PUM1 OR PUM2 OR Pumilio)", "date": "2026-10-05", "evidence": "outputs/novelty-focused-r001.json"}],
+        "limitation": "A prior-table observation is not a newly validated direct regulator."
+      },
+      "limitations": "No time-zero baseline, fitted decay curve or source SE. Source strict binding threshold fails, so not promoted into the requested validated joint set. No Schwann context or site-functional validation.",
+      "next_test": "Measure arm-specific pre-ActD abundance or metabolically labeled persistence and test endogenous binding-site dependence in TCam-2 before extrapolating the PUM1 abundance response to Schwann cells."
+    },
+    {
+      "id": "cnot-pmp22-abundance",
+      "claim": "CNOT1 or joint CNOT7/8 depletion increases captured polyadenylated PMP22 RNA in HCT116.",
+      "context": "GSE159510 HCT116; three biological culture replicates per condition; 48h RNAi; PAC-seq gene summary, not a rate measurement.",
+      "kind": "biological",
+      "status": "reproduced_known",
+      "alternatives": ["Indirect transcriptome-wide response", "PUM-independent CNOT recruitment", "RNA synthesis or processing rather than changed stability", "Polyadenylated-RNA capture changes"],
+      "discovery_artifacts": ["artifact_846caefc1fb2760cf47e458fe0745e309566d4a1845b78cf4a4d512f4704e0f2"],
+      "prediction_lock": null,
+      "prediction_sha256": null,
+      "validation_mode": "retrospective",
+      "validation_artifacts": ["artifact_779f4542f3154e93b42e157e59949383da2b50a7704a66aa4966704979b3a532", "artifact_7da6a1aaed19cf651735d7cc0904e218855fff31303df80d1de677aa7ecf84df"],
+      "validation_result": "PMP22 +1.0358log2(q2.2291e-5) for CNOT1 and +0.9926(q3.8991e-5) for CNOT7/8. PUM single/dual estimates are positive but nonsignificant. This does not statistically establish a difference between the CNOT and PUM effects.",
+      "independence_assessment": "HCT116 provides context corroboration of the older MCF7 CNOT/PMP22 connection (PMID19605561 abstract), not new measurements or replication of direct binding. HCT contrasts share study controls; no pooled inference.",
+      "novelty": {
+        "status": "known",
+        "closest_prior_work": [{"source": "PMID19605561 / PMC2735483", "locator": "Primary 2009 abstract, final sentence", "relationship": "Explicitly reports CNOT7/8-associated repression of PMP22 in MCF7. Fulltext retrieval failed and no decay/half-life detail is inferred from the abstract."}, {"source": "PMC7962487 / GSE159510", "locator": "Supplemental Table S2, PMP22 gene-summary rows", "relationship": "Present positive HCT116 measurements were already public."}],
+        "searches": [{"query": "(PMP22 OR peripheral myelin protein 22) AND (CNOT1 OR CNOT7 OR CNOT8 OR CCR4-NOT)", "date": "2026-10-05", "evidence": "outputs/novelty-focused-r001.json"}],
+        "limitation": "100 of103 search hits returned; sufficient known prior found, not exhaustive novelty clearance."
+      },
+      "limitations": "No demonstrated PMP22 binding by the CNOT subunits; no PUM mediation, fitted decay rate, Schwann transfer or SE reconstructed from adjusted p. Not admitted to the strict RBP binding-plus-abundance set.",
+      "next_test": "In the same context, determine whether a target-site-dependent PUM intervention affects PMP22 fate and whether CNOT response persists when those sites are disrupted; distinguish direct recruitment from broad RNA/state changes."
+    }
+  ]
+}

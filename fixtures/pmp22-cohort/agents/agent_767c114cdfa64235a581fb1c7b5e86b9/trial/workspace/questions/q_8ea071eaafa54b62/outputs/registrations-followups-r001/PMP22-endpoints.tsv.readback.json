@@ -1,0 +1,599 @@
+{
+  "created": "2026-10-05T23:51:33.422788+00:00",
+  "derivation_key": "a2bfc8d038e889bdbd4112158e466be79576631a2d5a4e5dcba94ef4e8c3bbb5",
+  "id": "artifact_846caefc1fb2760cf47e458fe0745e309566d4a1845b78cf4a4d512f4704e0f2",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "ccb89931719a2f96d580707b83e9bde69b66ccc7c9fb8c1b5deeae23341dba9a"
+      ],
+      "command": [],
+      "environment": {
+        "lock": "67e5583f9564da5655a13fc5daad75d08768e48882ea13385efdaeaf89bd7349",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.3"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "anndata",
+            "0.12.19"
+          ],
+          [
+            "annotated-doc",
+            "0.0.5"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "anyio",
+            "4.15.1"
+          ],
+          [
+            "array-api-compat",
+            "1.15.0"
+          ],
+          [
+            "asciitree",
+            "0.3.3"
+          ],
+          [
+            "bioframe",
+            "0.8.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.1"
+          ],
+          [
+            "click",
+            "8.5.0"
+          ],
+          [
+            "coloredlogs",
+            "15.0.1"
+          ],
+          [
+            "contourpy",
+            "1.4.0"
+          ],
+          [
+            "cooler",
+            "0.10.4"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "cytoolz",
+            "1.1.0"
+          ],
+          [
+            "data-archaeology-workbench",
+            "0.3.0"
+          ],
+          [
+            "defusedxml",
+            "0.7.1"
+          ],
+          [
+            "dill",
+            "0.4.1"
+          ],
+          [
+            "donfig",
+            "0.8.1.post1"
+          ],
+          [
+            "duckdb",
+            "1.5.5"
+          ],
+          [
+            "et_xmlfile",
+            "2.0.0"
+          ],
+          [
+            "fonttools",
+            "4.66.0"
+          ],
+          [
+            "google-crc32c",
+            "1.9.0"
+          ],
+          [
+            "h11",
+            "0.16.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "httpcore",
+            "1.0.9"
+          ],
+          [
+            "httpx",
+            "0.28.1"
+          ],
+          [
+            "humanfriendly",
+            "10.0"
+          ],
+          [
+            "hypothesis",
+            "6.168.1"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "iniconfig",
+            "2.3.0"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "legacy-api-wrap",
+            "1.5"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "msgspec",
+            "0.21.1"
+          ],
+          [
+            "multiprocess",
+            "0.70.19"
+          ],
+          [
+            "natsort",
+            "8.4.0"
+          ],
+          [
+            "numcodecs",
+            "0.17.0"
+          ],
+          [
+            "numpy",
+            "2.5.3"
+          ],
+          [
+            "openpyxl",
+            "3.1.5"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pandas",
+            "2.3.3"
+          ],
+          [
+            "pephubclient",
+            "0.6.0"
+          ],
+          [
+            "peppy",
+            "0.40.8"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "pluggy",
+            "1.6.0"
+          ],
+          [
+            "pyBigWig",
+            "0.3.26"
+          ],
+          [
+            "pyarrow",
+            "23.0.1"
+          ],
+          [
+            "pydantic",
+            "2.13.5"
+          ],
+          [
+            "pydantic_core",
+            "2.46.5"
+          ],
+          [
+            "pyfaidx",
+            "0.9.0.4"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "pytest",
+            "9.1.1"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "pytz",
+            "2026.4"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "ruff",
+            "0.16.9"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "scverse-misc",
+            "0.1.6"
+          ],
+          [
+            "session-info2",
+            "0.4.2"
+          ],
+          [
+            "shellingham",
+            "1.5.4"
+          ],
+          [
+            "simplejson",
+            "4.1.2"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sortedcontainers",
+            "2.4.0"
+          ],
+          [
+            "toml",
+            "0.10.2"
+          ],
+          [
+            "toolz",
+            "1.1.0"
+          ],
+          [
+            "typer",
+            "0.27.2"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "tzdata",
+            "2026.4"
+          ],
+          [
+            "ubiquerg",
+            "0.9.3"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "zarr",
+            "3.4.0"
+          ]
+        ],
+        "platform": "macOS-27.0-arm64-arm-64bit",
+        "python": "3.12.8",
+        "source": "81fae9e2e6479431f6a82b42eb00fb413fab90f598354e90be1b5879f21d0488"
+      },
+      "inputs": [
+        {
+          "blob": "d3623d23b558af6a5fd2a7228c91a86dd96fe494f8097f09f794e5d2a7f4b951",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "6f677ca6b5e780dc1ed7f3f5a2d85822dce862b3d59ab7a7b81d5c4600ededb6",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4fe77be2a9c1bbe4a2367cb799e440e1677614619b6cc31e4e21db0711456d65",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "e6da55fe932252aae8a7d92384a70dfebfd55b7c41334983d2a71c274bc7d4ab",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "be7244b1b3fd45c1abe2a2776b9e8600dea5b57a69360846c7a32e176d769fc4",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "69b7d1481e1d7b73cfb355d672aeefd4c4c64d707b8ad379b01acb006eddcaab",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "c482e84ac12be1462a8afeae4624a5ad07f67e2b1932913fd3b452eaed7eb118",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "14e8b79f1031791d023433a55d71fb91f34fc97bca518575fe9e424e9f8d67dd",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "975b4f0ef3bdf654afd7185f82c7a283b775364a5adeedd8a4bb3bdb27e948a9",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "09c180531de180715ccff88c5f93ce24dbf1616b53c1e9c34b79a62f4d7aa6d5",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "22aba303137efedb8221aedb8f36bea74d1d0424b87b31e227a0334a1f45cf76",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f3bd53f1ae3dfaa17507d451a3ab9af620a986610af6833050a05fcf539e9030",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "8d6ec54a23f2e6ae137e5a6a446b17cea8aa7ce738776740242be2ebee111a7f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "eaa35f102dd9a5fa07ab5c1ffc7246a2cce2968b3abff5673203ab3da0614150",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "5a1ff0e1d4b493a0ba58034ed04f8c959c09a0a74707f254a7eded15d5e2cc0a",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b315c0a0606984efdb8e0a13aa6308e924162772fcbc8a0e071b64119c04b11e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "6808960db4f30dc393a857ef04848f32d611b02db5a7f812696987ac0aeda8c0",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "cde1761a6116c9193b348b1b6eed151f05416ffa2ab240a6977a9076d9d6a5c0",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "47bec5300faa9a875342bb81b1ad1bc4992c7522b4a6c415f7c57574b384155f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "3efbf1d65bbd4fff1063ea5c7f0de58ddf99c7227e65586c3279e3f52c989f47",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f11da73ba390e0f8c1e064cf0481954f4cbb58f4c9c9ea714d569fb3fc99ebd5",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "6b7f58eec98cb7660009bfef181bf514b31c5be9e77f557292edefbf17b2ccf2",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "98296acf0a58484d9a5373afd502a2cae5cc707da62cb9340c3423240ebc81d1",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "497ef6f1179c35e53a2f3a2d7c7321783dff3b5fca72df911b5ee9c4e56859ea",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b71993ffed9d1f0124faca576cbe670f3e22086a881029257a9667dee0a647ca",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "63d47a2ef26d37dd5ab15519798ec4d84b0915296bf185e8e69fbca9534e0ebc",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "251687cdba868c222d3849637a979cd12ace962eefe600068740387effe567ee",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "4a94fb9cc54091decd14e885b50d1ede679e2e8937e29ed594bf59b5ddabe2aa",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "a72d9195b40b4d26545e50d00f85ab93830c6b3c56c2f08d21201fc1877abcfd",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "6f70f7cc9acd90345e3bb5b415759a48f3b06edc4ada48a43d8e28216297c26b",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "660a4b36f68fe918df245d6dfb18c93782301cf51a76b1a7add402bef9f886d6",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b5cd1b44f7684a9256a3c3aef3da8eb2bdfe68f9d796656f6c910edb4ef0fb8f",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "334ccf0d4be2e170c18a7ec1db33af82607371dc66faac43baeacf0c8c110324",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "f0c95bad93a1b36800e7d9d60fd05ab281bcd74265bc07360ef8c4f3cba0da3e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "cd50e6defb2a02d82dabab83c822c5c8bd861c4213a9c6de54c7c4fc6e94f2fc",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "da8c1931337f21ca6b959b7e9c93a882564bb47316f9f17b96408e22ac199b45",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "aaf576916744d1dc02d6f78a6f67e8b286f797456698f0dbd37d6cc058820a84",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "e0dff2360fdbfde345a891aae368e5e972adba7669dfcf65369c9658fdaabbbe",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "execution_receipt_sha256": "e0dff2360fdbfde345a891aae368e5e972adba7669dfcf65369c9658fdaabbbe",
+        "run": "independent-r006"
+      },
+      "references": []
+    },
+    "derivation_key": "a2bfc8d038e889bdbd4112158e466be79576631a2d5a4e5dcba94ef4e8c3bbb5",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "15f0c36706da6c90611bda519ee430d43d25161b1ef993c8ac77919bfe5d8f83",
+      "bytes": 7094,
+      "name": "PMP22-endpoints.tsv"
+    },
+    "output_role": "independent-PMP22-endpoints.tsv",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Executed native full-background audit: conditional TCam PUM1 response; failed HEK293 PUM persistence prediction; HCT116 PUM nonsignificant/CNOT positive; endpoint and source-export limitations retained.",
+    "title": "PMP22 independent PUM/CNOT audit: PMP22-endpoints.tsv"
+  },
+  "manifest_blob": "efb54d9c3e8c8b9074d3b448f5ed60473d188e5d7705f35628b636c4c5b3e1d7",
+  "output_blob": "15f0c36706da6c90611bda519ee430d43d25161b1ef993c8ac77919bfe5d8f83",
+  "output_role": "independent-PMP22-endpoints.tsv",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_767c114cdfa64235a581fb1c7b5e86b9/trial/workspace/blobs/sha256/15/15f0c36706da6c90611bda519ee430d43d25161b1ef993c8ac77919bfe5d8f83",
+  "questions": [
+    {
+      "question_id": "q_8ea071eaafa54b62",
+      "relationship": "produced"
+    }
+  ]
+}

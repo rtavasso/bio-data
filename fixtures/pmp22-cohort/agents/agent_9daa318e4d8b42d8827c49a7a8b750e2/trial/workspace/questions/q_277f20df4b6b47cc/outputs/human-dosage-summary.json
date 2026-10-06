@@ -1,0 +1,89 @@
+{
+  "experiment": "GSE7423/GPL1708",
+  "endpoint": "Source VALUE explicitly log10(normalized Cy3 test/Cy5 pooled reference), not log2 or RNA counts. Zero log ratio means equal test/reference signals, not absent RNA.",
+  "source_value_evidence": "inputs/continuation/GSM178757-quick.soft #VALUE",
+  "probe_rows": 43931,
+  "unique_probes": 43931,
+  "missing_numeric_cells": 0,
+  "donor_mapping": {
+    "BON": [
+      "GSM178536",
+      "GSM178752"
+    ],
+    "MAR": [
+      "GSM178753",
+      "GSM178754"
+    ],
+    "BAR": [
+      "GSM178756",
+      "GSM178757"
+    ],
+    "JIM": [
+      "GSM178758",
+      "GSM178759"
+    ],
+    "AAL": [
+      "GSM178760"
+    ],
+    "ETT": [
+      "GSM178761",
+      "GSM178762"
+    ],
+    "LEY": [
+      "GSM178763"
+    ]
+  },
+  "genotypes": {
+    "BAR": "PMP22 duplication, ONE donor",
+    "JIM": "PMP22 Leu16Pro, ONE different donor; not second duplication replicate",
+    "BON": "CTDP1 IVS6+389C>T",
+    "MAR": "CTDP1 IVS6+389C>T",
+    "AAL": "normal",
+    "ETT": "normal",
+    "LEY": "normal"
+  },
+  "normal_donor_weighting": "Technical array log10 ratios averaged within donor; normal mean across three donors equally weighted. Fold ratio=10**difference, common reference cancels. No fresh normalization.",
+  "biological_scope": "Cultured human Schwann cells below passage 10, proliferative heregulin/forskolin/IBMX medium; duplication donor plantar-nerve origin differs from other biopsies. Not mature myelinating Schwann cells.",
+  "formal_inference": "No genotype-effect p-value: duplication and L16P each one donor, culture/tissue/donor confounding. Historical labels of two HMSN1A biological replicates must not pool unlike variants.",
+  "PMP22_probes": [
+    {
+      "ID_REF": "24979",
+      "Platform_SPOTID": "A_23_P100711",
+      "GenBank Accession": "NM_000304",
+      "GSM178536": 0.326094,
+      "GSM178752": -0.232132,
+      "GSM178753": -0.980318,
+      "GSM178754": -0.943732,
+      "GSM178756": 0.325255,
+      "GSM178757": 0.329446,
+      "GSM178758": 0.377774,
+      "GSM178759": 0.333903,
+      "GSM178760": -1.1943,
+      "GSM178761": -1.43295,
+      "GSM178762": -1.42288,
+      "GSM178763": -0.621222,
+      "BAR_vs_normal_geometric_ratio": 25.615106546192113,
+      "JIM_vs_normal_geometric_ratio": 27.351690067987423
+    },
+    {
+      "ID_REF": "33317",
+      "Platform_SPOTID": "A_32_P52488",
+      "GenBank Accession": "BX338933",
+      "GSM178536": 0.0281717,
+      "GSM178752": -0.217626,
+      "GSM178753": -0.42827,
+      "GSM178754": -0.518033,
+      "GSM178756": 0.224656,
+      "GSM178757": 0.269938,
+      "GSM178758": 0.533208,
+      "GSM178759": 0.485959,
+      "GSM178760": -0.17124,
+      "GSM178761": -0.258013,
+      "GSM178762": -0.33261,
+      "GSM178763": -0.0646017,
+      "BAR_vs_normal_geometric_ratio": 2.6567339566706925,
+      "JIM_vs_normal_geometric_ratio": 4.859980947032783
+    }
+  ],
+  "probe_limitation": "Two annotated probes kept separate; annotation accession does not prove promoter-specific binding. Probe 33317 maps a cDNA clone; no P1/P2 assignment."
+}

@@ -1,0 +1,108 @@
+{
+  "candidate_id": "abca1-abcg1-state-transfer",
+  "prediction_sha256": "a48d7a06535a11421c508d8f6c84f2a3b3af315e03a3eacd561dc1bf88e98d9a",
+  "source": "GSE104324",
+  "result_status": "untestable",
+  "eligible": false,
+  "primary_logratio": {
+    "delta_log2": -0.6959527538814356,
+    "ci95_low": -3.246136862218758,
+    "ci95_high": 1.8542313544558868,
+    "permutation_p": 0.6,
+    "permutation_assignments": 20
+  },
+  "CPM_sensitivity": {
+    "delta_log2": -0.7548917182041421,
+    "ci95_low": -3.4581806082936772,
+    "ci95_high": 1.948397171885393,
+    "permutation_p": 0.6,
+    "permutation_assignments": 20
+  },
+  "genes": {
+    "Abca1": {
+      "control_mean_normalized": 3309.934280819028,
+      "delta_log2": -0.1496670624644274,
+      "ci95_low": -1.2049465147222291,
+      "ci95_high": 0.9056123897933743,
+      "permutation_p": 0.9,
+      "permutation_assignments": 20
+    },
+    "Abcg1": {
+      "control_mean_normalized": 3.450241605780057,
+      "delta_log2": 0.5462856914170078,
+      "ci95_low": -1.256047773633583,
+      "ci95_high": 2.3486191564675987,
+      "permutation_p": 0.4,
+      "permutation_assignments": 20
+    },
+    "Apoe": {
+      "control_mean_normalized": 1132.0016892437773,
+      "delta_log2": -0.11441318517576171,
+      "ci95_low": -3.562066720604201,
+      "ci95_high": 3.3332403502526775,
+      "permutation_p": 0.8,
+      "permutation_assignments": 20
+    },
+    "Pmp22": {
+      "control_mean_normalized": 15313.91520490413,
+      "delta_log2": -1.5523622472468919,
+      "ci95_low": -3.208120592980379,
+      "ci95_high": 0.10339609848659537,
+      "permutation_p": 0.1,
+      "permutation_assignments": 20
+    }
+  },
+  "samples": [
+    {
+      "sample": "GSM2795457",
+      "source_file": "GSM2795457_SC31-Vehicle_counts.txt.gz",
+      "source_blob": "8872eddcf1a76d1cd9e488788e9840b9c22a23d200d78eb650cebf7f07cc38d1",
+      "title": "mock 1 (SC31_Vehicle)",
+      "treatment": false,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    },
+    {
+      "sample": "GSM2795459",
+      "source_file": "GSM2795459_SC1-Vehicle_counts.txt.gz",
+      "source_blob": "a6ccf0bf22f596a2562e7ff0c2d88581d05604758b83386be49bcbb96f59da4c",
+      "title": "mock 2 (SC1_Vehicle)",
+      "treatment": false,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    },
+    {
+      "sample": "GSM2795461",
+      "source_file": "GSM2795461_SC13-Vehicle_counts.txt.gz",
+      "source_blob": "fd6c6d77c76b3bc1fda6749358639d75a47d3ea09998f3eafdbf77b2d549d71e",
+      "title": "mock 3 (SC13_Vehicle)",
+      "treatment": false,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    },
+    {
+      "sample": "GSM2795458",
+      "source_file": "GSM2795458_SC33-b10nM_counts.txt.gz",
+      "source_blob": "bb93d26d09f4278044706d348bf36c406bdfd011fac8b28db9ca57a248c890f5",
+      "title": "treated 1 (SC33_b10nM)",
+      "treatment": true,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    },
+    {
+      "sample": "GSM2795460",
+      "source_file": "GSM2795460_SC3-b10nM_counts.txt.gz",
+      "source_blob": "c2cadace0b78a5e1b3485898899cfd28c0be425888774facb6c6626f282d36c3",
+      "title": "treated 2 (SC3_b10nM)",
+      "treatment": true,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    },
+    {
+      "sample": "GSM2795462",
+      "source_file": "GSM2795462_SC15-b10nM_counts.txt.gz",
+      "source_blob": "2ebee0ef64f1f6815f8ede96290bfeb96d82f596509453c6735df3ec5c8e4e75",
+      "title": "treated 3 (SC15_b10nM)",
+      "treatment": true,
+      "unit": "source-labelled independent experiment; donor/split unresolved"
+    }
+  ],
+  "full_native_feature_rows": 17332,
+  "normalization_gene_rows": 10551,
+  "interpretation_limit": "Independent contextual perturbation test; not disease replication, lipid flux, or promoter output. Donor pairing remains unknown."
+}

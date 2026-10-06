@@ -1,0 +1,155 @@
+{
+  "valid": true,
+  "checks": [
+    "All new output JSON and current records reject non-finite constants",
+    "All26registeredoutputs, code hashes, immutable input hashes and question links verified; no role conflicts",
+    "Originalpanelsealunchanged;fullthreeinheritednegative member records exactly retained;no membership added",
+    "Independentstdlibsource arithmetic and full matching procedure reproduce primarydelta and1276referencepercentile",
+    "MapIDs/endpoints/evidence and queue analyzed/blocker requirements valid; checks do not certifybiology",
+    "NewTSVoutputs contain no infinities; missing values are not zero-imputed",
+    "Conservativelyaccountednetworkusage within all limits"
+  ],
+  "artifacts": 26,
+  "primary_delta": 1.961992628734587,
+  "primary_reference_n": 1276,
+  "transport": {
+    "requests": 28,
+    "downloaded_bytes": 1002936,
+    "web_estimated_bytes": 580000,
+    "limits": {
+      "requests": 150,
+      "total_bytes": 1073741824,
+      "file_bytes": 536870912
+    },
+    "events": [
+      {
+        "route": "web search",
+        "requests": 3,
+        "queries": [
+          "PMP22 Gonen PERK",
+          "Pmp22 NIH3T3 thapsigargin",
+          "PMP22 ribosome stress PERK"
+        ],
+        "receipt": "inputs/context-audit/web-search-r001.json",
+        "bytes_estimated": 90000
+      },
+      {
+        "route": "bio discover",
+        "requests": 1,
+        "bytes_estimated": 30000,
+        "receipt": "inputs/context-audit/discovery-literature.json"
+      },
+      {
+        "route": "web search",
+        "requests": 4,
+        "bytes_estimated": 120000,
+        "receipt": "inputs/context-audit/web-search-r002.json"
+      },
+      {
+        "route": "web search",
+        "requests": 3,
+        "bytes_estimated": 90000,
+        "receipt": "inputs/context-audit/web-search-r003.json"
+      },
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2728407/fullTextXML",
+        "name": "PMC2728407.xml",
+        "started": "2026-09-28T15:41:56.480890+00:00",
+        "bytes": 85748,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2728407/fullTextXML",
+        "content_type": "application/xml",
+        "sha256": "14e61c21916566d50f627214811adb631ebc3ceb7abc89e7a73ed4ee2fe95be3",
+        "finished": "2026-09-28T15:42:14.386065+00:00"
+      },
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4571326/fullTextXML",
+        "name": "PMC4571326.xml",
+        "started": "2026-09-28T15:43:17.958519+00:00",
+        "bytes": 103802,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4571326/fullTextXML",
+        "content_type": "application/xml",
+        "sha256": "f52e05b3d03d5a3e820b0d284968db4f908e9dff4bc91adb74954714078bb5b2",
+        "finished": "2026-09-28T15:43:30.762688+00:00"
+      },
+      {
+        "url": "https://walterlab.ucsf.edu/wp-content/uploads/2015/04/Hollien_2009_JCB.pdf",
+        "name": "Hollien2009-paper-supp.pdf",
+        "started": "2026-09-28T15:44:10.189404+00:00",
+        "bytes": 146,
+        "status": "failed",
+        "http_status": 403,
+        "final_url": "https://walterlab.ucsf.edu/wp-content/uploads/2015/04/Hollien_2009_JCB.pdf",
+        "content_type": "text/html",
+        "sha256": "32f2fa940d4b4fe19aca1e53a24e5aac29c57b7c5ee78588325b87f1b649c864",
+        "error": "403 Client Error: Forbidden for url: https://walterlab.ucsf.edu/wp-content/uploads/2015/04/Hollien_2009_JCB.pdf",
+        "finished": "2026-09-28T15:44:10.522091+00:00"
+      },
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2728407/supplementaryFiles",
+        "name": "PMC2728407-supplementary-response.zip",
+        "started": "2026-09-28T15:44:17.407591+00:00",
+        "bytes": 466548,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2728407/supplementaryFiles",
+        "content_type": "application/zip",
+        "sha256": "989946fb49283b25b21f7a75f25371255a47c0f46074e112952160130ef7c426",
+        "finished": "2026-09-28T15:44:18.949599+00:00"
+      },
+      {
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2728407/",
+        "name": "PMC2728407.html",
+        "started": "2026-09-28T15:45:01.524687+00:00",
+        "bytes": 180262,
+        "status": "downloaded_unvalidated",
+        "http_status": 200,
+        "final_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2728407/",
+        "content_type": "text/html; charset=utf-8",
+        "sha256": "a1194ad2b93bb1e62ef8c5e1e5a018a691353207bab0b6d53dbced504b0bc246",
+        "finished": "2026-09-28T15:45:01.944859+00:00"
+      },
+      {
+        "url": "https://www.jcb.org/cgi/content/full/jcb.200903014/DC1",
+        "name": "Hollien2009-DC1-response.html",
+        "started": "2026-09-28T15:45:42.955125+00:00",
+        "bytes": 93,
+        "status": "failed",
+        "http_status": 403,
+        "final_url": "https://www.jcb.org/cgi/content/full/jcb.200903014/DC1",
+        "content_type": "text/html",
+        "sha256": "0d3e98ca727fc1201b436170af5a63f23348aaf146a3ac6234f6c4da283e8b34",
+        "error": "403 Client Error: Forbidden for url: https://www.jcb.org/cgi/content/full/jcb.200903014/DC1",
+        "finished": "2026-09-28T15:45:43.313682+00:00"
+      },
+      {
+        "route": "bio discover",
+        "requests": 1,
+        "bytes_estimated": 30000,
+        "receipt": "inputs/context-audit/discovery-ridd.json"
+      },
+      {
+        "route": "bio resolve",
+        "requests": 5,
+        "request_accounting": "conservative upper allowance for adapter metadata route",
+        "bytes_estimated": 100000,
+        "receipt": "inputs/context-audit/resolve-GSE118660.json"
+      },
+      {
+        "route": "bio fetch",
+        "requests": 1,
+        "bytes": 166337,
+        "receipt": "inputs/context-audit/NIH-counts-fetch.json"
+      },
+      {
+        "route": "web search",
+        "requests": 4,
+        "bytes_estimated": 120000,
+        "receipt": "inputs/context-audit/web-search-r004.json"
+      }
+    ]
+  }
+}

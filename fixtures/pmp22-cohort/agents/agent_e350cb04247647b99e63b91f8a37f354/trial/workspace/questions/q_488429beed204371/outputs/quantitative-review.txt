@@ -1,0 +1,148 @@
+ROBUSTNESS {
+  "cAMP_vs_vehicle": {
+    "window_low_signal_specifications_n": 28,
+    "window_low_signal_mean_logratio_defined_n": 24,
+    "window_low_signal_mean_logratio_undefined_n": 4,
+    "all_window_low_signal_mean_logratio_range": [
+      0.22146310394276458,
+      1.7201447921823236
+    ],
+    "all_window_low_signal_fold_of_means_difference_range": [
+      0.08447494237743003,
+      0.9050807187053449
+    ],
+    "focal_leave_one_mean_logratio_range": [
+      0.1633574927068011,
+      0.1633574927068011
+    ],
+    "focal_leave_one_mean_logratio_defined_n": 1,
+    "focal_leave_one_total_n": 6,
+    "all_window_low_signal_leave_one_mean_logratio_range": [
+      -0.3619980332236654,
+      2.5002277542167013
+    ],
+    "all_window_low_signal_leave_one_fold_difference_range": [
+      -0.3431638631311893,
+      1.43326856522105
+    ],
+    "focal_leave_one_fold_of_means_difference_range": [
+      0.18380891206938887,
+      1.3759079169827864
+    ],
+    "focal_cross_library_logratio_difference_range": [
+      -0.24976489578697159,
+      0.4539254600159284
+    ],
+    "focal_cross_library_defined_n": 6,
+    "focal_cross_library_total_n": 9,
+    "focal_cross_library_positive_n": 4,
+    "focal_cross_library_negative_n": 2,
+    "range_type": "Observed or specification sensitivity range; NOT a confidence interval"
+  },
+  "SOX10_KO_vs_parental": {
+    "window_low_signal_specifications_n": 28,
+    "window_low_signal_mean_logratio_defined_n": 28,
+    "window_low_signal_mean_logratio_undefined_n": 0,
+    "all_window_low_signal_mean_logratio_range": [
+      -5.285888690355735,
+      -3.3350332433484313
+    ],
+    "all_window_low_signal_fold_of_means_difference_range": [
+      -4.613756617408144,
+      -3.331988951124666
+    ],
+    "focal_leave_one_mean_logratio_range": [
+      -5.754350816490432,
+      -4.817881711819692
+    ],
+    "focal_leave_one_mean_logratio_defined_n": 6,
+    "focal_leave_one_total_n": 6,
+    "all_window_low_signal_leave_one_mean_logratio_range": [
+      -5.767598208706914,
+      -3.1524367116829968
+    ],
+    "all_window_low_signal_leave_one_fold_difference_range": [
+      -5.717837884667238,
+      -3.188647751532838
+    ],
+    "focal_leave_one_fold_of_means_difference_range": [
+      -5.700372934727932,
+      -4.230580991890789
+    ],
+    "focal_cross_library_logratio_difference_range": [
+      -6.620209526060375,
+      -3.7640726626638537
+    ],
+    "focal_cross_library_defined_n": 8,
+    "focal_cross_library_total_n": 8,
+    "focal_cross_library_positive_n": 0,
+    "focal_cross_library_negative_n": 8,
+    "range_type": "Observed or specification sensitivity range; NOT a confidence interval"
+  }
+}
+COMPARATOR cAMP_vs_vehicle Pmp22 mean 471.9544586416667 3760.6841899466663 log2FC 2.994275600404438
+COMPARATOR SOX10_KO_vs_parental Pmp22 mean 6689.250664325 219.97269999374998 log2FC -4.926448215591479
+COMPARATOR cAMP_vs_vehicle Mpz mean 676.3193721803333 3516.9219326713333 log2FC 2.3785367275521905
+COMPARATOR SOX10_KO_vs_parental Mpz mean 2155.812733929 1.409241587 log2FC -10.579097192763221
+COMPARATOR cAMP_vs_vehicle Mbp mean 218.27858767700002 1348.833279245 log2FC 2.62746951756292
+COMPARATOR SOX10_KO_vs_parental Mbp mean 327.218232031 3.2252589065 log2FC -6.66469434774276
+COMPARATOR cAMP_vs_vehicle Mag mean 0.005094319333333333 35.35563500866667 log2FC 12.76076315413858
+COMPARATOR SOX10_KO_vs_parental Mag mean 48.55 0.0127 log2FC -11.900427083309113
+COMPARATOR cAMP_vs_vehicle Prx mean 0.0 0.024446237666666665 log2FC NA
+COMPARATOR SOX10_KO_vs_parental Prx mean 0.0 0.0 log2FC NA
+COMPARATOR cAMP_vs_vehicle Cnp mean 1788.2112809996668 1849.8624639326665 log2FC 0.04890080718726803
+COMPARATOR SOX10_KO_vs_parental Cnp mean 609.0723407840001 47.13368157475 log2FC -3.69178331154717
+COMPARATOR cAMP_vs_vehicle Mal mean 0.12187313899999999 370.79738196666665 log2FC 11.571035153330794
+COMPARATOR SOX10_KO_vs_parental Mal mean 153.6555306585 0.39206893575 log2FC -8.614376641374657
+COMPARATOR cAMP_vs_vehicle Sox10 mean 141.76336956666665 125.69531073333333 log2FC -0.17355397206894402
+COMPARATOR SOX10_KO_vs_parental Sox10 mean 84.135192545 0.04122515025 log2FC -10.994968918294683
+COMPARATOR cAMP_vs_vehicle Egr2 mean 0.016024320666666664 41.596087170333334 log2FC 11.341968912369772
+COMPARATOR SOX10_KO_vs_parental Egr2 mean 17.05 1.894883702 log2FC -3.1695905280605303
+COMPARATOR cAMP_vs_vehicle Jun mean 544.810372269 60.76558667333334 log2FC -3.1644277503785005
+COMPARATOR SOX10_KO_vs_parental Jun mean 63.492000000000004 43.25269197 log2FC -0.5537848972826384
+COMPARATOR cAMP_vs_vehicle S100b mean 1882.7820483173332 1594.62132075 log2FC -0.239652138824063
+COMPARATOR SOX10_KO_vs_parental S100b mean 157.331709998 9.26185535475 log2FC -4.086364436907167
+COMPARATOR cAMP_vs_vehicle Actb mean 11269.181831446333 8177.366538454 log2FC -0.46267456272159235
+COMPARATOR SOX10_KO_vs_parental Actb mean 15193.052401931 26355.783714012752 log2FC 0.7947078450281322
+COMPARATOR cAMP_vs_vehicle Gapdh mean 592.3185814776666 979.0434026453333 log2FC 0.7249994730840227
+COMPARATOR SOX10_KO_vs_parental Gapdh mean 1607.8532371390002 1550.71290592625 log2FC -0.05220410999500414
+COMPARATOR cAMP_vs_vehicle Arpc1a mean 585.0937307023333 281.1468164886667 log2FC -1.0573440488231012
+COMPARATOR SOX10_KO_vs_parental Arpc1a mean 40.122132617 0.213751878 log2FC -7.552317386111565
+COMPARATOR cAMP_vs_vehicle Chn2 mean 0.9902777696666667 24.14523313 log2FC 4.60776132985284
+COMPARATOR SOX10_KO_vs_parental Chn2 mean 5.631091486 0.0 log2FC NA
+COMPARATOR cAMP_vs_vehicle Ddr1 mean 23.328358353333332 14.321601276666666 log2FC -0.7038919794033481
+COMPARATOR SOX10_KO_vs_parental Ddr1 mean 8.5829941335 0.68796996225 log2FC -3.6410635310051003
+COMPARATOR cAMP_vs_vehicle Gas7 mean 562.0155133190001 650.6092415633333 log2FC 0.2111813615322968
+COMPARATOR SOX10_KO_vs_parental Gas7 mean 347.1081128395 0.1322430835 log2FC -11.357977100517056
+FOCAL cAMP_vs_vehicle none 0 mean-ratio-difference 0.8389319311268126 mean-logratio-difference NA
+FOCAL cAMP_vs_vehicle add 0.1 mean-ratio-difference 0.7386282741677079 mean-logratio-difference 1.6123252080170332
+FOCAL cAMP_vs_vehicle add 0.5 mean-ratio-difference 0.40332487042371934 mean-logratio-difference 0.6965098780999428
+FOCAL cAMP_vs_vehicle add 1 mean-ratio-difference 0.08447494237743003 mean-logratio-difference 0.22146310394276458
+FOCAL cAMP_vs_vehicle floor 0.1 mean-ratio-difference 0.8020317867018063 mean-logratio-difference 1.653064181826558
+FOCAL cAMP_vs_vehicle floor 0.5 mean-ratio-difference 0.6632020931732003 mean-logratio-difference 0.8790881501974361
+FOCAL cAMP_vs_vehicle floor 1 mean-ratio-difference 0.506571888685666 mean-logratio-difference 0.545754816864104
+FOCAL SOX10_KO_vs_parental none 0 mean-ratio-difference -4.551693631082181 mean-logratio-difference -5.262622471706826
+FOCAL SOX10_KO_vs_parental add 0.1 mean-ratio-difference -4.370626750482901 mean-logratio-difference -4.851657592251556
+FOCAL SOX10_KO_vs_parental add 0.5 mean-ratio-difference -3.8146334112514317 mean-logratio-difference -3.947719771754875
+FOCAL SOX10_KO_vs_parental add 1 mean-ratio-difference -3.331988951124666 mean-logratio-difference -3.3350332433484313
+FOCAL SOX10_KO_vs_parental floor 0.1 mean-ratio-difference -4.551693631082181 mean-logratio-difference -5.262622471706826
+FOCAL SOX10_KO_vs_parental floor 0.5 mean-ratio-difference -4.227605567099066 mean-logratio-difference -4.446512456395131
+FOCAL SOX10_KO_vs_parental floor 1 mean-ratio-difference -3.739194653379074 mean-logratio-difference -3.696512456395131
+ALL_LOO_EXTREMES cAMP_vs_vehicle P1_minus_P2_log2_fold_of_means defined 168 of 168
+{'set': 'focal', 'method': 'add', 'constant_RPM': '1', 'omitted_library': 'Primary Schwann Cell Control 1 RPM', 'P1_minus_P2_log2_fold_of_means': '-0.3431638631311893'}
+{'set': 'midpoint_500', 'method': 'none', 'constant_RPM': '0', 'omitted_library': 'Primary Schwann Cell Control 3 RPM', 'P1_minus_P2_log2_fold_of_means': '1.43326856522105'}
+ALL_LOO_EXTREMES cAMP_vs_vehicle change_mean_log2_P1_P2 defined 148 of 168
+{'set': 'focal', 'method': 'add', 'constant_RPM': '1', 'omitted_library': 'Primary Schwann Cell Control 1 RPM', 'change_mean_log2_P1_P2': '-0.3619980332236654'}
+{'set': 'midpoint_500', 'method': 'floor', 'constant_RPM': '0.1', 'omitted_library': 'Primary Schwann Cell Control 3 RPM', 'change_mean_log2_P1_P2': '2.5002277542167013'}
+ALL_LOO_EXTREMES SOX10_KO_vs_parental P1_minus_P2_log2_fold_of_means defined 168 of 168
+{'set': 'midpoint_250', 'method': 'none', 'constant_RPM': '0', 'omitted_library': 'S16 delSOX10 2-2 RPM', 'P1_minus_P2_log2_fold_of_means': '-5.717837884667238'}
+{'set': 'focal', 'method': 'add', 'constant_RPM': '1', 'omitted_library': 'S16 delSOX10 1-1 RPM', 'P1_minus_P2_log2_fold_of_means': '-3.188647751532838'}
+ALL_LOO_EXTREMES SOX10_KO_vs_parental change_mean_log2_P1_P2 defined 168 of 168
+{'set': 'midpoint_250', 'method': 'none', 'constant_RPM': '0', 'omitted_library': 'S16 delSOX10 2-2 RPM', 'change_mean_log2_P1_P2': '-5.767598208706914'}
+{'set': 'focal', 'method': 'add', 'constant_RPM': '1', 'omitted_library': 'S16 delSOX10 1-1 RPM', 'change_mean_log2_P1_P2': '-3.1524367116829968'}
+COMPOSITION adult_nerve {'P1_fraction_focal_or_window_pair': 0.8579311489228807, 'P1_fraction_all22': 0.8236138072511616, 'P2_fraction_all22': 0.13635601420168228}
+COMPOSITION primary_control {'P1_fraction_focal_or_window_pair': 0.003264998604190567, 'P1_fraction_all22': 0.002844896817170282, 'P2_fraction_all22': 0.8722142019691141}
+COMPOSITION primary_cAMP {'P1_fraction_focal_or_window_pair': 0.0055386635650375715, 'P1_fraction_all22': 0.005169603412412465, 'P2_fraction_all22': 0.9289490185081757}
+COMPOSITION S16_parental {'P1_fraction_focal_or_window_pair': 0.08211112944958804, 'P1_fraction_all22': 0.07830148501971299, 'P2_fraction_all22': 0.8752851668524784}
+COMPOSITION S16_SOX10_KO {'P1_fraction_focal_or_window_pair': 0.003005912057083505, 'P1_fraction_all22': 0.002710855777497652, 'P2_fraction_all22': 0.8810262466798822}
+PER_CLUSTER [('5436', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5436', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5437', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5437', 'SOX10_KO_vs_parental', '1.3563281285', '0.0', 'NA'), ('5438', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5438', 'SOX10_KO_vs_parental', '2.8347509544999996', '0.0063552515', '-8.801057059255076'), ('5439', 'cAMP_vs_vehicle', '1.2866468323333333', '19.52100474', '3.9233392977154753'), ('5439', 'SOX10_KO_vs_parental', '523.80083985', '0.74348993725', '-9.460489441253848'), ('5440', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5440', 'SOX10_KO_vs_parental', '0.9331839515', '0.00636964825', '-7.194803981476685'), ('5441', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5441', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5442', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5442', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5443', 'cAMP_vs_vehicle', '5.988660873', '26.486851036666664', '2.1449709925299243'), ('5443', 'SOX10_KO_vs_parental', '34.150000000000006', '3.98140393575', '-3.1005364250479635'), ('5444', 'cAMP_vs_vehicle', '5.678495538', '39.012082613333334', '2.7803403594765257'), ('5444', 'SOX10_KO_vs_parental', '34.55', '3.4601508735', '-3.3197788602097766'), ('5445', 'cAMP_vs_vehicle', '20.82643897', '41.23690959666666', '0.9855200375896292'), ('5445', 'SOX10_KO_vs_parental', '44.859418855', '6.57879922075', '-2.7695147419980986'), ('5446', 'cAMP_vs_vehicle', '411.7674209666667', '3492.6182456666666', '3.0844073665886627'), ('5446', 'SOX10_KO_vs_parental', '5855.0', '194.909100825', '-4.908795810171667'), ('5447', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5447', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5448', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5448', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5449', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5449', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA'), ('5450', 'cAMP_vs_vehicle', '0.0', '0.9041340090000001', 'NA'), ('5450', 'SOX10_KO_vs_parental', '2.8000000000000003', '0.0', 'NA'), ('5451', 'cAMP_vs_vehicle', '0.5718968466666666', '2.3634694053333334', '2.0470793334792265'), ('5451', 'SOX10_KO_vs_parental', '0.0', '0.82087819275', 'NA'), ('5452', 'cAMP_vs_vehicle', '1.075944572', '2.226261621', '1.0490193837445714'), ('5452', 'SOX10_KO_vs_parental', '2.644839851', '1.0319429185', '-1.3578171967635426'), ('5453', 'cAMP_vs_vehicle', '0.7233933273333334', '2.2780822746666667', '1.6549676564350677'), ('5453', 'SOX10_KO_vs_parental', '0.0113027345', '0.6421374355', '5.8281383528241335'), ('5454', 'cAMP_vs_vehicle', '19.448711143333334', '89.45231366333333', '2.201444246054481'), ('5454', 'SOX10_KO_vs_parental', '120.5', '5.4077771085', '-4.477853646719433'), ('5455', 'cAMP_vs_vehicle', '0.0', '1.39754954', 'NA'), ('5455', 'SOX10_KO_vs_parental', '1.26', '0.0', 'NA'), ('5456', 'cAMP_vs_vehicle', '4.586849572333334', '43.18728578', '3.2350311498658195'), ('5456', 'SOX10_KO_vs_parental', '64.55', '2.3842946465', '-4.758782658152602'), ('5457', 'cAMP_vs_vehicle', '0.0', '0.0', 'NA'), ('5457', 'SOX10_KO_vs_parental', '0.0', '0.0', 'NA')]

@@ -1,0 +1,179 @@
+{
+  "question": "q_b6e71fffe204498a",
+  "prior_question": "q_277f20df4b6b47cc",
+  "status": "revisable_bounded_research",
+  "report": "outputs/REPORT.md",
+  "native_memory": "No scientific always-on memory or skill write; existing native session history plus catalog pointer suffices in this one-shot run. New conclusions are indexed here and in LABBOOK.",
+  "reuse_observation": "Single follow-up without control arm; cannot establish causal improvement from memory.",
+  "prior_retrieval": [
+    {
+      "source": "catalog and native sessions 20260929_133701_bc632e / 20260929_155427_f27806",
+      "inspected": "Prior full LABBOOK, corrected pointer, scripts, source paper text, registrations and native cells",
+      "disposition": "useful with corrected scope",
+      "decision": "Use corrected four-gene endpoint; preserve untestable Osgin1 lock and failed relative-Pmp22 transfer"
+    },
+    {
+      "artifact": "artifact_67f1a8f71cf2a4978144bdf321e65bd485c719476e2a0a4c281a61f319c1e3eb",
+      "action": "artifact use",
+      "disposition": "useful",
+      "decision": "Navigate exact corrected sources and retain old negatives"
+    },
+    {
+      "artifact": "artifact_0ce2aca3b3d0f1f6230aa21d5cd4d5997c63cfeb0dc870e047a34cf245817e7f",
+      "action": "artifact use and native-cell recomputation",
+      "disposition": "useful; all panel effects reproduce",
+      "decision": "Fix retrospective endpoint and study-specific comparison direction"
+    },
+    {
+      "artifact": "artifact_38df20aae1fea7c91df45595395e4e420e947e21f7c1557264c8b74f54b124f5",
+      "action": "artifact use; native full matrix extended to whole nerve",
+      "disposition": "useful for repair, inapplicable as normal neonatal development",
+      "decision": "Retain rat injury as compartment sensitivity, seek age-matched mouse reference"
+    },
+    {
+      "source": "PMC11014456 Figure1C-E; inspected text lines 14,21-22",
+      "disposition": "useful incidental measurement lead; Figure1E accession scope clarified",
+      "decision": "Retrieve Gerber SNAT full developmental and sorted tables; GSE137947 supplies P5 paired-subject metadata"
+    },
+    {
+      "source": "SNAT article processing paragraph and GSE137947 sample processing",
+      "disposition": "corrected source ambiguity",
+      "decision": "Retain conflicting article GRCh38.p10; use explicit GRCm38.p5 sample metadata for sorted source, no coordinate inference"
+    },
+    {
+      "source": "Figlia native XLSX gene_name cells",
+      "disposition": "measurement suitability correction",
+      "decision": "Exclude and preserve non-text/date-converted symbols rather than invent repairs"
+    },
+    {
+      "source": "prior Ppp6r1/Gtf2f1/Hck negatives, Eed truncation, HDAC3 HIDATA, opposed ISR contexts, protein-quantitation limitations",
+      "disposition": "retained; not retested or promoted by this follow-up",
+      "decision": "No restoration of failed/untestable claims"
+    }
+  ],
+  "evidence": [
+    {
+      "topic": "Exact inherited measurement audit",
+      "artifact": "artifact_80153e193888f8727ae9f2edf5f9b476abfce2115d70b76cd50bec3825cf053c",
+      "files": [
+        "outputs/preparation-summary.json",
+        "outputs/robustness-summary.json"
+      ],
+      "finding": "Native Nae1 counts exactly match; all 20 exposed panel effects reproduced to 1e-12",
+      "scope": "Integrity, not new replication"
+    },
+    {
+      "topic": "Normal developmental and purified Schwann state",
+      "artifact": "artifact_cf14cda0f514a5bfad505daa46f56be382ca83f46a523d05f1fff58a3023527e",
+      "files": [
+        "outputs/reference-effects.tsv",
+        "outputs/projection-panel-sensitivity.tsv",
+        "outputs/projection-fit.json",
+        "outputs/sorted-robustness.tsv",
+        "outputs/development-all-age-sensitivity.tsv"
+      ],
+      "finding": "P5 purified antioxidant -0.102 despite Pmp22 -3.039; Nae1 antioxidant residual +2.352 to +2.535 across axes",
+      "scope": "These reference axes insufficient, all pathological states not excluded"
+    },
+    {
+      "topic": "Cell composition and independent biological pools",
+      "artifact": "artifact_86fa02867f7d4e0e9b2210042a96103fa4787ce9436590120b72e00c9a234533",
+      "files": [
+        "outputs/cell-reference-QC.tsv",
+        "outputs/cell-SC-state-effects.tsv",
+        "outputs/composition-compatibility-unique-summary.tsv",
+        "inputs/public/GSE138577-family.soft"
+      ],
+      "finding": "11339 cells, 11 labels, 3 independent pools; fixed-P1 profile null fails broad markers too",
+      "scope": "No measured tissue fractions; no Schwann-intrinsic causal attribution"
+    },
+    {
+      "topic": "Reusable complete P1 reference profiles",
+      "artifact": "artifact_8dc2fce773d6d041027001284499dfbeef0f5b1cb70f7865def470ba311e7ca1",
+      "secondary_artifact": "artifact_57c94fbb77368291cb905eb370a0c840d9e6f450f07c624061a2dc905777d4f8",
+      "files": [
+        "outputs/cell-pseudobulk-counts.tsv.gz",
+        "outputs/cell-pseudobulk-cpm.tsv.gz"
+      ],
+      "finding": "Full unambiguous-symbol profiles with native UMI provenance",
+      "scope": "P1 sorted biased recovery; pool/type not donor-level cells; absent mature myelinating SC"
+    },
+    {
+      "topic": "Bulk confounding and normalization",
+      "artifact": "artifact_9fbeb73951af28e17422c75b9d098904df35647fe38389102ca6e3e6441beec6",
+      "files": [
+        "outputs/bulk-adjustment-sensitivity.tsv",
+        "outputs/stable-ratio-sensitivity.tsv"
+      ],
+      "finding": "Genotype/proxy separation prevents causal adjustment; stable-gene ratios preserve contrast",
+      "scope": "Sensitivity in existing data, not independent replication"
+    },
+    {
+      "topic": "Repair compartment comparison",
+      "artifact": "artifact_6fbeafac5c0f4a801f087f13454c78b57c0b4f189ff70cac1fad5c70da1fdbdf",
+      "files": [
+        "outputs/repair-effects.tsv",
+        "outputs/repair-normalization-sensitivity.tsv"
+      ],
+      "finding": "Day3 whole-nerve antioxidant up, purified down; later whole-nerve panel direction normalization-sensitive",
+      "scope": "Rat P18 pooled preparations, not neonatal mouse equivalence or proven mixing"
+    },
+    {
+      "topic": "Broad response and omitted blood RNA diagnostic",
+      "artifact": "artifact_4387fd6cbf38dd0b0e68ac2c44c0b4b634f5bf1639993e4e195509c2bc440e57",
+      "secondary_artifact": "artifact_3e8a5962ea8daf5a1236132ff94992c86388a8390854318b23565a91a418a7f8",
+      "files": [
+        "outputs/RNA-burden-summary.json",
+        "outputs/broad-residual-extremes.tsv"
+      ],
+      "finding": "Additional redox-related residual candidates; selected erythroid RNA too small for uniform denominator explanation",
+      "scope": "Post-outcome exploration; not absolute erythrocyte abundance"
+    },
+    {
+      "topic": "NRF2/PMP22 causal identification",
+      "files": [
+        "outputs/causal-design-evidence.txt",
+        "outputs/reference-sample-metadata.json"
+      ],
+      "finding": "No matched within-cell Nae1-by-Nrf2 perturbation/activity/promoter design in the analyzed sources",
+      "scope": "Cell origin, abnormal state, NRF2 activity, promoter usage and absolute output remain unidentified"
+    }
+  ],
+  "sources": [
+    {
+      "id": "PMC8064760",
+      "files": [
+        "inputs/public/SNAT.xml",
+        "outputs/SNAT-text.txt",
+        "inputs/managed/elife-58591-supp1.xls.fetch.json",
+        "inputs/managed/elife-58591-supp2.xls.fetch.json"
+      ]
+    },
+    {
+      "id": "GSE137947",
+      "file": "inputs/public/GSE137947-gsm.soft",
+      "locator": "Sample_characteristics subject 1-4, processing genome build"
+    },
+    {
+      "id": "GSE138577",
+      "file": "inputs/public/GSE138577-family.soft",
+      "locator": "Series_overall_design; independent sex-balanced biological pools"
+    },
+    {
+      "id": "GSE177037",
+      "file": "outputs/GSE177037-design-summary.json",
+      "locator": "Sample_description library mapping; extract protocol at least 10 nerves/purified preparation"
+    },
+    {
+      "id": "GSE241269 / PMC11014456",
+      "file": "outputs/causal-design-evidence.txt",
+      "locator": "P7 bulk design; pro-myelin arrest; unmatched later assays"
+    },
+    {
+      "id": "PMC5589416 / PRJEB20661",
+      "file": "questions/q_277f20df4b6b47cc/outputs/upstream/PMC5589416-text.txt"
+    }
+  ],
+  "next_discriminating_data": "Genotype-matched P7 biological-donor purified/sc/snRNA plus measured composition and absolute calibration; factorial NRF2 perturbation/rescue with activity and nascent/promoter Pmp22 readouts",
+  "not_novelty_claim": "Additional analysis of available measurements; not a claim that these genes or source capabilities are novel in the literature"
+}

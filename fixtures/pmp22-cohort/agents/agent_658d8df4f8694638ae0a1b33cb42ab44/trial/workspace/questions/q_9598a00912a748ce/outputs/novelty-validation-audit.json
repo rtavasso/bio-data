@@ -1,0 +1,86 @@
+{
+  "primary_claims": [
+    {
+      "source": "PMC10990902",
+      "locator": "Results p0195/p0205, Fig 7; p0210 and Discussion p0230",
+      "claim": "Intestine-specific Acsl5 deletion in male mice increased postprandial circulating GLP-1/PYY. Authors propose altered enterocyte fatty-acid trapping and increased mucosal NEFA as an enteroendocrine stimulus.",
+      "role": "Already published ACSL5-secretion relationship; not generic secretory-pathway validation, not PMP22, not a quantitative reanalysis here."
+    },
+    {
+      "source": "PMC2952567",
+      "locator": "Results ACSL5 knockdown suppresses esterification of FAs into complex lipids; Fig 3F",
+      "claim": "ACSL5 knockdown in rat primary hepatocytes reduced radiolabeled TAG appearance in media, reported approximately 50%, alongside lower cellular TAG synthesis.",
+      "role": "Endpoint/context counterexample to blanket secretion enhancement. Lipid export is not secreted protein and this does not falsify the frozen protein-cargo prediction. Source-text observation, not newly digitized/quantified values."
+    },
+    {
+      "source": "JCI Insight 201297",
+      "locator": "Results Discovery of KCNQ1 trafficking modulators; Supplemental Fig 4",
+      "claim": "PMP22 expression/trafficking effects were already used to exclude compounds. VU0494372/PMP22 counter-screen finding is published and selection-conditioned.",
+      "role": "Novelty and independence restriction."
+    },
+    {
+      "source": "PMC7771966",
+      "locator": "Fig 5 and source workbook; reviewer-response discussion",
+      "claim": "UGGT1/ALG6 control of endogenous IGF1R maturation was already reported; percentages of surviving labeled cargo need not identify yield relative to synthesis.",
+      "role": "Orthogonal mechanism constraint, not novel biology or PMP22 transfer."
+    },
+    {
+      "source": "PMC6979480",
+      "locator": "S4 complete selected HRP follow-up; S6 Golgi images",
+      "claim": "Raw HRP measurements including ACSL5 were already published. GPR161/TMEM220 mechanistic follow-up was reported; our reanalysis separates absolute reporter activity, within-cell reporter activity and their ratio across individual repeats.",
+      "role": "Potentially overlooked assay-level reclassification, not new measurements or verified mechanism."
+    }
+  ],
+  "queries": [
+    {
+      "name": "novelty-specific-cargos",
+      "hit_count": 21,
+      "returned": 21,
+      "complete_returned_set": true,
+      "receipt": "novelty-specific-cargos.json.receipt.json"
+    },
+    {
+      "name": "novelty-specific-pmp",
+      "hit_count": 0,
+      "returned": 0,
+      "complete_returned_set": true,
+      "receipt": "novelty-specific-pmp.json.receipt.json"
+    },
+    {
+      "name": "novelty-pmp-candidates",
+      "hit_count": 34,
+      "returned": 34,
+      "complete_returned_set": true,
+      "receipt": "novelty-pmp-candidates.json.receipt.json"
+    },
+    {
+      "name": "validation-general-screen",
+      "hit_count": 717,
+      "returned": 100,
+      "complete_returned_set": false,
+      "receipt": "validation-general-screen.json.receipt.json"
+    },
+    {
+      "name": "candidate-secretion",
+      "hit_count": 1141,
+      "returned": 100,
+      "complete_returned_set": false,
+      "receipt": "candidate-secretion.json.receipt.json"
+    },
+    {
+      "name": "candidate-acsl5-er",
+      "hit_count": 602,
+      "returned": 100,
+      "complete_returned_set": false,
+      "receipt": "candidate-acsl5-er.json.receipt.json"
+    }
+  ],
+  "validation": {
+    "frozen_prediction_blob": "32f44b839b162178cf551b8b8e846a1ecd09ceb0eb10cc02084347ab2d7d0e11",
+    "ncb2510": "Candidate independent human cargo RNAi screen; native outcomes/target coverage unavailable after publisher Client Challenge, structured metadata and repository searches, DNS/403 supplement probes. Not evaluated.",
+    "PMC6754299": "Additional VCP/PGD disposition study was acquired as primary HTML; exact native secretome/whole-proteome workbook downloads blocked by HTML preparation pages and alternate-source errors. No numerical results produced.",
+    "same_study_orthogonal": "Golgi phenotype in HRP study and KCNQ1 electrophysiology in JCI are orthogonal readouts but not independent replication of the HRP ACSL5 claim; culture nesting/count discrepancies retained.",
+    "computational_verification": "Separately implemented checks verify outputs against native scalar values and local controls. These verify computations, not biological reproducibility."
+  },
+  "conclusion": "No verified novel PMP22 mechanism. Previously published assays support a new endpoint/replicate sensitivity analysis and an ACSL5 cargo hypothesis; targeted absence of abstracts is not proof of novelty."
+}

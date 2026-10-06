@@ -1,0 +1,167 @@
+{
+  "revision": 2,
+  "scope": "Total RNA and antioxidant RNA contrast, not promoter output/protein",
+  "status": "bounded_complete",
+  "stopping_reason": "All high-priority measurement branches executed; causal identification blocked by unmatched designs. Additional normal/adult atlases cannot identify the within-genotype cell-state/source contribution. No time or byte cap invoked.",
+  "items": [
+    {
+      "id": "inherited-baseline",
+      "priority": "high",
+      "question": "Do the exact inherited derivations support the contrast being explained?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Native cells, sample metadata and immutable artifacts",
+      "assets": [
+        "q_277f20df4b6b47cc",
+        "GSE241269",
+        "PMC5589416"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_80153e193888f8727ae9f2edf5f9b476abfce2115d70b76cd50bec3825cf053c",
+        "artifact_6fbeafac5c0f4a801f087f13454c78b57c0b4f189ff70cac1fad5c70da1fdbdf"
+      ],
+      "finding": "Exact native/count and 20-panel reproduction; corrected endpoint applies, old negative and untestable outcomes retained.",
+      "limitation": "Source cohorts remain different ages/drivers; exposed comparisons are retrospective.",
+      "next_action": "Use genotype-matched within-cell and composition data for causal attribution; preserve current sensitivity scope.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "purified-state-reference",
+      "priority": "high",
+      "question": "Can state changes within purified Schwann cells reproduce the antioxidant/myelin pattern?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Processed purified developmental or repair transcriptomes with known sample units",
+      "assets": [
+        "GSE177037"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_cf14cda0f514a5bfad505daa46f56be382ca83f46a523d05f1fff58a3023527e",
+        "artifact_6fbeafac5c0f4a801f087f13454c78b57c0b4f189ff70cac1fad5c70da1fdbdf"
+      ],
+      "finding": "P5 paired and P1 pool-level purified/state comparisons do not reproduce antioxidant rise; repair compartments diverge.",
+      "limitation": "Normal development/rat repair cannot exhaust pathological P7 states.",
+      "next_action": "Use genotype-matched within-cell and composition data for causal attribution; preserve current sensitivity scope.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "bulk-sensitivity",
+      "priority": "high",
+      "question": "Does the contrast remain under defensible state/composition sensitivities in the existing bulk matrices?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Sample scores, reference projections and broad effects",
+      "assets": [
+        "GSE241269",
+        "PRJEB20661"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_cf14cda0f514a5bfad505daa46f56be382ca83f46a523d05f1fff58a3023527e",
+        "artifact_9fbeb73951af28e17422c75b9d098904df35647fe38389102ca6e3e6441beec6",
+        "artifact_3389edf2a0c2adda1ce887d8cbde0ae5f4b92f8ff795f9df8706216684a02657"
+      ],
+      "finding": "Broad external axes explain part of response but leave antioxidant +2.352 to +2.535, no-Nqo1 +1.508 to +1.793.",
+      "limitation": "Covariates largely separated by genotype; reference resampling not independent replication or causal proof.",
+      "next_action": "Use genotype-matched within-cell and composition data for causal attribution; preserve current sensitivity scope.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "cell-composition",
+      "priority": "high",
+      "question": "Can measured cell-type reference profiles and plausible mixtures account for the contrast?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Annotated cell-type RNA profiles; biological replicate metadata; mixture bounds",
+      "assets": [],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_86fa02867f7d4e0e9b2210042a96103fa4787ce9436590120b72e00c9a234533",
+        "artifact_57c94fbb77368291cb905eb370a0c840d9e6f450f07c624061a2dc905777d4f8",
+        "artifact_5c4769b623de2e8dcc556a0fcda9f102053de4f58d5ce39dc5977f0b266cd3c5"
+      ],
+      "finding": "Native P1 profiles and arbitrary-mixture compatibility executed; pure fixed-reference explanation does not fit, but markers-only mismatch prevents causal exclusion of real composition.",
+      "limitation": "Biased recovery, age/pathological-state and assay mismatch; no empirical cell fractions or absolute abundance identified.",
+      "next_action": "Use genotype-matched within-cell and composition data for causal attribution; preserve current sensitivity scope.",
+      "blocker_evidence": []
+    },
+    {
+      "id": "causal-identification",
+      "priority": "high",
+      "question": "What remains unidentifiable about NRF2 and PMP22 regulation?",
+      "alternatives": [
+        "Composition or state suffices",
+        "Parallel/perturbation-associated redox response",
+        "Unresolved design or measurement confounding"
+      ],
+      "readout": "Matched within-cell perturbation/rescue and calibrated RNA/protein readouts",
+      "assets": [
+        "PMC11014456",
+        "PMC5589416"
+      ],
+      "prerequisites": [
+        "Source/sample/feature eligibility and independence audit"
+      ],
+      "status": "blocked",
+      "artifacts": [],
+      "finding": "Source inspection separates bulk RNA from direct activity or promoter measurements; mechanistic route remains unidentified.",
+      "limitation": "Analyzed P7 bulk and separate age/culture assays do not jointly measure genotype, source cell identity, nuclear NRF2/target engagement and promoter-specific Pmp22. Atlas is unperturbed reference; no causal factorial/rescue comparison.",
+      "next_action": "Genotype-matched P7 biological-donor purified/sc/snRNA plus measured composition and absolute calibration; factorial NRF2 perturbation/rescue with activity and nascent/promoter Pmp22 readouts",
+      "blocker_evidence": [
+        "outputs/causal-design-evidence.txt",
+        "outputs/reference-sample-metadata.json",
+        "outputs/GSE177037-design-summary.json"
+      ]
+    },
+    {
+      "id": "erythroid-denominator",
+      "priority": "medium",
+      "question": "Could omitted erythroid RNA explain the broad residual/antioxidant inflation?",
+      "alternatives": [
+        "Relative library dilution",
+        "Specific RNA response"
+      ],
+      "readout": "Native whole-library TPM burden",
+      "assets": [
+        "GSE241269"
+      ],
+      "prerequisites": [
+        "Inspect complete native TPM denominator"
+      ],
+      "status": "analyzed",
+      "artifacts": [
+        "artifact_4387fd6cbf38dd0b0e68ac2c44c0b4b634f5bf1639993e4e195509c2bc440e57"
+      ],
+      "finding": "Selected erythroid WT RNA ~0.0029% TPM; removal insufficient for +2.369 uniform inflation.",
+      "limitation": "Marker RNA is not cell abundance; other cell-state changes remain possible.",
+      "next_action": "No further blood-only acquisition warranted by this quantitative diagnostic.",
+      "blocker_evidence": []
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+"""Outcome-blind sample/feature eligibility for the selected spike-in study."""
+import hashlib
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import openpyxl
+
+ROOT=Path(__file__).resolve().parents[1]
+S=ROOT/'inputs'/'sources'
+OUT=ROOT/'outputs'
+records=[]
+r=None
+for number,line in enumerate((S/'GSE256237.soft').read_text().splitlines(),1):
+    if line.startswith('^SAMPLE = '):
+        r={'accession':line.split(' = ',1)[1],'source_line':number}
+        records.append(r)
+    if r is not None and line.startswith('!Sample_') and ' = ' in line:
+        key,value=line.split(' = ',1)
+        r.setdefault(key.removeprefix('!Sample_'),[]).append(value)
+rows=[]
+for r in records:
+    rows.append({'accession':r['accession'],'title':r['title'][0],'source_line':r['source_line'],'characteristics':'; '.join(r.get('characteristics_ch1',[])),'molecule':r.get('molecule_ch1'),'library_selection':r.get('library_selection'),'extract_protocol':r.get('extract_protocol_ch1')})
+meta=pd.DataFrame(rows)
+meta.to_csv(OUT/'GSE256237-sample-map.tsv',sep='\t',index=False)
+x=pd.read_csv(S/'GSE256237-counts',compression='gzip',index_col=1).drop(columns='Unnamed: 0')
+assert x.index.is_unique
+assert np.isfinite(x.dropna().to_numpy()).all()
+assert ((x.fillna(0)>=0)&(x.fillna(0)==np.floor(x.fillna(0)))).all().all()
+hgnc=pd.read_csv(S/'hgnc-complete.tsv',sep='\t',dtype=str)
+target=hgnc.loc[hgnc.symbol=='PMP22'].iloc[0]
+ids=[target['ensembl_gene_id']]+str(target['refseq_accession']).split('|')
+wb=openpyxl.load_workbook((S/'GSE256237-S2').open('rb'),read_only=True,data_only=False)
+author_ids=[row[0] for row in wb['ISR_G3BP_translation_table'].iter_rows(values_only=True) if row[1]=='PMP22']
+ids+=author_ids
+independent=pd.read_csv(S/'GSM1331342',compression='gzip',sep='\t',dtype={'RefSeq accession identifier':str})
+other_ids=independent.loc[independent.Gene=='PMP22','RefSeq accession identifier'].tolist()
+ids+=other_ids
+hits=[i for i in x.index if i.split('.')[0] in ids]
+controlcols=[c for c in x if 'WT_Unstressed' in c]
+spikes=[i for i in x.index if not i.startswith(('ENSG','NM_','NR_','XM_','XR_'))]
+pairs=[]
+for c in x:
+    if c.startswith('RPF_'):
+        rna=c.replace('RPF_','RNA_',1)
+        assert rna in x
+        pairs.append({'RPF':c,'RNA':rna,'RPF_GSM':meta.loc[meta.title==c,'accession'].tolist(),'RNA_GSM':meta.loc[meta.title==rna,'accession'].tolist()})
+duplicates=[]
+for i,a in enumerate(x):
+    for b in x.columns[i+1:]:
+        if x[a].equals(x[b]):
+            duplicates.append([a,b])
+out={'count_sha256':hashlib.sha256((S/'GSE256237-counts').read_bytes()).hexdigest(),'rows':len(x),'columns':len(x.columns),'native_missing_cells':int(x.isna().sum().sum()),'column_sums':x.sum().to_dict(),'metadata_samples':len(meta),'pairs':pairs,'duplicate_vectors':duplicates,'unmatched_columns':[c for c in x if c not in set(meta.title)],'PMP22_ids':hits,'PMP22_unstressed_counts':x.loc[hits,controlcols].to_dict('index'),'additional_rows':spikes,'sample_metadata':records}
+out['PMP22_searched_identifiers']=ids
+out['target_gate']='eligible_feature_present' if hits else 'FAIL: target not recovered in processed RPF/RNA count universe; not a measured zero'
+(OUT/'design-inspection.json').write_text(json.dumps(out,indent=2,allow_nan=False)+'\n')
+print(json.dumps({k:v for k,v in out.items() if k not in ['sample_metadata','column_sums']},indent=2))
+print('INDEPENDENT CONTROL COVERAGE',independent.loc[independent.Gene=='PMP22'].to_json(orient='records'))

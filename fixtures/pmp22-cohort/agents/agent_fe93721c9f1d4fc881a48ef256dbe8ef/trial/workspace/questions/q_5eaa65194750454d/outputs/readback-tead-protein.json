@@ -1,0 +1,94 @@
+{
+  "created": "2026-10-05T23:05:48.525394+00:00",
+  "derivation_key": "0a5355c725218a2de09902dcabf400f88e9a5d1aee418215dc31e1a5c3d21435",
+  "id": "artifact_94def30413e259d3d4565617986a44436e3934cff87c323daa8c5516d4a731ec",
+  "manifest": {
+    "derivation": {
+      "code": [
+        "505b87fed68324549dd7de6a55e19f48d63de6e533398c306ad5ee35f6b6edbb"
+      ],
+      "command": [],
+      "environment": {
+        "packages": {
+          "defusedxml": "0.7.1",
+          "matplotlib": "3.11.2",
+          "numpy": "2.5.3",
+          "openpyxl": "3.1.5",
+          "pandas": "2.3.3",
+          "scipy": "1.18.1"
+        },
+        "python": "3.12.8 (v3.12.8:2dc476bcb91, Dec  3 2024, 14:43:19) [Clang 13.0.0 (clang-1300.0.29.30)]"
+      },
+      "inputs": [
+        {
+          "blob": "11c2558cb6e86ddacce2abf86289f86e1dd8981edb4d08db18849d7cca14031c",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "46efdfd2902ff65d58583070c71d959a43255e5406582d2ed46a8c2dadd5936e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "5054c1c55cbd61adfc1e171c179348a6c6fdb9e716f325e1e5108efcb164808d",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b75588038e125423341aac189ef322b832d5dad37ea9b73272ec7f0c1191ed2a",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "b7ab35619280602f82af99ce49e51dfd49456f4f07676002fc1347a6a14f96f9",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        },
+        {
+          "blob": "bfacc432e3f1bb7fe08874ac2e65bc96322fa0186e052e448ac3ce16093c074e",
+          "role": "input",
+          "selector": {},
+          "source_identity": ""
+        }
+      ],
+      "parameters": {
+        "gene_scores_are_not_TF_activity": true,
+        "relative_not_absolute_abundance": true,
+        "source_units_not_pooled": true,
+        "version": 1
+      },
+      "references": [
+        "ceaee22f80843a6926c406729da45d470d2a230ecbcd8ebaebbdbaff06b2f4db"
+      ]
+    },
+    "derivation_key": "0a5355c725218a2de09902dcabf400f88e9a5d1aee418215dc31e1a5c3d21435",
+    "execution": "registered by operator; code is preserved, never automatically executed",
+    "kind": "file",
+    "limitations": [],
+    "output": {
+      "blob": "6c73a158bba9ae09b7e165ac248417664342554bfa6525326e7b3974e883e998",
+      "bytes": 3421,
+      "name": "tead-protein-contrasts.json"
+    },
+    "output_role": "tead-protein",
+    "scientific_applicability": "assessed at question time",
+    "summary": "Numeric Prism Table-only parsing; four protein endpoints from three mice/genotype. Independent assay subedge, not RNA preservation or PMP22 measurement; known biology reproduced.",
+    "title": "TEAD1 source protein reanalysis: Krox20 high, MPZ/MBP low"
+  },
+  "manifest_blob": "c9989b47e0620eb30c7e32c8360a24f39b7ad725b7b7398c37396fd888829216",
+  "output_blob": "6c73a158bba9ae09b7e165ac248417664342554bfa6525326e7b3974e883e998",
+  "output_role": "tead-protein",
+  "path": "/Users/rtavasso/atiercorp/bio-data/workspaces/community-validation/board/agents/agent_fe93721c9f1d4fc881a48ef256dbe8ef/trial/workspace/blobs/sha256/6c/6c73a158bba9ae09b7e165ac248417664342554bfa6525326e7b3974e883e998",
+  "questions": [
+    {
+      "question_id": "q_5eaa65194750454d",
+      "relationship": "produced"
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "eligible4": {
+    "Nae1KO": {
+      "study": "Nae1KO",
+      "panel": "eligible4",
+      "n_control": 4,
+      "n_KO": 4,
+      "effect": 2.368638808502192,
+      "ci95": [
+        2.037955520049641,
+        2.6993220969547433
+      ],
+      "alternative_normalization": 2.4508820536577263,
+      "all_pairwise_range": [
+        1.9682909472654337,
+        2.7470512848249236
+      ],
+      "sample_omission_range": [
+        2.296611009650345,
+        2.4711033697008737
+      ],
+      "gene_omission_range": [
+        1.5268672389541518,
+        3.069823899197541
+      ]
+    },
+    "TSC1KO": {
+      "study": "TSC1KO",
+      "panel": "eligible4",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": -0.053766688734546264,
+      "ci95": [
+        -0.24867183841854335,
+        0.14113846094945082
+      ],
+      "alternative_normalization": 0.18399784185699852,
+      "all_pairwise_range": [
+        -0.21322843550458614,
+        0.12772590037712916
+      ],
+      "sample_omission_range": [
+        -0.09993202772812282,
+        -0.011532577165743518
+      ],
+      "gene_omission_range": [
+        -0.263417017591304,
+        0.0849099513162308
+      ]
+    },
+    "PTENKO": {
+      "study": "PTENKO",
+      "panel": "eligible4",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": -0.19785576553521267,
+      "ci95": [
+        -0.40880783700175266,
+        0.013096305931327323
+      ],
+      "alternative_normalization": 0.06217040935003615,
+      "all_pairwise_range": [
+        -0.2753277434413306,
+        -0.1039002313864259
+      ],
+      "sample_omission_range": [
+        -0.24402110452878922,
+        -0.16035900371899459
+      ],
+      "gene_omission_range": [
+        -0.2949836306125908,
+        -0.07360530209938254
+      ]
+    },
+    "RaptorKO": {
+      "study": "RaptorKO",
+      "panel": "eligible4",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": -0.04759003870063694,
+      "ci95": [
+        -0.27662602021624716,
+        0.18144594281497328
+      ],
+      "alternative_normalization": 0.013930571122906965,
+      "all_pairwise_range": [
+        -0.24987355913529186,
+        0.11185583949660405
+      ],
+      "sample_omission_range": [
+        -0.0937553776942135,
+        0.016054959700472438
+      ],
+      "gene_omission_range": [
+        -0.17729393937855953,
+        0.10961061498877989
+      ]
+    }
+  },
+  "without_Nqo1": {
+    "Nae1KO": {
+      "study": "Nae1KO",
+      "panel": "discovery_gene_excluded",
+      "n_control": 4,
+      "n_KO": 4,
+      "effect": 1.5268672389541518,
+      "ci95": [
+        1.248936521003693,
+        1.8047979569046106
+      ],
+      "alternative_normalization": 1.6737059762438928,
+      "all_pairwise_range": [
+        1.166739733116934,
+        1.9038410831169514
+      ],
+      "sample_omission_range": [
+        1.4523802996850677,
+        1.590752807320813
+      ],
+      "gene_omission_range": [
+        1.0927942673830469,
+        2.157759090223159
+      ]
+    },
+    "TSC1KO": {
+      "study": "TSC1KO",
+      "panel": "discovery_gene_excluded",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": 0.0849099513162308,
+      "ci95": [
+        -0.013960948210962568,
+        0.18378085084342416
+      ],
+      "alternative_normalization": 0.3054195985168118,
+      "all_pairwise_range": [
+        0.013569524991387638,
+        0.17943067227955467
+      ],
+      "sample_omission_range": [
+        0.059513057989727614,
+        0.10576857154431529
+      ],
+      "gene_omission_range": [
+        -0.1602272219435168,
+        0.3437297659868257
+      ]
+    },
+    "PTENKO": {
+      "study": "PTENKO",
+      "panel": "discovery_gene_excluded",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": -0.1847432143357821,
+      "ci95": [
+        -0.3130066462916558,
+        -0.056479782379908416
+      ],
+      "alternative_normalization": 0.07808774051025669,
+      "all_pairwise_range": [
+        -0.27212282816466704,
+        -0.07419115552471212
+      ],
+      "sample_omission_range": [
+        -0.21815577658616014,
+        -0.15586500035567674
+      ],
+      "gene_omission_range": [
+        -0.3238787363521354,
+        0.008188756417675691
+      ]
+    },
+    "RaptorKO": {
+      "study": "RaptorKO",
+      "panel": "discovery_gene_excluded",
+      "n_control": 3,
+      "n_KO": 3,
+      "effect": -0.060305758925380815,
+      "ci95": [
+        -0.14009132195703292,
+        0.019479804106271287
+      ],
+      "alternative_normalization": 0.002200749055177198,
+      "all_pairwise_range": [
+        -0.11686377623558286,
+        0.01358708835043565
+      ],
+      "sample_omission_range": [
+        -0.08216922608053778,
+        -0.045494165991042834
+      ],
+      "gene_omission_range": [
+        -0.2612194700546411,
+        0.16913736149636627
+      ]
+    }
+  },
+  "pmp22": {
+    "Nae1KO": -1.4958155959584225,
+    "TSC1KO": -2.556838559849016,
+    "PTENKO": -1.96144946643442,
+    "RaptorKO": -0.49883404503872697
+  },
+  "shared": 12496
+}

@@ -1,0 +1,24 @@
+"""Read exact peer artifacts and their derivations; never execute imported code."""
+import json
+from pathlib import Path
+import subprocess
+q=Path(__file__).resolve().parents[1]
+out=q/'inputs/community-reuse'
+out.mkdir(exist_ok=True)
+ids=['artifact_0ad2e6fbf524635e89a43ac014998f9e8664b449e102c1b47eb5322fe5145fda','artifact_1dc56cde62ec0f2c595bb2ccdb71d1259b3c4dec85cda82a2ec057ab5761b9b7']
+for aid in ids:
+    p=subprocess.run(['./bin/bio','artifact','show',aid],capture_output=True,text=True)
+    p.check_returncode()
+    obj=json.loads(p.stdout)
+    (out/(aid+'.manifest.json')).write_text(json.dumps(obj,indent=2))
+    data=Path(obj['path']).read_text()
+    (out/(aid+'.txt')).write_text(data)
+    print('ARTIFACT',aid,'PATH',obj['path'],'PRODUCER',obj['manifest']['derivation']['code'],'INPUT_COUNT',len(obj['manifest']['derivation']['inputs']))
+    if len(data)<20000:
+        print(data)
+    else:
+        x=json.loads(data)
+        print('TOP KEYS',list(x))
+        for k,v in x.items():
+            if len(json.dumps(v))<8000:
+                print(k,json.dumps(v))

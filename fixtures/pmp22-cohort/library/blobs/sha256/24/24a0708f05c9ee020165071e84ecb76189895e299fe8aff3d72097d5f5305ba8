@@ -1,0 +1,683 @@
+{
+  "inputs": {
+    "GPL7294-full.txt": "a6d9f1de5f5e4859c82ffc229cdc164af0810eb106613e149ab28709ce7891c4",
+    "GSE163132_series_matrix.txt.gz": "d182eff651e652e4bbd800cca03d03cdd74a424c487863c10d2f9ad4cd77830b",
+    "E-MEXP-3491.matrix.txt": "60ce9f91828c295be562295fd7b4046e6d2387ad0d34b07ac252accce89b31e2",
+    "E-MEXP-3491.sdrf.txt": "aa9e5aae5cccfcd8cedc31586ff8881b679b7bec62e1d1ee889cff544fff3fe5",
+    "Schwanncellscontrol1-annotation-only.txt": "f7faa6fa209a80cdb00f4a82faaf196c8ae075c08d4e8d95c0fcbf2e3bf6384b"
+  },
+  "array_spec_sha256": "bd4d1e81d1bb186c725b3ab7fb0f3ad2a7287839f8edcb6c50ba1e8d0f2e9165",
+  "panel_spec_sha256": "6a69de9578a208fc92c8b8069261c1e5b2ade8559f8b41247f3eb6de4dac2a1c",
+  "universes": [
+    {
+      "dataset": "GSE163132",
+      "native_rows": 41105,
+      "unique_probe_ids": 41105,
+      "exact_annotated_probes": 22503,
+      "unambiguous_feature_labels": 17347,
+      "samples": 18,
+      "target_probe_ids": [
+        "A_44_P353515"
+      ],
+      "panel_probe_ids": {
+        "Pmp22": [
+          "A_44_P353515"
+        ],
+        "Mpz": [
+          "A_43_P11783"
+        ],
+        "Mbp": [
+          "A_43_P11782",
+          "A_44_P334799"
+        ],
+        "Mag": [
+          "A_44_P557233"
+        ],
+        "Prx": [
+          "A_42_P553918"
+        ],
+        "Plp1": [
+          "A_42_P741139",
+          "A_44_P165732"
+        ],
+        "Cnp": [
+          "A_44_P100207"
+        ],
+        "Mal": [
+          "A_44_P465329"
+        ],
+        "Sox10": [
+          "A_44_P447394"
+        ],
+        "S100b": [
+          "A_43_P15530"
+        ],
+        "Erbb3": [
+          "A_44_P557246"
+        ],
+        "Dhh": [
+          "A_44_P194166",
+          "A_44_P639832"
+        ],
+        "Mki67": [],
+        "Top2a": [
+          "A_43_P12148",
+          "A_44_P531770"
+        ],
+        "Pcna": [
+          "A_44_P242756",
+          "A_44_P995132"
+        ],
+        "Ccnb1": [
+          "A_44_P534089"
+        ],
+        "Cdk1": [
+          "A_42_P580844"
+        ],
+        "Mcm2": [
+          "A_44_P223446",
+          "A_44_P415010"
+        ],
+        "Atf3": [
+          "A_43_P11616"
+        ],
+        "Jun": [
+          "A_42_P741027"
+        ],
+        "Ddit3": [
+          "A_44_P445344"
+        ],
+        "Hspa5": [
+          "A_44_P1054213"
+        ],
+        "Hmox1": [
+          "A_43_P11472"
+        ],
+        "Nqo1": [
+          "A_44_P476733"
+        ]
+      },
+      "scale": "source-normalized intensity, no additional log; log base not verified",
+      "detection": "native detection flags unavailable in normalized matrices; primary CPM floor not applicable",
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured"
+    },
+    {
+      "dataset": "E-MEXP-3491",
+      "native_rows": 45018,
+      "unique_probe_ids": 41105,
+      "exact_annotated_probes": 40994,
+      "unambiguous_feature_labels": 35455,
+      "samples": 8,
+      "target_probe_ids": [
+        "A_44_P353515"
+      ],
+      "panel_probe_ids": {
+        "Pmp22": [
+          "A_44_P353515"
+        ],
+        "Mpz": [
+          "A_43_P11783"
+        ],
+        "Mbp": [
+          "A_44_P334799",
+          "A_43_P11782"
+        ],
+        "Mag": [
+          "A_44_P557233"
+        ],
+        "Prx": [
+          "A_42_P553918"
+        ],
+        "Plp1": [
+          "A_42_P741139",
+          "A_44_P165732"
+        ],
+        "Cnp": [
+          "A_44_P100207"
+        ],
+        "Mal": [
+          "A_44_P465329"
+        ],
+        "Sox10": [
+          "A_44_P447394"
+        ],
+        "S100b": [
+          "A_43_P15530"
+        ],
+        "Erbb3": [
+          "A_44_P557246"
+        ],
+        "Dhh": [
+          "A_44_P194166",
+          "A_44_P639832"
+        ],
+        "Mki67": [],
+        "Top2a": [
+          "A_43_P12148",
+          "A_44_P531770"
+        ],
+        "Pcna": [
+          "A_44_P242756",
+          "A_44_P995132"
+        ],
+        "Ccnb1": [
+          "A_44_P534089"
+        ],
+        "Cdk1": [],
+        "Mcm2": [
+          "A_44_P415010",
+          "A_44_P223446"
+        ],
+        "Atf3": [
+          "A_43_P11616"
+        ],
+        "Jun": [
+          "A_42_P741027"
+        ],
+        "Ddit3": [
+          "A_44_P445344"
+        ],
+        "Hspa5": [
+          "A_44_P1054213"
+        ],
+        "Hmox1": [
+          "A_43_P11472"
+        ],
+        "Nqo1": [
+          "A_44_P476733"
+        ]
+      },
+      "scale": "source-normalized intensity, no additional log; log base not verified",
+      "detection": "native detection flags unavailable in normalized matrices; primary CPM floor not applicable",
+      "unit": "two pooled-culture preparations per arm; donor/pool overlap unknown; SDRF/paper 500nM conflicts IDF10nM; native GeneName/ProbeName annotation: all rows correspond except18 retained/excluded nonpanel-name corruptions"
+    }
+  ],
+  "contrasts": [
+    {
+      "dataset": "GSE163132",
+      "contrast": "co_culture_d1_vs_d0",
+      "control": [
+        "GSM4972426",
+        "GSM4972427",
+        "GSM4972428"
+      ],
+      "treated": [
+        "GSM4972432",
+        "GSM4972433",
+        "GSM4972434"
+      ],
+      "n_control": 3,
+      "n_treated": 3,
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 0.5361539999999998,
+        "ci_low": -0.6980985266783504,
+        "ci_high": 1.77040652667835,
+        "df": 3.9340246947130226
+      },
+      "myelin7": {
+        "effect": -0.034510819047617325,
+        "ci_low": -0.8592280024921888,
+        "ci_high": 0.7902063643969541,
+        "df": 3.919296417661478,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.21496993333333414,
+        "ci_low": -1.1578845248580043,
+        "ci_high": 0.7279446581913361,
+        "df": 3.949934111806749,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 2.17911532,
+        "ci_low": -0.22078673772415636,
+        "ci_high": 4.579017377724156,
+        "df": 3.186838484967084,
+        "coverage": 5
+      },
+      "stress6": {
+        "effect": 0.2629322222222239,
+        "ci_low": -0.5149925991116263,
+        "ci_high": 1.0408570435560742,
+        "df": 3.888502134150997,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 0.5706648190476196,
+        "ci_low": -0.29107445382017494,
+        "ci_high": 1.432404091915414,
+        "df": 3.6889326283519677
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 0.36534500000000003,
+        "Mbp": 1.207292666666667,
+        "Mag": 0.5216566333333335,
+        "Prx": -0.15398613333333255,
+        "Plp1": -0.03001316666666609,
+        "Cnp": 1.0672416666666673,
+        "Mal": 1.0171170666666658
+      }
+    },
+    {
+      "dataset": "GSE163132",
+      "contrast": "co_culture_d3_vs_d0",
+      "control": [
+        "GSM4972426",
+        "GSM4972427",
+        "GSM4972428"
+      ],
+      "treated": [
+        "GSM4972438",
+        "GSM4972439",
+        "GSM4972440"
+      ],
+      "n_control": 3,
+      "n_treated": 3,
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 2.891841666666668,
+        "ci_low": 1.8612571012008636,
+        "ci_high": 3.922426232132472,
+        "df": 3.379952904054672
+      },
+      "myelin7": {
+        "effect": 0.9702321666666691,
+        "ci_low": 0.2160938026803112,
+        "ci_high": 1.724370530653027,
+        "df": 2.342294477337252,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.2974941249999983,
+        "ci_low": -1.131544454741257,
+        "ci_high": 0.5365562047412603,
+        "df": 3.9224856459369524,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.6194903166666661,
+        "ci_low": -1.8076422935775267,
+        "ci_high": 3.046622926910859,
+        "df": 2.97362196877161,
+        "coverage": 5
+      },
+      "stress6": {
+        "effect": 0.5182930722222245,
+        "ci_low": -0.13356107561325514,
+        "ci_high": 1.170147220057704,
+        "df": 2.782678891784218,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 1.9216095000000009,
+        "ci_low": 1.06872513251973,
+        "ci_high": 2.7744938674802717,
+        "df": 3.344194856058594
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 2.8117266666666674,
+        "Mbp": 3.1843538333333337,
+        "Mag": 0.6237357333333318,
+        "Prx": 0.3434721333333348,
+        "Plp1": 2.530581666666668,
+        "Cnp": 3.076420666666667,
+        "Mal": 0.8809757999999999
+      }
+    },
+    {
+      "dataset": "GSE163132",
+      "contrast": "co_culture_d7_vs_d0",
+      "control": [
+        "GSM4972426",
+        "GSM4972427",
+        "GSM4972428"
+      ],
+      "treated": [
+        "GSM4972441",
+        "GSM4972442",
+        "GSM4972443"
+      ],
+      "n_control": 3,
+      "n_treated": 3,
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 2.766447833333334,
+        "ci_low": 1.365353422570414,
+        "ci_high": 4.167542244096254,
+        "df": 3.6938553298067145
+      },
+      "myelin7": {
+        "effect": 1.0348744380952404,
+        "ci_low": -0.7168968925121864,
+        "ci_high": 2.786645768702667,
+        "df": 2.649000030303391,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.24956460416666637,
+        "ci_low": -0.55229206729596,
+        "ci_high": 1.0514212756292927,
+        "df": 3.102505204776596,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": -0.4445810733333335,
+        "ci_low": -3.0785315672030427,
+        "ci_high": 2.1893694205363756,
+        "df": 2.360827980314935,
+        "coverage": 5
+      },
+      "stress6": {
+        "effect": 0.23946711666666687,
+        "ci_low": -0.41944744321200533,
+        "ci_high": 0.8983816765453391,
+        "df": 2.689581536907573,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 1.7315733952380954,
+        "ci_low": 0.8567579386033369,
+        "ci_high": 2.606388851872854,
+        "df": 2.843725176946123
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 3.1638365000000004,
+        "Mbp": 3.7456288333333334,
+        "Mag": -0.30465370000000114,
+        "Prx": 1.808441133333333,
+        "Plp1": 1.518760166666667,
+        "Cnp": 2.638260166666667,
+        "Mal": -0.4492593333333339
+      }
+    },
+    {
+      "dataset": "GSE163132",
+      "contrast": "co_culture_d14_vs_d0",
+      "control": [
+        "GSM4972426",
+        "GSM4972427",
+        "GSM4972428"
+      ],
+      "treated": [
+        "GSM4972429",
+        "GSM4972430",
+        "GSM4972431"
+      ],
+      "n_control": 3,
+      "n_treated": 3,
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 2.7512620000000005,
+        "ci_low": -0.04696848939943443,
+        "ci_high": 5.5494924893994355,
+        "df": 2.5927750279914514
+      },
+      "myelin7": {
+        "effect": 0.5032348285714292,
+        "ci_low": -2.279500819245192,
+        "ci_high": 3.2859704763880506,
+        "df": 2.2979467408625553,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.2223171541666673,
+        "ci_low": -1.0457801302829652,
+        "ci_high": 0.6011458219496306,
+        "df": 3.8705717309790604,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.8867087600000003,
+        "ci_low": -1.6698134837075367,
+        "ci_high": 3.4432310037075373,
+        "df": 2.5212602493713665,
+        "coverage": 5
+      },
+      "stress6": {
+        "effect": -0.33502275000000026,
+        "ci_low": -1.076606001889416,
+        "ci_high": 0.4065605018894154,
+        "df": 2.107527172492747,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 2.2480271714285722,
+        "ci_low": 1.3577372797500569,
+        "ci_high": 3.1383170631070874,
+        "df": 3.9108398536799194
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 3.437616666666667,
+        "Mbp": 2.7575968333333334,
+        "Mag": 2.1932772333333324,
+        "Prx": 1.5825970666666676,
+        "Plp1": 1.2669448333333349,
+        "Cnp": 3.3863856666666683,
+        "Mal": 1.111771899999999
+      }
+    },
+    {
+      "dataset": "GSE163132",
+      "contrast": "co_culture_d21_vs_d0",
+      "control": [
+        "GSM4972426",
+        "GSM4972427",
+        "GSM4972428"
+      ],
+      "treated": [
+        "GSM4972435",
+        "GSM4972436",
+        "GSM4972437"
+      ],
+      "n_control": 3,
+      "n_treated": 3,
+      "unit": "three independent donor experiments per time in series; no verified cross-time pairing; morphologically selected LMD SCs, d0 not co-cultured",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 2.6836659999999988,
+        "ci_low": -0.751098879404426,
+        "ci_high": 6.118430879404423,
+        "df": 2.4215549962570218
+      },
+      "myelin7": {
+        "effect": 0.2066530833333342,
+        "ci_low": -2.7079149213014797,
+        "ci_high": 3.121221087968148,
+        "df": 2.2747836384643882,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.47111913333333355,
+        "ci_low": -1.2676064478203575,
+        "ci_high": 0.3253681811536905,
+        "df": 3.324504678457292,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.5541097533333312,
+        "ci_low": -1.9146824427075138,
+        "ci_high": 3.0229019493741762,
+        "df": 2.781362205690909,
+        "coverage": 5
+      },
+      "stress6": {
+        "effect": 0.04490832777777953,
+        "ci_low": -0.6687784503143774,
+        "ci_high": 0.7585951058699365,
+        "df": 3.995295366202162,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 2.4770129166666672,
+        "ci_low": 0.46847337390771626,
+        "ci_high": 4.485552459425618,
+        "df": 2.7463598175190502
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 3.7871466666666667,
+        "Mbp": 2.791153166666666,
+        "Mag": 2.596090199999998,
+        "Prx": 1.4253412333333335,
+        "Plp1": 1.7429649166666685,
+        "Cnp": 3.5079436666666672,
+        "Mal": 1.4884505666666659
+      }
+    },
+    {
+      "dataset": "E-MEXP-3491",
+      "contrast": "calcitriol_24h_schwann cells",
+      "control": [
+        "SC control 1",
+        "SC control 2"
+      ],
+      "treated": [
+        "SC VD3 1",
+        "SC VD3 2"
+      ],
+      "n_control": 2,
+      "n_treated": 2,
+      "unit": "two pooled-culture preparations per arm; donor/pool overlap unknown; SDRF/paper 500nM conflicts IDF10nM; native GeneName/ProbeName annotation: all rows correspond except18 retained/excluded nonpanel-name corruptions",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": 0.351113682034601,
+        "ci_low": -0.696444150914481,
+        "ci_high": 1.398671514983683,
+        "df": 1.9432154331412235
+      },
+      "myelin7": {
+        "effect": -0.07495718973065824,
+        "ci_low": -1.6122580203499568,
+        "ci_high": 1.4623436408886403,
+        "df": 1.0013636845570895,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": 0.09434488062777291,
+        "ci_low": -0.17325774206511663,
+        "ci_high": 0.36194750332066244,
+        "df": 1.258480534174768,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.2831753513070856,
+        "ci_low": -0.9182549456248843,
+        "ci_high": 1.4846056482390555,
+        "df": 1.994486067916561,
+        "coverage": 4
+      },
+      "stress6": {
+        "effect": 0.08976679044713087,
+        "ci_low": -0.5690104790869681,
+        "ci_high": 0.7485440599812299,
+        "df": 1.7048368223419865,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": 0.42607087176525926,
+        "ci_low": -1.6672955726241279,
+        "ci_high": 2.5194373161546464,
+        "df": 1.0567952161891458
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 0.9504934566303946,
+        "Mbp": 0.5130009244348175,
+        "Mag": 0.2635818028566437,
+        "Prx": 0.08690293771477986,
+        "Plp1": 0.39600659239425706,
+        "Cnp": 0.3734612157605497,
+        "Mal": 0.3990491725653653
+      }
+    },
+    {
+      "dataset": "E-MEXP-3491",
+      "contrast": "calcitriol_24h_dorsal root ganglia and schwann cells",
+      "control": [
+        "DRG control 1",
+        "DRG control 2"
+      ],
+      "treated": [
+        "DRG VD3 1",
+        "DRG VD3 2"
+      ],
+      "n_control": 2,
+      "n_treated": 2,
+      "unit": "two pooled-culture preparations per arm; donor/pool overlap unknown; SDRF/paper 500nM conflicts IDF10nM; native GeneName/ProbeName annotation: all rows correspond except18 retained/excluded nonpanel-name corruptions",
+      "missing_primary_genes": [],
+      "scale": "source-normalized-intensity difference, NOT asserted log2 fold change",
+      "detection_eligible": null,
+      "status": "exploratory array; unknown detection/scale qualification",
+      "Pmp22": {
+        "effect": -0.3712263654532997,
+        "ci_low": -4.965826859538042,
+        "ci_high": 4.223374128631443,
+        "df": 1.0095626141756138
+      },
+      "myelin7": {
+        "effect": 0.08424610191227977,
+        "ci_low": -1.9318279467730202,
+        "ci_high": 2.1003201505975797,
+        "df": 1.1094816055219003,
+        "coverage": 7
+      },
+      "identity4": {
+        "effect": -0.11443294242567603,
+        "ci_low": -0.79123042414687,
+        "ci_high": 0.5623645392955179,
+        "df": 1.9428801611657336,
+        "coverage": 4
+      },
+      "proliferation6": {
+        "effect": 0.006201851708173223,
+        "ci_low": -1.61742126903738,
+        "ci_high": 1.6298249724537264,
+        "df": 1.2209776690298524,
+        "coverage": 4
+      },
+      "stress6": {
+        "effect": -0.06279623215765895,
+        "ci_low": -0.6112245146968878,
+        "ci_high": 0.48563205038156987,
+        "df": 1.9999687529858636,
+        "coverage": 6
+      },
+      "selectivity": {
+        "effect": -0.4554724673655812,
+        "ci_low": -2.633903125281087,
+        "ci_high": 1.7229581905499245,
+        "df": 1.5081340649907047
+      },
+      "target_vs_each_myelin": {
+        "Mpz": 0.3804605253987994,
+        "Mbp": -0.05425384553680779,
+        "Mag": -0.3812847404149755,
+        "Prx": -1.3029918239757254,
+        "Plp1": -0.5560768884748999,
+        "Cnp": 0.1124771050608997,
+        "Mal": -1.3866376036163661
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "question": "q_59708481fed741af",
+  "result": "Endpoint-specific non-identifiability of chiefly EGR2-mediated Pmp22 regulation",
+  "interventions_audited": 13,
+  "eligible_pmp22_mediation_contrasts": 0,
+  "reported_egr2_chase_direction_available": true,
+  "egr2_half_life_hours": null,
+  "pmp22_mediated_fraction": null,
+  "changed_position": "Source Figure 8N abundance rescue without MPZ rescue shifts from EGR2-only preference to pleiotropic control with unidentified PMP22 mediation; MG132 nonspecific and EGR2 activity unverified.",
+  "retrospective_rna_counterexample": [
+    {
+      "gene": "Egr2",
+      "status": "measured_positive",
+      "source_row": 1208,
+      "description": "early growth response 2",
+      "LentiAS-1": 5364,
+      "LentiAS-2": 4057,
+      "LentiGFP-1": 4591,
+      "LentiGFP-2": 3995,
+      "raw_log2_AS_over_GFP": 0.13389403126358884,
+      "CPM_log2_AS_over_GFP": 0.3656340488572424,
+      "median_ratio_log2_AS_over_GFP": 0.33149219533610913
+    },
+    {
+      "gene": "Pmp22",
+      "status": "measured_positive",
+      "source_row": 6729,
+      "description": "peripheral myelin protein 22",
+      "LentiAS-1": 220643,
+      "LentiAS-2": 201051,
+      "LentiGFP-1": 267997,
+      "LentiGFP-2": 282624,
+      "raw_log2_AS_over_GFP": -0.3848631389502733,
+      "CPM_log2_AS_over_GFP": -0.1407043951805458,
+      "median_ratio_log2_AS_over_GFP": -0.17624552522424877
+    },
+    {
+      "gene": "Jun",
+      "status": "measured_positive",
+      "source_row": 16169,
+      "description": "Jun proto-oncogene, AP-1 transcription factor subunit",
+      "LentiAS-1": 78468,
+      "LentiAS-2": 81462,
+      "LentiGFP-1": 118479,
+      "LentiGFP-2": 107919,
+      "raw_log2_AS_over_GFP": -0.501420625536123,
+      "CPM_log2_AS_over_GFP": -0.25080916451517005,
+      "median_ratio_log2_AS_over_GFP": -0.2862222019626582
+    }
+  ],
+  "rna_rows_verified": 17950,
+  "numeric_features": 17949,
+  "rescue_design": {
+    "status": "Proposed falsifiable experiment, not performed; based on source audit, not a claim suitable measurements already exist",
+    "question": "Does selective restoration of active EGR2 recover Pmp22 initiation during ongoing neddylation inhibition?",
+    "design": "Within each independently derived, donor-labelled rat Schwann preparation, randomize sister cultures at the same differentiation stage to vehicle, upstream perturbation, EGR2 restoration alone, and upstream perturbation plus EGR2 restoration. Replicate with genetic Nae1 loss or NAE1 addback as on-target control. Do not assign libraries or cells as independent donors.",
+    "upstream_context": "Start from source db cAMP induction context; compare inhibition at differentiation onset with inhibition after 48 h induction as separate time windows, never pool them. MLN4924 2.5 uM is the published starting condition, not assumed optimal or nontoxic.",
+    "egr2_restoration": "Orthogonal titratable expression adjusted to restore nuclear EGR2 to control range despite upstream blockade. Verify actual amount and function. No assumed known neddylation-site mutant or selective EGR2 stabilizer. Include empty vector and DNA-binding-deficient EGR2 at matched abundance. MG132 remains a nonspecific comparison, not the rescue instrument.",
+    "proposed_times_hours": [
+      0,
+      1,
+      3,
+      6,
+      12,
+      24,
+      48
+    ],
+    "time_origin": "Upstream perturbation in each pre-specified induction window; ensure EGR2 rescue is active at baseline when testing prevention versus later recovery",
+    "matched_measurements": [
+      "NAE1/NEDD8 target engagement in each arm/time; confirm restoration does not simply reverse upstream inhibition",
+      "Endogenous/transgenic Egr2 nascent and mature RNA separately; EGR2 total/nuclear protein and validated occupancy plus transactivation readout",
+      "Promoter-specific Pmp22 nascent output using experimentally validated species/first-exon/TSS assignments; spike-in/cell-number calibration; total RNA and RNA stability as separate endpoints",
+      "c-Jun and Sox2 protein/activity, p-4EBP1/p-S6K, YAP nuclear activity and target genes; differentiation markers, live cell counts, cell-cycle status and survival",
+      "Later PMP22 total protein, surface/myelin localization and functional myelin assays as distinct follow-up endpoints"
+    ],
+    "primary_comparison": "At the earliest pre-specified time with confirmed neddylation loss, restored active EGR2 and overlapping state/viability, compare upstream perturbation plus EGR2 restoration to upstream perturbation alone and control. Report donor-level contrasts separately for each Pmp22 promoter.",
+    "estimand": "A controlled EGR2-restoration effect on initiation under upstream perturbation, not automatically the natural mediated fraction. Compare residual log-scale deficit to a prospectively defined assay/biological equivalence margin, not an invented percentage threshold.",
+    "predictions": [
+      {
+        "hypothesis": "EGR2 persistence/activity is the sufficient early mediator",
+        "prediction": "EGR2 decay/activity loss precedes Pmp22 nascent suppression; selective active-EGR2 restoration normalizes initiation before state changes, while DNA-binding-deficient control does not"
+      },
+      {
+        "hypothesis": "Parallel pathway contribution is necessary",
+        "prediction": "A reproducible residual Pmp22 nascent deficit persists despite verified control-range EGR2 activity under matched state; test EGR2 restoration combined with targeted alternative-branch correction"
+      },
+      {
+        "hypothesis": "RNA production/timing or RNA fate accounts for apparent protein/RNA mismatch",
+        "prediction": "Egr2 nascent change precedes protein change, or mature Pmp22 changes without initiation change; measure decay/synthesis rather than interpret steady-state RNA as promoter output"
+      }
+    ],
+    "failed_assay_rule": "If EGR2 activity is not restored, target engagement is lost, viability diverges, or the promoter assay is not validated, mark the contrast untestable rather than evidence for a parallel mediator.",
+    "redox_extension": "Only after core contrast eligibility, add Nrf2 loss/blockade with nuclear NRF2 and target-program engagement. If antioxidant induction is removed while Pmp22 loss remains, redox necessity is weakened; EGR2 rescue under that condition tests a separable branch.",
+    "no_existing_data_result": "No audited contrast jointly supplies selective EGR2 activity restoration and matched promoter-specific Pmp22 initiation. Existing Figure 8N is abundance/MPZ and does not qualify."
+  },
+  "validation": "Source-row identity, numeric token audit, source/locator presence, unique intervention IDs, producer output hashes and finite JSON passed.",
+  "not_claimed": [
+    "independent replication",
+    "new molecular mechanism",
+    "EGR2-specific MG132 rescue",
+    "no Egr2 RNA contribution",
+    "human transfer",
+    "protein abundance from identification scores"
+  ]
+}

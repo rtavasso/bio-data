@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-28",
+  "boundary": "12 initial/mechanistic/exact-claim web search queries, plus one flag-documentation query; inspect four primary full texts and Gonen native TableS5. Not exhaustive corpus search. Original GSE49598 lacks a linked source article in series record; Gonen reused it.",
+  "search_evidence": "outputs/iteration/web-searches.json",
+  "claims": [
+    {
+      "claim": "Pmp22 RNA and polysome suppression during chronic ER stress",
+      "novelty_status": "known",
+      "closest_prior_work": "Guan et al2017 PMC5730339, Results Figure7 paragraph explicitly naming PMP22 as congruently regulated; Figure6 outlines RNA/polysome program",
+      "new_contribution": "New sample-level effect sizes, fraction interaction and robustness; not a newly recognized biological relationship."
+    },
+    {
+      "claim": "Uniform PERK-dependent Pmp22 repression across fibroblast experiments",
+      "novelty_status": "unresolved",
+      "closest_prior_work": "Guan2017 Figure6/7; Gonen2019 PMC6416471 TableS5A Pmp22 late cluster1 and TableS5B Pmp22 decrease",
+      "new_contribution": "Cross-study assay/context comparison plus frozen genetic test exposes nontransferability and provenance limitations. Original TableS5 already contains opposed cell-context outcomes; no claim of discovery from table values alone."
+    },
+    {
+      "claim": "Pmp22 translation loss implies granule sequestration",
+      "novelty_status": "known_general_alternative",
+      "closest_prior_work": "Namkoong et al2018 PMC6359928 Figure4 and Discussion already establish that translational suppression is not sufficient for RG recruitment",
+      "new_contribution": "Target-specific reanalysis finds replicate-dependent relative partition and missing absolute calibration. Does not establish a new Pmp22 granule mechanism."
+    },
+    {
+      "claim": "PTEN reduction restores a metabolic endpoint independently of differentiation",
+      "novelty_status": "known_negative_baseline",
+      "closest_prior_work": "PMC10940316 Figure7 already reports no differentiation rescue",
+      "new_contribution": "Hmgcr rescue not convincingly supported by native qPCR; source-count and duplicated-row anomalies limit precision. No new mechanistic uncoupling claim."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "source_rows": 20234,
+  "columns": 32,
+  "positive_all_samples": 11817,
+  "eligible_min10_all32": 10760,
+  "pmp22_min_raw": 1136,
+  "zero_cells": 203868,
+  "PC_variance": [
+    0.35636419347323983,
+    0.2724228468920934,
+    0.23963013308719922,
+    0.06878316394449416
+  ],
+  "source_semantics": "Deposited integer gene read counts; no quality/status columns. >=10 in all32 eligibility. Missing genes not zero. H fraction >4 ribosomes; paired with cytosolic from same sample.",
+  "units": "Four labelled replicates/condition; source does not document separate donor identities or clearly distinguish biological from technical replicates. Treat inferential intervals/p values as conditional descriptive summaries of replicate variation. No population biological claim.",
+  "normalization": "Median ratio using positive-all genes; CPM sensitivity. Neither establishes absolute translation or global translation restoration without external calibration.",
+  "analysis": "Welch comparison of within-sample log2 H/Input across conditions; no cross-condition pairing; unmoderated descriptive p and BH within each contrast/endpoint; broad selection retrospective, not independent validation.",
+  "context": "MEF; no Schwann transfer, promoter attribution, RNA synthesis versus stability, or direct eIF3d-to-Pmp22 effect identified.",
+  "environment": {
+    "python": "3.12.8 (v3.12.8:2dc476bcb91, Dec  3 2024, 14:43:20) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "platform": "macOS-15.7.2-x86_64-i386-64bit"
+  }
+}

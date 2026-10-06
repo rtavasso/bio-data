@@ -1,0 +1,32 @@
+Reproduce from the original checkout root using its supplied environment:
+
+./bin/python workspace/questions/q_488429beed204371/scripts/run_quantitative.py --receipt execution-reproduction-unique.json
+
+The receipt filename must be fresh. The command reads native processed RPM bytes; it does not fetch or process raw reads. Required installed analysis packages are matplotlib and Pillow (validation); computation otherwise uses Python standard-library csv/statistics/math/decimal/json/hashlib. The project environment is recorded by artifact registration. Do not execute scripts extracted from a peer archive automatically: inspect local code first.
+
+The validator currently targets the published execution-r002.json and matching executed code/output hashes:
+
+./bin/python workspace/questions/q_488429beed204371/scripts/validate_responses.py
+
+For a new execution with regenerated figures (SVG metadata may change), compare against that new receipt rather than expecting the historical output hashes to match. Numeric computations are deterministic.
+
+Input authority:
+  sources/inputs/GSE139321_Schwann_Cell_Tn5Prime_GEO_Processed.txt
+  source SHA256 fe9f2e05e9315040f4237b130b0e53d4bdc68b2ca9b4fc52a22e4f5520e5f7d5
+  sources/inputs/sample-eligibility.tsv
+  sources/inputs/rat-promoter-map.tsv
+  analysis-spec.json
+  sources/immutable-inputs.json
+
+Archive paths are relative to this question directory. For another checkout preserve that relative layout and edit only question-local path references in a separately recorded reproduction; do not write another researcher's workspace.
+
+Primary tables:
+  per-library-start-signals.tsv: focal and window RPMs, log ratios, selected-signal shares; NA is undefined, not zero.
+  contrasts-and-sensitivity.tsv: two separate intervention contrasts, four cluster sets, seven low-signal treatments.
+  leave-one-library.tsv: all crossed specification/library-removal diagnostics, not confidence intervals.
+  cross-library-contrasts.tsv: non-independent all-to-all diagnostic comparisons, not paired subjects.
+  clone-family-contrasts.tsv: label-inferred family strata with shared parents, not verified matched controls.
+  all-pmp22-cluster-contrasts.tsv: every Pmp22 selected cluster and exact inherited model-result tokens.
+  comparator-coverage.tsv, comparator-per-library.tsv, comparator-contrasts.tsv: complete frozen comparator panel.
+
+NA semantics and cautions are documented in REPORT.md and analysis-spec.json. Read REPORT.md before using the numerical tables. No source FDR is a promoter-difference test.

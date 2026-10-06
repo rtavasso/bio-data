@@ -1,0 +1,82 @@
+{
+  "question": "q_d14c6e25fa864ab5",
+  "status": "proposed_not_performed",
+  "purpose": "Identify direction and endpoint, not force LXR, ABCA1, FDFT1, redox and progesterone into one mechanism.",
+  "source_motivation": [
+    "PMC5802790 Figures2-4: preventive protein recovery with altered axon topology",
+    "PMID21715627: oxysterol/LXR gene-regulatory branch",
+    "PMID31061090: reverse PMP22/ABCA1 lipid effects",
+    "PMID9751213: P1 reporter and RU486 anomaly",
+    "PMID16787508: sex/metabolite specificity"
+  ],
+  "eligibility": {
+    "organism": "Start in the chosen rodent source context; human wild-type PMP22 duplication/isogenic correction is a separate replication, not assumed transfer.",
+    "units": "Randomize independent donors or animals within sex, age and litter/batch; split donor cultures across arms. Wells, cells, axons and genes are nested technical units. Record donor, pool, clone, nerve site, age, sex, genotype, driver, copy number and intervention timing.",
+    "age": "Do not pool P21 and eight-week nerves. Include a P21 baseline and independently randomized adult-onset perturbation/rescue cohort with verified existing phenotype; preventive P21-P56 NAC and delayed treatment answer different questions.",
+    "timing": "Pilot target-engagement, survival and state overlap; proposed acute culture sampling at baseline, 2, 6 and 24 hours and later protein/myelin follow-up. These are proposed times, not source observations or assumed sufficient for biology.",
+    "power": "No n or equivalence margin computed from published bars. Obtain independent pilot variance and assay dynamic range before freezing sample size, minimum relevant change and equivalence margins.",
+    "exclusions": "Predeclare failed engagement, assay limits, sample swapping, toxicity and loss of state overlap as non-identifying; retain failures, do not substitute zeros or post-hoc smaller panels."
+  },
+  "experiments": [
+    {
+      "id": "forward-sterol-receptor",
+      "design": "Donor-split defined sterol/oxysterol intervention x LXRalpha/beta intact or acutely depleted; independent depletion reagents and near-endogenous resistant addback. Separate chemically altered sterol abundance from selective receptor activation. Include vehicle, carrier-only, receptor-loss-only and rescue controls.",
+      "engagement": "Quantify intracellular free/esterified cholesterol and relevant oxysterols with standards, LXR protein/activity and canonical target engagement. Ligand dose or receptor localization alone is not activity. Verify no early EGR2/SOX10/c-Jun/state or viability divergence.",
+      "primary": "Calibrated endogenous P1/exon1A and P2/exon1B nascent initiation/first-exon RNA, with organism-specific primer/TSS validation and copy-number controls.",
+      "secondary": "Matched mature isoform RNA and RNA-decay chase; calibrated newly synthesized PMP22 and pulse-chase loss; total amount per viable cell, absolute surface/myelin-localized PMP22, surface/total fraction, EndoH sensitivity, aggregation, endolysosomal routing, lipid efflux, myelin morphology and function.",
+      "directness": "If rapid nascent response is LXR-dependent, next test endogenous receptor-associated cis element necessity plus rescue and occupancy. Occupancy/siRNA response alone does not exclude Wnt/EGR2 intermediates."
+    },
+    {
+      "id": "reverse-PMP22-dose",
+      "design": "Acute titrated endogenous PMP22 reduction and calibrated near-physiological addback, with WT-dosage and increased WT-dosage arms, crossed with ABCA1 intact/lost and ABCA1 addback. Avoid assuming complete KO or misfolded coding mutants represent human duplication.",
+      "engagement": "Verify PMP22 copy number, mature RNA, total and localized protein. Establish ABCA1 abundance and absolute surface localization; assay ApoA-I-dependent cholesterol efflux with matched cholesterol loading/acceptor controls and per-cell calibration.",
+      "primary": "Does PMP22 perturbation precede lipid redistribution/efflux failure while state remains comparable, and does PMP22 addback restore it?",
+      "secondary": "Under independent lipid rescue while PMP22 dosage remains fixed, measure functional PMP22 delivery and nascent P1/P2 output separately. ABCA1 loss response is not automatically a transcriptional feedback arm."
+    },
+    {
+      "id": "endocrine-specificity",
+      "design": "Separate sex-specific donor cultures treated with progesterone, DHP or THP; factorial validated PR depletion/addback with steroid exposure/metabolite measurements. Separate GABAA perturbation for metabolite-route testing. RU486 and onapristone pharmacology are supportive comparators, not sole receptor-specific instruments.",
+      "engagement": "PR abundance/activity with independent canonical receptor control; ligand uptake and conversion; viability and EGR2/SOX10 maturation. Use both sexes rather than treating a nonresponse in one as global absence.",
+      "primary": "Early endogenous promoter-resolved nascent output plus mature isoform RNA/decay, not reporter alone.",
+      "secondary": "Total and absolute productive PMP22 delivery with myelin function. A positive P1 reporter can guide a cis experiment but is not itself the endogenous initiation endpoint."
+    }
+  ],
+  "decisions": [
+    {
+      "case": "early_nascent",
+      "observation": "Receptor-dependent P1/P2 nascent change before detectable lipid/state changes with specific rescue",
+      "interpretation": "Supports receptor-dependent transcriptional component; requires endogenous cis perturbation to establish direct promoter action rather than a fast intermediary."
+    },
+    {
+      "case": "protein_only",
+      "observation": "No nascent or mature-RNA change within powered margins, but improved absolute surface/myelin delivery and functional yield",
+      "interpretation": "Supports protein-environment rescue in that interval; total protein alone is insufficient."
+    },
+    {
+      "case": "mature_only",
+      "observation": "Mature RNA changes with stable nascent output and altered measured decay",
+      "interpretation": "Supports RNA-fate route, not initiation."
+    },
+    {
+      "case": "retained_accumulation",
+      "observation": "Higher total protein or surface fraction without higher absolute productive delivery/function, with ER/lysosomal accumulation",
+      "interpretation": "Does not establish functional rescue."
+    },
+    {
+      "case": "reverse_lipid",
+      "observation": "Acute PMP22 dose change precedes ABCA1 localization/efflux change, corrected by PMP22 addback at matched state",
+      "interpretation": "Supports PMP22-to-lipid direction; direct physical action still requires additional mechanism tests."
+    },
+    {
+      "case": "feedback",
+      "observation": "Independent lipid intervention alters endogenous PMP22 nascent output, and separately controlled PMP22 dose alters lipids",
+      "interpretation": "Supports bidirectionality; two different model contexts are not by themselves a closed feedback loop in one system."
+    },
+    {
+      "case": "neither_identifiable",
+      "observation": "Perturbation or assay fails; state/viability shifts first; donor or pairing unidentified",
+      "interpretation": "Publish endpoint-specific non-identifiability rather than post-hoc adjustment or apparent null."
+    }
+  ],
+  "analysis": "Estimate donor-blocked intervention, receptor and interaction effects within sex and age, with uncertainty and multiplicity rules locked before outcome review. For repeated time points use donor/animal-aware models; do not count genes or axons as independent n. Global RNA/protein calibration avoids compositional artifacts. Statistical nonsignificance is not equivalence."
+}

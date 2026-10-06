@@ -1,0 +1,110 @@
+{
+  "inherited_representation": "artifact_ae47d75299e31396b253c089db31ef6a95911ffab74697818aa7dcda5135160a",
+  "input_sha256": "a286c57fd32a24a01d5be33fb14c75564c5dc23b4284b5ec57031178895bbac4",
+  "excluded_headers": [
+    {
+      "#Geneid": "Geneid",
+      "LentiAS-1": "LentiAS-1",
+      "LentiAS-2": "LentiAS-for-RNAseq-2_S49.featureCounts",
+      "LentiGFP-1": "LentiGFP-for-RNAseq-1_S46.featureCounts",
+      "LentiGFP-2": "LentiGFP-for-RNAseq-2_S47.featureCounts",
+      "description": "description",
+      "__source_row": 1472
+    }
+  ],
+  "rows": 17949,
+  "unique_symbols": 17949,
+  "duplicate_symbols": [],
+  "zero_all_samples": 1623,
+  "fraction_integer_counts": 1.0,
+  "library_sums": {
+    "LentiAS-1": 87084735,
+    "LentiAS-2": 74024323,
+    "LentiGFP-1": 94061942,
+    "LentiGFP-2": 96185890
+  },
+  "size_factors": {
+    "LentiAS-1": 1.0043540075835855,
+    "LentiAS-2": 0.8619472156083654,
+    "LentiGFP-1": 1.069604571007908,
+    "LentiGFP-2": 1.0818718505617915
+  },
+  "QC_filter": "mean median-ratio-normalized count >=20",
+  "QC_features": 11573,
+  "PCA_variance": [
+    0.5096179404840665,
+    0.3756417138910458,
+    0.11474034562488764,
+    9.584885081821322e-30
+  ],
+  "same_direction_all_pairs_features": 6536,
+  "no_inference_reason": "Two libraries per condition, GEO calls biological replicates but animal/pool/culture-batch identities unspecified. Gene-wise results descriptive; no differential significance or donor-level inference. Correlation does not prove identity.",
+  "mapping": "Column order agrees with GEO labels and embedded header. Do not invert groups to match hypothesis.",
+  "endpoint": "48h lentivirus gene-level steady-state counts, not nascent RNA, promoter output or protein activity.",
+  "zero_semantics": "Observed zero counts kept; ratio with zero denominator written NA, not zero. Pairwise sensitivity uses explicit 0.5 normalized-count pseudocount.",
+  "comparison_genes": [
+    {
+      "#Geneid": "Egr2",
+      "__source_row": 1208,
+      "AS_over_GFP": 1.2583141898776027,
+      "log2_AS_over_GFP": 0.3314921953361107,
+      "CPM_log2_AS_over_GFP": 0.3656340488572424,
+      "pairwise_min_log2_pseudocount_0.5": 0.13299617799088267,
+      "pairwise_max_log2_pseudocount_0.5": 0.5323152102571501
+    },
+    {
+      "#Geneid": "Mtor",
+      "__source_row": 4998,
+      "AS_over_GFP": 1.2751055354360719,
+      "log2_AS_over_GFP": 0.3506166581816193,
+      "CPM_log2_AS_over_GFP": 0.3856320543953951,
+      "pairwise_min_log2_pseudocount_0.5": 0.10854305235806147,
+      "pairwise_max_log2_pseudocount_0.5": 0.5950420550212889
+    },
+    {
+      "#Geneid": "Pmp22",
+      "__source_row": 6729,
+      "AS_over_GFP": 0.885003137400223,
+      "log2_AS_over_GFP": -0.17624552522424716,
+      "CPM_log2_AS_over_GFP": -0.1407043951805458,
+      "pairwise_min_log2_pseudocount_0.5": -0.24990773230158303,
+      "pairwise_max_log2_pseudocount_0.5": -0.10324901811210198
+    },
+    {
+      "#Geneid": "Mpz",
+      "__source_row": 8637,
+      "AS_over_GFP": 1.5298222556667962,
+      "log2_AS_over_GFP": 0.6133640413072378,
+      "CPM_log2_AS_over_GFP": 0.6460203204769248,
+      "pairwise_min_log2_pseudocount_0.5": -0.002040240402795229,
+      "pairwise_max_log2_pseudocount_0.5": 1.0686040948354878
+    },
+    {
+      "#Geneid": "G3bp1",
+      "__source_row": 10785,
+      "AS_over_GFP": 0.9595608586391676,
+      "log2_AS_over_GFP": -0.059553784899681765,
+      "CPM_log2_AS_over_GFP": -0.02433263244014006,
+      "pairwise_min_log2_pseudocount_0.5": -0.08519307509299644,
+      "pairwise_max_log2_pseudocount_0.5": -0.03411870552578419
+    },
+    {
+      "#Geneid": "Sox10",
+      "__source_row": 15277,
+      "AS_over_GFP": 1.4936249375432218,
+      "log2_AS_over_GFP": 0.5788179200961409,
+      "CPM_log2_AS_over_GFP": 0.6106293195266762,
+      "pairwise_min_log2_pseudocount_0.5": -0.3326729350015113,
+      "pairwise_max_log2_pseudocount_0.5": 1.1591835632037701
+    },
+    {
+      "#Geneid": "Jun",
+      "__source_row": 16169,
+      "AS_over_GFP": 0.8200465989882203,
+      "log2_AS_over_GFP": -0.28622220196265685,
+      "CPM_log2_AS_over_GFP": -0.25080916451517005,
+      "pairwise_min_log2_pseudocount_0.5": -0.5036426479088593,
+      "pairwise_max_log2_pseudocount_0.5": -0.07789115285144808
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-27",
+  "baseline": [
+    {
+      "source": "PMC9063194",
+      "locator": "Results Fig2D; WGCNA analysis",
+      "known": "Purified Schwann injury transcriptome already reports myelin loss, state modules, AGE/RAGE, Sparcl1 and Sema5a. Our residual screen is a new computation, not a new injury program."
+    },
+    {
+      "source": "PMC4964942",
+      "locator": "Results; Fig3/4; Discussion",
+      "known": "Zeb2 loss blocks differentiation; persistent Sox2/Ednrb/Hey2 and myelin-gene reduction were already reported."
+    },
+    {
+      "source": "PMC4961522",
+      "locator": "Abstract; Results Notch-Hey2; RNA-seq Methods",
+      "known": "Zeb2 recruits HDAC/NuRD and suppresses inhibitory signaling; this is established, not discovered here."
+    },
+    {
+      "source": "PMC2440619",
+      "locator": "Table1; Results Activation of Egr2 target genes in Egr2-null mice",
+      "known": "Hck induction after dominant-negative NAB2 and Egr2 deficiency was reported. This is a shared-upstream alternative to Hck causing Pmp22 repression; no direct Hck-to-Pmp22 effect established by that paper."
+    }
+  ],
+  "candidate_novelty": {
+    "Ppp6r1": {
+      "status": "unresolved",
+      "finding": "No direct Schwann-cell Ppp6r1-to-Pmp22 specificity study identified in scoped exact-name and nerve searches. Two exact PMP22 co-mentions are unrelated topics. Incomplete full-text/synonym coverage and failed validation prohibit novel-mechanism claim."
+    },
+    "Gtf2f1": {
+      "status": "unresolved",
+      "finding": "Exact names/TFIIF/RAP74 plus PMP22 yielded13 records, mostly broad neuropathy or omics co-mentions; no direct target-specific mechanism established in inspected primary papers. Full corpus not exhaustively audited."
+    },
+    "Hck": {
+      "status": "unresolved",
+      "finding": "Hck participation in the Egr2/NAB myelination program is known. The specific Hck-to-Pmp22 residual predictor claim is not established, and validation failed. Do not call the gene a novel Schwann regulator."
+    }
+  },
+  "search_boundary": "EuropePMC indexed full-text/metadata queries with source/synonyms and separate title/abstract query; dated cutoff where explicit. Search hits can be supplemental-list membership. Primary full texts inspected for discovery, both Zeb2 studies, Eed and Egr2/NAB. No exhaustive all-language or citation-chain priority claim. Early broad queries lacked a date cutoff; dated narrower queries supersede them for novelty scope.",
+  "conclusion": "No novel mechanism claimed; new exploratory associations failed frozen primary prediction. Known shared-upstream regulation and broad residual target prediction remain better-supported alternatives."
+}
