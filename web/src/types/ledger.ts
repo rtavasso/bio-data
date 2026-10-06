@@ -104,6 +104,15 @@ export interface FrontierItem {
   updated: string;
   promoted_to?: string | null;
   watch: WatchStatus;
+  // Who set candidate_evidence, from records: a watcher run's event, the author's status event, or both.
+  candidate_evidence?: CandidateEvidence | null;
+  // Whether the item's own post exists on this board (null when it names none).
+  post_present?: boolean | null;
+}
+
+export interface CandidateEvidence {
+  set_by: "watcher" | "author" | "author and watcher" | "unrecorded";
+  records: { by: "watcher" | "author"; watcher?: string; run?: string; post?: string | null; event?: string | null; reason?: string | null }[];
 }
 
 export interface Confirmation {

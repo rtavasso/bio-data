@@ -1,4 +1,4 @@
-// Discovery area (M1.8 search, M5.2 watchers): shapes returned by /api/search and /api/watchers.
+// Discovery area (M1.8 lexical vector index and search, M5.2 watchers): shapes returned by /api/search and /api/watchers.
 
 export type SearchFamily = "forum" | "artifact" | "work" | "data" | "claim" | "resource";
 export type SearchScope = "library" | "workspaces";
@@ -35,6 +35,7 @@ export interface SearchResult {
   vector: boolean;
   scope: SearchScope;
   family: string | null;
+  paragraphs?: boolean; // article paragraphs are their own search (family=paragraph or paragraphs=true)
   method: string;
   model: string | null;
   total: number;
@@ -84,9 +85,13 @@ export interface WatcherHit {
   accession: string;
   provider: string;
   title: string;
-  pmcid?: string;
-  doi?: string;
-  pmid?: string;
+  title_source?: string; // "provider-supplied title, third-party text"
+  pmcid?: string | null;
+  doi?: string | null;
+  pmid?: string | null;
+  // europepmc-fulltext hits: full text is listed in Europe PMC; the watcher never downloads it.
+  fetch?: string;
+  open_access?: string | null;
 }
 
 export interface WatcherRun {
