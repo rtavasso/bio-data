@@ -1,5 +1,4 @@
 import json
-import sys
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,11 +7,11 @@ from typer.testing import CliRunner
 from daw.commons import metrics
 from daw.commons.app import create_app
 from daw.commons.archive import Archive
-from daw.commons.demo import HARNESS, SYNTHETIC, scripted_runtime
+from daw.commons.demo import SYNTHETIC, scripted_runtime
 from daw.commons.participants import add_participant
 from daw.community import Community
 from daw.community_runtime import add_agent, dispatch
-from daw.util import DawError, canonical, now
+from daw.util import DawError, now
 
 BRIEF = "Investigate whether the demo marker differs between conditions A and B. " + SYNTHETIC
 DONORS = "Test whether the demo samples share donors; report what is unmeasured. " + SYNTHETIC
@@ -151,18 +150,11 @@ def test_dashboard_api_panels_are_read_only_and_never_report_zero_for_unavailabl
 
 
 def _two_harness_commons(root):
-    """Add carol (config harness "claude", token-reporting scripted harness); alice and carol answer the
-    same two assignments. Returns the two cohorts."""
+    """Add carol (a Claude Code harness agent, driven by the scripted harness in Claude stream format, which
+    reports token telemetry); alice and carol answer the same two assignments. Returns the two cohorts."""
     with Community(root) as board, scripted_runtime(root) as (harness, _answers):
-        carol = add_agent(board, "carol", model="claude-test")
-        config = {**carol["config"], "harness": "claude"}
-        with board.writer(), board.db:  # the runtime records the adapter at creation; set it for this fixture
-            board.db.execute("UPDATE agent SET config=? WHERE id=?", (canonical(config).decode(), carol["id"]))
-        reporting = root / "demo-harness" / "claude-scripted"
-        reporting.write_text(f"#!{sys.executable}\n" + HARNESS.replace(
-            '"tokens": {"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}',
-            '"tokens": {"input": 1200, "cache_read": 300, "output": 450}'))
-        reporting.chmod(0o755)
+        add_agent(board, "carol", model="claude-test", harness="claude")
+        reporting = harness
         for target, body, executable in (("carol", BRIEF, reporting), ("carol", DONORS, reporting),
                                          ("alice", DONORS, harness)):
             dispatch(board, board.ask(target, "operator", body)["id"], str(executable))

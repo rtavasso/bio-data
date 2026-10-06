@@ -40,6 +40,8 @@ app.add_typer(index_app, name="index")
 app.add_typer(object_app, name="object")
 app.add_typer(community_app, name="community")
 app.add_typer(commons_app, name="commons")
+mcp_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Expose the agent-safe bio commands to an MCP-capable harness.")
+app.add_typer(mcp_app, name="mcp")
 
 
 def emit(value):
@@ -441,6 +443,14 @@ def demo(ctx: typer.Context):
     from daw.substrate_demo import demo as run_demo
     with session(ctx) as ws:
         emit(run_demo(ws))
+
+
+@mcp_app.command("serve")
+def mcp_serve(checkout: Annotated[Path | None, typer.Option(envvar="BIO_CHECKOUT", help="Agent checkout (default: current directory)")] = None,
+              timeout: int = 3600):
+    """Stdio MCP server: search, show, register, sync, gap and community tools run as ./bin/bio in this checkout."""
+    from daw.harness.mcp_server import serve
+    serve(checkout, timeout=timeout)
 
 
 def main():

@@ -1,4 +1,5 @@
 """Small local CLI for shared research, evidence publication, and session delivery."""
+import json
 import os
 from pathlib import Path
 from typing import Annotated
@@ -6,11 +7,11 @@ from typing import Annotated
 import typer
 
 from daw.community import Community
-from daw.community_runtime import add_agent, dispatch, fork_agent, recover, retry
+from daw.community_runtime import STALL_MINUTES, add_agent, dispatch, fork_agent, recover, retry
 from daw.util import DawError, canonical
 
 
-app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Shared research posts, evidence, and persistent Hermes colleagues.")
+app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Shared research posts, evidence, and persistent colleagues on stock agent harnesses.")
 
 
 def emit(value):
@@ -39,17 +40,29 @@ def init(directory: Path):
 @app.command("add-agent")
 def create_agent(ctx: typer.Context, name: str, seed_workspace: Path | None = None,
                  checkpoint: Path | None = None, session_id: str | None = None,
-                 model: str = "gpt-6-astra", effort: str = "xhigh", provider: str = "openai-codex", public: bool = True):
-    """Create an isolated researcher; optionally inherit a verified restorable checkpoint."""
+                 model: Annotated[str | None, typer.Option(help="Default: the harness's default (Hermes: gpt-6-astra)")] = None,
+                 effort: str = "xhigh",
+                 provider: Annotated[str | None, typer.Option(help="Default: the harness's default (Hermes: openai-codex)")] = None,
+                 public: bool = True,
+                 harness: Annotated[str, typer.Option(help="hermes, codex, claude, mcp or scripted")] = "hermes",
+                 harness_options: Annotated[str | None, typer.Option(help="JSON options (mcp: executable, args, resume_args, provider_hosts; scripted: stream_format)")] = None):
+    """Create an isolated researcher on a stock harness; optionally inherit a verified restorable checkpoint."""
+    try:
+        options = json.loads(harness_options) if harness_options else None
+    except ValueError as e:
+        raise DawError("invalid_harness_options", "JSON object required") from e
     with Community(ctx.obj) as board:
         emit(add_agent(board, name, seed_workspace=seed_workspace, checkpoint=checkpoint, native_session=session_id,
-                       model=model, effort=effort, provider=provider, public=public))
+                       model=model, effort=effort, provider=provider, public=public, harness=harness,
+                       harness_options=options))
 
 
 @app.command()
 def agents(ctx: typer.Context):
     with Community(ctx.obj) as board:
-        emit(board.rows("SELECT id,name,trial,native_session,parent,created FROM agent ORDER BY created"))
+        emit([{**{k: r[k] for k in ("id", "name", "trial", "native_session", "parent", "created")},
+               "harness": json.loads(r["config"] or "{}").get("harness", "hermes") if r["trial"] else None}
+              for r in board.rows("SELECT * FROM agent ORDER BY created")])
 
 
 @app.command()
@@ -132,23 +145,41 @@ def operator_only():
 @app.command("run")
 def run_request(ctx: typer.Context, request: str,
                 hermes: Annotated[str, typer.Option(envvar="BIO_HERMES")] = "hermes", timeout: int = 0,
-                refresh_tools: bool = False):
-    """Deliver exactly one pending request with stock Hermes; DAW_LIVE=1 required."""
+                refresh_tools: bool = False,
+                executable: Annotated[str | None, typer.Option(help="Harness executable for a non-Hermes agent (default: the harness's own name)")] = None,
+                stall_minutes: Annotated[float, typer.Option(help="Notify the operator after this many minutes without output")] = STALL_MINUTES,
+                stall_timeout: Annotated[int, typer.Option(help="Seconds without output after which the run is stopped (0: never)")] = 0,
+                allow_unsandboxed: Annotated[str | None, typer.Option(help="Recorded reason to run without a sandbox on a multi-tenant commons")] = None):
+    """Deliver exactly one pending request with the target's stock harness; DAW_LIVE=1 required."""
     operator_only()
     with Community(ctx.obj) as board:
-        emit(dispatch(board, request, hermes, timeout=timeout, refresh_tools=refresh_tools))
+        target = board.one("SELECT target FROM request WHERE id=?", (request,))
+        harness = board.agent(target["target"])["config"].get("harness", "hermes") if target else "hermes"
+        emit(dispatch(board, request, executable or (hermes if harness == "hermes" else None), timeout=timeout,
+                      refresh_tools=refresh_tools, stall_minutes=stall_minutes, stall_timeout=stall_timeout,
+                      allow_unsandboxed=allow_unsandboxed))
 
 
 @app.command("serve")
 def serve_requests(ctx: typer.Context, hermes: Annotated[str, typer.Option(envvar="BIO_HERMES")] = "hermes",
                    agent: Annotated[list[str] | None, typer.Option("--agent")] = None,
                    concurrency: int = 0, poll_seconds: float = 2, timeout: int = 0,
-                   refresh_tools: bool = False, once: bool = False):
-    """Auto-deliver peer questions and answer notifications to started, idle sessions."""
+                   refresh_tools: bool = False, once: bool = False,
+                   harness_executable: Annotated[list[str] | None, typer.Option("--harness-executable", help="HARNESS=PATH for non-Hermes agents (repeatable)")] = None,
+                   stall_minutes: float = STALL_MINUTES, stall_timeout: int = 0,
+                   allow_unsandboxed: Annotated[str | None, typer.Option(help="Recorded reason to run without a sandbox on a multi-tenant commons")] = None):
+    """Auto-deliver peer questions, answer notifications, human comments and person-authorized tasks to idle sessions."""
     operator_only()
     from daw.community_service import serve
+    executables = {}
+    for item in harness_executable or []:
+        name, sep, path = item.partition("=")
+        if not sep or not path:
+            raise DawError("invalid_harness_executable", "use HARNESS=PATH")
+        executables[name] = path
     emit(serve(ctx.obj, hermes, agents=agent or (), concurrency=concurrency, poll_seconds=poll_seconds,
-               timeout=timeout, refresh_tools=refresh_tools, once=once))
+               timeout=timeout, refresh_tools=refresh_tools, once=once, executables=executables,
+               stall_minutes=stall_minutes, stall_timeout=stall_timeout, allow_unsandboxed=allow_unsandboxed))
 
 
 @app.command("retry")

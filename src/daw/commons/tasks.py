@@ -69,7 +69,7 @@ REVIEW_CRITERIA = ("claims_traceable_to_pointers", "methods_reproducible_from_re
                    "scope_matches_evidence")
 REVIEW_ROLE = "review"
 IDENTIFIER = re.compile(r"\b(?:post|artifact|claim|asset|request|run|q)_[A-Za-z0-9]{6,}\b")
-FENCE = re.compile(r"```(?:review|json)[ \t]*\n(.*?)\n```", re.DOTALL)
+FENCE = re.compile(r"```(review|json)[ \t]*\n(.*?)\n```", re.DOTALL)
 
 # Which records count as each type's deliverable (shown to the agent and checked by `evaluate`).
 DELIVERABLES = {
@@ -210,7 +210,8 @@ def _analysis_receipts(parsed):
 
 def review_block(text):
     """The review deliverable from an answer: (value, problems)."""
-    candidates = [b for b in FENCE.findall(text or "") if '"review"' in b]
+    # A ```review fence is always the deliverable; a ```json fence only when it holds a review object.
+    candidates = [b for tag, b in FENCE.findall(text or "") if tag == "review" or '"review"' in b]
     if len(candidates) != 1:
         return None, [f"expected one fenced review block, found {len(candidates)}"]
     try:

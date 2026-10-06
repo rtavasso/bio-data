@@ -1,4 +1,5 @@
 """`bio commons`: serve the web application, build the synthetic demo, manage participants."""
+import json
 from pathlib import Path
 from typing import Annotated
 
@@ -32,7 +33,11 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     from daw.commons.app import create_app
     if host not in {"127.0.0.1", "localhost", "::1"} and mode == "local":
         raise DawError("local_mode_is_loopback_only", "use --mode accounts to listen on other interfaces")
-    uvicorn.run(create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir), host=host, port=port)
+    app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir)
+    from daw.commons.sandbox import record_tenancy
+    # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
+    record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
+    uvicorn.run(app, host=host, port=port)
 
 
 @app.command()
@@ -136,3 +141,73 @@ def metrics_dashboard(ctx: typer.Context, cohort: str | None = None, participant
     with Archive(ctx.obj) as view:
         emit(dashboard(view, cohort_id=cohort, participant=participant, harness=harness, task_type=task_type,
                        bucket=bucket))
+
+
+@app.command("cohort-run")
+def cohort_run_command(ctx: typer.Context, name: str,
+                       assignment: Annotated[list[Path], typer.Option("--assignment", help="Markdown file; first line is the title (repeatable)")],
+                       agent: Annotated[list[str], typer.Option("--agent", help="Agent id or name (repeatable)")],
+                       task_type: str = "research", minutes: int | None = None, tokens: int | None = None,
+                       download_bytes: int | None = None, deadline: str | None = None,
+                       dispatch: Annotated[bool, typer.Option("--dispatch", help="Deliver now, one at a time (DAW_LIVE=1)")] = False,
+                       harness_executable: Annotated[list[str] | None, typer.Option("--harness-executable", help="HARNESS=PATH (repeatable)")] = None,
+                       actor: Annotated[str, typer.Option("--as", help="Operator participant")] = "operator"):
+    """Give the same assignments to several agents (e.g. on two harnesses) and record one cohort per agent."""
+    import os
+    from daw.commons.assignments import cohort_run, collect_cohorts
+    from daw.community import Community
+    from daw.community_runtime import dispatch as deliver
+    if os.environ.get("BIO_AGENT"):
+        raise DawError("operator_dispatch_required")
+    executables = dict(item.split("=", 1) for item in harness_executable or [] if "=" in item)
+    items = []
+    for path in assignment:
+        text = path.read_text()
+        title = text.partition("\n")[0]
+        items.append((title.lstrip("# ").strip() or path.stem, text))
+    budget = {k: v for k, v in {"minutes": minutes, "tokens": tokens, "download_bytes": download_bytes}.items() if v}
+    with Community(ctx.obj) as board:
+        queued = cohort_run(board, actor, name, items, agent, task_type=task_type, budget=budget, deadline=deadline)
+        results = {}
+        if dispatch:
+            for target, requests in queued.items():
+                harness = board.agent(target)["config"].get("harness", "hermes")
+                for request in requests.values():
+                    try:
+                        results[request] = deliver(board, request, executables.get(harness))["state"]
+                    except DawError as e:
+                        results[request] = e.reason
+        value = {"queued": queued, "delivered": results}
+        if dispatch:
+            value["cohorts"] = collect_cohorts(board, actor, name)
+        else:
+            value["next"] = f"let the service deliver, then: bio commons cohort-collect {name}"
+        emit(value)
+
+
+@app.command("cohort-collect")
+def cohort_collect_command(ctx: typer.Context, name: str,
+                           actor: Annotated[str, typer.Option("--as", help="Operator participant")] = "operator"):
+    """Record one cohort per agent from a cohort run's completed deliveries (explicit assignment keys)."""
+    from daw.commons.assignments import collect_cohorts
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(collect_cohorts(board, actor, name))
+
+
+@app.command("egress")
+def egress_command(ctx: typer.Context, host: str = "0.0.0.0", port: int = 3128,
+                   log: Annotated[Path | None, typer.Option(help="JSONL decision log (default <commons>/service/egress.jsonl)")] = None):
+    """Run the allowlisting HTTP(S) CONNECT proxy for sandboxed checkouts (hosts from sandbox.toml and agents' harnesses)."""
+    from daw import harness
+    from daw.commons import egress, sandbox
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        config = sandbox.load(board.root)
+        provider = {h for a in board.rows("SELECT config FROM agent WHERE kind='agent'")
+                    for h in harness.for_agent({"config": json.loads(a["config"])}).hosts(json.loads(a["config"]))}
+        allowed = sandbox.hosts(config, provider)
+        log = log or board.root / "service" / "egress.jsonl"
+        log.parent.mkdir(exist_ok=True)
+    typer.echo(canonical({"listen": f"{host}:{port}", "hosts": allowed, "log": str(log)}).decode())
+    egress.serve(egress.Policy(allowed), host, port, log)

@@ -33,9 +33,27 @@ from daw.util import DawError, canonical, digest, now, read_json
 METRICS_VERSION = 1
 # Files a run's metrics are computed from; size and mtime changes mark the projection stale.
 RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db")
-# Stream parsers per harness. Runs are written by the runtime in the Hermes stream format unless
-# a harness adapter registers its own parser here.
-PARSERS = {"hermes": hermes.parse}
+
+
+class _HarnessParsers(dict):
+    """Stream parsers per harness name, looked up from the harness adapters (daw.harness)."""
+
+    def get(self, name, default=None):
+        from daw import harness
+        try:
+            return harness.get(name or harness.DEFAULT).parse
+        except DawError:
+            return default
+
+    def __getitem__(self, name):
+        parser = self.get(name)
+        if parser is None:
+            raise KeyError(name)
+        return parser
+
+
+# Run streams are parsed by the adapter of the agent's harness (default Hermes).
+PARSERS = _HarnessParsers()
 DIMENSIONS = ("cohort", "participant", "harness", "task_type")
 CLAIM_STATUSES = ("supported", "descriptive", "untestable", "withdrawn")
 TOKEN_FIELDS = ("input_tokens", "cached_input_tokens", "output_tokens")

@@ -26,6 +26,7 @@ prompt = sys.stdin.read()
 if "--stream-format" in argv:
     fmt = argv[argv.index("--stream-format") + 1]
     home, trial = Path(argv[argv.index("--home") + 1]), Path.cwd()
+    store = "db"
 elif argv[:1] == ["chat"]:
     fmt, home, trial = "hermes", Path(os.environ["HERMES_HOME"]), Path(os.environ["HERMES_CWD"])
 elif "-p" in argv:
@@ -34,37 +35,43 @@ elif "exec" in argv:
     fmt, home, trial = "codex", Path(os.environ["CODEX_HOME"]), Path.cwd()
 else:
     sys.exit("unrecognized harness invocation")
+store = locals().get("store") or fmt
 resume = None
 for flag in ("--resume", "resume"):
     if flag in argv:
         resume = argv[argv.index(flag) + 1]
 sid = resume or ("native_" + uuid.uuid4().hex if fmt in ("hermes", "jsonl") else str(uuid.uuid4()))
-db = sqlite3.connect(home / "state.db")
-db.execute("CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, cwd TEXT)")
-db.execute("CREATE TABLE IF NOT EXISTS messages(session TEXT, content TEXT, timestamp REAL)")
-if resume and fmt == "claude" and "--fork-session" in argv:
-    sid = str(uuid.uuid4())
-    db.execute("INSERT INTO sessions VALUES(?,?)", (sid, str(trial)))
-    db.execute("INSERT INTO messages SELECT ?,content,timestamp FROM messages WHERE session=?", (sid, resume))
-elif not resume:
-    db.execute("INSERT INTO sessions VALUES(?,?)", (sid, str(trial)))
-elif not db.execute("SELECT id FROM sessions WHERE id=?", (resume,)).fetchone():
-    sys.exit("unknown session")
-db.execute("INSERT INTO messages VALUES(?,?,?)", (sid, prompt, time.time()))
-db.commit()
-turns = db.execute("SELECT count(*) FROM messages WHERE session=?", (sid,)).fetchone()[0]
-db.close()
-if fmt == "claude":
+if store == "claude":
+    # Claude Code files a conversation per working directory; --fork-session branches it under a new id.
     folder = home / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(trial))
     folder.mkdir(parents=True, exist_ok=True)
+    if resume and not (folder / (resume + ".jsonl")).is_file():
+        sys.exit("unknown session")
+    if resume and "--fork-session" in argv:
+        sid = str(uuid.uuid4())
+        shutil.copyfile(folder / (resume + ".jsonl"), folder / (sid + ".jsonl"))
     with (folder / (sid + ".jsonl")).open("a") as log:
         log.write(json.dumps({"type": "user", "message": prompt[:200]}) + "\n")
-elif fmt == "codex":
+    turns = len((folder / (sid + ".jsonl")).read_text().splitlines())
+else:
+    db = sqlite3.connect(home / "state.db")
+    db.execute("CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, cwd TEXT)")
+    db.execute("CREATE TABLE IF NOT EXISTS messages(session TEXT, content TEXT, timestamp REAL)")
+    if not resume:
+        db.execute("INSERT INTO sessions VALUES(?,?)", (sid, str(trial)))
+    elif not db.execute("SELECT id FROM sessions WHERE id=?", (resume,)).fetchone():
+        sys.exit("unknown session")
+    db.execute("INSERT INTO messages VALUES(?,?,?)", (sid, prompt, time.time()))
+    db.commit()
+    turns = db.execute("SELECT count(*) FROM messages WHERE session=?", (sid,)).fetchone()[0]
+    db.close()
+if store == "codex":
     folder = home / "sessions" / "2026" / "01" / "01"
     folder.mkdir(parents=True, exist_ok=True)
     with (folder / ("rollout-scripted-" + sid + ".jsonl")).open("a") as log:
         log.write(json.dumps({"type": "session_meta", "id": sid}) + "\n")
-post = next((w.rstrip(".") for w in prompt.split() if w.startswith("post_")), "")
+found = re.search(r"(?:Question|Request) post: (post_[0-9a-f]+)", prompt)
+post = found.group(1) if found else ""
 answers = Path(os.environ.get("COLLOQUY_DEMO_ANSWERS", "/nonexistent"))
 hook = answers / (post + ".hook.py")
 if post and hook.is_file():

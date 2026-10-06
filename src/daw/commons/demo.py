@@ -13,7 +13,6 @@ import contextlib
 import importlib
 import os
 import sqlite3
-import sys
 import uuid
 from pathlib import Path
 from unittest import mock
@@ -23,53 +22,15 @@ from daw.artifacts import attach_artifact, register_artifact
 from daw.catalog import Workspace
 from daw.community import Community
 from daw.community_runtime import add_agent, dispatch, fork_agent
+from daw.harness import scripted
 from daw.substrate_models import ArtifactRegistration, Derivation, ObjectInput
 from daw.util import DawError, now, write_json
 from daw.work import create_question, record_event, sync_work
 
 SYNTHETIC = "Synthetic demo record; numbers are fixtures, not biological measurements."
 
-HARNESS = r'''import json, os, sqlite3, sys, time, uuid
-from pathlib import Path
-home = Path(os.environ["HERMES_HOME"]); trial = Path(os.environ["HERMES_CWD"])
-prompt = sys.stdin.read()
-sid = sys.argv[sys.argv.index("--resume") + 1] if "--resume" in sys.argv else "native_" + uuid.uuid4().hex
-db = sqlite3.connect(home / "state.db")
-db.execute("CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, cwd TEXT)")
-db.execute("CREATE TABLE IF NOT EXISTS messages(session TEXT, content TEXT, timestamp REAL)")
-if "--resume" not in sys.argv:
-    db.execute("INSERT INTO sessions VALUES(?,?)", (sid, str(trial)))
-db.execute("INSERT INTO messages VALUES(?,?,?)", (sid, prompt, time.time()))
-db.commit(); db.close()
-post = next((w.rstrip(".") for w in prompt.split() if w.startswith("post_")), "")
-answers = Path(os.environ.get("COLLOQUY_DEMO_ANSWERS", "/nonexistent"))
-answer = (answers / (post + ".md")).read_text() if post and (answers / (post + ".md")).is_file() else "No change to my conclusions."
-clock = int(time.time() * 1000)
-def emit(value, step=1500):
-    global clock
-    clock += step
-    value["timestamp"] = clock
-    print(json.dumps(value), flush=True)
-emit({"type": "system", "session_id": sid})
-calls = [("terminal", {"command": "./bin/bio community search --text PMP22"}, {"exit_code": 0, "output": "3 hits"}),
-         ("terminal", {"command": "./bin/bio community inbox --sent"}, {"exit_code": 0, "output": "[]"}),
-         ("read_file", {"path": "workspace/questions/LABBOOK.md"}, None),
-         ("terminal", {"command": "./bin/python .agents/skills/bio-research/scripts/run_analysis.py scripts/contrast.py"},
-          {"exit_code": 0, "output": "receipt written"}),
-         ("terminal", {"command": "./bin/python .agents/skills/bio-research/scripts/run_analysis.py scripts/check.py"},
-          {"exit_code": 1, "output": "assertion failed: column missing"}),
-         ("terminal", {"command": "./bin/bio register outputs/contrast.tsv --output-role contrast-table"},
-          {"exit_code": 0, "output": "registered"})]
-for n, (name, args, result) in enumerate(calls):
-    call = "call_%d" % n
-    emit({"type": "tool_use", "name": name, "tool_call_id": call, "input": args})
-    emit({"type": "tool_result", "name": name, "tool_call_id": call,
-          "output": json.dumps(result) if result else "notebook text", "is_error": bool(result and result["exit_code"])}, 4000)
-    if n == 2:
-        print("⟳ compacting context…", flush=True)
-emit({"type": "result", "exit_code": 0, "text": answer,
-      "tokens": {"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}})
-'''
+# The scripted stand-in harness lives with the adapters (daw.harness.scripted).
+HARNESS = scripted.SCRIPT
 
 
 def _fake_native_session(executable, home, identity, cwd, *, fork=False):
@@ -87,10 +48,7 @@ def _fake_native_session(executable, home, identity, cwd, *, fork=False):
 @contextlib.contextmanager
 def scripted_runtime(root):
     """Dispatch through the real runtime with the scripted harness; restores the environment afterwards."""
-    harness = root / "demo-harness" / "hermes"
-    harness.parent.mkdir(exist_ok=True)
-    harness.write_text(f"#!{sys.executable}\n" + HARNESS)
-    harness.chmod(0o755)
+    harness = scripted.install(root / "demo-harness" / "hermes")
     answers = root / "demo-harness" / "answers"
     answers.mkdir(exist_ok=True)
     saved = {k: os.environ.get(k) for k in ("DAW_LIVE", "COLLOQUY_DEMO_ANSWERS", "BIO_AGENT")}
@@ -98,7 +56,7 @@ def scripted_runtime(root):
     os.environ.pop("BIO_AGENT", None)
     try:
         with mock.patch.object(community_runtime, "native_session", _fake_native_session):
-            yield str(harness), answers
+            yield harness, answers
     finally:
         for key, value in saved.items():
             if value is None:

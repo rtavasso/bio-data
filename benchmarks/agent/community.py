@@ -8,7 +8,7 @@ import argparse
 import json
 from pathlib import Path
 
-from daw import hermes
+from daw import harness
 from daw.artifacts import reuse_links
 from daw.catalog import Workspace
 from daw.commons.metrics import task_type_of
@@ -26,7 +26,7 @@ def report(root, output):
         for attempt in audit["attempts"]:
             folder = board.root / attempt["path"]
             raw = folder / "events.jsonl"
-            parsed = hermes.parse(raw)
+            parsed = harness.for_agent(board.agent(attempt["target"])).parse(raw)
             request = requests[attempt["request"]]
             runs.append({**attempt, "transcript": str(folder / "transcript.md"),
                          "harness": board.agent(attempt["target"])["config"].get("harness", "hermes"),
