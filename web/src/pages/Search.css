@@ -1,0 +1,17 @@
+/* Search page. Colours come from the shared variables in styles.css. */
+.search-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+.search-form input[type="search"] { flex: 1 1 20rem; min-width: 0; font: inherit; padding: 0.3rem 0.4rem; }
+.search-form select, .search-form button { font: inherit; }
+.search-mode { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.8rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.search-page .small { font-size: 0.85rem; }
+.search-sources { list-style: none; padding: 0; margin: 0.2rem 0 0.8rem; display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; }
+.search-results { padding-left: 1.4rem; display: grid; gap: 0.8rem; }
+.search-hit { overflow-wrap: anywhere; }
+.search-hit-head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.search-hit-head .family { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 0.6rem; padding: 0 0.4rem; }
+.search-hit-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; font-size: 0.85rem; margin: 0.15rem 0; }
+.search-snippet { margin: 0; }
+.search-pages { display: flex; gap: 0.5rem; margin: 0.8rem 0; }
+.search-pages button { font: inherit; }

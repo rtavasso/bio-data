@@ -53,7 +53,7 @@ class Page(Contract):
 
 
 class Discovery(Contract):
-    provider: Literal["europepmc", "zenodo", "chipatlas", "encode"]
+    provider: Literal["europepmc", "zenodo", "chipatlas", "encode", "pride", "cellxgene", "gtex"]
     query: str
     max_pages: int = Field(default=3, ge=1, le=100)
     page_size: int = Field(default=25, ge=1, le=100)

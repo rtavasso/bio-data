@@ -1,5 +1,6 @@
 """Small read-only provider adapters; raw payloads and pagination survive normalization."""
 import csv
+import hashlib
 import io
 import json
 import re
@@ -9,13 +10,21 @@ from urllib.parse import parse_qs, quote, urlencode, urljoin, urlsplit
 from defusedxml import ElementTree as ET
 
 from daw.models import Asset, Discovery, Page
+from daw.search import index_document
 from daw.transport import Transport
 from daw.util import DawError, canonical, digest, now, read_json, safe_url
 
 EPMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
 PMC = "https://pmc-oa-opendata.s3.amazonaws.com/"
 ENA = "https://www.ebi.ac.uk/ena/portal/api/"
+PRIDE = "https://www.ebi.ac.uk/pride/ws/archive/v3/"
+GTEX = "https://gtexportal.org/api/v2/"
+CELLXGENE = "https://api.cellxgene.cziscience.com/curation/v1/"
 VERSION = "1"
+# Paragraph locator scheme for Europe PMC JATS full text; a change is a new parser version.
+JATS_PARSER = "jats-paragraphs-v1"
+TABLE_SUFFIXES = ("csv", "tsv", "txt", "xlsx", "xlsm")
+MAX_LISTING_PAGES = 100
 
 
 class Sources:
@@ -24,6 +33,7 @@ class Sources:
         self.http = transport or Transport(ws)
         self.snapshots = []
         self.warnings = []
+        self._listings = {}
 
     def payload(self, url, kind="json", limit=16 * 2**20):
         receipt = self.http.fetch(url, expected=kind, limit=limit)
@@ -43,7 +53,8 @@ class Sources:
 
     def add(self, reference, provider=None):
         provider, native = identify(reference, provider)
-        if provider not in {"url", "geo", "pmc", "europepmc", "zenodo", "figshare", "ena", "biostudies", "encode", "chipatlas"}:
+        if provider not in {"url", "geo", "pmc", "europepmc", "zenodo", "figshare", "ena", "biostudies", "encode", "chipatlas",
+                            "pride", "gtex", "cellxgene"}:
             raise DawError("unsupported_provider", provider)
         bundle = self.ws.resource("bundle", provider, native, {"reference": safe_url(reference) if "://" in reference else reference})
         run, _ = self.ws.start_run("resolve", {"provider": provider, "reference": native, "adapter_version": VERSION})
@@ -58,8 +69,9 @@ class Sources:
             else:
                 method = getattr(self, "resolve_" + provider)
                 records, sid, metadata = method(native, bundle)
-                assets = [self.ws.register_asset(bundle, provider, asset, source or sid)
-                          for asset, source in records]
+                # A record is (asset, snapshot) or, for a derived metadata table, (asset, snapshot, blob).
+                assets = [self.ws.register_asset(bundle, provider, record[0], record[1] or sid, *record[2:])
+                          for record in records]
             result = {"bundle": bundle, "provider": provider, "reference": native, "assets": assets,
                       "snapshots": self.snapshots[before:], "metadata": metadata, "warnings": self.warnings,
                       "adapter_version": VERSION, "retrieved_utc": now(), "enumeration_complete": not self.warnings,
@@ -339,6 +351,271 @@ class Sources:
                                  metadata={"experiment": native}, access="unsupported_route"), sid))
         return assets, sid, {"supported_genomes": genomes, "source_metadata": data,
                              "threshold_issue": "05/10/20 use -log10(Q); agent guide contradicts processing wiki; blocked until file fixture"}
+    def listing(self, url, limit=64 * 2**20):
+        """One snapshot per listing URL per invocation, so paging a client-side match costs one request."""
+        if url not in self._listings:
+            data, sid, _ = self.payload(url, limit=limit)
+            self._listings[url] = (data, sid)
+        return self._listings[url]
+
+    def resolve_pride(self, native, bundle):
+        if not re.fullmatch(r"PXD\d{6,}", native):
+            raise DawError("unsupported_reference", "expected a PRIDE project accession (PXD…)")
+        project, sid, _ = self.payload(PRIDE + f"projects/{native}")
+        count, _, _ = self.payload(PRIDE + f"projects/{native}/files/count")
+        if isinstance(count, bool) or not isinstance(count, int):
+            self.warnings.append("PRIDE file count unavailable; listing completeness unknown")
+            count = None
+        assets, seen, page = [], set(), 0
+        while page < MAX_LISTING_PAGES:
+            rows, page_sid, _ = self.payload(PRIDE + f"projects/{native}/files?" + urlencode({"pageSize": 100, "page": page}))
+            if not isinstance(rows, list):
+                raise DawError("schema_changed", "PRIDE file listing is not a list")
+            for i, f in enumerate(rows):
+                if f["accession"] in seen:
+                    self.warnings.append(f"duplicate PRIDE file record across pages: {f['accession']}")
+                    continue
+                seen.add(f["accession"])
+                locations = {x.get("name"): x.get("value") for x in f.get("publicFileLocations") or [] if isinstance(x, dict)}
+                ftp = locations.get("FTP Protocol") or ""
+                checksum = str(f.get("checksum") or "").lower()
+                algorithm = {32: "md5", 40: "sha1", 64: "sha256"}.get(len(checksum)) if re.fullmatch(r"[0-9a-f]+", checksum) else None
+                category = (f.get("fileCategory") or {}).get("value")
+                assets.append((Asset(native_id=f"{native}:{f['accession']}", name=f["fileName"],
+                                     url=ftp.replace("ftp://", "https://", 1) if ftp.startswith("ftp://") else None,
+                                     size=f.get("fileSizeBytes"), checksum=f"{algorithm}:{checksum}" if algorithm else None,
+                                     raw=category == "RAW", selector={"metadata_pointer": f"page={page}/{i}"},
+                                     metadata={"project": native, "file_accession": f["accession"], "category": category,
+                                               "locations": locations, "provider_checksum": checksum or None,
+                                               "publication_date": f.get("publicationDate"), "updated_date": f.get("updatedDate")}),
+                               page_sid))
+            page += 1
+            if len(rows) < 100 or (count is not None and len(seen) >= count):
+                break
+        else:
+            self.warnings.append("PRIDE file listing page budget exhausted")
+        if count is not None and len(seen) != count:
+            self.warnings.append(f"PRIDE reported {count} files; listed {len(seen)}")
+        return assets, sid, {"title": project.get("title"), "reported_file_count": count, "listed_files": len(seen),
+                             "schema_keys": sorted(project)}
+
+    def resolve_gtex(self, native, bundle):
+        dataset, _, tissue = native.partition("/")
+        if not re.fullmatch(r"\w+", dataset) or (tissue and not re.fullmatch(r"\w+", tissue)):
+            raise DawError("unsupported_reference", "use gtex:<datasetId>[/<tissueSiteDetailId>]; no dataset is assumed")
+        datasets, sid, _ = self.payload(GTEX + "metadata/dataset")
+        info = [d for d in datasets if isinstance(d, dict) and d.get("datasetId") == dataset]
+        if len(info) != 1:
+            raise DawError("not_found", f"datasetId {dataset} is not listed by GTEx metadata/dataset")
+        tissues, tissue_sid, _ = self.payload(GTEX + "dataset/tissueSiteDetail?" + urlencode({"datasetId": dataset, "itemsPerPage": 250}))
+        if (tissues.get("paging_info") or {}).get("numberOfPages", 1) > 1:
+            self.warnings.append("tissue listing has more than one page; only the first was read")
+        known = set()
+        for i, t in enumerate(tissues.get("data", [])):
+            known.add(t.get("tissueSiteDetailId"))
+            rid = self.ws.resource("tissue_site", "gtex", f"{dataset}/{t.get('tissueSiteDetailId')}", t)
+            self.ws.link(bundle, rid, "describes_tissue", tissue_sid, f"/data/{i}")
+        if tissue and tissue not in known:
+            raise DawError("not_found", f"tissueSiteDetailId {tissue} is not listed for {dataset}")
+        rows, pages, snapshots, total, page = [], 1, [], None, 0
+        while page < pages:
+            if page >= MAX_LISTING_PAGES:
+                self.warnings.append(f"sample listing truncated at {MAX_LISTING_PAGES} pages")
+                break
+            params = {"datasetId": dataset, "itemsPerPage": 250, "page": page} | ({"tissueSiteDetailId": tissue} if tissue else {})
+            data, page_sid, _ = self.payload(GTEX + "dataset/sample?" + urlencode(params))
+            snapshots.append(page_sid)
+            paging = data.get("paging_info") or {}
+            pages, total = paging.get("numberOfPages", 0), paging.get("totalNumberOfItems")
+            rows.extend(data.get("data", []))
+            page += 1
+        if total is not None and len(rows) != total:
+            self.warnings.append(f"GTEx reported {total} samples; read {len(rows)}")
+        # Derived metadata table: the API pages remain the authority (snapshots); values are literal.
+        columns = sorted({key for row in rows for key in row}, key=lambda k: (k != "sampleId", k))
+        out = io.StringIO()
+        writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+        writer.writerow(columns)
+        literal_na = False
+        for row in rows:
+            values = []
+            for key in columns:
+                value = row.get(key)
+                literal_na |= value == "NA"
+                values.append("NA" if value is None else canonical(value).decode() if isinstance(value, (dict, list)) else str(value))
+            writer.writerow(values)
+        if literal_na:
+            self.warnings.append("a source value is the literal string NA, which is also the null token")
+        name = f"{dataset}{'-' + tissue if tissue else ''}-samples.tsv"
+        blob = self.ws.put_bytes(out.getvalue().encode(), "derived")
+        asset = Asset(native_id=f"{native}:samples.tsv", name=name, version=dataset, access="available_full",
+                      metadata={"conversion": "GTEx API v2 dataset/sample pages to TSV; columns are the union of returned keys",
+                                "null_token": "NA", "nested_values": "canonical JSON", "source_snapshots": snapshots,
+                                "rows": len(rows), "reported_total": total, "dataset": info[0], "tissue": tissue or None,
+                                "sample_rows_are_not_donors": True})
+        return [(asset, snapshots[0] if snapshots else sid, blob)], sid, {
+            "dataset": info[0], "tissues": len(known), "samples": len(rows), "reported_samples": total,
+            "data_files": "the portal API lists metadata only; data files need an explicit source-backed locator"}
+
+    def resolve_cellxgene(self, native, bundle):
+        if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", native):
+            raise DawError("unsupported_reference", "use cellxgene:<collection UUID>")
+        data, sid, _ = self.payload(CELLXGENE + f"collections/{native}")
+        assets = []
+        for i, ds in enumerate(data.get("datasets", [])):
+            rid = self.ws.resource("dataset", "cellxgene", ds["dataset_id"], {k: ds.get(k) for k in (
+                "dataset_id", "dataset_version_id", "title", "schema_version", "cell_count", "is_primary_data",
+                "organism", "assay", "tissue", "disease", "suspension_type", "tombstone")})
+            self.ws.link(bundle, rid, "contains_dataset", sid, f"/datasets/{i}")
+            if ds.get("tombstone"):
+                self.warnings.append(f"dataset {ds['dataset_id']} is tombstoned upstream; retained")
+            for j, item in enumerate(ds.get("assets") or []):
+                url, filetype = item.get("url"), item.get("filetype")
+                assets.append((Asset(
+                    native_id=f"{ds['dataset_version_id']}:{filetype}", version=ds.get("dataset_version_id"),
+                    name=Path(urlsplit(url).path).name if url else f"{ds['dataset_id']}.{str(filetype).lower()}",
+                    url=url, size=item.get("filesize"), selector={"metadata_pointer": f"/datasets/{i}/assets/{j}"},
+                    metadata={"collection_id": native, "collection_version_id": data.get("collection_version_id"),
+                              "dataset": rid, "dataset_id": ds["dataset_id"], "dataset_version_id": ds.get("dataset_version_id"),
+                              "filetype": filetype, "schema_version": ds.get("schema_version"), "title": ds.get("title"),
+                              "is_primary_data": ds.get("is_primary_data"),
+                              "count_semantics": "not asserted by the listing; inspect X and raw layers",
+                              **({"serialization": "R serialization; never deserialized"} if filetype == "RDS" else {})}), sid))
+        if data.get("revising_in") or data.get("revision_of"):
+            self.warnings.append("collection has a revision relationship; versions are not merged")
+        return assets, sid, {"collection_version_id": data.get("collection_version_id"), "name": data.get("name"),
+                             "doi": data.get("doi"), "revision_of": data.get("revision_of"), "published_at": data.get("published_at"),
+                             "datasets": len(data.get("datasets", [])), "schema_keys": sorted(data)}
+
+    def fulltext(self, reference):
+        """Europe PMC JATS full text: immutable XML, a paragraph object with stable locators, search documents."""
+        pmcid = reference.upper()
+        if not re.fullmatch(r"PMC\d+", pmcid):
+            raise DawError("unsupported_reference", "Europe PMC full text needs a PMCID")
+        bundle = self.ws.resource("bundle", "europepmc", pmcid, {"reference": pmcid})
+        run, _ = self.ws.start_run("fulltext", {"pmcid": pmcid, "adapter_version": VERSION, "parser": JATS_PARSER})
+        before = len(self.snapshots)
+        url = EPMC + pmcid + "/fullTextXML"
+        try:
+            root, sid, blob = self.payload(url, "xml")
+            paragraphs = jats_paragraphs(root)
+            node = next((e for e in root.iter() if local_tag(e) == "article-title"), None)
+            title = " ".join("".join(node.itertext()).split()) if node is not None else pmcid
+            aid = self.ws.register_asset(bundle, "europepmc", Asset(
+                native_id=f"{pmcid}:jats", name=f"{pmcid}.xml", url=url, access="available_full",
+                metadata={"article": pmcid, "parser": JATS_PARSER}), sid, blob)
+            record = {"kind": "jats_paragraphs", "parser": JATS_PARSER, "pmcid": pmcid, "title": title,
+                      "asset_revision": aid, "source_blob": blob, "source_snapshot": sid, "paragraphs": paragraphs,
+                      "locators": "element path with 1-based same-tag sibling indexes; body paragraphs are relative to "
+                                  "<body>, others start at abstract/back/floats-group"}
+            obj = self.ws.put_json(record)
+            abstract = " ".join(p["text"] for p in paragraphs if p["locator"].startswith("abstract"))
+            # Keyed by asset revision: a changed upstream representation leaves older documents historical.
+            index_document(self.ws, key=f"fulltext:{aid}", family="data", subject=aid, record_id=obj, title=title,
+                           summary=(abstract or " ".join(p["text"] for p in paragraphs[:3]))[:2000], body_blob=obj,
+                           detail="\n".join(f"[{p['locator']}] {p['text']}" for p in paragraphs),
+                           provider="europepmc", format="jats", level=2)
+            for p in paragraphs:
+                index_document(self.ws, key=f"fulltext:{aid}#{p['locator']}", family="data", subject=aid,
+                               record_id=p["locator"], title=f"{title} — {p['section'] or p['locator']}",
+                               summary=p["text"][:2000], body_blob=obj, detail=p["text"], provider="europepmc",
+                               format="jats-paragraph", level=2)
+            output = {"pmcid": pmcid, "outcome": "available_full", "asset_revision": aid, "source_blob": blob,
+                      "snapshot": sid, "paragraphs_blob": obj, "paragraphs": len(paragraphs), "title": title,
+                      "parser": JATS_PARSER, "run": run,
+                      "warnings": [] if paragraphs else ["no paragraphs parsed; inspect the source XML"],
+                      "next": "bio data search TEXT --format jats-paragraph returns paragraph locators in record_id"}
+            self.ws.finish_run(run, output)
+        except DawError as e:
+            output = {"pmcid": pmcid, "outcome": e.reason, "reason": str(e), "snapshots": self.snapshots[before:], "run": run,
+                      "note": "not_found means Europe PMC served no full text for this ID, not that the article lacks it"}
+            self.ws.finish_run(run, output, error=str(e))
+        return output
+
+    def supplementary(self, reference, *, max_files=10, max_bytes=256 * 2**20, max_asset_bytes=64 * 2**20, isolated=True):
+        """List supplementary files, fetch tables within budgets, inspect them with the safe readers, keep a receipt.
+
+        Listing uses the PMC Cloud inventory; when it has no candidate files the Europe PMC
+        supplementaryFiles ZIP is the route. Formulas and macros are never evaluated; formats
+        without a safe reader are listed and skipped, not fetched.
+        """
+        from daw.inspectors import extract_members, inspect_asset
+        pmcid = reference.upper()
+        if not re.fullmatch(r"PMC\d+(?:\.\d+)?", pmcid) or not 1 <= max_files <= 200 or max_bytes < 1 or max_asset_bytes < 1:
+            raise DawError("unsupported_reference", "a PMCID and positive budgets are required")
+        base = pmcid.split(".")[0]
+        budgets = {"max_files": max_files, "max_bytes": max_bytes, "max_asset_bytes": max_asset_bytes}
+        run, _ = self.ws.start_run("supplementary", {"pmcid": pmcid, "budgets": budgets, "adapter_version": VERSION})
+        original = self.ws.budgets
+        self.ws.budgets = original.model_copy(update={
+            "asset_bytes": min(original.asset_bytes or max_asset_bytes, max_asset_bytes),
+            "bundle_bytes": min(original.bundle_bytes or max_bytes, max_bytes)})
+        candidates, fetched, tables, skipped, route = [], [], [], [], "pmc_cloud"
+        try:
+            listing = self.add(pmcid, "pmc")
+            for aid in listing["assets"]:
+                body = self.ws.asset(aid)["body"]
+                if body["metadata"].get("article_version") and not body["name"].upper().startswith(base + "."):
+                    candidates.append(aid)
+            if not candidates:
+                route = "europepmc_zip"
+                bundle = self.ws.resource("bundle", "europepmc", base, {"reference": base})
+                url = EPMC + base + "/supplementaryFiles"
+                sid = self.ws.snapshot(url, "listed", {"source": "Europe PMC supplementaryFiles route (one ZIP per article)",
+                                                       "pmc_cloud_outcome": listing["outcome"]}, resource=bundle)
+                candidates = [self.ws.register_asset(bundle, "europepmc", Asset(
+                    native_id=f"{base}:supplementaryFiles", name=f"{base}_SupplementaryFiles.zip", url=url,
+                    metadata={"article": base, "route": "europepmc_zip"}), sid)]
+            selected = []
+            for aid in candidates:
+                name = self.ws.asset(aid)["body"]["name"]
+                suffix = name.lower().rsplit(".", 1)[-1]
+                if suffix not in TABLE_SUFFIXES and suffix != "zip":
+                    skipped.append({"asset_revision": aid, "name": name, "reason": "no_safe_table_reader"})
+                elif len(selected) >= max_files:
+                    skipped.append({"asset_revision": aid, "name": name, "reason": "file_budget"})
+                else:
+                    selected.append(aid)
+            for aid in selected:
+                result = self.http.acquire(aid)
+                fetched.append({k: result.get(k) for k in ("asset_revision", "previous_revision", "outcome", "snapshot",
+                                                          "blob", "bytes", "reason", "reused")})
+                if result["outcome"] != "available_full":
+                    continue
+                current = result["asset_revision"]
+                inspection = inspect_asset(self.ws, current, isolated)
+                if inspection.get("kind") == "archive":
+                    members = [self.ws.asset(c)["body"]["name"] for c in inspection.get("listed_child_assets", [])]
+                    wanted = [m for m in members if m.lower().rsplit(".", 1)[-1] in TABLE_SUFFIXES]
+                    skipped.extend({"member": m, "parent": current, "reason": "no_safe_table_reader"}
+                                   for m in members if m not in wanted)
+                    room = max(0, max_files - len(tables))
+                    skipped.extend({"member": m, "parent": current, "reason": "file_budget"} for m in wanted[room:])
+                    try:
+                        children = extract_members(self.ws, current, wanted[:room]) if wanted[:room] else []
+                    except DawError as e:
+                        skipped.append({"parent": current, "reason": e.reason, "detail": e.detail})
+                        children = []
+                    for child in children:
+                        tables.append(table_summary(child["member"], inspect_asset(self.ws, child["asset_revision"], isolated)))
+                else:
+                    tables.append(table_summary(self.ws.asset(current)["body"]["name"], inspection))
+            receipt = {"pmcid": pmcid, "route": route, "listing_run": listing.get("run"), "budgets": budgets,
+                       "candidates": candidates, "fetched": fetched, "tables": tables, "skipped": skipped,
+                       "requests": self.http.requests, "transferred_bytes": self.http.transferred,
+                       "policy": "tables read with the safe readers; formulas and macros are not evaluated; "
+                                 "downloaded code is never executed", "adapter_version": VERSION, "retrieved_utc": now()}
+            receipt_blob = self.ws.put_json(receipt)
+            output = {**receipt, "receipt_blob": receipt_blob, "run": run}
+            self.ws.finish_run(run, output)
+            return output
+        except DawError as e:
+            output = {"pmcid": pmcid, "route": route, "outcome": e.reason, "reason": str(e), "fetched": fetched,
+                      "tables": tables, "run": run}
+            self.ws.finish_run(run, output, error=str(e))
+            return output
+        finally:
+            self.ws.budgets = original
 
 
     @staticmethod
@@ -447,6 +724,36 @@ class Sources:
             return Page(items=selected, next_cursor=None if end else str(int(cursor) + 1), exhausted=end,
                         reported_total=len(matches), source_snapshot_id=sid,
                         warnings=["search scope is the saved experiment-list snapshot"])
+        if request.provider == "pride":
+            items, sid, _ = self.payload(PRIDE + "search/projects?" + urlencode({
+                "keyword": request.query, "pageSize": request.page_size, "page": int(cursor) - 1}))
+            if not isinstance(items, list):
+                raise DawError("schema_changed", "PRIDE search did not return a list")
+            # The total is only a response header; a short page is the terminator.
+            exhausted = len(items) < request.page_size
+            return Page(items=items, next_cursor=None if exhausted else str(int(cursor) + 1), exhausted=exhausted,
+                        reported_total=None, source_snapshot_id=sid)
+        if request.provider in {"cellxgene", "gtex"}:
+            if request.provider == "cellxgene":
+                data, sid = self.listing(CELLXGENE + "collections")
+                rows = [{"id": x.get("collection_id"), "name": x.get("name"), "doi": x.get("doi"),
+                         "collection_version_id": x.get("collection_version_id"), "published_at": x.get("published_at"),
+                         "revised_at": x.get("revised_at"), "datasets": len(x.get("datasets") or []),
+                         "dataset_titles": [d.get("title") for d in (x.get("datasets") or [])][:50], "source_pointer": f"/{i}"}
+                        for i, x in enumerate(data) if request.query.casefold() in canonical(x).decode().casefold()]
+                scope = "search scope is the full public collection listing; literal case-insensitive match"
+            else:
+                dataset, _, text = request.query.strip().partition(" ")
+                data, sid = self.listing(GTEX + "dataset/tissueSiteDetail?" + urlencode({"datasetId": dataset, "itemsPerPage": 250}))
+                if not isinstance(data, dict) or not data.get("data"):
+                    raise DawError("unsupported_reference", "start a GTEx query with an explicit datasetId, e.g. 'gtex_v10 nerve'")
+                rows = [{"id": f"{dataset}/{t.get('tissueSiteDetailId')}", "record": t, "source_pointer": f"/data/{i}"}
+                        for i, t in enumerate(data["data"]) if text.strip().casefold() in canonical(t).decode().casefold()]
+                scope = f"search scope is the {dataset} tissue-site listing; literal case-insensitive match"
+            start = (int(cursor) - 1) * request.page_size
+            end = start + request.page_size >= len(rows)
+            return Page(items=rows[start:start + request.page_size], next_cursor=None if end else str(int(cursor) + 1),
+                        exhausted=end, reported_total=len(rows), source_snapshot_id=sid, warnings=[scope])
         raise DawError("unsupported_provider")
 
     def jats_links(self, aid):
@@ -486,6 +793,65 @@ class Sources:
         return {"assets": assets, "links": links}
 
 
+def local_tag(element):
+    return element.tag.rsplit("}", 1)[-1] if isinstance(element.tag, str) else ""
+
+
+def jats_paragraphs(root):
+    """Every <p> of a JATS article with a stable locator, its section title, text and text SHA-256.
+
+    A locator is the element path with 1-based indexes among same-tag siblings
+    (`sec[2]/p[3]`). Body paragraphs are relative to <body>; abstract, back matter and
+    floats keep their container (`abstract[1]/p[1]`, `back/ack[1]/p[1]`). Nested
+    paragraphs belong to their outer <p>. Text is whitespace-normalised, otherwise literal.
+    """
+    found = []
+
+    def walk(element, path, section):
+        counts = {}
+        for child in element:
+            tag = local_tag(child)
+            if not tag:
+                continue
+            counts[tag] = counts.get(tag, 0) + 1
+            step = f"{path}/{tag}[{counts[tag]}]" if path else f"{tag}[{counts[tag]}]"
+            if tag == "p":
+                text = " ".join("".join(child.itertext()).split())
+                if text:
+                    found.append({"locator": step, "section": section,
+                                  "sha256": hashlib.sha256(text.encode()).hexdigest(), "text": text})
+                continue
+            walk(child, step, heading(child) or section if tag in {"sec", "app", "ack", "boxed-text"} else section)
+
+    def heading(element):
+        title = next((c for c in element if local_tag(c) == "title"), None)
+        return " ".join("".join(title.itertext()).split()) if title is not None else ""
+
+    meta = next((e for e in root.iter() if local_tag(e) == "article-meta"), None)
+    if meta is not None:
+        for count, abstract in enumerate((c for c in meta if local_tag(c) == "abstract"), 1):
+            walk(abstract, f"abstract[{count}]", heading(abstract) or "Abstract")
+    for container in ("body", "back", "floats-group"):
+        node = next((c for c in root if local_tag(c) == container), None)
+        if node is not None:
+            walk(node, "" if container == "body" else container, "")
+    return found
+
+
+def table_summary(name, inspection):
+    """Compact extraction receipt for one inspected supplementary table; the inspection blob is the full record."""
+    summary = {"name": name, "asset_revision": inspection.get("asset_revision"), "inspection": inspection.get("inspection"),
+               "inspection_blob": inspection.get("manifest_blob"), "status": inspection.get("status"),
+               "kind": inspection.get("kind"), "reason": inspection.get("reason")}
+    if inspection.get("kind") == "workbook":
+        summary["sheets"] = [{"name": s["name"], "rows": s["rows"], "columns": s["columns"], "formulas": len(s["formulas"]),
+                              "complete": s["complete"]} for s in inspection.get("sheets", [])]
+        summary["formula_policy"] = inspection.get("formula_policy")
+    elif inspection.get("kind") == "delimited":
+        summary.update(rows_scanned=inspection.get("rows_scanned"), column_counts=inspection.get("column_counts"),
+                       complete=inspection.get("complete"))
+    return summary
+
 def identify(reference, provider=None):
     if provider:
         return provider, reference
@@ -495,6 +861,11 @@ def identify(reference, provider=None):
         return "figshare", reference.removeprefix("figshare:")
     if reference.startswith("chipatlas:"):
         return "chipatlas", reference.removeprefix("chipatlas:")
+    for prefix in ("cellxgene", "gtex", "pride"):
+        if reference.startswith(prefix + ":"):
+            return prefix, reference.removeprefix(prefix + ":")
+    if re.fullmatch(r"PXD\d{6,}", reference):
+        return "pride", reference
     if re.fullmatch(r"GSE\d+", reference):
         return "geo", reference
     if re.fullmatch(r"PMC\d+(?:\.\d+)?", reference):
