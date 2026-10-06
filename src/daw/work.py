@@ -25,6 +25,12 @@ def record_event(ws, qid, kind, payload):
     if kind == "retrieval_gap":
         from daw.gaps import validate_gap
         payload = validate_gap(payload, qid)
+        if "evidence_blob" in payload:
+            from daw.profiles import verify_object
+            verify_object(ws, payload["evidence_blob"])
+    if kind == "retrieval_gap_withdrawal":
+        from daw.gaps import validate_withdrawal
+        payload = validate_withdrawal(ws, payload, qid)
     body = ws.put_json(payload)
     event = {"id": "event_" + uuid.uuid4().hex, "question": qid, "kind": kind, "body_blob": body, "created": now()}
     with ws.db:

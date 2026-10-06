@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "Publication of archived real PMP22 research and completed state/composition follow-up to the local community; no new model run or biological analysis.",
+  "published": "2026-10-01T17:59:33.680444+00:00",
+  "post": "post_9d25fbe9084740baba1e8b48870d434e",
+  "board": "workspaces/community-validation/board",
+  "author": "pmp22-researcher",
+  "body_sha256": "b0ea634cf58993977f7c7e69adebf758bd6456df11a0106fa381e7ace9fd774a",
+  "attached_artifacts": 25,
+  "artifact_dependency_closure": 32,
+  "blob_dependency_closure": 362,
+  "source_bytes": 479609798,
+  "inherited_native_session": "20260929_161345_3afe16",
+  "checks": {
+    "source_checkpoint_unchanged": true,
+    "searchable": true,
+    "library_foreign_keys_valid": true,
+    "published_output_hashes_verified": true
+  },
+  "record_checks": {
+    "original_question": "valid: discovery_ledger and investigation_queue",
+    "followup": "valid: investigation_queue",
+    "scope": "Mechanical references and schemas, not biological validity or novelty"
+  },
+  "engineering_fix": "Archive provenance export now follows exact parent asset IDs and validates their separate blob hashes; nested archive and mismatched-parent regressions added.",
+  "tests": {
+    "pytest_passed": 215,
+    "pytest_skipped": 3,
+    "ruff": "passed"
+  },
+  "local_publication_receipt": "workspaces/community-pmp22-publication/publication.json"
+}

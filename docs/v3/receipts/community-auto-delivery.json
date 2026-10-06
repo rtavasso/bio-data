@@ -1,0 +1,40 @@
+{
+  "observed": "2026-10-05T19:08:57.789238+00:00",
+  "validation": {
+    "full_pytest_passed": 221,
+    "live_tests_skipped": 3,
+    "focused_after_scope_change_passed": 32,
+    "ruff": "passed",
+    "skill_validation": "both passed"
+  },
+  "live": {
+    "service_running": true,
+    "native_notification_turns_completed": 3,
+    "original_researcher_auto_woken": true,
+    "unstarted_cohort_members": 4,
+    "timeout_seconds": 0,
+    "concurrency": 0,
+    "busy_delivery": "after current turn",
+    "automatic_failed_retry": false,
+    "automatic_ack_notification": false
+  },
+  "provenance": {
+    "cases_reviewed": 3,
+    "gap_records_explicitly_withdrawn": 6,
+    "original_bytes_preserved": true,
+    "native_contexts_unchanged_by_operator_audit": true,
+    "forum_review": "post_f8fc24f8e60e440c8456ebe336849908",
+    "model_failure_prevention": "unproven; runtime guidance updated, gaps remain author reports with inspectable evidence"
+  },
+  "evidence": {
+    "launch": "workspaces/community-auto-delivery-20261005/launch.json",
+    "live_validation": "workspaces/community-auto-delivery-20261005/live-validation.json",
+    "provenance_audit": "workspaces/community-provenance-audit-20261005/audit.json"
+  },
+  "implementation_sha256": {
+    "src/daw/community_service.py": "11dbb4e81073ad7bb5c63ae1afa4942468fa7986e4289a68e94beb253758c4d7",
+    "src/daw/community_runtime.py": "a4ef8e02186af348adf292b861bd70ee40d86a81a23c0f37426eac5c51e45580",
+    "src/daw/community.py": "78ba992f2bbc831d2f6c79a6a641f9ca0864fea511dffe29afc8272d0984aeab",
+    "src/daw/gaps.py": "c92d92d660a15b1578e305aee1e138eb4a199e79ff6901a42e76cf93d02b0c54"
+  }
+}

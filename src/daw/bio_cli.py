@@ -1,6 +1,7 @@
 """Agent-facing research substrate. Ordinary files and tools are the analysis interface."""
 import contextlib
 import json
+import re
 import os
 import platform
 import sqlite3
@@ -11,8 +12,9 @@ import typer
 from pydantic import ValidationError
 
 from daw.adapters import Sources
-from daw.artifacts import artifact_info, attach_artifact, find_derivation, provenance, register_artifact
+from daw.artifacts import artifact_info, attach_artifact, check_output_role, find_derivation, provenance, register_artifact
 from daw.catalog import Workspace, restore_check
+from daw.community_cli import app as community_app
 from daw.gaps import report_gaps
 from daw.indexer import create_job, import_graph, index_status, run_job, schedule_feed, tick
 from daw.inspectors import extract_members, inspect_asset
@@ -24,17 +26,18 @@ from daw.transport import Transport
 from daw.util import DawError, canonical, environment_identity, read_json
 from daw.work import create_question, record_event, show_work, sync_work
 
-app = typer.Typer(no_args_is_help=True, help="BIO — persistent public data, searchable contents, and reusable research work.")
-data_app = typer.Typer(no_args_is_help=True, help="Search and inspect data without a scientific acceptance gate.")
-artifact_app = typer.Typer(no_args_is_help=True, help="Find and reuse artifacts by their actual derivation.")
-work_app = typer.Typer(no_args_is_help=True, help="Question folders, notebooks, and prior research.")
-index_app = typer.Typer(no_args_is_help=True, help="Resumable progressive indexing and recurring feeds.")
-object_app = typer.Typer(no_args_is_help=True, help="Preserve exact source, code and reference bytes.")
+app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="BIO — persistent public data, searchable contents, and reusable research work.")
+data_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Search and inspect data without a scientific acceptance gate.")
+artifact_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Find and reuse artifacts by their actual derivation.")
+work_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Question folders, notebooks, and prior research.")
+index_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Resumable progressive indexing and recurring feeds.")
+object_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Preserve exact source, code and reference bytes.")
 app.add_typer(data_app, name="data")
 app.add_typer(artifact_app, name="artifact")
 app.add_typer(work_app, name="work")
 app.add_typer(index_app, name="index")
 app.add_typer(object_app, name="object")
+app.add_typer(community_app, name="community")
 
 
 def emit(value):
@@ -238,6 +241,7 @@ def register(ctx: typer.Context, path: Path, manifest: Path | None = None, quest
              output_role: str = "result"):
     """Register a computed output. Flags require --input and --code; prose can stay in LABBOOK.md."""
     with session(ctx) as ws:
+        check_output_role(output_role)
         if manifest:
             if input or code or reference or environment or title or summary or parameters != "{}" or output_role != "result":
                 raise DawError("registration_manifest_and_flags_are_exclusive")
@@ -278,9 +282,11 @@ def artifact_show(ctx: typer.Context, artifact: str):
 
 
 @artifact_app.command("use")
-def artifact_use(ctx: typer.Context, artifact: str, question: Annotated[str, typer.Option()], name: str | None = None):
+def artifact_use(ctx: typer.Context, artifact: str, question: Annotated[str, typer.Option()], name: str | None = None,
+                 reason: Annotated[str | None, typer.Option(help="How the bytes inform this analysis; marks the artifact reused. Without it the link is considered.")] = None):
+    """Attach an artifact to a question. Retrieval alone is `considered`; `reused` needs --reason or a later --input."""
     with session(ctx) as ws:
-        emit(attach_artifact(ws, question, artifact, name=name))
+        emit(attach_artifact(ws, question, artifact, "reused" if reason else "considered", name=name, reason=reason))
 
 
 @work_app.command("new")
@@ -311,14 +317,27 @@ def work_event(ctx: typer.Context, question: str, kind: Annotated[str, typer.Opt
 @work_app.command("gap")
 def work_gap(ctx: typer.Context, question: str, desired_information: Annotated[str, typer.Option("--need")],
              why_current_tools_failed: Annotated[str, typer.Option("--failed")], source_or_format: str = "unspecified",
-             likely_value: str | None = None, possible_indexing_solution: str | None = None, gap_key: str | None = None):
+             likely_value: str | None = None, possible_indexing_solution: str | None = None, gap_key: str | None = None,
+             evidence: Path | None = None):
     """Record an actual information-access failure; freeform details remain question-local."""
     payload = {"desired_information": desired_information, "why_current_tools_failed": why_current_tools_failed,
                "source_or_format": source_or_format}
     payload.update({k: v for k, v in {"likely_value": likely_value, "possible_indexing_solution": possible_indexing_solution,
                                     "gap_key": gap_key}.items() if v is not None})
     with session(ctx) as ws:
+        if evidence is None and re.search(r"browser|web\.run|captcha", why_current_tools_failed, re.IGNORECASE):
+            raise DawError("evidence_required", "a browser/web failure claim needs --evidence pointing at the saved response "
+                           "or tool result; stock Hermes has no browser, so an unreceipted claim is unsupported")
+        if evidence:
+            payload["evidence_blob"] = ws.put_file(evidence, "work")
         emit(record_event(ws, question, "retrieval_gap", payload))
+
+
+@work_app.command("gap-withdraw")
+def work_gap_withdraw(ctx: typer.Context, question: str, event: str, reason: Annotated[str, typer.Option()]):
+    """Withdraw an unsupported failure report without changing its original bytes."""
+    with session(ctx) as ws:
+        emit(record_event(ws, question, "retrieval_gap_withdrawal", {"event": event, "reason": reason}))
 
 
 @work_app.command("gaps")

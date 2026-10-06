@@ -20,6 +20,17 @@ def validate_gap(payload, question):
     return {**payload, "question": question, "source_or_format": payload.get("source_or_format", "unspecified")}
 
 
+def validate_withdrawal(ws, payload, question):
+    if not isinstance(payload, dict) or not isinstance(payload.get("reason"), str) or not payload["reason"].strip():
+        raise DawError("invalid_gap_withdrawal", "provide the gap event ID and a reason")
+    if not isinstance(payload.get("event"), str):
+        raise DawError("invalid_gap_withdrawal_target", "provide a retrieval_gap event ID")
+    target = ws.one("SELECT * FROM work_event WHERE id=?", (payload["event"],))
+    if not target or target["kind"] != "retrieval_gap" or target["question_id"] != question:
+        raise DawError("invalid_gap_withdrawal_target", "withdraw a retrieval_gap from this question")
+    return {**payload, "question": question}
+
+
 def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_events=10000):
     if not 1 <= limit <= 100 or not 1 <= max_events <= 100000:
         raise DawError("invalid_gap_report_bounds")
@@ -41,7 +52,33 @@ def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_eve
     where = " AND ".join(conditions)
     total = ws.one("SELECT count(*) AS n FROM work_event WHERE " + where, params)["n"]
     rows = ws.rows("SELECT * FROM work_event WHERE " + where + " ORDER BY created DESC,id DESC LIMIT ?", params + [max_events])
-    groups, legacy, matched = {}, [], 0
+    # Corrections can be newer than the selected gap window. Preserve both
+    # records, and never rank a disputed/withdrawn report as an observed failure.
+    correction_rows = ws.rows("SELECT * FROM work_event WHERE kind IN "
+                              "('retrieval_gap_withdrawal','retrieval_gap_correction') "
+                              + ("AND question_id=? " if question else "")
+                              + "ORDER BY created DESC,id DESC LIMIT ?",
+                              ([question] if question else []) + [max_events + 1])
+    corrections, withdrawals = {}, {}
+    invalid_corrections = []
+    for event in correction_rows[:max_events]:
+        payload = read_json(ws.blob_path(event["body_blob"]))
+        target = payload.get("event", payload.get("supersedes_event")) if isinstance(payload, dict) else None
+        original = ws.one("SELECT * FROM work_event WHERE id=?", (target,)) if isinstance(target, str) else None
+        if not original or original["kind"] != "retrieval_gap" or original["question_id"] != event["question_id"]:
+            invalid_corrections.append(event["id"])
+            continue
+        detail = {"event": event["id"], "body_blob": event["body_blob"], "payload": payload}
+        if event["kind"] == "retrieval_gap_withdrawal":
+            try:
+                validate_withdrawal(ws, payload, event["question_id"])
+            except DawError:
+                invalid_corrections.append(event["id"])
+                continue
+            withdrawals.setdefault(target, []).append(detail)
+        else:
+            corrections.setdefault(target, []).append(detail)
+    groups, legacy, matched, withdrawn, disputed = {}, [], 0, [], []
     for event in rows:
         raw = read_json(ws.blob_path(event["body_blob"]))
         try:
@@ -52,6 +89,11 @@ def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_eve
             continue
         fmt = " ".join(payload["source_or_format"].casefold().split())
         if source and fmt != " ".join(source.casefold().split()):
+            continue
+        if event["id"] in withdrawals or event["id"] in corrections:
+            detail = {"event": event["id"], "question": event["question_id"], "body_blob": event["body_blob"],
+                      "withdrawals": withdrawals.get(event["id"], []), "corrections": corrections.get(event["id"], [])}
+            (withdrawn if event["id"] in withdrawals else disputed).append(detail)
             continue
         matched += 1
         key = " ".join(payload.get("gap_key", payload["desired_information"]).casefold().split())
@@ -65,7 +107,8 @@ def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_eve
         if payload.get("possible_indexing_solution"):
             group["proposed_solutions"].add(payload["possible_indexing_solution"])
         if len(group["examples"]) < 3:
-            group["examples"].append({"event": event["id"], "body_blob": event["body_blob"], "payload": payload})
+            group["examples"].append({"event": event["id"], "body_blob": event["body_blob"], "payload": payload,
+                                      "verification": "author-reported; inspect actual tool results and receipt bytes"})
     output = []
     for group in groups.values():
         group["distinct_questions"] = len(group["questions"])
@@ -77,7 +120,10 @@ def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_eve
     return {"groups": output[:limit], "total_groups": len(output), "matching_events": matched,
         "events_in_scope": total, "events_scanned": len(rows), "scan_complete": total == len(rows),
         "groups_truncated": len(output) > limit, "unstructured_events": legacy[:limit], "unstructured_count": len(legacy),
+        "withdrawn_events": withdrawn, "withdrawn_count": len(withdrawn),
+        "corrections_requiring_review": disputed, "corrected_count": len(disputed),
+        "correction_scan_complete": len(correction_rows) <= max_events, "invalid_corrections": invalid_corrections,
         "filters": {"question": question, "since": since, "source_or_format": source},
-        "ranking": "distinct questions, then observations; reported value is author judgment, not a scientific score",
+        "ranking": "distinct questions, then author-reported observations; not verified failures or a scientific score",
         "grouping": "normalized source/format plus explicit gap_key or exact desired_information; no semantic merging",
         "content_is_untrusted_data": True}

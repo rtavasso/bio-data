@@ -37,35 +37,8 @@ def safe_path(root, relative):
 
 
 def copy_snapshot(trial, skills):
-    copied = {}
-    files = [REPO / p for p in ("AGENTS.md", "README.md", "pyproject.toml", "uv.lock")]
-    for directory in ("src/daw", "contracts", "examples"):
-        files += [p for p in (REPO / directory).rglob("*") if p.is_file() and "__pycache__" not in p.parts]
-    files += [REPO / "docs" / name for name in ("WORKFLOW.md", "V2.md", "V3.md", "SKILLS.md")]
-    if skills:
-        for name in SKILLS:
-            files += [p for p in (REPO / ".agents/skills" / name).rglob("*") if p.is_file()]
-    for source in files:
-        if source.is_symlink():
-            raise ValueError(f"project snapshot refuses symlink: {source}")
-        relative = source.relative_to(REPO)
-        destination = trial / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, destination)
-        copied[str(relative)] = file_hash(destination)
-    # A repository boundary keeps parent project skills out of the subject run.
-    subprocess.run(["git", "init", "--quiet", str(trial)], check=True, capture_output=True)
-    bin_dir = trial / "bin"
-    bin_dir.mkdir()
-    wrappers = {"bio": "from daw.bio_cli import main\nmain()\n",
-                "python": f"import os, sys\nos.execv({sys.executable!r}, [{sys.executable!r}, *sys.argv[1:]])\n"}
-    for name, body in wrappers.items():
-        path = bin_dir / name
-        path.write_text(f"#!{sys.executable}\nimport os, ssl, certifi\nos.environ.setdefault('SSL_CERT_FILE', certifi.where())\n"
-                       f"ssl.create_default_context(cafile=os.environ['SSL_CERT_FILE'])\n{body}")
-        path.chmod(0o755)
-        copied[str(path.relative_to(trial))] = file_hash(path)
-    return copied
+    from daw.agent_setup import copy_research_tools
+    return copy_research_tools(trial, REPO, SKILLS if skills else ())
 
 
 def subject_prompt(case, skills, timeout, budget=None, continuation=None, profile="pilot", runtime="codex"):
@@ -239,7 +212,9 @@ def codex_command(executable, cwd, output, *, model=DEFAULT_MODEL, reasoning_eff
 
 
 def subject_environment(trial, manifest):
-    return {**os.environ, "BIO_WORKSPACE": str(trial / "workspace"), "PYTHONPATH": str(trial / "src"),
+    # A benchmark remains isolated even when launched from a community shell.
+    base = {k: v for k, v in os.environ.items() if k not in {"BIO_COMMUNITY", "BIO_AGENT"}}
+    return {**base, "BIO_WORKSPACE": str(trial / "workspace"), "PYTHONPATH": str(trial / "src"),
             "PATH": os.pathsep.join([str(trial / "bin"), str(Path(manifest["python"]).parent), os.environ.get("PATH", "")]),
             "UV_PROJECT_ENVIRONMENT": manifest["project_environment"], "UV_NO_SYNC": "1", "UV_OFFLINE": "1",
             "UV_CACHE_DIR": str(trial / ".cache/uv"), "PYTHONDONTWRITEBYTECODE": "1"}

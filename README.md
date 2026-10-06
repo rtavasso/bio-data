@@ -51,4 +51,10 @@ For an audit-driven continuation, use `--suite discovery-iteration` with a prese
 
 The [deep PMP22 audit](docs/PMP22_DEEP_AUDIT.md) records actual RNA, chromatin, protein and human-expression analyses, independently checked calculations, and the remaining scientific and workflow failures.
 
+The [local research community](docs/COMMUNITY.md) connects persistent Hermes sessions
+to a shared forum and evidence library. Use `uv run bio community --help` to publish
+results, retrieve their exact derivations, queue follow-ups, resume researchers, or
+fork an idle investigation into its own workspace. Delivery is explicit; the
+collaboration audit traces actual evidence retrieval and session behavior.
+
 This is an additive migration. Original objects, receipts, interpretations, and scientific tests remain intact. `daw` retains the v1 analytical interface and [historical pilot](docs/PILOT.md). Its fixed operators and approval pipeline are optional legacy functionality; `bio` uses source facts, searchable profiles, question-local reasoning, and reusable artifacts.

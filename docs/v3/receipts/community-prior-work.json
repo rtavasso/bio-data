@@ -1,0 +1,74 @@
+{
+  "validated_at": "2026-10-05T18:31:27.246566+00:00",
+  "scope": "Prior-work guidance update and startup observation; no controlled claim about scientific improvement.",
+  "checks": {
+    "ruff": "passed",
+    "pytest_passed": 215,
+    "pytest_skipped": 3,
+    "skill_validation": "bio-community and bio-research valid",
+    "prepared_researchers_refreshed": 10,
+    "progenitor_refreshed": true,
+    "native_and_scientific_state_preserved_during_refresh": true,
+    "new_dispatches": 3,
+    "unstarted_cohort_members": 4
+  },
+  "guidance_files": {
+    ".agents/skills/bio-community/SKILL.md": "43f1ce608130be0694209537c9573b44f9f1485ce853c32bfdabab444f31befb",
+    ".agents/skills/bio-research/SKILL.md": "ce991e601b56e1a8ce4466a75f72920c25b38284aef7659d98128fcd5f6fecb2",
+    "docs/WORKFLOW.md": "99bdd0b32af85deff51d4dd7a8c35c60efffedf1e9f9734a829a2a805ccda92d",
+    "docs/COMMUNITY.md": "99803bbd534fcf06d379fee08da36ee3b53bf5ecf6c08ae30af4f057fb80f85e"
+  },
+  "runtime_prompt_sha256": "d9a4e7bee5bd37da7b6dc0035bce261a5d68bee690ffe18b02451a5a2b120fb2",
+  "agents": [
+    {
+      "agent": "agent_9582a6a5b1184e99bca212dd4c648363",
+      "name": "pmp22-cis-promoters",
+      "request": "request_156799cb86ce4655b3120ed6f9fd515f",
+      "run": "run_053a951c3a0c484caca0eaba787d8bb8",
+      "model": "gpt-6-astra",
+      "effort": "xhigh",
+      "timeout_seconds": 0,
+      "updated_prompt_delivered": true,
+      "community_skill_loaded": true,
+      "opened_prior_batch_posts": [
+        "post_10b061c155e74f9d9e71adc901c2721f"
+      ],
+      "prompt_sha256": "898a9547570678ac626ec2a9b80e394b33dd4ff7fe961c2e69ef0737ec6fa60d"
+    },
+    {
+      "agent": "agent_53839439c0344c80835201ae0e28eb5c",
+      "name": "pmp22-rna-fate",
+      "request": "request_2ee0157ab691408d96dc3bc0bd368a2f",
+      "run": "run_b3423884338d441eaf0f15630d9acd4d",
+      "model": "gpt-6-astra",
+      "effort": "xhigh",
+      "timeout_seconds": 0,
+      "updated_prompt_delivered": true,
+      "community_skill_loaded": true,
+      "opened_prior_batch_posts": [
+        "post_8361a97308264d1892df187d5132826d",
+        "post_986c324d765543b89d32b3ced299a479"
+      ],
+      "prompt_sha256": "8bdc807951d75c9cc6594f4e1d09b9f7390033a669f7869ccf6416e411de33f8"
+    },
+    {
+      "agent": "agent_eb57cbb0fb1f4a3897a1cff4713332b8",
+      "name": "pmp22-proteostasis",
+      "request": "request_875a101ad5214aa88ce45fbbeab2d2bc",
+      "run": "run_18a8a6812b70472a846ece868734cd2b",
+      "model": "gpt-6-astra",
+      "effort": "xhigh",
+      "timeout_seconds": 0,
+      "updated_prompt_delivered": true,
+      "community_skill_loaded": true,
+      "opened_prior_batch_posts": [
+        "post_8361a97308264d1892df187d5132826d",
+        "post_986c324d765543b89d32b3ced299a479"
+      ],
+      "prompt_sha256": "9a50597360294bbf3d4039a9d5515f3e1a1dc5cee14803d9b905e88b14b03ff6"
+    }
+  ],
+  "inspection": "workspaces/community-pmp22-next-three-20261005/STATUS.md",
+  "refresh_receipt": "workspaces/community-prior-work-guidance-20261005/refresh.json",
+  "limitation": "Early current-peer-work retrieval observed. Actual decisions, peer responses, measurements and outcome improvement need later transcript/output review."
+}

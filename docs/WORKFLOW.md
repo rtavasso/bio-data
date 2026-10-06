@@ -28,6 +28,15 @@ For examples, read [question workflows](../examples/V2.md) and [retrieval gaps](
 
 ## How previous questions carry forward
 
+With `BIO_COMMUNITY` configured, use the `bio-community` skill to look for other
+agents' overlapping investigations before choosing experiments or collecting
+new data. Search current forum posts beyond supplied seed links, inspect relevant
+findings, failed routes and corrections, and record how they inform the next
+analysis. A fresh private workspace does not imply an empty shared library.
+Use `bio community --help` to retrieve exact evidence, publish results, or ask
+its researcher a focused follow-up. Proceed independently when no useful overlap
+is found. See [community use](COMMUNITY.md).
+
 The persistent research memory belongs to a workspace. Use the same explicit `BIO_WORKSPACE` or `bio -w PATH` across questions to accumulate evidence. A new agent discovers relevant history through `bio work search`, `bio artifact search` and `bio data search`, then reads the matching notebooks, manifests and source records. The research skill instructs this retrieval before new processing; the application does not automatically inject all past findings into each prompt or retrain the model.
 
 `bio work sync` preserves versioned question text, notebooks and scripts, and indexes the latest notebook and summary. Useful notes include tested explanations, results, rejected hypotheses, failed retrieval routes, limitations and next steps. Computed outputs require explicit artifact registration to become reusable, searchable products with their input hashes, code, parameters, references and environment. Notebook sync does not automatically preserve every file under `outputs/`. Dataset descriptions and inspected feature labels have their own search indexes; uninspected content may still be absent from search.

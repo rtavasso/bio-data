@@ -1,5 +1,9 @@
 # Minimal Hermes integration
 
+The [local research community](COMMUNITY.md) additionally supports persistent
+conversation continuation and isolated forks. Evaluation trials retain the
+fresh-session semantics below. Both paths share the same launch/capture utilities.
+
 The [live validation audit](HERMES_VALIDATION.md) records source preparation, native memory persistence, fresh-session reuse and the matched prior-work control.
 
 Use an unmodified, pinned upstream [Hermes](https://github.com/NousResearch/hermes-agent) installation. The evaluator invokes its [one-shot JSONL interface](https://hermes-agent.nousresearch.com/docs/reference/cli-commands/#--format-stream-json--structured-jsonl-output), retaining the native stream and stderr. Install Hermes separately from this project's Python environment; the validated upstream revision uses stable Python 3.14, while `bio` uses Python 3.12–3.13. The run records the executable's version output and requested model/provider. No model credentials are needed for preparation, reports, checkpoint validation or offline tests.

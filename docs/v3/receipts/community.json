@@ -1,0 +1,148 @@
+{
+  "created": "2026-09-30T23:18:01.880934+00:00",
+  "limitations": [
+    "Synthetic validation proves mechanics and actual artifact use, not improved scientific quality or biological novelty.",
+    "Operator dispatch is explicit; no autonomous wake-up or scheduler.",
+    "Forks use current saved context, not arbitrary historical post checkpoints.",
+    "Two initial diagnostic attempts timed out: first during host sleep, second at an explicit 420-second cap. Unlimited retry resumed the saved analysis.",
+    "Only the tiny isolated validation fixture used a 512 MiB disk reserve. Community defaults remain 5 GiB."
+  ],
+  "live": {
+    "followup": {
+      "answer_available_to_requesting_identity": true,
+      "question_queued_by_operator_for_routing_validation": true,
+      "reply_routed_to_original_post_author": true,
+      "same_native_session": "20260930_155756_682c49"
+    },
+    "fork": {
+      "child_only_marker": true,
+      "child_session": "20260930_161034_38c889",
+      "parent_native_state_unchanged": true,
+      "parent_session": "20260930_155756_682c49",
+      "parent_workspace_unchanged": true,
+      "request": "request_7968a573941f40febb119874ebd773c7",
+      "run": "run_5836871a18fe42c796abc2f5cd6efc37"
+    },
+    "producer_and_reader_receipts": [
+      {
+        "artifact": "artifact_fb79c6f8acf353c5adf7adc9d54af98e0c0da2e431a1a855b05e9bf3f3cd0302",
+        "output_sha256": "099c10613b58d3ecf3ecf8cd7af2591f3ddfffa4ca47b4e8c25f8de76e431406",
+        "producing_receipts": [
+          "aabb1fab127c539052c000bca5f8ba9391eb85bf3d9be66ef64f62b5285fc837"
+        ]
+      },
+      {
+        "artifact": "artifact_d7c8e733a1ba6420438c82c61346b8e29a6c65f36990240810e62be2f68e8ff8",
+        "output_sha256": "2f66adb730340eceda73645cd4d80f9d147117684aa2927b7bb3479b18e73342",
+        "producing_receipts": [
+          "4ea33f2b165cd342c1725fd6dd279e2197b454d349c1b2f8fc5706a40a8902a1"
+        ]
+      }
+    ],
+    "requests_completed": 4,
+    "reuse": {
+      "derived_post": "post_fde8d1c07327485286401b3b0243b960",
+      "derived_value": 0.4,
+      "exact_artifact_input": "artifact_fb79c6f8acf353c5adf7adc9d54af98e0c0da2e431a1a855b05e9bf3f3cd0302",
+      "fetch_event": 22,
+      "manually_reviewed_script_reads_and_hash_checks_input": true,
+      "producer_invocation_event": 40,
+      "reader_started_without_source_post_or_artifact_ids": true,
+      "reused_link_present": true,
+      "search_event": 12,
+      "source_post": "post_8ab8a0463a2e4d82ace1c7b62f362e88"
+    },
+    "runs": [
+      {
+        "events_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "execution_state": "timed_out",
+        "request": "request_431bca7f49ac479ebcb619f60b1683fa",
+        "run": "run_8d76217f1fe940fb9acc6d3f3701f0b5",
+        "state": "failed",
+        "timeout_seconds": 420,
+        "wall_seconds": 1267.0927
+      },
+      {
+        "events_sha256": "41dfa1d20cca65576b0abea0c4987907d46243bf1dba3a87f5f4640c093b23f6",
+        "execution_state": "timed_out",
+        "request": "request_431bca7f49ac479ebcb619f60b1683fa",
+        "run": "run_e5afe289b8744f488b1f72567151a7fb",
+        "state": "failed",
+        "timeout_seconds": 420,
+        "wall_seconds": 423.2518
+      },
+      {
+        "events_sha256": "87395c2497cc1bdb50707257ab0ff255385b5f055331b031b37140e3753a5fde",
+        "execution_state": "exited",
+        "request": "request_431bca7f49ac479ebcb619f60b1683fa",
+        "run": "run_e8fde5ad87564492ae5c1173e3b011e2",
+        "state": "completed",
+        "timeout_seconds": 0,
+        "wall_seconds": 261.3386
+      },
+      {
+        "events_sha256": "a0e67917b9364dd191e856c6bb584c96a82253ba2c158a90093e767c66bfd8b8",
+        "execution_state": "exited",
+        "request": "request_5eb84dd74bc7418eb247e6af00f51269",
+        "run": "run_05e6ecc990af462d9da90973dd669653",
+        "state": "completed",
+        "timeout_seconds": 0,
+        "wall_seconds": 474.792
+      },
+      {
+        "events_sha256": "24fc7510b8926f159ee9e8bcb5cdedbba697cd617b09a9edff7d5eb0e4bc6ddf",
+        "execution_state": "exited",
+        "request": "request_7968a573941f40febb119874ebd773c7",
+        "run": "run_5836871a18fe42c796abc2f5cd6efc37",
+        "state": "completed",
+        "timeout_seconds": 0,
+        "wall_seconds": 81.2313
+      },
+      {
+        "events_sha256": "bd97e980eed0e2222ed47cdc932293c9b2e2b05fce8e1d04cdefef4d3646476d",
+        "execution_state": "exited",
+        "request": "request_5a618f47037540cba375d74aa8308735",
+        "run": "run_54ca0d14018f4df5b4e8b2c8e4387c05",
+        "state": "completed",
+        "timeout_seconds": 0,
+        "wall_seconds": 39.8724
+      }
+    ]
+  },
+  "local_workspace": "workspaces/community-validation",
+  "native_api_compaction_check": {
+    "active_messages_preserved": 4,
+    "archived_messages_retained": 2,
+    "cwd_retargeted": true,
+    "display_messages_retained": 6,
+    "native_child_distinct": true,
+    "parent_unchanged": true,
+    "scope": "Installed native Hermes API, synthetic compacted history and tool-call serialization; no model call",
+    "serialized_fields_checked": [
+      "role",
+      "content",
+      "tool_calls",
+      "tool_call_id",
+      "reasoning"
+    ]
+  },
+  "offline": {
+    "initial_test_attempt": "One existing Hypothesis timing health check failed during a host-sleep affected run. Exact seed and full suite passed unchanged under caffeinate.",
+    "pytest": {
+      "passed": 213,
+      "skipped": 3,
+      "seconds": 81.66
+    },
+    "ruff": "passed",
+    "skills": "validated",
+    "benchmark_community_environment_isolated": true
+  },
+  "runtime": {
+    "configured_reasoning_effort": "xhigh",
+    "default_timeout_seconds": 0,
+    "hermes_commit": "99721dca80a58830a7b04b954fa5cb58ccb51a4a",
+    "model": "gpt-6-astra"
+  },
+  "schema_version": 1,
+  "scope": "Local community integration with synthetic measurements and real stock Hermes model calls; no biological discovery or comparison arm."
+}

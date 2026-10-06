@@ -127,6 +127,46 @@ def test_gap_wrong_question_and_legacy_freeform_remain_auditable(ws):
         report_gaps(ws, since="2026-01-01")
 
 
+def test_gap_withdrawal_and_legacy_correction_do_not_rank_false_failures(ws):
+    q = create_question(ws, "Audit browser provenance")["question"]
+    other = create_question(ws, "Different question")["question"]
+    bad = record_event(ws, q, "retrieval_gap", gap_payload())
+    original = ws.blob_path(bad["body_blob"]).read_bytes()
+    record_event(ws, q, "retrieval_gap_correction", {
+        "supersedes_event": bad["id"], "correction": "Withdrawn: browser calls were never executed."})
+    report = report_gaps(ws, question=q)
+    assert report["matching_events"] == 0 and report["corrected_count"] == 1
+    assert report["corrections_requiring_review"][0]["event"] == bad["id"]
+    with pytest.raises(DawError, match="invalid_gap_withdrawal_target"):
+        record_event(ws, other, "retrieval_gap_withdrawal", {"event": bad["id"], "reason": "Wrong question"})
+    withdrawal = record_event(ws, q, "retrieval_gap_withdrawal", {
+        "event": bad["id"], "reason": "No actual browser tool calls in captured transcript"})
+    report = report_gaps(ws, question=q, since=bad["created"])
+    assert report["matching_events"] == 0 and report["withdrawn_count"] == 1
+    assert report["corrected_count"] == 0
+    assert report["withdrawn_events"][0]["withdrawals"][0]["event"] == withdrawal["id"]
+    assert ws.blob_path(bad["body_blob"]).read_bytes() == original
+    record_event(ws, q, "retrieval_gap", gap_payload(gap_key="actual HTTP 403"))
+    assert report_gaps(ws)["matching_events"] == 1
+
+
+def test_gap_cli_preserves_receipt_and_explicit_withdrawal(ws, tmp_path):
+    q = create_question(ws, "Actual retrieval")["question"]
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text('{"url":"https://example.test/source","status":403}')
+    runner = CliRunner()
+    prefix = ["--workspace", str(ws.root), "work"]
+    result = runner.invoke(app, prefix + ["gap", q, "--need", "Source", "--failed", "HTTP 403",
+                                        "--evidence", str(receipt)])
+    assert result.exit_code == 0, result.output
+    gap = json.loads(result.output)
+    payload = read_json(ws.blob_path(gap["body_blob"]))
+    assert ws.blob_path(payload["evidence_blob"]).read_bytes() == receipt.read_bytes()
+    result = runner.invoke(app, prefix + ["gap-withdraw", q, gap["id"], "--reason", "Fixture report withdrawn"])
+    assert result.exit_code == 0, result.output
+    assert report_gaps(ws)["withdrawn_count"] == 1
+
+
 def test_research_instructions_do_not_require_historical_specs():
     text = Path("AGENTS.md").read_text()
     assert "bio --help" in text and len(text.split()) < 400

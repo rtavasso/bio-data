@@ -78,7 +78,21 @@ def find_derivation(ws, derivation: Derivation, output_role="result"):
             "note": "Identical derivation permits byte reuse, not an assertion of scientific applicability"}
 
 
-def attach_artifact(ws, qid, aid, relationship="reused", *, name=None):
+OUTPUT_ROLES = ("result", "measurement-table", "contrast-table", "sample-map", "source-locator", "eligibility",
+                "figure", "package", "validation", "design")
+
+
+def check_output_role(role):
+    """Roles are a small vocabulary plus free suffixes (e.g. contrast-table-r002); file names are not roles."""
+    if not role or any(c in role for c in "./\\ \t") or role != role.strip():
+        raise DawError("invalid_output_role",
+                       f"{role!r} looks like a file name; use one of {', '.join(OUTPUT_ROLES)} optionally followed by -suffix")
+    return role
+
+
+def attach_artifact(ws, qid, aid, relationship="reused", *, name=None, reason=None):
+    """`considered` records retrieval; `reused` asserts the bytes informed an analysis and should carry a reason
+    or appear later as a registration input. Neither asserts scientific applicability."""
     _, path = question_record(ws, qid)
     artifact = artifact_info(ws, aid)
     if relationship not in {"produced", "reused", "considered"}:
@@ -98,10 +112,35 @@ def attach_artifact(ws, qid, aid, relationship="reused", *, name=None):
             shutil.copyfile(artifact["path"], destination)
     old = ws.one("SELECT event_id FROM question_artifact WHERE question_id=? AND artifact_id=? AND relationship=?", (qid, aid, relationship))
     if not old:
-        event = record_event(ws, qid, "artifact_" + relationship, {"artifact": aid, "output_blob": artifact["output_blob"]})
+        payload = {"artifact": aid, "output_blob": artifact["output_blob"]}
+        if reason:
+            payload["reason"] = reason
+        event = record_event(ws, qid, "artifact_" + relationship, payload)
         with ws.db:
             ws.db.execute("INSERT INTO question_artifact VALUES(?,?,?,?)", (qid, aid, relationship, event["id"]))
-    return {"question": qid, "artifact": aid, "relationship": relationship, "copy": str(destination) if destination else None}
+    return {"question": qid, "artifact": aid, "relationship": relationship, "copy": str(destination) if destination else None,
+            "note": "considered records retrieval; reused needs a reason or a later registration naming this artifact as --input"}
+
+
+def reuse_links(ws):
+    """Per question/artifact: whether a `reused` link is backed by a registration input, for audit reports."""
+    rows = ws.rows("SELECT qa.question_id,qa.artifact_id,qa.relationship,e.body_blob FROM question_artifact qa "
+                   "JOIN work_event e ON e.id=qa.event_id ORDER BY qa.question_id,qa.artifact_id,qa.relationship")
+    produced = {}
+    for link in rows:
+        if link["relationship"] == "produced":
+            produced.setdefault(link["question_id"], set()).add(link["artifact_id"])
+    out = []
+    for link in rows:
+        entry = {"question": link["question_id"], "artifact": link["artifact_id"], "relationship": link["relationship"]}
+        if link["relationship"] == "reused":
+            payload = read_json(ws.blob_path(link["body_blob"]))
+            consumers = ws.rows("SELECT artifact_id FROM artifact_input WHERE source_identity=?", (link["artifact_id"],))
+            entry["reason"] = payload.get("reason")
+            entry["input_to"] = sorted({c["artifact_id"] for c in consumers} & produced.get(link["question_id"], set()))
+            entry["backed"] = bool(entry["reason"] or entry["input_to"])
+        out.append(entry)
+    return out
 
 
 def provenance(ws, identity, *, depth=3):
