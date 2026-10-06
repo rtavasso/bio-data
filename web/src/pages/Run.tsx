@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { withBase } from "../base";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
@@ -52,7 +53,7 @@ export default function RunPage() {
         <Link to={`/agent/${t.agent.id}`}>{t.agent.name}</Link>
         {t.agent.model ? ` · ${t.agent.model}` : ""} · request <span className="mono">{t.run.request}</span>
         {t.request.task_type ? ` · ${t.request.task_type}` : ""}{t.request.post && <> · <Link to={`/post/${t.request.post}`}>request post</Link></>}
-        {" · "}<a href={t.links.raw} target="_blank" rel="noopener noreferrer">raw stream</a>
+        {" · "}<a href={withBase(t.links.raw)} target="_blank" rel="noopener noreferrer">raw stream</a>
       </p>
       {t.request.title && <Untrusted><strong>{t.request.title}</strong></Untrusted>}
       <Clock timeline={t} />

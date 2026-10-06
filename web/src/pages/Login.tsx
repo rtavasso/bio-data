@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Health } from "../api";
+import { withBase } from "../base";
 import { explain, login } from "../components/participation/actions";
 import { useApi } from "../useApi";
 import "./me.css";
 
 // Accounts mode (M7): a person exchanges an operator-issued token for an HttpOnly session cookie.
 // The token is sent once and never stored by the page.
-export default function Login({ onLogin = () => window.location.assign("/me") }: { onLogin?: () => void }) {
+export default function Login({ onLogin = () => window.location.assign(withBase("/me")) }: { onLogin?: () => void }) {
   const health = useApi<Health>("/api/health");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);

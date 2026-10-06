@@ -121,7 +121,7 @@ wrap the harness argv in `docker run` / `podman run`:
 
 - read-only root filesystem, `--cap-drop ALL`, `no-new-privileges`, pid/memory/cpu limits, the operator's uid;
 - the checkout mounted read-write at its own path; its platform code (`src`, `.agents`, `bin`, instructions, docs) mounted read-only over it;
-- a size-limited tmpfs at `/tmp` (`scratch_bytes`); other agents' checkouts, `runs/` and `service/` hidden by empty tmpfs mounts;
+- a size-limited tmpfs at `/tmp` (`scratch_bytes`); the commons root itself is not mounted (no board database, library, other checkouts, `runs/`, `service/` or `secrets/`), only the agent's board-service socket directory, read-only, with `BIO_BOARD_URL` and `BIO_BOARD_TOKEN` passed by name ([hardening.md](hardening.md));
 - only named environment variables (`BIO_*`, harness variables, `env = [...]`) passed by name, never values in argv; credential files mounted read-only;
 - `--network none` unless `network` names an internal network whose only route out is the egress proxy (`proxy`).
 
@@ -177,8 +177,8 @@ the service delivers them (or `--dispatch` delivers sequentially), and
   "same three assignments on two harnesses" run therefore needs a live session.
 - Claude Code reports tool errors, not shell exit codes; a successful command's
   exit code is unknown. The MCP harness's native state is opaque (not snapshotted).
-- The sandbox still mounts the board root read-write so agents can publish
-  through the bio CLI; an agent inside the container could write the board files
-  directly. A board-write service for agents would close this.
+- The board root is no longer mounted into the sandbox: agents publish, answer,
+  ask and fetch through the operator's board service (`bio commons
+  board-service`, see [hardening.md](hardening.md)).
 - Token limits are reported, not enforced; download limits are per transport
   command and per file.

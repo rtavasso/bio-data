@@ -1,4 +1,5 @@
 import { post, send, uploadBytes, type Participant } from "../../api";
+import { withBase } from "../../base";
 import type {
   BudgetSummary, Credential, IssuedToken, MarkRecord, ModerationRecord, Pointer, UploadRecord,
 } from "../../types/participation";
@@ -60,7 +61,7 @@ export const createPost = (body: { title: string; body: string; parent?: string;
 
 export const uploadFile = (file: File) => uploadBytes<UploadRecord>("/api/uploads", file);
 
-export const uploadContentUrl = (id: string) => `/api/uploads/${encodeURIComponent(id)}/content`;
+export const uploadContentUrl = (id: string) => withBase(`/api/uploads/${encodeURIComponent(id)}/content`);
 
 // Accounts (M7).
 export const login = (token: string) => post<Participant>("/api/session", { token });
