@@ -121,10 +121,11 @@ def test_dashboard_api_panels_are_read_only_and_never_report_zero_for_unavailabl
     assert summary["runs"] == 2 and summary["analysis_receipts"] == 4 and summary["analysis_failures"] == 2
     assert summary["compactions"] == 2 and summary["compaction_fallbacks"] == 0
     assert summary["ceremony_tail_minutes"]["runs"] == 2 and summary["minutes_per_executed_analysis"] is not None
-    # The demo harness's token fields are not in the Hermes telemetry shape: unavailable, never zero.
+    # The demo harness reports Hermes-native token telemetry; without a pricing table the amount is
+    # unavailable, never zero.
     cost = summary["cost"]
-    assert cost["tokens"]["input_tokens"] is None and cost["tokens"]["input_tokens_partial"] is None
-    assert cost["amount"] is None and cost["unavailable_reasons"]
+    assert cost["tokens"]["input_tokens"] == 2 * 1200
+    assert cost["amount"] is None and cost["currency"] is None and cost["pricing"] != "available"
     panels = value["panels"]
     assert [g["label"] for g in panels["cohort"]] == ["demo-runs"]
     assert [g["label"] for g in panels["harness"]] == ["hermes"]
@@ -157,7 +158,7 @@ def test_dashboard_api_panels_are_read_only_and_never_report_zero_for_unavailabl
     assert client.get("/api/cohorts/demo-runs").json()["id"] == ctx["cohorts"]["demo"]
     assert client.get("/api/cohorts/cohort_missing").status_code == 404
     runs = client.get("/api/metrics/runs", params={"cohort": "demo-runs"}).json()["items"]
-    assert {r["harness"] for r in runs} == {"hermes"} and all(r["metrics"]["tokens"] is None for r in runs)
+    assert {r["harness"] for r in runs} == {"hermes"} and all(r["metrics"]["tokens"] for r in runs)
     assert client.get("/api/cohorts/compare", params={"ids": ctx["cohorts"]["demo"]}).status_code == 400
     assert events(root) == before and stored(root) == rows
 
@@ -191,9 +192,9 @@ def test_cohort_comparison_keeps_criteria_separate_across_harnesses(demo):
     assert brief[claude["id"]]["yield"] == {"posts": 1, "registered_artifacts": 0, "analysis_receipts": 2,
                                             "analysis_failures": 1}
     assert brief[alice["id"]]["calibration"] is None  # the claim ledger has no rows: unavailable, not zero
-    # Claude-harness telemetry is reported; Hermes demo telemetry is not. No pricing table: no currency.
+    # Both harnesses report token telemetry in their own stream shape. No pricing table: no currency.
     assert brief[claude["id"]]["cost"]["tokens"]["input_tokens"] == 1200
-    assert brief[alice["id"]]["cost"]["tokens"]["input_tokens"] is None
+    assert brief[alice["id"]]["cost"]["tokens"]["input_tokens"] == 1200 and brief[alice["id"]]["cost"]["amount"] is None
     assert brief[claude["id"]]["cost"]["amount"] is None and brief[claude["id"]]["cost"]["currency"] is None
     # An assignment only one cohort attempted has a missing cell, distinct from zero yield.
     only = [row for row in value["assignments"] if not all(row["cells"].values())]
@@ -217,13 +218,13 @@ def test_cohort_comparison_keeps_criteria_separate_across_harnesses(demo):
     assert run_cell["cost"]["amount"] == round((900 * 3.0 + 300 * 0.3 + 450 * 15.0) / 1e6, 6)
     totals = value["totals"]
     assert totals[claude["id"]]["cost"]["amount"] == round(2 * (900 * 3.0 + 300 * 0.3 + 450 * 15.0) / 1e6, 6)
-    assert totals[alice["id"]]["cost"]["amount"] is None  # hermes runs have no telemetry
+    assert totals[alice["id"]]["cost"]["amount"] is None  # no price for the Hermes agent's model: unavailable
     assert totals[alice["id"]]["calibration"]["total"] == 0
     dashboard = client.get("/api/dashboard").json()
     assert {g["label"] for g in dashboard["panels"]["harness"]} == {"hermes", "claude"}
     assert dashboard["summary"]["cost"]["amount"] is None
     assert dashboard["summary"]["cost"]["amount_partial"] == totals[claude["id"]]["cost"]["amount"]
-    assert dashboard["summary"]["cost"]["tokens"]["input_tokens_partial"] == 2400
+    assert dashboard["summary"]["cost"]["tokens"]["input_tokens"] == 1200 * dashboard["summary"]["runs"]
 
 
 def test_pricing_and_token_rules():

@@ -134,7 +134,9 @@ for n, (name, args, result) in enumerate(calls):
             time.sleep(float(pause.read_text() or 0))
 code = 1 if failed else 0
 if fmt == "hermes":
-    emit({"type": "result", "exit_code": code, "text": answer, "tokens": usage})
+    # Hermes-native telemetry keys (daw.hermes.parse reads input, cache_read and output).
+    emit({"type": "result", "exit_code": code, "text": answer,
+          "tokens": {"input": 1200, "cache_read": 300, "output": 450}})
 elif fmt == "claude":
     emit({"type": "result", "subtype": "error_during_execution" if failed else "success", "is_error": failed,
           "result": answer, "session_id": sid, "num_turns": len(calls) + 1,
