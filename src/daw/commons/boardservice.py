@@ -19,8 +19,9 @@ environment name, never in argv). A socket answers only its own agent's token,
 and an `author` in a request must name that agent. The service never takes a
 file path for content: bodies, claims and frontier items travel in the request.
 The only path accepted is a workspace, which must resolve (on the host, after
-symlinks) inside the agent's own checkout, as must its catalog, configuration
-and object directories. Publishing reads that workspace from the host; fetching
+symlinks) to the agent's checkout workspace `<checkout>/workspace` (no other
+workspace, even inside the checkout), and its catalog, configuration and object
+directories must resolve inside the checkout. Publishing reads that workspace from the host; fetching
 writes into it under its own writer lock.
 
 Protocol: HTTP/1.1 over the Unix socket, `POST /v1/<operation>` with a JSON
@@ -294,7 +295,9 @@ def _int(payload, key, default):
 
 
 def checkout_workspace(trial, value):
-    """A workspace inside the agent's own checkout (default `<trial>/workspace`), checked after symlinks."""
+    """The agent's checkout workspace, `<trial>/workspace`, checked after symlinks. Another workspace, even one
+    inside the checkout (`bio init sub/ws`), is refused (v3 B5): the board reads and writes only the workspace
+    the runtime gave the agent."""
     trial = Path(trial).resolve()
     path = Path(value) if value else trial / "workspace"
     if not path.is_absolute():
@@ -308,6 +311,8 @@ def checkout_workspace(trial, value):
     for entry in entries:
         if (entry.exists() or entry.is_symlink()) and not entry.resolve().is_relative_to(trial):
             raise DawError("workspace_outside_checkout", f"{entry.name} links outside the checkout")
+    if resolved != (trial / "workspace").resolve():
+        raise DawError("workspace_not_checkout_workspace", f"{path}: use {trial / 'workspace'}")
     return resolved
 
 

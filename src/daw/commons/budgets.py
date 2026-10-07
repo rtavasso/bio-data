@@ -13,14 +13,16 @@ runtime around one delivery:
   `<checkout>/.colloquy/task-budget.json`, which the sandbox mounts read-only
   (spec v2 C7). The agent's own `workspace/config.toml` is never touched. The
   transport (`daw.catalog.Workspace`) caps `bundle_bytes` (per transport command)
-  and `asset_bytes` (per file) at the task limit whenever the file is present;
-  the task total is the agent's instruction. The runtime hashes the file before
+  and `asset_bytes` (per file) at the task limit whenever the file is present,
+  for every workspace under the checkout (v3 B5: `task_budget_files`), not only
+  `<checkout>/workspace`; the task total is the agent's instruction. The runtime hashes the file before
   the turn and compares it afterwards: a changed or removed file is a
   `budget_policy_violation` board event plus an operator notice, never a note.
 """
 import contextlib
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from daw.util import DawError, now
@@ -134,22 +136,33 @@ def download_budget(trial, budget, receipt, keep=None, *, run=None):
             observed_sha256=hashlib.sha256(observed).hexdigest() if observed is not None else None)
 
 
-def read_task_budget(workspace_root):
-    """Caps from the platform-owned task budget beside a checkout's workspace, or None.
+def task_budget_files(workspace_root, env=None):
+    """Task budget files that govern a workspace (v3 B5): the one in every directory above it, so a second
+    workspace anywhere inside an agent checkout (`bio init sub/ws`) is under the checkout's budget, and the
+    running agent's own checkout (BIO_AGENT's home, the directory holding the BIO_WORKSPACE the runtime set)."""
+    env = os.environ if env is None else env
+    roots = list(Path(workspace_root).expanduser().resolve().parents)
+    if env.get("BIO_AGENT") and env.get("BIO_WORKSPACE"):
+        roots.append(Path(env["BIO_WORKSPACE"]).expanduser().resolve().parent)
+    return [path for path in dict.fromkeys(root / TASK_BUDGET for root in roots) if path.is_file()]
+
+
+def read_task_budget(workspace_root, env=None):
+    """Caps from the platform-owned task budgets governing a workspace (the stricter wins per cap), or None.
 
     The agent's workspace is `<checkout>/workspace`; the file is `<checkout>/.colloquy/task-budget.json`.
     A malformed file fails closed: the transport refuses rather than running without the cap."""
-    path = Path(workspace_root).parent / TASK_BUDGET
-    if not path.is_file():
-        return None
-    try:
-        caps = json.loads(path.read_text())["caps"]
-        caps = {k: caps[k] for k in CAPS}
-    except (ValueError, KeyError, TypeError) as e:
-        raise DawError("task_budget_invalid", str(path)) from e
-    if any(type(v) is not int or v <= 0 for v in caps.values()):
-        raise DawError("task_budget_invalid", str(path))
-    return caps
+    found = None
+    for path in task_budget_files(workspace_root, env):
+        try:
+            caps = json.loads(path.read_text())["caps"]
+            caps = {k: caps[k] for k in CAPS}
+        except (ValueError, KeyError, TypeError) as e:
+            raise DawError("task_budget_invalid", str(path)) from e
+        if any(type(v) is not int or v <= 0 for v in caps.values()):
+            raise DawError("task_budget_invalid", str(path))
+        found = caps if found is None else {k: min(found[k], caps[k]) for k in CAPS}
+    return found
 
 
 def apply_task_caps(budgets, workspace_root):

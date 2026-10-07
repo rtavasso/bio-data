@@ -841,6 +841,47 @@ def test_transport_reads_task_caps_and_fails_closed(tmp_path):
     assert Workspace(trial / "workspace").budgets.bundle_bytes == 0
 
 
+def test_a_second_workspace_inside_the_checkout_still_hits_the_task_cap(demo, monkeypatch):
+    """v3 B5: the task budget is resolved from the checkout root (and the running agent's home), so a workspace
+    the agent initialises anywhere inside its checkout is capped like `<checkout>/workspace`; the board service
+    reads and writes only the checkout workspace."""
+    from daw.catalog import Workspace
+    from daw.commons import boardservice
+    monkeypatch.delenv("BIO_WORKSPACE", raising=False)
+    root, ctx = demo
+    with Community(root) as board, scripted_runtime(root) as (executable, answers):
+        request = assign(board, "operator", ctx["agents"]["bob"], "Bounded", "Stay within the cap.",
+                         budget={"download_bytes": 4096})
+        answer_for(answers, request, board, "Done.")
+        # As `bio init sub/ws` would, in the checkout and beside it (found through BIO_AGENT's home).
+        (answers / f"{request['post']}.hook.py").write_text(
+            "import json, os\nfrom pathlib import Path\nfrom daw.catalog import Workspace\ncaps = {}\n"
+            "for name in ('sub/ws', 'deep/er/ws', '../outside-ws'):\n"
+            "    ws = Workspace.create(name)\n"
+            "    caps[name] = [ws.budgets.bundle_bytes, ws.budgets.asset_bytes]\n    ws.close()\n"
+            "Path('caps-during-task.json').write_text(json.dumps(caps))\n")
+        dispatch(board, request["id"], executable)
+        trial = board.trial(board.agent(ctx["agents"]["bob"]))
+        assert read_json(trial / "caps-during-task.json") == {name: [4096, 4096] for name in
+                                                              ("sub/ws", "deep/er/ws", "../outside-ws")}
+        assert Workspace(trial / "sub/ws").budgets.bundle_bytes == 0  # the task is over
+        with budgets.download_budget(trial, {"download_bytes": 2048}, {}, run="run_x"):
+            nested = Workspace(trial / "deep/er/ws")
+            assert (nested.budgets.bundle_bytes, nested.budgets.asset_bytes) == (2048, 2048)
+            nested.close()
+        # A stricter cap the agent writes nearer its second workspace only tightens; a looser one does not loosen.
+        with budgets.download_budget(trial, {"download_bytes": 2048}, {}, run="run_y"):
+            for cap, expected in ((10**12, 2048), (1024, 1024)):
+                local = trial / "sub" / budgets.TASK_BUDGET
+                local.parent.mkdir(exist_ok=True)
+                local.write_text(json.dumps({"caps": {"bundle_bytes": cap, "asset_bytes": cap}}))
+                assert Workspace(trial / "sub/ws").budgets.bundle_bytes == expected
+    with pytest.raises(DawError, match="workspace_not_checkout_workspace"):
+        boardservice.execute(root, ctx["agents"]["bob"], "fetch", {"post": ctx["posts"]["finding"], "question": "q",
+                                                                    "workspace": str(trial / "sub" / "ws")})
+    assert boardservice.checkout_workspace(trial, str(trial / "workspace")) == (trial / "workspace").resolve()
+
+
 def test_harness_home_config_is_sealed_restored_each_turn_and_changes_recorded(demo):
     root, ctx = demo
     with Community(root) as board, scripted_runtime(root) as (executable, answers):
