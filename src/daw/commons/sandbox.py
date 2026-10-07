@@ -28,6 +28,15 @@ Multi-tenant serving (`bio commons serve --mode accounts`, `bio commons host`)
 records tenancy and refuses live dispatch without a sandbox unless the operator
 overrides it with a recorded reason.
 
+A replication dispatch executes the fetched derivation's code (the AGENTS.md
+carve-out), so it needs a sandbox with egress off: on a multi-tenant commons it
+is refused without `sandbox.toml` and no override is accepted. Inside the
+sandbox its allowlist holds only the harness's model hosts (no data sources,
+no configured extras); with no proxy network the container has no network at
+all, and `replicate.py` strips proxy variables from the executed code's
+environment. Local single-user mode runs it unsandboxed with a recorded
+`replication_unsandboxed` warning (`runs/<run>/sandbox.json` and an event).
+
 The board root is never mounted into the container. The checkout's `bio
 community` commands reach the board through the operator's board service
 (`daw.commons.boardservice`, `bio commons board-service`): only the agent's own
@@ -106,15 +115,28 @@ def tenancy(root):
     return read_json(path).get("mode", "local") if path.is_file() else "local"
 
 
-def policy(root, override=None):
+REPLICATION_WARNING = ("replication_unsandboxed: local single-user mode executes the fetched derivation's code "
+                       "without a container sandbox or egress control")
+
+
+def policy(root, override=None, task_type=None):
     """Decide before any state changes whether this dispatch may run, and how."""
     config = load(root)
     mode = tenancy(root)
     if override is not None and not str(override).strip():
         raise DawError("override_reason_required", "say why this dispatch may run without a sandbox")
-    if config is None and mode == "accounts" and override is None:
-        raise DawError("sandbox_required", "multi-tenant commons: configure sandbox.toml or override with a reason")
-    return {"config": config, "tenancy": mode, "override": override if config is None and override else None}
+    replication = task_type == "replication"
+    if config is None and mode == "accounts" and (override is None or replication):
+        raise DawError("sandbox_required", "multi-tenant commons: a replication executes fetched code and needs "
+                       "sandbox.toml (no override)" if replication else
+                       "multi-tenant commons: configure sandbox.toml or override with a reason")
+    decision = {"config": config, "tenancy": mode, "override": override if config is None and override else None}
+    if replication:
+        decision["replication_egress"] = ("unsandboxed" if config is None else "model_hosts_only" if config.network
+                                          else "none")
+        if config is None:
+            decision["warning"] = REPLICATION_WARNING
+    return decision
 
 
 def hosts(config, harness_hosts=()):
@@ -176,9 +198,9 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run)
     """Wrap a harness argv per the dispatch decision; returns (argv, env, receipt or None)."""
     config = decision["config"]
     if config is None:
-        if decision["override"]:
-            return argv, env, {"sandboxed": False, "override": decision["override"], "tenancy": decision["tenancy"],
-                               "recorded": now()}
+        if decision["override"] or decision.get("warning"):
+            return argv, env, {"sandboxed": False, "tenancy": decision["tenancy"], "recorded": now(),
+                               **{k: decision[k] for k in ("override", "warning", "replication_egress") if decision.get(k)}}
         return argv, env, None
     from daw.commons import boardservice
     name = "colloquy-" + run
@@ -188,9 +210,12 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run)
     receipt = {"sandboxed": True, "engine": config.engine, "image": config.image, "network": config.network or "none",
                "proxy": config.proxy, "container": name, "harness_argv": argv,
                "environment_names": sorted(k for k in client_env if k not in CLIENT_ENV),
-               "egress_allowlist": hosts(config, adapter.hosts(agent_config)), "board_mounted": False,
+               "egress_allowlist": (sorted(set(adapter.hosts(agent_config))) if decision.get("replication_egress")
+                                    else hosts(config, adapter.hosts(agent_config))), "board_mounted": False,
                "board_service": {"url": board["url"], "listening": board["socket"].is_socket()}, "recorded": now(),
                "cleanup": [config.engine, "rm", "-f", name]}
+    if decision.get("replication_egress"):
+        receipt["replication_egress"] = decision["replication_egress"]
     return wrapped, client_env, receipt
 
 

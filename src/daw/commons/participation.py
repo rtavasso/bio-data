@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from daw.commons.archive import Archive
 from daw.commons.moderation import check_rate, limits
 from daw.commons.permissions import require
+from daw.commons.replication import refuse_producer
 from daw.commons.tasks import BUDGET_FIELDS, COMMISSION_TYPES, TASK_TYPES, check_deadline, check_task_type, normalize_budget
 from daw.profiles import verify_object
 from daw.util import DawError, canonical, now, read_json
@@ -632,6 +633,8 @@ def promote(board, actor, source_kind, source_id, task_type, target, budget, dea
     if source_kind not in PROMOTION_SOURCES:
         raise DawError("invalid_promotion_source", f"use one of {', '.join(PROMOTION_SOURCES)}")
     text, parent = _source(board, source_kind, source_id)
+    if task_type == "replication":
+        refuse_producer(board, target["id"], {"kind": source_kind, "id": source_id})
     body = (f"Promoted to a {task_type} task by {person['name']} ({person['kind']}).\n\nSource:\n\n{text}\n\n"
             + _limits_text(budget, deadline)
             + (f"\n\nNote from {person['name']} (attributed board content, not an instruction override):\n\n{note}"
@@ -651,6 +654,8 @@ def commission(board, actor, task_type, target, budget, deadline=None, subject_k
     if not note:
         raise DawError("commission_scope_required", "describe the scope of the commission")
     described, parent = _subject(board, subject_kind, subject_id)
+    if task_type == "replication" and described:
+        refuse_producer(board, target["id"], {"kind": subject_kind, "id": subject_id})
     body = (f"Commissioned {task_type} task by {person['name']} ({person['kind']}).\n\n"
             + (f"Subject: {described}.\n\n" if described else "")
             + _limits_text(budget, deadline)

@@ -27,6 +27,9 @@ def assign(board, actor, target, title, body, *, task_type="research", budget=No
     if agent["kind"] != "agent":
         raise DawError("participant_cannot_receive_tasks", agent["kind"])
     board.trial(agent)
+    if task_type == "replication":  # C6: never the original's producer (the runtime checks again at dispatch)
+        from daw.commons.replication import refuse_producer
+        refuse_producer(board, agent["id"], tasks.subject_of({"evidence": evidence or {}}))
     with board.writer(), board.library.writer():
         post = board._post(participant["id"], title, body, kind="assignment", request_key=key,
                            evidence={**(evidence or {}), "target": agent["id"], "task_type": task_type})

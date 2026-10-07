@@ -4,10 +4,12 @@ import hashlib
 import json
 import shutil
 import stat
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+from daw.artifacts import artifact_info
 from daw.commons import export, studio, studio_demo, writeup
 from daw.commons.app import create_app
 from daw.commons.archive import Archive
@@ -232,70 +234,345 @@ def test_person_submits_a_structured_review_from_the_ui(demo):
                                                   "verdicts": [verdict]}).status_code == 403  # CSRF header required
 
 
-# ---- M6.3 replications ---------------------------------------------------------------------------
+# ---- M6.3 replications (spec v2 C6: replication that executes, under an explicit carve-out) ----------
 
-REPLICATE = '''import os
+# A copied-bytes replication: the hook registers the original's output bytes under the same derivation
+# without executing anything (what every v1 test and demo did). With `forge`, it also runs run_analysis.py
+# on a different saved script that copies the bytes, so a receipt exists but its producer is not the
+# derivation's code.
+COPY_BYTES = '''import os, pathlib, subprocess, sys
 from daw.artifacts import artifact_info, register_artifact
 from daw.catalog import Workspace
 from daw.substrate_models import ArtifactRegistration, Derivation
-from daw.work import create_question
+from daw.work import create_question, record_event
+trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
 ws = Workspace(os.environ["BIO_WORKSPACE"])
 with ws.writer():
-    manifest = artifact_info(ws, {original!r})["manifest"]
-    question = create_question(ws, "Replicate")["question"]
-    open("replicated.tsv", "w").write({content!r})
-    register_artifact(ws, "replicated.tsv", ArtifactRegistration(title="Replication", summary="re-executed",
-        output_role=manifest["output_role"], derivation=Derivation(**manifest["derivation"])), question=question)
+    info = artifact_info(ws, {original!r})
+    question = create_question(ws, "Replicate")
+    out = pathlib.Path(question["path"]) / "outputs" / "replicated.tsv"
+    if {forge!r}:
+        script = pathlib.Path(question["path"]) / "scripts" / "copy.py"
+        script.write_text("import shutil, sys\\nshutil.copyfile(sys.argv[1], sys.argv[2])\\n")
+        receipt = pathlib.Path(question["path"]) / "outputs" / "execution.json"
+        subprocess.run([sys.executable, str(trial / ".agents/skills/bio-research/scripts/run_analysis.py"),
+                        "--receipt", str(receipt), "--output", str(out), "--", sys.executable, str(script),
+                        str(ws.blob_path(info["output_blob"])), str(out)], check=True, capture_output=True)
+        record_event(ws, question["question"], "replication_execution",
+                     {{"receipt_blob": ws.put_file(receipt, "work"), "original": {original!r}}})
+    else:
+        out.write_bytes(ws.blob_path(info["output_blob"]).read_bytes())
+    register_artifact(ws, out, ArtifactRegistration(title="Replication", summary="copied bytes",
+        output_role=info["manifest"]["output_role"], derivation=Derivation(**info["manifest"]["derivation"])),
+        question=question["question"])
 ws.close()
 '''
 
+def replication_system(board):
+    row = board.one("SELECT id,kind FROM agent WHERE name='replication'")
+    assert row and row["kind"] == "system"
+    return row["id"]
 
-@pytest.mark.parametrize("identical", [True, False])
-def test_replication_confirms_bytes_or_posts_a_mismatch_correction(demo, identical, monkeypatch):
-    """Milestone 3 offline: a person commissions a replication of one derivation to another agent; the scripted
-    harness re-registers the same derivation in that agent's workspace; bytes are confirmed or corrected."""
+
+@pytest.mark.parametrize("forge", [False, True])
+def test_copied_bytes_registration_without_receipt_is_no_execution_receipt(demo, forge):
+    """Spec v2 §5 C6: a same-derivation registration of copied bytes confirms nothing."""
     root, ctx = demo
     original = ctx["artifacts"]["contrast"]
     with Community(root) as board, scripted_runtime(root) as (_, answers):
-        blob = board.library.one("SELECT output_blob FROM artifact WHERE id=?", (original,))["output_blob"]
-        content = board.library.blob_path(blob).read_text() if identical else "contrast\tlog2_ratio\nB_vs_A\t1.60\n"
         request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
                              subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
-        deliver(board, answers, request, "Re-executed.", REPLICATE.format(original=original, content=content))
+        deliver(board, answers, request, "Replicated.", COPY_BYTES.format(original=original, forge=forge))
+        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        assert result["outcome"] == "no_execution_receipt" and not result["identical"] and not result["different"]
+        [unreceipted] = result["unreceipted"]
+        assert unreceipted["artifact"] == original  # byte-identical copy: the same artifact identity
+        problems = [p for c in unreceipted["candidates"] for p in c["problems"]]
+        assert problems == (["producer_not_a_derivation_code_blob"] if forge else ["no_replication_execution_recorded"])
         [check] = events(board, "replication_checked")
-        [result] = check["results"]
-        if identical:
-            assert result["outcome"] == "byte_identical"
-            mark = board.one("SELECT * FROM mark WHERE id=?", (result["mark"],))
+        assert check["results"][0]["outcome"] == "no_execution_receipt" and "post" not in check["results"][0]
+        assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+        assert not board.rows("SELECT id FROM post WHERE request_key LIKE 'replication-%'")
+        assert not [n for n in events(board, "notice_queued") if "Replication" in board.show(n["post"])["content"]["title"]]
+    # An outcome recorded before the receipt gate (byte comparison only) is re-gated at check time.
+    with Community(root) as board:
+        legacy = {**result, "outcome": "byte_identical", "identical": [original], "receipts": {}}
+        with board.writer(), board.db:
+            board.event("task_outcome", {**events(board, "task_outcome")[-1], "criteria": {"replication": [legacy]}})
+        assert studio.replication_check(board, request["id"])["results"][0]["outcome"] == "no_execution_receipt"
+        assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+
+
+def test_replication_target_that_produced_the_original_is_refused(demo, monkeypatch):
+    """Spec v2 §5 C6: commission, promotion, assignment and dispatch refuse the original's producer and forks
+    that inherited its workspace."""
+    from daw.commons import assignments, replication
+    from daw.commons.participation import promote
+    root, ctx = demo
+    original = ctx["artifacts"]["contrast"]
+    with Community(root) as board:
+        assert replication.producers(board, [original]) == {ctx["agents"]["alice"]: [original],
+                                                            ctx["fork"]: [original]}
+        for target in (ctx["agents"]["alice"], ctx["fork"]):
+            with pytest.raises(DawError, match="replication_target_produced_original"):
+                commission(board, human(ctx), "replication", target, {"minutes": 10}, subject_kind="artifact",
+                           subject_id=original, note="Re-execute the contrast.")
+            with pytest.raises(DawError, match="replication_target_produced_original"):
+                promote(board, human(ctx), "post", ctx["posts"]["finding"], "replication", target, {"minutes": 10})
+            with pytest.raises(DawError, match="replication_target_produced_original"):
+                assignments.assign(board, "operator", target, "Replicate", "Replicate.", task_type="replication",
+                                   evidence={"subject_kind": "artifact", "subject_id": original})
+        # Bob fetched the artifact but did not produce it; a review by the producer is still allowed.
+        assert commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10}, subject_kind="artifact",
+                          subject_id=original, note="Re-execute the contrast.")["state"] == "pending"
+        assert commission(board, human(ctx), "review", ctx["agents"]["alice"], {"minutes": 10}, subject_kind="artifact",
+                          subject_id=original, note="Check it.")["state"] == "pending"
+        # A request queued before the check existed is refused at dispatch, before any state changes.
+        monkeypatch.setattr(replication, "refuse_producer", lambda *args: None)
+        legacy = assignments.assign(board, "operator", ctx["fork"], "Replicate", "Replicate.", task_type="replication",
+                                    evidence={"subject_kind": "artifact", "subject_id": original})
+        monkeypatch.undo()
+        with scripted_runtime(root) as (executable, _):
+            with pytest.raises(DawError, match="replication_target_produced_original"):
+                dispatch(board, legacy["id"], executable)
+        assert board.one("SELECT state FROM request WHERE id=?", (legacy["id"],))["state"] == "pending"
+        assert not board.rows("SELECT id FROM attempt WHERE request=?", (legacy["id"],))
+    http = client(root, local_user="mira")
+    refused = http.post("/api/commissions", headers=WRITE, json={
+        "task_type": "replication", "target": ctx["fork"], "budget": {"minutes": 10}, "subject_kind": "artifact",
+        "subject_id": original, "note": "Re-execute."})
+    assert refused.status_code == 400 and refused.json()["error"] == "replication_target_produced_original"
+
+
+def _receipt(root, agent, blob):
+    with Archive(root) as view:
+        ws = view.workspace(agent)
+        return json.loads(ws.blob_path(blob).read_bytes())
+
+
+@pytest.mark.parametrize("altered", [False, True])
+def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches(demo, altered, monkeypatch):
+    """Spec v2 C6: the scripted harness runs replicate.py in bob's checkout with ./bin/python; it hash-checks the
+    saved script and inputs, executes the script through run_analysis.py and registers the output. The
+    confirmation (or mismatch) is a platform record by the `replication` participant citing bob's receipt."""
+    from daw.commons.demo import CODE
+    root, ctx = demo
+    original, post = ctx["artifacts"]["contrast"], ctx["posts"]["finding"]
+    with Community(root) as board, scripted_runtime(root) as (_, answers):
+        if altered:
+            # Alice's saved script rounds to one decimal while her registered output has two: re-execution differs.
+            alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
+            meas = board.library.one("SELECT output_blob FROM artifact WHERE id=?", (ctx["artifacts"]["measurement"],))
+            bad = alice.register(ctx["questions"]["alice"], "contrast-r2.tsv", "contrast\tlog2_ratio\nB_vs_A\t1.54\n",
+                                 title="Contrast (altered script)", summary="log2(B/A).", role="contrast-table-r2",
+                                 parameters={"contrast": "B_vs_A"}, code=CODE["contrast.tsv"].replace(":.2f", ":.1f"),
+                                 inputs=[{"blob": meas["output_blob"], "source_identity": ctx["artifacts"]["measurement"]}])
+            original = bad["artifact"]
+            post = alice.publish("Contrast from the altered script", f"log2(B/A) ({original}).", artifacts=[original],
+                                 question=ctx["questions"]["alice"], request_key="studio-altered")["id"]
+        blob = board.library.one("SELECT output_blob FROM artifact WHERE id=?", (original,))["output_blob"]
+        request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
+                             subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
+        done = deliver(board, answers, request, "No answer recorded.", studio_demo.replication_hook(post, original))
+        run = done["active_run"]
+        assert "replication_unsandboxed" in (root / "runs" / run / "sandbox.json").read_text()
+        assert events(board, "replication_unsandboxed")[-1]["request"] == request["id"]
+        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        replica = (result["identical"] + result["different"])[0]
+        receipt = result["receipts"][replica]
+        stored = _receipt(root, ctx["agents"]["bob"], receipt["receipt_blob"])
+        code = artifact_info(board.library, original)["manifest"]["derivation"]["code"]
+        assert stored["code_sha256"] == receipt["code_sha256"] == code[0] and stored["exit_code"] == 0
+        assert stored["complete"] and receipt["producer"].startswith("questions/") and "/scripts/" in receipt["producer"]
+        written = [o["sha256"] for o in stored["outputs"] if o["written"]]
+        answer = board.show(done["answer"])["content"]["body"]
+        assert receipt["receipt_blob"] in answer and "through run_analysis.py" in answer  # worded from the receipt
+        system = replication_system(board)
+        [check] = events(board, "replication_checked")
+        [entry] = check["results"]
+        if not altered:
+            assert result["outcome"] == "byte_identical" and result["identical"] == [original] and written == [blob]
+            mark = board.one("SELECT * FROM mark WHERE id=?", (entry["mark"],))
             assert (mark["participant"], mark["target_kind"], mark["target_id"], mark["kind"]) == (
-                ctx["agents"]["bob"], "artifact", original, "reproduced") and blob in mark["note"]
-            reply = board.show(result["post"])
-            assert reply["author"] == ctx["agents"]["bob"] and reply["parent"] == ctx["posts"]["finding"]
+                system, "artifact", original, "reproduced") and blob in mark["note"]
+            assert {"kind": "receipt", "id": receipt["receipt_blob"]}.items() <= json.loads(mark["pointers"])[2].items()
+            reply = board.show(entry["post"])
+            assert reply["author"] == system and reply["parent"] == ctx["posts"]["finding"]
             assert reply["content"]["kind"] == "replication_confirmed"
+            assert receipt["receipt_blob"] in reply["content"]["body"] and code[0] in reply["content"]["body"]
+            assert reply["content"]["evidence"]["replication"]["receipts"][0]["receipt_blob"] == receipt["receipt_blob"]
         else:
-            assert result["outcome"] == "bytes_differ"
-            correction = board.show(result["post"])
-            replica = correction["content"]["evidence"]["replication"]["different"][0]
-            assert correction["author"] == ctx["agents"]["bob"] and correction["parent"] == ctx["posts"]["finding"]
+            assert result["outcome"] == "bytes_differ" and result["different"] == [replica] and written != [blob]
+            replica_blob = written[0]
+            assert board.library.blob_path(replica_blob).read_text() == "contrast\tlog2_ratio\nB_vs_A\t1.5\n"
+            correction = board.show(entry["post"])
+            assert correction["author"] == system and correction["parent"] == post
             assert correction["content"]["kind"] == "replication_mismatch"
-            assert blob in correction["content"]["body"] and replica["output_sha256"] in correction["content"]["body"]
-            assert replica["artifact"] in correction["content"]["evidence"]["artifacts"]  # published: bytes verifiable
-            assert board.library.one("SELECT id FROM artifact WHERE id=?", (replica["artifact"],))
-            assert not board.rows("SELECT * FROM mark WHERE participant=?", (ctx["agents"]["bob"],))
+            body = correction["content"]["body"]
+            assert blob in body and replica_blob in body and receipt["receipt_blob"] in body
+            assert replica in correction["content"]["evidence"]["artifacts"]  # published: bytes verifiable
+            assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+            notice = events(board, "notice_queued")[-1]  # the runtime notice uses the same receipt gate
+            assert notice["target"] == ctx["agents"]["alice"]
+            assert receipt["receipt_blob"] in board.show(notice["post"])["content"]["body"]
+        # The agent signs only what it wrote: its answer. Platform records carry the replication participant.
+        assert [p["id"] for p in board.rows("SELECT id FROM post WHERE author=? AND created>=?",
+                                            (ctx["agents"]["bob"], request["created"]))] == [done["answer"]]
     # Operator re-check (CLI) is idempotent: no new marks, posts or events.
     from typer.testing import CliRunner
 
     from daw.commons.cli import app
     monkeypatch.delenv("BIO_AGENT", raising=False)
-    result = CliRunner().invoke(app, ["--root", str(root), "replication", "check", request["id"]])
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["results"][0]["post"] == check["results"][0]["post"]
+    rechecked = CliRunner().invoke(app, ["--root", str(root), "replication", "check", request["id"]])
+    assert rechecked.exit_code == 0, rechecked.output
+    assert json.loads(rechecked.output)["results"][0]["post"] == entry["post"]
     with Community(root) as board:
         assert len(events(board, "replication_checked")) == 1
         with pytest.raises(DawError, match="not_a_replication_request"):
             studio.replication_check(board, ctx["requests"]["brief"])
         with pytest.raises(DawError, match="permission_denied"):
             studio.replication_check(board, request["id"], actor=human(ctx))
+
+
+def test_replicate_helper_refuses_a_code_blob_that_fails_its_hash(demo):
+    """The carve-out executes only hash-verified code: a tampered stored script stops the helper before any run."""
+    import os
+    import subprocess
+    root, ctx = demo
+    original = ctx["artifacts"]["contrast"]
+    with Community(root) as board:
+        bob = board.agent(ctx["agents"]["bob"])
+        trial = board.trial(bob)
+        code = artifact_info(board.library, original)["manifest"]["derivation"]["code"][0]
+    env = {**os.environ, "BIO_WORKSPACE": str(trial / "workspace"), "BIO_COMMUNITY": str(root), "BIO_AGENT": bob["id"]}
+    question = json.loads(subprocess.run(["./bin/bio", "work", "new", "Replicate"], cwd=trial, env=env, check=True,
+                                         capture_output=True, text=True).stdout)["question"]
+    stored = trial / "workspace" / "blobs" / "sha256" / code[:2] / code  # bob fetched it with the finding post
+    stored.chmod(0o644)
+    stored.write_text("import os\nos.system('echo executed > TAMPERED')\n")
+    done = subprocess.run(["./bin/python", ".agents/skills/bio-research/scripts/replicate.py", original, "--question",
+                           question], cwd=trial, env=env, capture_output=True, text=True)
+    refused = json.loads(done.stdout.strip().splitlines()[-1])
+    assert done.returncode == 2 and refused["event"] == "replication_refused" and "integrity_failed" in refused["detail"]
+    assert not (trial / "TAMPERED").exists()
+    assert not list((trial / "workspace" / "questions" / question / "outputs").glob("replication-*/execution.json"))
+
+
+def test_demo_saved_scripts_reproduce_their_registered_outputs(demo, tmp_path):
+    """The synthetic derivations carry real saved code (`demo.CODE`): run on its recorded input, each script
+    writes exactly the bytes registered as its output (our own fixture code, run here as a check)."""
+    import subprocess
+    import sys
+    root, ctx = demo
+    with Community(root) as board:
+        for name in ("measurement", "contrast", "normalized"):
+            info = artifact_info(board.library, ctx["artifacts"][name])
+            derivation = info["manifest"]["derivation"]
+            script = tmp_path / f"{name}.py"
+            script.write_bytes(board.library.blob_path(derivation["code"][0]).read_bytes())
+            out = tmp_path / f"{name}.out"
+            subprocess.run([sys.executable, str(script), str(board.library.blob_path(derivation["inputs"][0]["blob"])),
+                            str(out)], check=True)
+            assert hashlib.sha256(out.read_bytes()).hexdigest() == info["output_blob"], name
+
+
+def test_demo_deliver_replicate_runs_the_helper_on_the_request_subject(demo, monkeypatch):
+    """`bio commons demo-deliver --replicate`: the operator's scripted delivery of a replication request runs
+    replicate.py in the agent's checkout, so the demo's saved script executes under a receipt."""
+    from typer.testing import CliRunner
+
+    from daw.commons.cli import app
+    root, ctx = demo
+    monkeypatch.delenv("BIO_AGENT", raising=False)
+    with Community(root) as board:
+        request = commission(board, human(ctx), "replication", ctx["agents"]["dana"], {"minutes": 10},
+                             subject_kind="artifact", subject_id=ctx["artifacts"]["measurement"], note="Re-execute.")
+        writing = commission(board, human(ctx), "writing", ctx["agents"]["dana"], {"minutes": 10},
+                             subject_kind="post", subject_id=ctx["posts"]["finding"], note="Summarise.")
+    answer = root / "answer.md"
+    answer.write_text("placeholder")
+    runner = CliRunner()
+    refused = runner.invoke(app, ["--root", str(root), "demo-deliver", writing["id"], "--answer", str(answer),
+                                  "--replicate"])
+    assert refused.exit_code != 0 and refused.exception.reason == "not_a_replication_request"
+    done = runner.invoke(app, ["--root", str(root), "demo-deliver", request["id"], "--answer", str(answer), "--replicate"])
+    assert done.exit_code == 0, done.output
+    with Community(root) as board:
+        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        assert result["outcome"] == "byte_identical" and result["identical"] == [ctx["artifacts"]["measurement"]]
+        assert events(board, "replication_checked")[-1]["results"][0]["post"]
+        assert "through run_analysis.py" in board.show(json.loads(done.output)["answer"])["content"]["body"]
+
+
+def test_replication_prompt_states_the_carve_out_without_contradiction(demo):
+    from daw.community_runtime import UNTRUSTED, compose_prompt
+    root, ctx = demo
+    with Community(root) as board:
+        request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
+                             subject_kind="artifact", subject_id=ctx["artifacts"]["contrast"], note="Re-execute.")
+        agent, request = board.agent(ctx["agents"]["bob"]), board.one("SELECT * FROM request WHERE id=?", (request["id"],))
+        prompt = compose_prompt(board, request, agent, board.trial(agent), board.show(request["post"]), "a test")
+    assert "only the code blobs named in the fetched derivation, after hash verification, through run_analysis.py" in prompt
+    assert "egress off" in prompt and "replicate.py" in prompt and "remains forbidden" in prompt
+    assert UNTRUSTED not in prompt and "permission to execute downloaded code" not in prompt
+    agents_md = (Path(__file__).resolve().parents[1] / "AGENTS.md").read_text()
+    assert "only the code blobs named in the fetched derivation" in agents_md
+
+
+def test_replication_dispatch_needs_a_sandbox_with_egress_off_on_a_multi_tenant_commons(demo):
+    from daw.commons import sandbox
+    root, ctx = demo
+    sandbox.record_tenancy(root, "accounts")
+    with pytest.raises(DawError, match="sandbox_required"):
+        sandbox.policy(root, "operator says so", "replication")  # no override for executing fetched code
+    assert sandbox.policy(root, "operator says so", "research")["override"] == "operator says so"
+    (root / "sandbox.toml").write_text('engine = "docker"\nimage = "agent:1"\n')
+    assert sandbox.policy(root, None, "replication")["replication_egress"] == "none"
+    (root / "sandbox.toml").write_text('engine = "docker"\nimage = "agent:1"\nnetwork = "egress"\n'
+                                       'proxy = "http://egress:3128"\nallow_hosts = ["example.org"]\n')
+    decision = sandbox.policy(root, None, "replication")
+    assert decision["replication_egress"] == "model_hosts_only" and "warning" not in decision
+
+    class Adapter:
+        def auth_files(self, env):
+            return ()
+
+        def hosts(self, config):
+            return ("api.anthropic.com",)
+    with Community(root) as board:
+        trial = board.trial(board.agent(ctx["agents"]["bob"]))
+    env = {"BIO_AGENT": ctx["agents"]["bob"], "BIO_COMMUNITY": str(root), "PATH": "/usr/bin"}
+    _, _, receipt = sandbox.apply(decision, ["claude"], env, trial=trial, board_root=root, adapter=Adapter(),
+                                  agent_config={}, run="run_1")
+    assert receipt["egress_allowlist"] == ["api.anthropic.com"] and receipt["replication_egress"] == "model_hosts_only"
+    _, _, research = sandbox.apply(sandbox.policy(root), ["claude"], env, trial=trial, board_root=root,
+                                   adapter=Adapter(), agent_config={}, run="run_2")
+    assert "example.org" in research["egress_allowlist"] and "replication_egress" not in research
+
+
+def test_replication_producers_on_the_cohort_include_forks(cohort):
+    """Real data: in the PMP22 cohort every library artifact's producers include the agents whose own workspace
+    produced it, and forks created afterwards inherit that production; commissioning one is refused."""
+    from daw.commons import replication
+    with Community(cohort) as board:
+        artifacts = [r["id"] for r in board.library.rows("SELECT id FROM artifact ORDER BY id")]
+        found = replication.producers(board, artifacts)
+        agents = {r["id"]: r for r in board.rows("SELECT id,parent,kind FROM agent")}
+        produced = {a for ids in found.values() for a in ids}
+        assert produced == set(artifacts)  # every published artifact (281) was produced by some participant here
+        forks = [p for p in found if agents[p]["parent"]]
+        assert forks and all(agents[agents[p]["parent"]]["kind"] == "agent" for p in forks)
+        inherited = [p for p in forks if set(found[p]) & set(found.get(agents[p]["parent"], []))]
+        assert inherited  # a fork holds its parent's production
+        fork = inherited[0]
+        artifact = sorted(set(found[fork]) & set(found[agents[fork]["parent"]]))[0]
+        person = board.one("SELECT id FROM agent WHERE kind='human'")["id"]
+        before = board.one("SELECT max(seq) AS n FROM event")["n"]
+        for target in (fork, agents[fork]["parent"]):
+            with pytest.raises(DawError, match="replication_target_produced_original"):
+                commission(board, person, "replication", target, {"minutes": 10}, subject_kind="artifact",
+                           subject_id=artifact, note="Re-execute.")
+        assert board.one("SELECT max(seq) AS n FROM event")["n"] == before  # refused before any write
 
 
 # ---- M6.4 digests ----------------------------------------------------------------------------------
