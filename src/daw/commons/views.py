@@ -317,7 +317,20 @@ def diff_texts(old, new):
 # ---------------------------------------------------------------------------- artifacts
 
 def locate_artifact(view, aid, *, quiet=False):
-    """Where an artifact's catalog record lives: the shared library first, then participant workspaces."""
+    """Where an artifact's catalog record lives: the shared library first, then participant workspaces.
+
+    With a graph store (spec v2 V6) the answer comes from the operations recorded for this identity, so no
+    catalog is scanned; every catalog's artifacts are in the graph, so a miss there is a miss everywhere."""
+    from daw.commons import graphstore
+    store = graphstore.reader(view)
+    if store is not None:
+        holders = store.holders(aid)
+        if holders:
+            return {"store": "library"} if holders[0] == "library" else {
+                "store": "workspace", "participant": holders[0].split(":", 1)[1]}
+        if quiet:
+            return {"store": "missing"}
+        raise DawError("unknown_artifact", aid)
     if view.library.one("SELECT id FROM artifact WHERE id=?", (aid,)):
         return {"store": "library"}
     for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
@@ -368,6 +381,54 @@ def _artifact_record(store, aid):
             "questions": store.rows("SELECT question_id,relationship FROM question_artifact WHERE artifact_id=?", (aid,))}
 
 
+def _post_index(view, pids):
+    """The slice of `thread_index` that post cards for these posts need (constant work per post)."""
+    posts = {}
+    for pid in pids:
+        row = view.one("SELECT * FROM post WHERE id=?", (pid,))
+        if row and pid not in posts:
+            posts[pid] = {**row, "content": content(view, row["body_blob"])}
+    return {"posts": posts, "people": participants_by_id(view),
+            "superseded_by": {pid: [r["id"] for r in view.rows("SELECT id FROM post WHERE supersedes=? ORDER BY seq",
+                                                                (pid,))] for pid in posts}}
+
+
+def _artifact_relations(view, aid):
+    """(questions, naming posts, fetch events, comment posts) for one artifact. From the graph store's recorded
+    operations touching it when one exists (constant work per node), else by scanning every workspace and the
+    board event log."""
+    from daw.commons import graphstore
+    store = graphstore.reader(view)
+    if store is None:
+        questions = []
+        for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
+            ws = _workspace(view, agent["id"])
+            if not ws:
+                continue
+            links = [link for link in reuse_links(ws) if link["artifact"] == aid]
+            questions.extend({"participant": agent["id"], **link} for link in links)
+        fetches = [e for e in _events(view, "evidence_fetched") if aid in (e["body"].get("artifacts") or [])]
+        index = thread_index(view)
+        comments = [pid for pid, row in index["posts"].items() if row["content"].get("kind") == "comment"
+                    and comment_target(row["content"].get("evidence") or {}) == ("artifact", aid)]
+        return questions, posts_naming(view, aid), fetches, comments, index
+    questions, comments = [], []
+    for name, op in store.touching(aid, side="b"):
+        kind, _, _, relation, _, payload = op
+        if kind != "edge":
+            continue
+        link = (payload.get("meta") or {}).get("link")
+        if relation in ("produced", "considered", "reused") and name.startswith("workspace:") and link:
+            questions.append({"participant": name.split(":", 1)[1], **link})
+        elif relation == "comments_on" and op[1] not in comments:
+            comments.append(op[1])
+    seqs = store.fetch_events(aid)
+    fetches = [{**row, "body": _jsonish(row["body"], {})} for row in view.rows(
+        f"SELECT * FROM event WHERE seq IN ({','.join('?' * len(seqs))}) ORDER BY seq", seqs)] if seqs else []
+    naming = store.posts_naming(aid)
+    return questions, naming, fetches, comments, _post_index(view, naming + comments)
+
+
 def artifact_view(view, aid, *, depth=3, caller=None, full=False):
     if not 0 <= depth <= 6:
         raise DawError("invalid_provenance_depth", "0 to 6")
@@ -402,19 +463,11 @@ def artifact_view(view, aid, *, depth=3, caller=None, full=False):
             raise
         graph = {"root": aid, "depth": depth, "nodes": {}, "edges": [], "frontier": [],
                  "unavailable": f"provenance walk stopped at bytes absent from this store ({error.detail})"}
-    questions = []
-    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
-        ws = _workspace(view, agent["id"])
-        if not ws:
-            continue
-        links = [link for link in reuse_links(ws) if link["artifact"] == aid]
-        questions.extend({"participant": agent["id"], **link} for link in links)
-    index = thread_index(view)
+    questions, named, fetches, commented, index = _artifact_relations(view, aid)
     vis = visibility(view, caller, full)
-    naming = [post_summary(index, pid, vis) for pid in posts_naming(view, aid) if pid in index["posts"]]
+    naming = [post_summary(index, pid, vis) for pid in named if pid in index["posts"]]
     fetchers = [{"seq": e["seq"], "created": e["created"], "reader": e["body"].get("reader"),
-                 "question": e["body"].get("question"), "post": e["body"].get("post")}
-                for e in _events(view, "evidence_fetched") if aid in (e["body"].get("artifacts") or [])]
+                 "question": e["body"].get("question"), "post": e["body"].get("post")} for e in fetches]
     output = manifest.get("output") or {}
     return {"id": aid, "location": location, "derivation_key": info["derivation_key"], "output_role": info["output_role"],
             "output_blob": info["output_blob"], "manifest_blob": info["manifest_blob"], "created": info["created"],
@@ -423,9 +476,7 @@ def artifact_view(view, aid, *, depth=3, caller=None, full=False):
                            "parameters": derivation.get("parameters", {}), "environment": derivation.get("environment", {})},
             "provenance": _strip_paths(graph), "questions": questions, "posts": naming, "fetchers": fetchers,
             "marks": marks_for(view, [("artifact", aid)]),
-            "comments": [post_summary(index, pid, vis, snippet=None) for pid, row in index["posts"].items()
-                         if row["content"].get("kind") == "comment"
-                         and comment_target(row["content"].get("evidence") or {}) == ("artifact", aid)],
+            "comments": [post_summary(index, pid, vis, snippet=None) for pid in commented if pid in index["posts"]],
             "bytes": {"name": output.get("name"), "size": output.get("bytes"), "url": f"/api/artifacts/{aid}/bytes",
                       "present": info.get("present", True)},
             "present": info.get("present", True),

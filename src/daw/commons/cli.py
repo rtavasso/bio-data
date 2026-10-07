@@ -52,7 +52,8 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
           mode: Annotated[str, typer.Option(help="local (single user, no login) or accounts")] = "local",
           user: Annotated[str, typer.Option(help="Human participant used in local mode")] = "local",
           static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None,
-          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None):
+          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None,
+          graph_refresh: Annotated[int, typer.Option(help="Refresh the graph store at start and every N seconds (0: only after writes)")] = 60):
     """Serve the read API, write API, event stream and built web app for one commons."""
     uvicorn = _uvicorn()
     from daw.commons.app import create_app
@@ -62,6 +63,8 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
+    from daw.commons.graphstore import start_interval
+    start_interval(ctx.obj, graph_refresh)  # V6: the derived graph store follows agents' writes too
     uvicorn.run(app, host=host, port=port, **_forwarded(forwarded_allow_ips))
 
 
@@ -501,3 +504,46 @@ def board_service_command(ctx: typer.Context,
     typer.echo(canonical({"commons": str(service.root), "agents": service.refresh(),
                           "log": str(service.log_path)}).decode())
     service.serve_forever(poll_seconds)
+
+
+# ---- spec v2 V6: recorded delivery records and the graph store ----------------------------------------------
+
+graph_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                        help="Graph store: the evidence map's derived projection under cache/graph (V6).")
+runs_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                       help="Delivery records: clock, compactions and analysis receipts (V6).")
+app.add_typer(graph_app, name="graph")
+app.add_typer(runs_app, name="runs")
+
+
+@graph_app.command("refresh")
+def graph_refresh(ctx: typer.Context,
+                  full: Annotated[bool, typer.Option("--full", help="Rebuild from scratch instead of updating")] = False):
+    """Bring the graph store up to the archive (changed segments only) or rebuild it; never authoritative."""
+    from daw.commons import graphstore
+    emit(graphstore.refresh(ctx.obj, full=full))
+
+
+@graph_app.command("status")
+def graph_status(ctx: typer.Context):
+    """Which graph store segments are current, behind by sequence, or stale (read-only)."""
+    from daw.commons import graphstore
+    emit(graphstore.status(ctx.obj))
+
+
+@runs_app.command("reindex")
+def runs_reindex(ctx: typer.Context, runs: Annotated[list[str] | None, typer.Argument(help="Run ids")] = None,
+                 all_runs: Annotated[bool, typer.Option("--all", help="Every finished run without records")] = False,
+                 as_: As = "operator"):
+    """Build clock, compaction and receipt records for runs captured before they existed, from what the run folder
+    and the checkout still hold; existing records are kept and nothing is fabricated."""
+    from daw.commons.records import reindex_run
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        selected = list(runs or [])
+        if all_runs:
+            selected += [r["id"] for r in board.rows("SELECT id FROM attempt WHERE state!='running' ORDER BY created,id")
+                         if r["id"] not in selected]
+        if not selected:
+            raise DawError("no_runs_selected", "name runs or pass --all")
+        emit([reindex_run(board, acting(as_), run) for run in selected])

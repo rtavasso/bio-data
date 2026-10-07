@@ -229,9 +229,52 @@ export interface Call {
   t_end: number | null;
 }
 
-export interface Receipt extends Call {
+export interface ReceiptRecord {
+  path: string;
+  sha256: string;
+  copy: string;
+  started: string | null;
+  finished: string | null;
+  exit_code: number | null;
+  complete: boolean | null;
+  code_unchanged: boolean | null;
+  verified: { stream_sha256: "matches" | "differs" | null; producer_now: string | null; outputs_now: string[] };
+  found_by: "stream" | "scan";
+  outputs: number;
+}
+
+// Spec v2 V6: `source: "receipt"` items are indexed run_analysis.py receipt files (recorded); `source: "exit_code"`
+// items come from the call's exit code in runs without a receipt index and are attributed.
+export interface Receipt extends Omit<Call, "line"> {
+  line: number | null;
   script: string | null;
   outcome: "pass" | "fail" | "unknown";
+  source?: "receipt" | "exit_code";
+  attributed?: boolean;
+  basis?: string;
+  receipt?: ReceiptRecord;
+}
+
+export interface Suspension {
+  at: number;
+  seconds: number;
+  gap_seconds: number;
+  placement: string;
+  unplaced_seconds: number;
+  attributed?: boolean;
+  basis?: string;
+  records?: (number | null)[];
+  precision_seconds?: number;
+  window?: { from: number; to: number; monotonic_seconds: number; sources: string[] };
+}
+
+export interface RunRecords {
+  clock: { file: string; records: number; cadence_seconds: number | null; reindexed: boolean; suspended_seconds: number;
+    execution_suspended_seconds: number | null; unrecorded_seconds: number | null } | null;
+  receipts: { indexed: string; counts: { receipts: number; pass: number; fail: number };
+    reindexed?: { by: string; note: string } | null } | null;
+  compactions: { available: boolean; source: string | null; reason?: string | null; count?: number; fallbacks?: number;
+    reindexed?: boolean } | null;
 }
 
 export type TokenValue = number | "unavailable";
@@ -245,14 +288,16 @@ export interface RunTimeline {
     monotonic_seconds?: number | null; suspended_seconds: number | null; suspension_floor_seconds: number; bounded: boolean };
   axis: { unit: "seconds" | "events"; duration: number; clock: string };
   // Heuristically placed items carry attributed: true and the rule in basis (spec v2 C10).
-  suspensions: { at: number; seconds: number; gap_seconds: number; placement: string; unplaced_seconds: number;
-    attributed?: boolean; basis?: string }[];
+  suspensions: Suspension[];
   lanes: { id: string; label: string; count: number }[];
   calls: Call[];
   receipts: Receipt[];
+  unreceipted_analysis_calls?: Call[];
+  records?: RunRecords;
   // null: this harness's stream does not mark compactions (unavailable, not zero).
   compactions: { line: number; t: number | null; source: string; text: string }[] | null;
-  compaction_summaries: { timestamp: number | null; fallback: boolean; excerpt: string; t: number | null }[] | null;
+  compaction_summaries: { timestamp: number | null; fallback: boolean; excerpt: string | null; t: number | null;
+    source?: string; message_id?: string | number | null; sha256?: string }[] | null;
   inbox_reads: (Call & { sent: boolean })[];
   answers_consumed: (Call & { posts: string[]; requests: string[]; attributed?: boolean; basis?: string })[];
   headline: (Call & { basis: string; attributed?: boolean }) | null;

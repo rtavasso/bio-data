@@ -7,7 +7,7 @@ import { Markdown } from "../components/Markdown";
 import { AskForm, CommissionForm } from "../components/participation/Actions";
 import TimelineCanvas, { formatSeconds } from "../components/run/TimelineCanvas";
 import Messages from "../components/run/Messages";
-import type { RunTimeline } from "../types/observatory-map";
+import type { RunTimeline, Suspension } from "../types/observatory-map";
 import "../components/map/graph.css";
 import "../components/map/shared.css";
 import "./Run.css";
@@ -19,6 +19,33 @@ import "./Run.css";
 
 function Attributed({ basis }: { basis?: string }) {
   return <span className="obs-chip run-attributed" title={basis}>attributed, not recorded</span>;
+}
+
+// Spec v2 V6: items placed by run records (clock.jsonl, receipts.json, compactions.jsonl) say so.
+function Recorded({ basis }: { basis?: string }) {
+  return <span className="obs-chip run-recorded" title={basis}>recorded</span>;
+}
+
+function placementText(s: Suspension): string {
+  if (s.placement === "clock_records") return `between clock records ${s.records?.join(" and ") ?? ""}`;
+  if (s.placement === "largest_event_gap_within_clock_window")
+    return `bounded by clock samples to ${formatSeconds(s.window?.monotonic_seconds ?? 0)}; at the largest event gap inside`;
+  if (s.placement === "before_first_event") return "before the first event";
+  if (s.placement === "after_last_event") return "after the last event";
+  return "largest gap between event timestamps";
+}
+
+function RecordsLine({ timeline }: { timeline: RunTimeline }) {
+  const r = timeline.records;
+  if (!r) return null;
+  const parts: string[] = [];
+  parts.push(r.clock ? `${r.clock.records} clock records${r.clock.reindexed ? " (reindexed from execution.json and heartbeat.json)" : ""}`
+    : "no clock records");
+  parts.push(r.receipts ? `${r.receipts.counts.receipts} indexed receipt(s)${r.receipts.reindexed ? " (reindexed)" : ""}`
+    : "no receipt index (receipts from exit codes)");
+  parts.push(r.compactions ? (r.compactions.available ? `${r.compactions.count ?? 0} recorded compaction summaries`
+    : `compaction summaries unavailable: ${r.compactions.reason ?? "not exposed"}`) : "no compaction record");
+  return <p className="muted run-records">Run records: {parts.join("; ")}.</p>;
 }
 
 function Clock({ timeline }: { timeline: RunTimeline }) {
@@ -69,12 +96,13 @@ export default function RunPage() {
       <section className="obs-section">
         <h2>Timeline</h2>
         <p className="muted run-axis">Axis: {t.axis.clock}. {t.suspensions.map((s) => (
-          <span key={s.at}>
-            {`Suspension of ${formatSeconds(s.seconds)} placed at ${at(s.at, unit)} (largest gap between event timestamps` +
+          <span key={`${s.at}-${s.seconds}`}>
+            {`Suspension of ${formatSeconds(s.seconds)} placed at ${at(s.at, unit)} (${placementText(s)}` +
               `${s.unplaced_seconds ? `; ${formatSeconds(s.unplaced_seconds)} could not be placed` : ""}). `}
-            {s.attributed && <Attributed basis={s.basis} />}
+            {s.attributed ? <Attributed basis={s.basis} /> : <Recorded basis={s.basis} />}
           </span>
         ))}</p>
+        <RecordsLine timeline={t} />
         <TimelineCanvas timeline={t} />
         <div className="viz viz-legend run-legend">
           <span><i className="run-key bar" /> tool call (red outline: non-zero exit)</span>
@@ -86,6 +114,7 @@ export default function RunPage() {
           <span>↩ peer answer read</span>
           <span><i className="run-key break" /> host suspension (not to scale)</span>
           <span><i className="run-key attributed" /> attributed, not recorded (dotted, hatched: placed by a heuristic)</span>
+          <span><i className="run-key break" /> recorded suspension: solid (placed between clock records)</span>
         </div>
         <details>
           <summary>Table view ({t.calls.length} tool calls)</summary>
@@ -110,12 +139,18 @@ export default function RunPage() {
           <h2>Analysis receipts</h2>
           {t.receipts.length ? (
             <ul className="run-list">
-              {t.receipts.map((r) => (
-                <li key={r.line}><Verdict outcome={r.outcome} /> <span className="mono">{r.script ?? r.summary}</span>{" "}
-                  <span className="muted">{at(r.t, unit)} · line {r.line}</span></li>
+              {t.receipts.map((r, i) => (
+                <li key={`${r.line ?? "r"}-${i}`}><Verdict outcome={r.outcome} /> <span className="mono">{r.script ?? r.summary}</span>{" "}
+                  <span className="muted">{at(r.t, unit)}{r.line !== null ? ` · line ${r.line}` : ""}
+                    {r.receipt ? ` · receipt ${r.receipt.path} (sha256 ${r.receipt.sha256.slice(0, 12)}…)` : ""}</span>{" "}
+                  {r.attributed ? <Attributed basis={r.basis} /> : r.source === "receipt" ? <Recorded basis="run_analysis.py receipt file indexed for this delivery" /> : null}</li>
               ))}
             </ul>
           ) : <p className="muted">No run_analysis.py receipts in this delivery.</p>}
+          {(t.unreceipted_analysis_calls?.length ?? 0) > 0 && (
+            <p className="muted">{t.unreceipted_analysis_calls?.length} run_analysis.py call(s) without an indexed receipt file
+              (lines {t.unreceipted_analysis_calls?.map((c) => c.line).join(", ")}).</p>
+          )}
           <h2>Headline result</h2>
           {t.headline ? (
             <p>★ {at(t.headline.t, unit)}: <span className="mono">{t.headline.summary}</span> <span className="muted">({t.headline.basis})</span>
@@ -128,7 +163,9 @@ export default function RunPage() {
             {t.compactions === null
               ? <><span className="obs-missing">unavailable</span> in the stream (this harness does not mark compactions);</>
               : `${t.compactions.length} in the stream;`}{" "}
-            {summaries === null ? "no agent-state database to read summaries from" :
+            {summaries === null ? (t.records?.compactions && !t.records.compactions.available
+              ? <>summaries <span className="obs-missing">unavailable</span> ({t.records.compactions.reason})</>
+              : "no agent-state database to read summaries from") :
               `${summaries.length} summaries in this delivery, ${summaries.filter((s) => s.fallback).length} deterministic fallback(s)`}
           </p>
           {summaries?.filter((s) => s.fallback).map((_, i) => (

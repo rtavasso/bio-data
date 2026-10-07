@@ -35,6 +35,9 @@ class Adapter:
     # Whether the harness stream marks context compactions (C10): when it does not, compaction counts are
     # unavailable (None), never zero.
     emits_compactions = False
+    # Where the run folder's session snapshot records compaction summaries and fallbacks (spec v2 V6), read
+    # after the turn into runs/<run>/compactions.jsonl; None: this harness does not expose them (unavailable).
+    compaction_store = None
 
     def reports_compactions(self, config):
         return self.emits_compactions
