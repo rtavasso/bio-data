@@ -162,7 +162,9 @@ numeric). **Unverified is shown, not refused**; it is distinct from unpointed.
 - **At read.** Every renderer reads the record (`checks.recorded`): the Studio
   renderer (its status and per-number statuses), `/api/posts/{id}` and the post
   page, thread and listing cards, forum search snippets, the digest skeleton,
-  the evidence map (node label and node record) and export. A **refused**
+  the evidence map (node label and node record) and export, all through the
+  moderation `Visibility` resolver (`refused`, `placeholder`; a hidden post stays
+  a stub). A **refused**
   write-up is a placeholder everywhere: title "Write-up withheld: refused by the
   number checker", the placeholder text and the problem locations; no body,
   excerpt, snippet or source. Its bytes stay in the library (operators may read
@@ -597,10 +599,11 @@ bytes.
 - Sentence splitting is heuristic (abbreviation list); a clause boundary is a
   punctuation rule (`,` `;` `:` dashes). A number followed by an unpunctuated,
   number-free aside before its citation is still covered by it.
-- Not covered by the placeholder here: run timelines and the running strip show
-  request titles (the commission, not the write-up); SSE frames and the event log
-  carry `writeup_check` bodies with number texts and offsets (no prose). The
-  visibility area's resolver (C2) is the place to route these.
+- Not covered by the placeholder: the run view withholds a refused answer's final text,
+  but its raw stream and model-facing messages still carry the agent's output, and run
+  lists show request titles (the commission, not the write-up); SSE frames and the event
+  log carry `writeup_check` bodies with number texts and offsets (no prose).
+  `Visibility.event` scrubs only hidden posts.
 - Write-up rendering and the embedded map are computed per request (the map is
   cached in-process by event sequence and workspace fingerprint); `/studio`
   renders every commissioned output without its map.

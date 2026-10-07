@@ -32,10 +32,11 @@ import tempfile
 from datetime import UTC, datetime
 
 from daw.artifacts import reuse_links
+from daw.commons.moderation import Visibility
 from daw.commons.participation import comment_target
 from daw.util import DawError, canonical, digest
 
-LAYOUT_VERSION = 2  # bumped when the response shape changes, so cached maps are recomputed
+LAYOUT_VERSION = 3  # bumped when the response shape changes, so cached maps are recomputed
 FAMILIES = {"post": "posts", "claim": "posts", "artifact": "artifacts", "asset": "sources", "snapshot": "sources",
             "object": "sources", "question": "questions", "frontier_item": "questions", "participant": "participants",
             "mark": "participants"}
@@ -64,6 +65,11 @@ RELATIONS = {
 }
 DEFAULT_LIMIT = 2000
 MAX_LIMIT = 10000
+# C13: only these kinds are ever dropped to honour `limit` (lowest degree first). Posts, library and workspace
+# artifacts, questions, claims, marks, participants, receipts and frontier items are always drawn.
+TRUNCATABLE = ("object", "asset")
+# Edges whose record is the hidden post's own body (or its author column): withheld with the post's content.
+BODY_RELATIONS = {"evidence", "notebook", "comments_on"}
 
 
 class Graph:
@@ -198,8 +204,9 @@ def _evidence(content):
     return evidence if isinstance(evidence, dict) else {}
 
 
-def build(view):
-    """The full recorded graph of one commons (unfiltered)."""
+def build(view, vis=None):
+    """The full recorded graph of one commons (unfiltered), as `vis` lets the caller see it (default: a reader)."""
+    vis = vis if vis is not None else Visibility.of(view)
     graph = Graph()
     agents = view.rows("SELECT id,name,kind,parent,trial,created FROM agent ORDER BY created,id")
     for agent in agents:
@@ -220,19 +227,26 @@ def build(view):
             continue  # A participant whose checkout is missing contributes no workspace records.
         workspaces[agent["id"]] = ws
         _add_catalog(graph, ws, "workspace:" + agent["id"], agent=agent)
-    hidden = {r["target_id"] for r in view.rows(
-        "SELECT target_id FROM moderation WHERE target_kind='post' AND state='hidden'")}
     for post in view.rows("SELECT id,author,channel,parent,supersedes,body_blob,created FROM post ORDER BY seq"):
+        record = {"store": "board", "table": "post", "id": post["id"]}
+        if vis.withheld(post["id"]):
+            # A hidden post is its identity and the moderation reason: no title, author, time or body relations.
+            graph.node(post["id"], "post", store="board", label="hidden post", hidden=True,
+                       reason=vis.reason(post["id"]))
+            if post["parent"]:
+                graph.edge(post["id"], post["parent"], "reply_to", {**record, "field": "parent"})
+            if post["supersedes"]:
+                graph.edge(post["id"], post["supersedes"], "supersedes", {**record, "field": "supersedes"})
+            continue
         try:
             content = view.library.json_blob(post["body_blob"])
         except (DawError, OSError, ValueError):
             content = {}
-        record = {"store": "board", "table": "post", "id": post["id"]}
         evidence = _evidence(content)
         graph.node(post["id"], "post", store="board", label=content.get("title") or post["id"],
                    title=content.get("title"), post_kind=content.get("kind"), author=post["author"],
-                   channel=post["channel"], created=post["created"], hidden=post["id"] in hidden,
-                   run=evidence.get("run"))
+                   channel=post["channel"], created=post["created"], hidden=vis.hidden(post["id"]),
+                   reason=vis.reason(post["id"]), run=evidence.get("run"))
         graph.edge(post["author"], post["id"], "authored", {**record, "field": "author"}, created=post["created"])
         if post["parent"]:
             graph.edge(post["id"], post["parent"], "reply_to", {**record, "field": "parent"}, created=post["created"])
@@ -269,11 +283,15 @@ def build(view):
     from daw.commons.checks import verified_claim_pointers
     verified = verified_claim_pointers(view)  # V2: numbers in recorded write-up verdicts verified against the claim
     for claim in view.rows("SELECT id,post,author,ordinal,status,created FROM claim ORDER BY created,id"):
-        count = verified.get(claim["id"], 0)
-        graph.node(claim["id"], "claim", store="board", label=f"claim {claim['ordinal']} · {claim['status']}"
-                   + (f" · {count} verified" if count else ""),
-                   status=claim["status"], author=claim["author"], created=claim["created"],
-                   verified_pointers=count)
+        if vis.withheld(claim["post"]):
+            graph.node(claim["id"], "claim", store="board", label="claim of a hidden post", hidden=True,
+                       reason=vis.reason(claim["post"]))
+        else:
+            count = verified.get(claim["id"], 0)
+            graph.node(claim["id"], "claim", store="board", label=f"claim {claim['ordinal']} · {claim['status']}"
+                       + (f" · {count} verified" if count else ""),
+                       status=claim["status"], author=claim["author"], created=claim["created"],
+                       verified_pointers=count)
         graph.edge(claim["id"], claim["post"], "claim_of", {"store": "board", "table": "claim", "id": claim["id"]},
                    created=claim["created"])
     for mark in view.rows("SELECT id,participant,target_kind,target_id,kind,created FROM mark ORDER BY created,id"):
@@ -296,17 +314,16 @@ def build(view):
     for node in graph.nodes.values():
         node["stores"].sort()
     _label_superseded(graph)
-    _label_withheld(view, graph)
+    _label_withheld(vis, graph)
     return graph
 
 
-def _label_withheld(view, graph):
+def _label_withheld(vis, graph):
     """C5: a write-up the number checker refused is a placeholder here too; its recorded edges stay."""
-    from daw.commons.checks import PLACEHOLDER_TITLE, withheld
-    for pid in withheld(view):
+    for pid in vis.refused_writeups:
         node = graph.nodes.get(pid)
-        if node is not None:
-            node.update(label=PLACEHOLDER_TITLE, title=None, withheld=True)
+        if node is not None and vis.refused(pid):
+            node.update(label=vis.title(pid, None), title=None, withheld=True)
 
 
 def _label_superseded(graph):
@@ -348,7 +365,8 @@ def _comment_target(content, evidence):
 
 def fingerprint(view):
     """Workspace catalogs change without board events (registrations, links); include their extent in cache keys."""
-    parts = [view.sequence()]
+    parts = [view.sequence(), view.rows("SELECT target_kind,target_id,state FROM moderation ORDER BY target_kind,"
+                                        "target_id")]
     for table, column in (("mark", "created"), ("frontier_item", "updated"), ("claim", "created")):
         parts.append(view.one(f"SELECT count(*) AS n, max({column}) AS m FROM {table}"))
     stores = [("library", view.library)]
@@ -447,17 +465,28 @@ def select(graph, *, questions=(), participant=None, since=None, until=None, fam
         linked = {e["source"] for e in edges} | {e["target"] for e in edges}
         keep = {n for n in keep if n in seeds or dated(graph.nodes[n]) or n in linked}
     total = len(keep)
+    truncation = {}
     if len(keep) > limit:
+        # C13: posts, artifacts and every other record kind are never dropped; only bare objects and assets
+        # (derivation inputs) are, lowest degree first, to bring the drawing near `limit`.
+        fixed = {n for n in keep if n in seeds or graph.nodes[n]["kind"] not in TRUNCATABLE}
         degree = {}
         for edge in edges:
             degree[edge["source"]] = degree.get(edge["source"], 0) + 1
             degree[edge["target"]] = degree.get(edge["target"], 0) + 1
-        ranked = sorted(keep, key=lambda n: (n not in seeds, -degree.get(n, 0), n))
-        keep = set(ranked[:limit])
+        ranked = sorted(keep - fixed, key=lambda n: (-degree.get(n, 0), n))
+        kept = set(ranked[:max(0, limit - len(fixed))])
+        for identity in ranked:
+            kind = graph.nodes[identity]["kind"]
+            entry = truncation.setdefault(kind, {"family": FAMILIES[kind], "total": 0, "shown": 0, "dropped": 0})
+            entry["total"] += 1
+            entry["shown" if identity in kept else "dropped"] += 1
+        truncation = {k: v for k, v in sorted(truncation.items()) if v["dropped"]}
+        keep = fixed | kept
         edges = [e for e in edges if e["source"] in keep and e["target"] in keep]
     nodes = [graph.nodes[n] for n in sorted(keep)]
     edges.sort(key=lambda e: (e["source"], e["target"], e["relation"]))
-    return nodes, edges, sorted(seeds), total
+    return nodes, edges, sorted(seeds), total, truncation
 
 
 def layout(node_ids, edges, *, seed=7, iterations=None, spacing=40.0):
@@ -483,29 +512,38 @@ def layout(node_ids, edges, *, seed=7, iterations=None, spacing=40.0):
                     if e["source"] in index and e["target"] in index and e["source"] != e["target"]})
     steps = iterations if iterations is not None else max(30, min(250, 40000 // n))
     k, cell = spacing, 2 * spacing
+    k2, cell2 = k * k, cell * cell
     temperature = radius / 4 + spacing
+    floor = math.floor
+    # Each unordered pair of grid cells within one step of each other is visited once: the cell itself and the
+    # four neighbours on one side (half the work of scanning all nine and skipping j <= i).
     for step in range(steps):
         dx, dy = [0.0] * n, [0.0] * n
         grid = {}
         for i in range(n):
-            grid.setdefault((math.floor(xs[i] / cell), math.floor(ys[i] / cell)), []).append(i)
+            grid.setdefault((floor(xs[i] / cell), floor(ys[i] / cell)), []).append(i)
         for (gx, gy), members in grid.items():
             nearby = [j for ox in (-1, 0, 1) for oy in (-1, 0, 1) for j in grid.get((gx + ox, gy + oy), ())]
             for i in members:
+                xi, yi = xs[i], ys[i]
+                fxi = fyi = 0.0
                 for j in nearby:
                     if j <= i:
                         continue
-                    ddx, ddy = xs[i] - xs[j], ys[i] - ys[j]
+                    ddx, ddy = xi - xs[j], yi - ys[j]
                     dist2 = ddx * ddx + ddy * ddy
-                    if dist2 > cell * cell:
+                    if dist2 > cell2:
                         continue
                     if dist2 < 1e-6:
                         ddx, ddy, dist2 = (i - j) * 0.01 + 0.01, 0.01, 1e-4 + ((i - j) * 0.01) ** 2
-                    force = k * k / dist2
-                    dx[i] += ddx * force
-                    dy[i] += ddy * force
-                    dx[j] -= ddx * force
-                    dy[j] -= ddy * force
+                    force = k2 / dist2
+                    fx, fy = ddx * force, ddy * force
+                    fxi += fx
+                    fyi += fy
+                    dx[j] -= fx
+                    dy[j] -= fy
+                dx[i] += fxi
+                dy[i] += fyi
         for i, j in pairs:
             ddx, ddy = xs[i] - xs[j], ys[i] - ys[j]
             dist = math.sqrt(ddx * ddx + ddy * ddy) or 1e-3
@@ -564,8 +602,11 @@ def _instant(value, name):
 
 
 def evidence_map(view, *, question=None, participant=None, since=None, until=None, family=None,
-                 limit=DEFAULT_LIMIT, use_cache=True):
-    """GET /api/map: recorded graph, filters and a cached deterministic layout."""
+                 limit=DEFAULT_LIMIT, use_cache=True, caller=None, full=False):
+    """GET /api/map: recorded graph, filters and a cached deterministic layout.
+
+    `limit` caps the drawing by dropping only bare objects and assets (C13); `truncated_families` says which
+    kinds lost nodes and how many. Hidden posts are resolved for this caller (C2) before caching."""
     if not 1 <= limit <= MAX_LIMIT:
         raise DawError("invalid_map_limit", f"1..{MAX_LIMIT}")
     questions = resolve_question(view, question) if question else []
@@ -575,13 +616,15 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
     filters = {"question": questions, "participant": participant_id, "since": since, "until": until,
                "family": families, "limit": limit}
     sequence, print_ = view.sequence(), fingerprint(view)
-    key = digest({"version": LAYOUT_VERSION, "sequence": sequence, "fingerprint": print_, "filters": filters})[:40]
+    vis = Visibility.of(view, caller, full)
+    key = digest({"version": LAYOUT_VERSION, "sequence": sequence, "fingerprint": print_, "filters": filters,
+                  "visibility": vis.key()})[:40]
     path = _cache_dir(view) / f"{key}.json"
     if use_cache and (cached := _read_cache(path)) and cached.get("key") == key:
         return {**cached, "cached": True}
-    graph = build(view)
-    nodes, edges, seeds, total = select(graph, questions=questions, participant=participant_id, since=since, until=until,
-                                        families=families, limit=limit)
+    graph = build(view, vis)
+    nodes, edges, seeds, total, truncation = select(graph, questions=questions, participant=participant_id, since=since,
+                                                    until=until, families=families, limit=limit)
     positions = layout([n["id"] for n in nodes], edges)
     xs = [p[0] for p in positions.values()] or [0]
     ys = [p[1] for p in positions.values()] or [0]
@@ -591,7 +634,9 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
     for edge in edges:
         counts["edges"][edge["relation"]] = counts["edges"].get(edge["relation"], 0) + 1
     value = {"sequence": sequence, "fingerprint": print_, "key": key, "filters": filters, "seeds": seeds,
-             "nodes": nodes, "edges": edges, "total_nodes": total, "truncated": total > len(nodes), "counts": counts,
+             "nodes": nodes, "edges": edges, "total_nodes": total, "truncated": total > len(nodes),
+             "truncated_families": truncation, "never_truncated": sorted(set(FAMILIES) - set(TRUNCATABLE)),
+             "counts": counts,
              "layout": {"algorithm": "fruchterman-reingold (grid repulsion)", "seed": 7, "version": LAYOUT_VERSION,
                         "positions": positions, "bounds": [min(xs), min(ys), max(xs), max(ys)],
                         "note": "disposable cache; the client may refine positions"},
@@ -605,29 +650,37 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
     return {**value, "cached": False}
 
 
-def node_record(view, identity):
-    """GET /api/map/node/{id}: the underlying record of one map node."""
+def node_record(view, identity, *, caller=None, full=False):
+    """GET /api/map/node/{id}: the underlying record of one map node, as the caller may see it (C2)."""
     from daw.commons.participants import describe
+    vis = Visibility.of(view, caller, full)
     if identity.startswith("question:"):
         from daw.commons.questions import question_summary
         _, agent, qid = identity.split(":", 2)
         return {"kind": "question", "id": identity, "record": question_summary(view, agent, qid)}
     if identity.startswith("post_"):
-        from daw.commons.checks import PLACEHOLDER_TITLE, withheld
-        if identity in withheld(view):  # C5: a refused write-up is a placeholder on every surface
+        if not view.one("SELECT id FROM post WHERE id=?", (identity,)):
+            raise DawError("unknown_post", identity)
+        if vis.withheld(identity):
+            return {"kind": "post", "id": identity, "record": vis.stub(identity), "hidden": True,
+                    "reason": vis.reason(identity)}
+        if vis.refused(identity):  # C5: a refused write-up is a placeholder on every surface
             post = view.one("SELECT id,author,created,channel,parent,supersedes FROM post WHERE id=?", (identity,))
-            return {"kind": "post", "id": identity, "record": {**post, "title": PLACEHOLDER_TITLE, "excerpt": None,
-                                                                "withheld": withheld(view)[identity]},
+            return {"kind": "post", "id": identity, "record": vis.placeholder(identity, {**post, "excerpt": None}),
                     "content_is_untrusted_data": True}
         post = view.post(identity)
         content = post["content"]
-        return {"kind": "post", "id": identity, "record": {
+
+        def related(sql):
+            return [vis.card(r["id"], r) if not vis.withheld(r["id"]) else vis.stub(r["id"])
+                    for r in view.rows(sql, (identity,))]
+        return {"kind": "post", "id": identity, "record": vis.card(identity, {
             "id": identity, "author": post["author"], "created": post["created"], "channel": post["channel"],
             "parent": post["parent"], "supersedes": post["supersedes"], "title": content.get("title"),
             "post_kind": content.get("kind"), "excerpt": (content.get("body") or "")[:1200],
-            "evidence": content.get("evidence"), "body_blob": post["body_blob"],
-            "superseded_by": view.rows("SELECT id,author,created FROM post WHERE supersedes=? ORDER BY seq", (identity,)),
-            "replies": view.rows("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq", (identity,))},
+            "evidence": vis.evidence(content.get("evidence")), "body_blob": post["body_blob"],
+            "superseded_by": related("SELECT id,author,created FROM post WHERE supersedes=? ORDER BY seq"),
+            "replies": related("SELECT id,author,created FROM post WHERE parent=? ORDER BY seq")}),
             "content_is_untrusted_data": True}
     if identity.startswith("mark_") or view.one("SELECT id FROM mark WHERE id=?", (identity,)):
         row = view.one("SELECT * FROM mark WHERE id=?", (identity,))
@@ -638,6 +691,9 @@ def node_record(view, identity):
         return {"kind": "participant", "id": identity, "record": describe(view.participant(identity))}
     for table, kind in (("claim", "claim"), ("frontier_item", "frontier_item")):
         row = view.one(f"SELECT * FROM {table} WHERE id=?", (identity,))
+        if row and kind == "claim" and vis.withheld(row["post"]):
+            return {"kind": kind, "id": identity, "record": vis.claim(row), "hidden": True,
+                    "reason": vis.reason(row["post"])}
         if row:
             for field in ("scope", "pointers"):
                 if isinstance(row.get(field), str):

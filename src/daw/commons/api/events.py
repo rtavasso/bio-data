@@ -7,7 +7,12 @@ observed from `runs/<run>/` and carry **no** `id:`, so they never move the recon
 - `delivery_heartbeat` when a running attempt's heartbeat.json changes (elapsed seconds, stdout bytes);
 - `run_receipt` when execution.json, state-receipt.json or final.md appears in a run folder.
 
-Synthetic messages are observations, not records; a reconnect does not replay them. The database is
+Synthetic messages are observations, not records; a reconnect does not replay them.
+
+Moderation (spec v2 C2) applies at frame time: every poll reads the current hide flags and an event that
+mentions a hidden post (by id or body blob) is framed without its text fields, so comment anchor quotes,
+titles and excerpts of a hidden post are withheld from live frames and from a backlog replayed after the
+hide (`daw.commons.moderation.Visibility.event`). Frames already delivered before a hide cannot be recalled. The database is
 polled read-only about once a second and a keepalive comment is sent every 15 seconds. `?once=true`
 returns the backlog (and current heartbeats) and closes; `GET /api/events/log` is the same backlog as
 JSON. `?named=false` sends every message as the default `message` type with `kind` inside `data`, for

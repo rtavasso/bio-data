@@ -52,6 +52,16 @@ function Toggle({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ClaimCard({ claim, onChange }: { claim: Claim; onChange?: () => void }) {
+  if (claim.hidden && claim.scope === undefined) {
+    return (
+      <article className="ledger-card withdrawn" aria-label={`Claim ${claim.id}`}>
+        <p className="muted">
+          Claim of a <Link to={`/post/${claim.post}`}>post hidden by moderation</Link>: {claim.reason ?? "no reason recorded"}.
+        </p>
+        <span className="mono muted">{claim.id}</span>
+      </article>
+    );
+  }
   const scope = Object.entries(claim.scope).filter(([, v]) => v);
   return (
     <article className={`ledger-card${claim.status === "withdrawn" ? " withdrawn" : ""}`} aria-label={`Claim ${claim.id}`}>

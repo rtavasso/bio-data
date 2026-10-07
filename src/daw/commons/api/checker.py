@@ -44,6 +44,6 @@ def writeup_check(post: str, view: View):
 def numbers(post: str, view: View):
     """The number report of one post (scopes, statuses, pointers); a hidden or withheld post reports nothing."""
     detail = views.post_view(view, post)
-    return {"post": post, "numbers": detail["numbers"], "summary": detail["number_summary"],
-            "unpointed": detail["unpointed_numbers"], "post_scoped": detail["post_scoped_numbers"],
-            "hidden": bool(detail["hidden"]), "withheld": bool(detail["withheld"])}
+    return {"post": post, "numbers": detail.get("numbers", []), "summary": detail.get("number_summary"),
+            "unpointed": detail.get("unpointed_numbers", []), "post_scoped": detail.get("post_scoped_numbers", []),
+            "hidden": bool(detail.get("hidden")), "withheld": bool(detail.get("withheld"))}

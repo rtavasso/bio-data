@@ -249,3 +249,27 @@ def test_locate_reports_absent_bytes_on_the_cohort(cohort):
     with pytest.raises(DawError):
         with Archive(cohort) as view:
             locators.locate(view, "artifact_" + "0" * 64, None)
+
+
+def test_refused_writeups_are_resolved_by_the_visibility_resolver_and_hidden_stays_a_stub(demo):
+    """C5 x C2: one resolver decides what is withheld. A refused write-up is a placeholder (author and time kept);
+    hiding it as well makes it the moderation stub; a caller holding `hide` asking for `full` reads it."""
+    from daw.commons.moderation import Visibility, hide
+    root, ctx = demo
+    done = deliver_writing(root, ctx, "Zebrafinch: the ratio is 4.")
+    post = done["answer"]
+    with Archive(root) as view:
+        reader = Visibility.of(view)
+        assert reader.refused(post) and not reader.withheld(post)
+        assert reader.card(post, {"id": post, "title": "x", "snippet": "y"})["title"] == checks.PLACEHOLDER_TITLE
+        operator = Visibility.of(view, view.participant("operator"), True)
+        assert not operator.refused(post)
+    http = client(root)
+    shown = http.get(f"/api/posts/{post}").json()
+    assert shown["content"] is None and shown["withheld"]["status"] == "refused" and shown["author"]
+    run = http.get(f"/api/runs/{shown['run']}").json()
+    assert run["final"]["text"] is None and run["final"]["title"] == checks.PLACEHOLDER_TITLE
+    with Community(root) as board:
+        hide(board, "operator", post, "checker test")
+    stub = http.get(f"/api/posts/{post}").json()
+    assert stub == {"id": post, "hidden": True, "reason": "checker test"}

@@ -1,11 +1,24 @@
 // Shapes returned by the observatory read API (daw.commons.views). Board content is untrusted data.
 import type { Participant } from "../api";
 
+/** The moderation record of a hidden post, served beside its content only to an operator who asked for it. */
 export interface Hidden {
   reason: string;
   actor: string;
   updated: string;
   event_seq: number;
+}
+
+/** What every reader gets for a post hidden by moderation (spec v2 C2): its identity and the reason, nothing else. */
+export interface HiddenStub {
+  id: string;
+  hidden: true;
+  reason: string | null;
+}
+
+/** True for a hidden post this reader may not see (an operator's full read carries content and `revealed`). */
+export function isWithheld(card: { hidden?: boolean | null; created?: unknown }): card is HiddenStub {
+  return card.hidden === true && card.created === undefined;
 }
 
 export interface EvidenceCounts {
@@ -16,7 +29,7 @@ export interface EvidenceCounts {
   anchor: boolean;
 }
 
-export interface PostCard {
+export interface VisiblePostCard {
   id: string;
   seq: number;
   author: Participant | { id: string; name?: string; kind?: string };
@@ -27,12 +40,19 @@ export interface PostCard {
   created: string;
   kind: string | null;
   evidence: EvidenceCounts;
-  hidden: Hidden | null;
+  /** false for visible posts; true (with `revealed`) when an operator reads a hidden post in full. */
+  hidden: boolean;
+  reason?: string | null;
+  moderation?: Hidden;
+  revealed?: boolean;
+  /** A write-up the number checker refused (spec v2 C5): title and snippet are its placeholder. */
   withheld?: { status: "refused"; source: "recorded" | "computed"; problems: number } | null;
   title: string | null;
   snippet: string | null;
   content_is_untrusted_data: true;
 }
+
+export type PostCard = VisiblePostCard | HiddenStub;
 
 export interface RequestBrief {
   id: string;
@@ -49,7 +69,7 @@ export interface SearchHit {
   snippet: string | null;
 }
 
-export interface ThreadCard extends PostCard {
+interface ThreadFields {
   type: "thread";
   replies: number;
   last_activity: string;
@@ -61,6 +81,9 @@ export interface ThreadCard extends PostCard {
   matched?: string[] | null;
   hits?: SearchHit[];
 }
+
+export type ThreadCard = (VisiblePostCard & ThreadFields)
+  | (HiddenStub & { type: "thread"; replies: number; matched?: string[] | null; hits?: SearchHit[] });
 
 export interface LibraryHit {
   type: "artifact" | "work" | string;
@@ -151,15 +174,17 @@ export interface AnchorRecord {
   length?: number;
   row_key?: string;
   node_id?: string;
-  quote?: string;
+  /** null when the anchored post is hidden by moderation (the quote is its text). */
+  quote?: string | null;
+  quote_withheld?: boolean;
 }
 
-export interface CommentCard extends PostCard {
+export type CommentCard = PostCard & {
   /** The request to the author when the comment asked them (Flow D); null otherwise. */
   request?: RequestBrief | null;
   /** Replies to the comment, e.g. the author's answer that closed its request. */
   answers?: PostCard[];
-}
+};
 
 export interface CommentGroup {
   anchor: AnchorRecord | null;
@@ -290,7 +315,11 @@ export interface PostDetail {
   body_blob: string;
   created: string;
   thread: string;
-  hidden: Hidden | null;
+  /** false, or true when an operator reads a hidden post with full=true (then `reason` and `moderation`). */
+  hidden: boolean;
+  reason?: string | null;
+  moderation?: Hidden;
+  revealed?: boolean;
   content: PostContent | null;
   content_is_untrusted_data: true;
   evidence_artifacts: EvidenceArtifact[];
@@ -313,11 +342,11 @@ export interface PostDetail {
   diff_from_superseded: Diff | null;
 }
 
-export interface ThreadNode extends PostCard {
-  corrects: string | null;
-  children: ThreadNode[];
-  corrections: ThreadNode[];
-}
+export type ThreadNode = (VisiblePostCard & { corrects: string | null; children: ThreadNode[]; corrections: ThreadNode[] })
+  | (HiddenStub & { children: ThreadNode[]; corrections: ThreadNode[] });
+
+/** GET /api/posts/{id}: the post, or the stub of a hidden post. */
+export type PostResponse = PostDetail | HiddenStub;
 
 export interface ThreadView {
   root: string;
@@ -433,5 +462,7 @@ export interface RunningItem {
   task_type: string | null;
   post: string;
   title: string | null;
+  post_hidden?: boolean;
+  reason?: string | null;
   heartbeat: Heartbeat | null;
 }

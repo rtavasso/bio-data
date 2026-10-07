@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from daw.commons import claims, frontier
 from daw.commons.api.deps import Board, Caller, Config, View
+from daw.commons.api.read import Reader
 from daw.util import DawError
 
 router = APIRouter(prefix="/api", tags=["ledger"])
@@ -33,9 +34,11 @@ def _fresh(view, config):
 
 
 @router.get("/claims")
-def claim_search(view: View, q: str = "", status: str | None = None, scope: str | None = None,
-                 author: str | None = None, post: str | None = None, limit: int = 50, offset: int = 0):
-    return claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=limit, offset=offset)
+def claim_search(view: View, caller: Reader, q: str = "", status: str | None = None, scope: str | None = None,
+                 author: str | None = None, post: str | None = None, limit: int = 50, offset: int = 0,
+                 full: bool = False):
+    return claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=limit, offset=offset,
+                              caller=caller, full=full)
 
 
 @router.get("/claims/contradictions")
@@ -44,17 +47,18 @@ def contradiction_queue(view: View):
 
 
 @router.get("/claims/{identity}")
-def claim(identity: str, view: View):
+def claim(identity: str, view: View, caller: Reader, full: bool = False):
+    from daw.commons.moderation import Visibility
     row = view.one("SELECT * FROM claim WHERE id=?", (identity,))
     if not row:
         raise DawError("unknown_claim", identity)
-    return claims.describe_claim(view, row)
+    return claims.describe_claim(view, row, vis=Visibility.of(view, caller, full))
 
 
 @router.get("/corrections/{post}")
-def correction(post: str, view: View):
+def correction(post: str, view: View, caller: Reader, full: bool = False):
     """Flow B: replacements, withdrawn claims and the readers affected by a superseded post."""
-    return claims.corrections(view, post)
+    return claims.corrections(view, post, caller=caller, full=full)
 
 
 @router.get("/frontier")
