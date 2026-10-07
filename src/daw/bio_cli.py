@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from daw.adapters import Sources
 from daw.artifacts import artifact_info, attach_artifact, check_output_role, find_derivation, provenance, register_artifact
 from daw.catalog import Workspace, restore_check
+from daw.cli_support import SuggestingGroup
 from daw.commons.cli import app as commons_app
 from daw.community_cli import app as community_app
 from daw.gaps import report_gaps
@@ -27,12 +28,12 @@ from daw.transport import Transport
 from daw.util import DawError, canonical, environment_identity, read_json
 from daw.work import create_question, record_event, show_work, sync_work
 
-app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="BIO — persistent public data, searchable contents, and reusable research work.")
-data_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Search and inspect data without a scientific acceptance gate.")
-artifact_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Find and reuse artifacts by their actual derivation.")
-work_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Question folders, notebooks, and prior research.")
-index_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Resumable progressive indexing and recurring feeds.")
-object_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Preserve exact source, code and reference bytes.")
+app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="BIO — persistent public data, searchable contents, and reusable research work.")
+data_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Search and inspect data without a scientific acceptance gate.")
+artifact_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Find and reuse artifacts by their actual derivation.")
+work_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Question folders, notebooks, and prior research.")
+index_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Resumable progressive indexing and recurring feeds.")
+object_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Preserve exact source, code and reference bytes.")
 app.add_typer(data_app, name="data")
 app.add_typer(artifact_app, name="artifact")
 app.add_typer(work_app, name="work")
@@ -40,7 +41,7 @@ app.add_typer(index_app, name="index")
 app.add_typer(object_app, name="object")
 app.add_typer(community_app, name="community")
 app.add_typer(commons_app, name="commons")
-mcp_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Expose the agent-safe bio commands to an MCP-capable harness.")
+mcp_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Expose the agent-safe bio commands to an MCP-capable harness.")
 app.add_typer(mcp_app, name="mcp")
 
 
@@ -348,6 +349,27 @@ def work_new(ctx: typer.Context, title: str, prompt: Path | None = None):
 def work_show(ctx: typer.Context, question: str, notebook: bool = False, events: int = 0):
     with session(ctx, False) as ws:
         emit(show_work(ws, question, notebook=notebook, events=events))
+
+
+@work_app.command("resume")
+def work_resume(ctx: typer.Context, question: str):
+    """Where this question stands, in one bounded record: status, notebook outline, registered outputs, latest
+    receipts, inherited scripts, open items, pending questions for you, and the command crib. Run it at the start
+    of a turn and after a compaction instead of re-reading outputs and crawling --help."""
+    from daw.resume import resume_work
+    inbox = None
+    board_root, agent = os.environ.get("BIO_COMMUNITY"), os.environ.get("BIO_AGENT")
+    if board_root and agent:
+        def inbox():
+            from daw.commons.boardservice import BoardClient
+            client = BoardClient.from_env()
+            if client:
+                return client.call("inbox", {"agent": agent})
+            from daw.community import Community
+            with Community(Path(board_root)) as board:
+                return board.inbox(agent)
+    with session(ctx, False) as ws:
+        emit(resume_work(ws, question, inbox=inbox))
 
 
 @work_app.command("sync")

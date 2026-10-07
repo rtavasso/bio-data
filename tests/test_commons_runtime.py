@@ -50,37 +50,34 @@ def test_registry_and_legacy_hermes_prompt_is_byte_identical():
         harness.get("copilot")
     post = {"id": "post_123", "parent": None, "content": {"body": "Body"}}
     trial = Path("/x/agents/agent_abc/trial")
-    # Frozen digests of the assignment prompt (question and answer notification). Spec v2 V1 changed exactly one
-    # sentence deliberately: the final-answer structure is now "claims first (a fenced ```claims block), prose
-    # second". The digests were re-frozen for that change only; swapping the old final-answer sentence back in
-    # must reproduce the pre-V1 digests, so any other drift in the legacy Hermes prompt still fails here.
-    # Spec v3 changed three sentences: read the overview then the LABBOOK at the start of a turn (V11), read the
-    # frontier before collecting (G5), and name the next computable step as a recorded frontier item (G1).
-    # Swapping them back must reproduce the v2 digests.
+    # Frozen digests of the assignment prompt (question and answer notification). Re-frozen three times, each
+    # for a deliberate change: spec v2 V1 (claims first), spec v3 (overview, frontier read, next step as a frontier
+    # item) and the 2026-10-07 transcript review (turn-start overview + work resume, prep budget, short-output and
+    # peek rules, eligibility/locus records, --publish-cited, ANSWER.md checkpoint, in-turn answering). The
+    # substitution checks below pin the sentences each change added, so any other drift still fails here.
     def digest_of(text):
         return hashlib.sha256(text.encode()).hexdigest()
     question, notification = (assignment_prompt("agent_abc", trial, post),
                               assignment_prompt("agent_abc", trial, post, notification=True))
-    assert digest_of(question) == "07e9c73d9f75ad88cc45cf727ec853bb1f6037e0a6ae1ec49e0d1b789ab44db6"
-    assert digest_of(notification) == "32fb80c0204cb6e12d7b68be67fc4b013b2612d42ebda3456d22c6ef90cb1c76"
+    assert digest_of(question) == "6a0ea04ece579cc6b668e404a267187d5da2ad14baeef42699ae375d95a968d9"
+    assert digest_of(notification) == "09abadd61224eb5b16a6ddee65e6a2be12a353f4bd08bd09f79e87f05a118f46"
     from daw import community_runtime
     v3_step = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Then name the next computable step"):]
     v2_step = ("Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
                "computable step. Receipt and lint details stay in the LABBOOK.\n")
 
     def v2(text):
-        return (text.replace("At the start of a turn read community overview, then your LABBOOK. ", "")
-                .replace("new data, read community frontier and search the shared forum", "new data, search the shared forum")
+        return (text.replace("new data, read community frontier and search the shared forum", "new data, search the shared forum")
                 .replace(v3_step, v2_step))
-    assert digest_of(v2(question)) == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
-    assert digest_of(v2(notification)) == "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
+    assert digest_of(v2(question)) == "671a4e21c5cf0a7252664c54b801853cda2e15e95da0c98ecae028f0c4743bb1"
+    assert digest_of(v2(notification)) == "6c0d6d23b637eb1c8c8431358787ea2cff4e75595f135a76b48272dd3ae61817"
     v1_sentence = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Structure it claims first"):]
     pre_v1 = ("Structure it as: the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the "
               "next computable step. Receipt and lint details stay in the LABBOOK.\n")
     old = v2(question).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
-    assert digest_of(old) == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
+    assert digest_of(old) == "42551b9f93906196ba7301fead06c88819163bf6b01e72103783f88b17cecca2"
     old = v2(notification).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
-    assert digest_of(old) == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
+    assert digest_of(old) == "323a161b0d59edfb46fddb519e9734e41defbe87a356b60d136389a1c70baf78"
 
 
 def test_codex_command_is_the_evaluator_launch_line_and_resumes_persistently(tmp_path):

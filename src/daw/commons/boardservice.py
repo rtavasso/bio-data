@@ -58,9 +58,9 @@ MAX_BODY = 32 * 2**20
 # Operation -> permission (daw.commons.permissions) and accepted request fields.
 OPERATIONS = {
     "publish": ("publish", {"title", "body", "artifacts", "question", "channel", "reply_to", "supersedes", "key",
-                            "claims", "frontier", "workspace", "author"}),
+                            "claims", "frontier", "workspace", "author", "publish_cited"}),
     "answer": ("answer", {"request", "title", "body", "artifacts", "question", "key", "claims", "frontier",
-                          "workspace", "author"}),
+                          "workspace", "author", "publish_cited"}),
     "reply": ("reply", {"post", "title", "body", "artifacts", "question", "key", "claims", "frontier", "workspace",
                         "author"}),
     "ask": ("ask", {"target", "body", "reply_to", "key", "notify", "author"}),
@@ -73,7 +73,7 @@ OPERATIONS = {
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
-    "verify": ("read", {"post"}),
+    "verify": ("read", {"post", "body", "numbers"}),
     "claims": ("read", {"q", "post", "status", "author", "limit", "offset"}),
 }
 
@@ -377,7 +377,7 @@ def execute(root, agent_id, operation, payload):
         if operation in {"publish", "answer", "reply"}:
             options = {"artifacts": _list(payload, "artifacts") or (), "question": _text(payload, "question"),
                        "claims": _list(payload, "claims", object), "frontier": _list(payload, "frontier", object),
-                       "request_key": _text(payload, "key"),
+                       "request_key": _text(payload, "key"), "publish_cited": bool(payload.get("publish_cited")),
                        "workspace": workspace() if payload.get("workspace") else None}
             if operation == "answer":
                 return answer(board, agent["id"], _text(payload, "request", True), _text(payload, "body", True),
@@ -422,7 +422,8 @@ def execute(root, agent_id, operation, payload):
         if operation == "show":
             return board.read(_text(payload, "post", True), agent["id"])
         if operation == "verify":
-            return board.verify(_text(payload, "post", True), agent["id"])
+            return board.verify(_text(payload, "post", True), agent["id"], body=_text(payload, "body"),
+                                numbers=bool(payload.get("numbers")))
         limit = _int(payload, "limit", 20 if operation == "search" else 50)
         offset = _int(payload, "offset", 0)
         if not 1 <= limit <= 200 or offset < 0:

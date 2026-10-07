@@ -101,6 +101,76 @@ def posts_naming(owner, artifact):
     return named
 
 
+def first_difference(published, local):
+    """The first line that differs between the published body and a local draft (bounded)."""
+    a, b = published.splitlines(), local.splitlines()
+    for n, (x, y) in enumerate(zip(a, b, strict=False), 1):
+        if x != y:
+            return {"line": n, "published": x[:200], "local": y[:200]}
+    return {"line": min(len(a), len(b)) + 1, "published": (a[len(b)][:200] if len(a) > len(b) else None),
+            "local": (b[len(a)][:200] if len(b) > len(a) else None)}
+
+
+# A number worth checking against a table: has a decimal point or exponent, or is at least three digits; it may
+# not be part of an identifier (artifact_…, GSE…, PMC…, post_…, a hash, a year-like token stays).
+PROSE_NUMBER = re.compile(r"(?<![\w./:-])[-+−]?(?:\d+\.\d+(?:[eE][-+]?\d+)?|\d+[eE][-+]?\d+|\d{3,})(?![\w./])")
+CELL_NUMBER = re.compile(r"^[-+−]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?$")
+
+
+def _decimals(token):
+    mantissa = token.split("e")[0].split("E")[0]
+    return len(mantissa.split(".")[1]) if "." in mantissa else 0
+
+
+def numbers_against_tables(library, body, evidence_artifacts):
+    """Each number in the prose, matched against the cells of the post's TSV/CSV artifacts, exactly or rounded
+    to the prose's own precision. Unmatched numbers are reported, never judged: a count or a citation number
+    may legitimately come from elsewhere. Tables larger than 8 MB are skipped and named."""
+    from daw.commons.locators import LocatorError, read_table
+    cells, tables, skipped = set(), [], []
+    for item in evidence_artifacts:
+        if not item.get("present"):
+            continue
+        row = library.one("SELECT output_blob,manifest_blob FROM artifact WHERE id=?", (item["id"],))
+        manifest = read_json(library.blob_path(row["manifest_blob"]))
+        name = (manifest.get("output") or {}).get("name", "")
+        path = library.blob_path(row["output_blob"])
+        if path.stat().st_size > 8 * 2**20:
+            skipped.append({"artifact": item["id"], "name": name, "reason": "table larger than 8 MB"})
+            continue
+        try:
+            header, rows = read_table(path.read_bytes(), name)
+        except LocatorError:
+            continue
+        tables.append({"artifact": item["id"], "name": name, "rows": len(rows)})
+        for line in rows:
+            for cell in line:
+                value = cell.strip().replace("−", "-")
+                if CELL_NUMBER.match(value):
+                    cells.add(value)
+    numeric_cells = []
+    for value in cells:
+        try:
+            numeric_cells.append(float(value))
+        except ValueError:
+            continue
+    checked, matched, unmatched = [], [], []
+    for token in dict.fromkeys(m.group(0) for m in PROSE_NUMBER.finditer(body)):
+        plain = token.replace("−", "-").lstrip("+")
+        checked.append(token)
+        try:
+            target = float(plain)
+        except ValueError:
+            continue
+        places = _decimals(plain)
+        if plain in cells or any(abs(round(v, places) - target) < 10 ** -(places + 6) for v in numeric_cells):
+            matched.append(token)
+        else:
+            unmatched.append(token)
+    return {"tables": tables, "skipped": skipped, "checked": len(checked), "matched": len(matched), "unmatched": unmatched,
+            "note": "unmatched numbers appear in the prose but in no cell of the post's own tables; confirm each against its source"}
+
+
 def find(owner, text="", *, limit=20, offset=0, family="forum", full=False, moderate=False, reader=None):
     """Search the shared board. family=artifact|work searches the library's published derivations and
     notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
@@ -291,10 +361,13 @@ class Community:
         return {**shown, "content": content, "replies": replies,
                 "acts": post_acts(self, identity, caller=caller), "acts_label": LABEL}
 
-    def verify(self, identity, reader=None, *, full=False):
+    def verify(self, identity, reader=None, *, full=False, body=None, numbers=False):
         """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts.
         Moderated like `read` (B15): a hidden post is its stub; its body hash, artifact ids and notebook state are
-        its content, and only a reader holding `hide` who asks for `full` verifies it."""
+        its content, and only a reader holding `hide` who asks for `full` verifies it. `body` (your local draft) is
+        compared with the published text, and `numbers` checks every number in the prose against the cells of the
+        post's own table artifacts: the one real error the cohort caught (P18 values transcribed as +1.080/-0.941
+        instead of +1.757706/-0.263582) was prose that no table supported."""
         from daw.commons.moderation import Visibility
         from daw.profiles import verify_object
         vis = Visibility.of(self, self.agent(reader) if reader else None, full)
@@ -303,6 +376,14 @@ class Community:
         if vis.withheld(identity):
             return {**vis.stub(identity), "verified": None, "note": "Hidden by moderation: not read back."}
         shown = self.show(identity)
+        extra = {}
+        if body is not None:
+            published = shown["content"]["body"]
+            extra["body_matches_local"] = published == body
+            if published != body:
+                extra["body_difference"] = first_difference(published, body)
+        if numbers:
+            extra["numbers"] = numbers_against_tables(self.library, shown["content"]["body"], shown["evidence_artifacts"])
         artifacts = []
         for item in shown["evidence_artifacts"]:
             ok = item["present"]
@@ -323,8 +404,9 @@ class Community:
             except DawError:
                 notebook_ok = False
         return {"post": identity, "body_sha256": shown["body_blob"], "body_verified": True,
-                "artifacts": artifacts, "notebook_verified": notebook_ok,
-                "verified": all(a["verified"] for a in artifacts) and notebook_ok is not False,
+                "artifacts": artifacts, "notebook_verified": notebook_ok, **extra,
+                "verified": all(a["verified"] for a in artifacts) and notebook_ok is not False
+                and extra.get("body_matches_local", True) and not (extra.get("numbers") or {}).get("unmatched"),
                 "note": "Byte readback only; it establishes neither scientific validity nor reuse."}
 
     def _index(self, post):
@@ -380,12 +462,34 @@ class Community:
         project_post(self, row)
         return identity
 
+    def cited_records(self, body, artifacts=(), source=None):
+        """Artifact and post ids named in a body, split into reachable and not. An artifact is reachable when it
+        is in this publication's evidence or already in the shared library; one the author's own workspace holds
+        is `local` (publishable with --publish-cited); a post must exist on this board. 16 of 97 cohort runs
+        hit `unknown_artifact` because a post named bytes its author had registered but never published."""
+        from daw.commons.claims import ARTIFACT_ID, POST_ID
+        selected = set(artifacts)
+        result = {"unreachable": [], "local": [], "unknown_posts": []}
+        for aid in sorted(set(ARTIFACT_ID.findall(body))):
+            if aid in selected or self.library.one("SELECT id FROM artifact WHERE id=?", (aid,)):
+                continue
+            if source is not None and source.one("SELECT id FROM artifact WHERE id=?", (aid,)):
+                result["local"].append(aid)
+            else:
+                result["unreachable"].append(aid)
+        for pid in sorted(set(POST_ID.findall(body))):
+            if not self.one("SELECT id FROM post WHERE id=?", (pid,)):
+                result["unknown_posts"].append(pid)
+        return result
+
     def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, claims=None,
-                frontier=None, anchored=None, **options):
+                frontier=None, anchored=None, publish_cited=False, **options):
         """Publish prose with selected evidence. `claims` (M1.6) is a list of {text, status, scope, pointers}
         stored as a library blob; every pointer must resolve. `frontier` items (M1.7) are recorded as work
         events in the author's own question first, then named in the post's evidence. `anchored` holds a reply's
-        thread fields (target, anchor, in_reply_to, anchor_root: `daw.commons.dialogue.reply`, spec v3 V12)."""
+        thread fields (target, anchor, in_reply_to, anchor_root: `daw.commons.dialogue.reply`, spec v3 V12).
+        Every artifact or post id the body names must be reachable by a reader (`cited_records`); `publish_cited`
+        adds the author's own unpublished artifacts to the evidence instead of refusing."""
         evidence = dict(anchored or {})
         source = Workspace(workspace) if workspace else None
         if (artifacts or question or frontier) and source is None:
@@ -393,6 +497,16 @@ class Community:
         if frontier and not question:
             raise DawError("frontier_question_required", "frontier items belong to a question")
         try:
+            cited = self.cited_records(body, artifacts, source)
+            if cited["local"] and publish_cited:
+                artifacts = [*artifacts, *cited["local"]]
+                cited["local"] = []
+            if cited["unreachable"] or cited["local"] or cited["unknown_posts"]:
+                missing = cited["unreachable"] + cited["local"] + cited["unknown_posts"]
+                hint = (" Add --publish-cited to publish your own registered artifacts named in the body"
+                        if cited["local"] else "") + (" (a workspace is needed to publish artifacts)" if source is None and cited["unreachable"] else "")
+                raise DawError("unpublished_citation", "the body names records a reader cannot fetch: "
+                               + ", ".join(missing) + "; name them with --artifact, remove them, or correct the id." + hint)
             # Pointers name immutable records (posts, library artifacts and blobs are never deleted),
             # so checking before the frontier events are written keeps a rejected publication side-effect free.
             checked = validate_claims(self, claims, artifacts) if claims is not None else None
@@ -433,7 +547,15 @@ class Community:
             shown = self.show(identity)
             # V1: evidence without claims is published, with a non-fatal warning in the output.
             warnings = publication_warnings(evidence, claims)
-            return {**shown, "warnings": warnings} if warnings else shown
+            if warnings:
+                shown = {**shown, "warnings": warnings}
+            # A publication is a milestone: questions waiting on the author are shown here, so the author can
+            # answer them in this turn (99 cohort inbox views showed a pending request to self; none was answered mid-run).
+            pending = [r["id"] for r in self.inbox(shown["author"]) if r["state"] in ("pending", "failed")]
+            if pending:
+                shown = {**shown, "pending_for_you": pending,
+                         "pending_note": "Answer with community answer REQUEST --body FILE when the bytes you hold settle it."}
+            return shown
         finally:
             if source:
                 source.close()

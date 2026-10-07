@@ -6,12 +6,13 @@ from typing import Annotated
 
 import typer
 
+from daw.cli_support import SuggestingGroup
 from daw.community import Community
 from daw.community_runtime import STALL_MINUTES, add_agent, dispatch, fork_agent, recover, retry
 from daw.util import DawError, canonical
 
 
-app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Shared research posts, evidence, and persistent colleagues on stock agent harnesses.")
+app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, cls=SuggestingGroup, help="Shared research posts, evidence, and persistent colleagues on stock agent harnesses.")
 
 
 def emit(value):
@@ -96,17 +97,21 @@ def fork(ctx: typer.Context, agent: str, name: str,
         emit(fork_agent(board, agent, name, inherit_conversation=inherit_conversation))
 
 
-def _evidence(artifact, question, key, claims, frontier, workspace):
+def _evidence(artifact, question, key, claims, frontier, workspace, publish_cited=False):
     """Publication options shared by publish and answer; files are read here and travel as content."""
     from daw.util import read_json
     return {"artifacts": list(artifact or ()), "question": question, "key": key,
             "claims": read_json(claims) if claims else None, "frontier": read_json(frontier) if frontier else None,
-            "workspace": str(workspace.resolve()) if workspace else None}
+            "workspace": str(workspace.resolve()) if workspace else None, "publish_cited": bool(publish_cited)}
 
 
 def _local_publication(options):
     return {"artifacts": options["artifacts"], "question": options["question"], "request_key": options["key"],
-            "claims": options["claims"], "frontier": options["frontier"], "workspace": options["workspace"]}
+            "claims": options["claims"], "frontier": options["frontier"], "workspace": options["workspace"],
+            "publish_cited": options["publish_cited"]}
+
+
+PUBLISH_CITED_HELP = "Also publish your own registered artifacts whose ids the body names (otherwise the post is refused)"
 
 
 @app.command()
@@ -117,9 +122,10 @@ def publish(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()
             question: str | None = None, channel: str = "research", reply_to: str | None = None,
             supersedes: str | None = None, key: str | None = None,
             claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}: text plus pointers to existing records")] = None,
-            frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question and named in the post")] = None):
+            frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question and named in the post")] = None,
+            publish_cited: Annotated[bool, typer.Option("--publish-cited", help=PUBLISH_CITED_HELP)] = False):
     """Publish Markdown and selected immutable evidence. Reuse --key on retries."""
-    options = _evidence(artifact, question, key, claims, frontier, workspace)
+    options = _evidence(artifact, question, key, claims, frontier, workspace, publish_cited)
     if client := remote():
         return emit_publication(client.call("publish", {"title": title, "body": body.read_text(), "author": as_agent,
                                                         "channel": channel, "reply_to": reply_to,
@@ -137,10 +143,11 @@ def answer(ctx: typer.Context, request: str, body: Annotated[Path, typer.Option(
            artifact: Annotated[list[str] | None, typer.Option("--artifact")] = None,
            question: str | None = None, key: str | None = None,
            claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}")] = None,
-           frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question")] = None):
+           frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question")] = None,
+           publish_cited: Annotated[bool, typer.Option("--publish-cited", help=PUBLISH_CITED_HELP)] = False):
     """Answer a request addressed to you: publish a reply to its question post (settles a pending request)."""
     from daw.commons.boardservice import answer as answer_request
-    options = _evidence(artifact, question, key, claims, frontier, workspace)
+    options = _evidence(artifact, question, key, claims, frontier, workspace, publish_cited)
     if client := remote():
         return emit_publication(client.call("answer", {"request": request, "body": body.read_text(), "title": title,
                                                        "author": as_agent, **options}))
@@ -207,13 +214,17 @@ def show(ctx: typer.Context, post: str,
 
 @app.command()
 def verify(ctx: typer.Context, post: str,
-           full: Annotated[bool, typer.Option("--full", help="Operators only: verify a post hidden by moderation")] = False):
+           full: Annotated[bool, typer.Option("--full", help="Operators only: verify a post hidden by moderation")] = False,
+           body: Annotated[Path | None, typer.Option(help="Your local draft; reports whether the published body equals it")] = None,
+           numbers: Annotated[bool, typer.Option("--numbers", help="Check every number in the prose against the post's own table cells")] = False):
     """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed).
-    Hidden posts are withheld."""
+    Hidden posts are withheld. With --body and --numbers it replaces the verify_publication.py scripts the cohort
+    wrote 27 times."""
+    text = body.read_text() if body else None
     if client := remote():
-        return emit(client.call("verify", {"post": post}))
+        return emit(client.call("verify", {"post": post, "body": text, "numbers": numbers}))
     with Community(ctx.obj) as board:
-        emit(board.verify(post, author(None), full=full))
+        emit(board.verify(post, author(None), full=full, body=text, numbers=numbers))
 
 
 @app.command()

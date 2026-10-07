@@ -12,6 +12,8 @@ from daw.util import read_json
 
 PLUMBING = re.compile(r"(retriev|acquire|fetch|download|get_source|register|publish|verify|validat|package|check_|readback|"
                       r"inspect_|research_io|community_|handoff|export|resume_)", re.IGNORECASE)
+VERIFY = re.compile(r"(verify|readback|validate_publication|check_publication)", re.IGNORECASE)
+INSPECT = re.compile(r"(inspect|peek|probe|extract_|dump_|locate_|inventory|survey_)", re.IGNORECASE)
 SUSPENSION_FLOOR_SECONDS = 60
 
 
@@ -104,6 +106,8 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
         tail = round((max(stamps) - last_ok[-1]["event"].get("timestamp", max(stamps))) / 60000, 1)
     final = folder / "final.md"
     summaries, fallbacks = compaction_summaries(folder, execution)
+    results = [str(e["event"].get("output") or "") for e in parsed["events"] if e["event"].get("type") == "tool_result"]
+    reads = [i["input"].get("path", "") for i in tools if i.get("name") == "read_file"]
     known_exit = [a for a in analyses if a.get("exit_code") is not None]
 
     def count(value):
@@ -126,6 +130,16 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
             "plumbing_scripts": count(sum(bool(PLUMBING.search(Path(p).name)) for p in scripts)),
             "compactions": count(len(stream_compactions(parsed)))
             if compactions_reported else None,
+            # Agent-efficiency counters from the transcript review (2026-10-07); each names a cohort failure mode.
+            "no_such_command": count(sum("No such command" in r for r in results)),          # guessed CLI verbs (25)
+            "unknown_artifact_errors": count(sum("unknown_artifact" in r for r in results)),  # unpublished citations (16 runs)
+            "truncated_terminal_results": count(sum("truncation_note" in r for r in results)),  # compound-command captures (58)
+            "verify_scripts_written": count(sum(bool(VERIFY.search(Path(p).name)) for p in scripts)),  # 69 hand-written
+            "inspection_scripts_written": count(sum(bool(INSPECT.search(Path(p).name)) for p in scripts)),  # 169 hand-written
+            "labbook_reads": count(sum(Path(p).name == "LABBOOK.md" for p in reads)),  # 100 repeats, 86% prompt-habit
+            "resume_calls": count(sum("work resume" in c for c in commands)),
+            "records_helper_calls": count(sum("records.py" in c for c in commands)),
+            "empty_final": (not final.read_text().strip()) if final.exists() else None,
             "minutes_after_last_successful_analysis": tail,
             "provider_citation_in_final": bool(PROVIDER_CITATION.search(final.read_text())) if final.exists() else None,
             "limitations": ["events.jsonl truncates tool outputs at 5000 chars; model-facing bodies are in agent-state/state.db",

@@ -15,14 +15,18 @@ SKILLS_DIR = Path(__file__).resolve().parents[2] / ".agents" / "skills"
 # This is the only place budgets are recorded. Growing one requires naming, in the same change, the dashboard
 # metric the added text moves (turn economics: help or re-orientation calls per turn, skill reads per turn,
 # ceremony tail, compactions, or cost per useful datum) and the direction it is expected to move it.
+# 2026-10-07 transcript review (agent-efficiency PR): bio-research +1024 and bio-community +1536 bytes for the
+# command crib, the peek/short-output rules, the records helper and the turn-start rule. Expected to lower
+# `help_calls` (238 in the first cohort), `labbook_reads` (138), `inspection_scripts_written` (169) and
+# `verify_scripts_written` (69) per cohort, and to raise `resume_calls` from 0; the audit report sums each.
 BUDGET_BYTES = {
     "bio-artifact-reuse": 4096,
-    "bio-community": 12288,
+    "bio-community": 13824,
     "bio-data-discovery": 17408,
     "bio-evaluation-review": 8704,
     "bio-hypothesis-discovery": 27648,
     "bio-mechanism-exploration": 17408,
-    "bio-research": 14336,
+    "bio-research": 15360,
     "bio-research-consolidation": 5120,
 }
 
