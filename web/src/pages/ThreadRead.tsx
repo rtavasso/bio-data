@@ -133,10 +133,15 @@ export default function ThreadRead() {
     }
   }, [reading, count, index, navigate]);
 
+  // One listener for the page's lifetime, always calling the latest handler: re-binding on every state change
+  // left a gap in which a key press was dropped (seen as a flaky test on CI).
+  const latest = useRef(onKey);
+  latest.current = onKey;
   useEffect(() => {
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onKey]);
+    const listener = (event: KeyboardEvent) => latest.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   // Highlight the current number in its post and keep it in view.
   useEffect(() => {
