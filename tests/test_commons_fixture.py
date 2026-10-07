@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from daw.commons.app import create_app
-from daw.commons.fixture import build_fixture, redact_stream_line, verify_fixture
+from daw.commons.fixture import KEEP, build_fixture, redact_stream_line, verify_fixture
 from daw.community import Community
 from daw.util import DawError
 
@@ -65,7 +65,17 @@ def test_fixture_excludes_downloaded_bytes_and_sessions_and_still_serves(demo, t
             if line.startswith("{") and json.loads(line).get("type") == "tool_result":
                 assert "[redacted " in json.loads(line)["output"]
     checked = verify_fixture(out)
-    assert checked["verified"] and checked["untracked"] == []
+    assert checked["verified"] and checked["untracked"] == [] and checked["empty_dirs"] == []
+    # B2: empty working directories carry a placeholder, so a checkout has them and serving creates none.
+    assert (out / "library/staging" / KEEP).is_file() and (out / "library/staging" / KEEP).stat().st_size == 0
+    (out / "library/staging" / KEEP).unlink()
+    assert verify_fixture(out)["empty_dirs"] == ["library/staging"]
+    (out / "library/staging" / KEEP).write_text("not a placeholder")
+    assert verify_fixture(out)["untracked"] == [] and verify_fixture(out)["empty_dirs"] == []  # staging is operational
+    (out / "library/proposals" / KEEP).write_text("not a placeholder")
+    assert verify_fixture(out)["untracked"] == [f"library/proposals/{KEEP}"]
+    (out / "library/staging" / KEEP).write_bytes(b"")
+    (out / "library/proposals" / KEEP).write_bytes(b"")
     (out / "FIXTURE.json").touch()
     # The fixture is a real commons to every reader: the API serves it, demo-only commands refuse it.
     client = TestClient(create_app(out, local_user="reviewer", static_dir=out / "missing"))
@@ -78,6 +88,7 @@ def test_fixture_excludes_downloaded_bytes_and_sessions_and_still_serves(demo, t
     timeline = client.get(f"/api/runs/{run_id}")
     assert timeline.status_code == 200 and timeline.json()["metrics"]["tool_calls"] >= 0
     assert client.get(f"/api/runs/{run_id}/messages").status_code != 200  # no session database in a fixture
+    assert verify_fixture(out)["empty_dirs"] == []  # serving created no working directory (B2)
     with pytest.raises(DawError, match="not_a_demo_commons"):
         from daw.commons.demo import _demo_root
         _demo_root(out)
@@ -87,7 +98,7 @@ def test_committed_cohort_fixture_verifies_and_serves_real_data(cohort):
     """The real PMP22 board, as committed: unchanged bytes, and every main screen's endpoint answers."""
     source = Path(__file__).resolve().parents[1] / "fixtures" / "pmp22-cohort"
     checked = verify_fixture(source)
-    assert checked["verified"] and checked["untracked"] == [], checked
+    assert checked["verified"] and checked["untracked"] == [] and checked["empty_dirs"] == [], checked
     manifest = json.loads((source / "FIXTURE.json").read_text())
     assert manifest["real_data"] is True and manifest["counts"]["runs"] == 97 and manifest["counts"]["agents"] == 25
     before = sqlite3.connect(cohort / "board.sqlite").execute("SELECT max(seq) FROM event").fetchone()[0]

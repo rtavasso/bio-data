@@ -34,6 +34,10 @@ RUN_FILES = ("execution.json", "state-receipt.json", "heartbeat.json", "final.md
              # V6 delivery records: clocks, compaction ids/hashes (no summary text), the receipt index.
              "clock.jsonl", "compactions.jsonl", "receipts.json")
 DROP_BOARD_TABLES = ("credential",)
+# Working directories of every workspace (the library and each agent's). Git does not carry empty directories, so
+# an empty one holds an empty KEEP file: a checkout is complete and serving it creates no directory (B2).
+WORKING_DIRS = ("blobs/sha256", "staging", "proposals", "runs", "reports", "questions", "profiles")
+KEEP = ".fixture-keep"
 STREAM_KEEP_INPUT_KEYS = {"command", "path", "name", "names", "pattern", "query", "limit", "offset", "role_filter",
                           "detail", "start_line", "end_line", "offset_line", "timeout", "session_id", "cwd"}
 
@@ -234,7 +238,8 @@ def build_fixture(source_root, out, *, name=None):
     # fixture then verifies unchanged until someone writes to it.
     manifest["settle"] = _settle(out)
     manifest["files"] = {str(p.relative_to(out)): file_hash(p) for p in sorted(out.rglob("*"))
-                         if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(out))}
+                         if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(out))
+                         and not _kept(out, p.relative_to(out))}
     manifest["counts"]["files"] = len(manifest["files"])
     manifest["counts"]["bytes"] = sum((out / p).stat().st_size for p in manifest["files"])
     del manifest["_root"]
@@ -263,11 +268,26 @@ def _settle(root):
     for leftover in Path(root).rglob("*.lock"):
         leftover.unlink(missing_ok=True)
     shutil.rmtree(Path(root) / "cache", ignore_errors=True)
-    # Empty working directories (staging) are not content and git does not carry them.
-    for staging in Path(root).rglob("staging"):
-        if staging.is_dir() and not any(staging.iterdir()):
-            staging.rmdir()
+    keep_working_dirs(root)
     return outcomes
+
+
+def keep_working_dirs(root):
+    """Create every workspace's working directories and leave a KEEP file in each empty one, so a checkout
+    carries them. Returns the placeholders written."""
+    root = Path(root)
+    written = []
+    for catalog in sorted(root.rglob("catalog.sqlite")):
+        workspace = catalog.parent
+        if workspace != root / "library" and workspace.name != "workspace":
+            continue
+        for part in WORKING_DIRS:
+            folder = workspace / part
+            folder.mkdir(parents=True, exist_ok=True)
+            if not any(folder.iterdir()):
+                (folder / KEEP).touch()
+                written.append(str((folder / KEEP).relative_to(root)))
+    return written
 
 
 def resettle_fixture(root, *, reason):
@@ -287,7 +307,8 @@ def resettle_fixture(root, *, reason):
     with Community(root) as board:
         sequence = board.one("SELECT coalesce(max(seq),0) AS n FROM event")["n"]
     files = {str(p.relative_to(root)): file_hash(p) for p in sorted(root.rglob("*"))
-             if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(root))}
+             if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(root))
+             and not _kept(root, p.relative_to(root))}
     changed = sorted(rel for rel, digest in files.items() if manifest["files"].get(rel) != digest)
     # Settling may add content-addressed library blobs (projection documents); nothing else may appear.
     added = sorted(set(files) - set(manifest["files"]))
@@ -310,6 +331,19 @@ def _operational(rel):
             or rel.name.endswith(("-shm", "-wal")) or str(rel) == "tenancy.json")
 
 
+def _kept(root, rel):
+    """An empty working directory's placeholder: structure, not content (a KEEP file with bytes is content)."""
+    return (rel.name == KEEP and rel.parent.name in {Path(part).name for part in WORKING_DIRS}
+            and (root / rel).stat().st_size == 0)
+
+
+def _empty_dirs(root):
+    """Empty directories that are neither tracked (holding a file or a KEEP placeholder) nor operational (caches).
+    A checkout drops them and serving recreates them, so one means the fixture is incomplete or was written to."""
+    return sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_dir() and not p.is_symlink()
+                  and not any(p.iterdir()) and "cache" not in p.relative_to(root).parts)
+
+
 def verify_fixture(root):
     root = Path(root).expanduser().resolve()
     manifest = json.loads((root / "FIXTURE.json").read_text())
@@ -324,7 +358,7 @@ def verify_fixture(root):
             changed.append(rel)
     extra = sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()
                    and str(p.relative_to(root)) not in manifest["files"] and p.name != "FIXTURE.json"
-                   and not _operational(p.relative_to(root)))
+                   and not _operational(p.relative_to(root)) and not _kept(root, p.relative_to(root)))
     return {"fixture": str(root), "name": manifest["name"], "board_sequence": manifest["board_sequence"],
             "files": len(manifest["files"]), "changed": changed, "missing": missing, "untracked": extra,
-            "verified": not changed and not missing}
+            "empty_dirs": _empty_dirs(root), "verified": not changed and not missing}
