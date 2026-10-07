@@ -165,7 +165,7 @@ class Fingerprints:
 
     def notebooks(self, order):
         if "board:notebooks" not in self.cache:
-            self.cache["board:notebooks"] = digest([self.covered("board:posts")] + [
+            self.cache["board:notebooks"] = digest([
                 [name, self.catalog(name)[0]] for name in order if name.startswith("workspace:")])
         return self.cache["board:notebooks"]
 
@@ -240,6 +240,11 @@ class Reader:
             fingerprint, _, covered = self.prints.of(name, self.order)
             if row is None:
                 value = "stale"
+            elif name == "board:notebooks":
+                # Notebook links depend on the workspaces (fingerprint) and grow with posts (covered).
+                posts = self.prints.covered("board:posts")
+                value = ("stale" if fingerprint != row["fingerprint"] or posts < (row["covered"] or 0)
+                         else "fresh" if posts == row["covered"] else "behind")
             elif covered is not None:
                 value = "fresh" if covered == row["covered"] else "behind" if covered > (row["covered"] or 0) else "stale"
             else:
@@ -275,7 +280,10 @@ class Reader:
         if name == "board:notebooks":
             def compute():
                 graph = Recorder()
-                segment_notebooks(self.view, graph, self._notebook_refs(), self._workspace_map())
+                refs = self._notebook_refs()
+                if state == "behind":
+                    refs = [r for r in refs if r["seq"] > (self.stored[name]["covered"] or 0)]
+                segment_notebooks(self.view, graph, refs, self._workspace_map())
                 return graph.ops, None
         else:
             def compute():
@@ -580,18 +588,26 @@ def _update(db, view, *, full):
                 report[name] = {"action": "appended" if after else "built", "ops": total, "added": len(ops),
                                 "seconds": round(time.perf_counter() - began, 4)}
                 continue
+            if name == "board:notebooks":
+                posts = prints.covered("board:posts")
+                after = row["covered"] if row and row["fingerprint"] == fingerprint and (row["covered"] or 0) <= posts else None
+                if after == posts:
+                    report[name] = {"action": "kept", "ops": row["ops"]}
+                    continue
+                refs = [dict(r) for r in db.execute("SELECT * FROM post_notebook WHERE seq>? ORDER BY seq", (after or 0,))]
+                graph = Recorder()
+                segment_notebooks(view, graph, refs, workspaces)
+                total = _write_segment(db, name, graph.ops, fingerprint, None, posts, time.perf_counter() - began,
+                                       append=after is not None, affected=affected)
+                report[name] = {"action": "appended" if after is not None else "rebuilt" if row else "built",
+                                "ops": total, "seconds": round(time.perf_counter() - began, 4)}
+                continue
             if row and row["fingerprint"] == fingerprint:
                 if stat is not None and row["stat"] != json.dumps(stat):
                     db.execute("UPDATE segment SET stat=? WHERE name=?", (json.dumps(stat), name))
                 report[name] = {"action": "kept", "ops": row["ops"]}
                 continue
-            if name == "board:notebooks":
-                refs = [dict(r) for r in db.execute("SELECT * FROM post_notebook ORDER BY seq")]
-                graph = Recorder()
-                segment_notebooks(view, graph, refs, workspaces)
-                ops = graph.ops
-            else:
-                ops, _ = record_segment(view, name, workspaces=workspaces)
+            ops, _ = record_segment(view, name, workspaces=workspaces)
             total = _write_segment(db, name, ops, fingerprint, stat, None, time.perf_counter() - began,
                                    affected=affected)
             report[name] = {"action": "rebuilt" if row else "built", "ops": total,

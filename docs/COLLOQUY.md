@@ -39,7 +39,9 @@ per-workspace catalogs, with no file over 50 MB). It keeps what agents and peopl
 the board, post bodies, claims and marks, artifact manifests, derived outputs
 up to 64 KB, notebooks, scripts and outputs up to 64 KB under each question, work
 events, receipts, prompts, finals and the tool-call streams with every tool
-output replaced by its length and sha256 (exit codes kept). It drops downloaded
+output replaced by its length and sha256 (exit codes kept); a rebuild also keeps
+the V6 run records (`clock.jsonl`, `compactions.jsonl` without summary text,
+`receipts.json` and receipt copies), which the committed snapshot predates. It drops downloaded
 bytes (source, full-text, reference and research-input blobs; dataset-profile
 bodies; `inputs/` and `sources/` under questions), the per-workspace content
 index (`feature_term`), model-facing session databases, rendered transcripts,

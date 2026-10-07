@@ -246,14 +246,17 @@ def test_timeline_places_a_suspension_by_clock_record(demo):
 
 # ---- reindexing old runs (the cohort) -------------------------------------------------------------------
 
-def _cohort_copy(cohort, tmp_path):
-    copy = tmp_path / "cohort"
+@pytest.fixture(scope="module")
+def cohort_rw(cohort, tmp_path_factory):
+    """One writable copy of the cohort for this module's tests (each copy is about 300 MB), used in file order:
+    reindex one run, reindex every run, then build the graph store and add a comment."""
+    copy = tmp_path_factory.mktemp("records-cohort") / "commons"
     shutil.copytree(cohort, copy, symlinks=True, ignore=shutil.ignore_patterns("cache"))
     (copy / "library" / "staging").mkdir(exist_ok=True)  # the fixture keeps no operational directories
     return copy
 
 
-def test_cohort_runs_keep_the_attributed_style_until_reindexed(cohort, tmp_path):
+def test_cohort_runs_keep_the_attributed_style_until_reindexed(cohort, cohort_rw):
     with Archive(cohort) as view:
         runs = view.rows("SELECT a.id,a.path FROM attempt a ORDER BY a.created")
         suspended = [r for r in runs if run_timeline(view, r["id"])["suspensions"]]
@@ -261,7 +264,7 @@ def test_cohort_runs_keep_the_attributed_style_until_reindexed(cohort, tmp_path)
     assert all(not (cohort / r["path"] / name).exists() for r in runs for name in records.RECORD_FILES)
     assert old["suspensions"][0]["attributed"] is True and old["records"]["clock"] is None
     assert all(r["attributed"] for r in old["receipts"])
-    copy = _cohort_copy(cohort, tmp_path)
+    copy = cohort_rw
     with Community(copy) as board:
         result = records.reindex_run(board, "operator", suspended[0]["id"])
         assert set(result["written"]) == {"clock.jsonl", "compactions.jsonl", "receipts.json"}
@@ -287,16 +290,19 @@ def test_cohort_runs_keep_the_attributed_style_until_reindexed(cohort, tmp_path)
     assert timeline["records"]["clock"]["reindexed"] is True
     assert all(r["attributed"] is False and r["source"] == "receipt" for r in timeline["receipts"])
     assert timeline["compaction_summaries"] is None and timeline["records"]["compactions"]["available"] is False
-    (event,) = _events(copy, "receipts_indexed")
+    (event,) = [e for e in _events(copy, "receipts_indexed") if e["run"] == suspended[0]["id"]]
     assert event["reindexed"] is True and event["run"] == suspended[0]["id"] and event["actor"] == "operator"
 
 
-def test_cohort_reindex_indexes_receipts_from_checkouts(cohort, tmp_path):
-    copy = _cohort_copy(cohort, tmp_path)
+def test_cohort_reindex_indexes_receipts_from_checkouts(cohort_rw):
+    copy = cohort_rw
     with Community(copy) as board:
         runs = [r["id"] for r in board.rows("SELECT id FROM attempt WHERE state!='running' ORDER BY created")]
-        results = [records.reindex_run(board, "operator", run) for run in runs]
-    counted = [r["receipts"]["receipts"] for r in results if r["receipts"]]
+        for run in runs:
+            records.reindex_run(board, "operator", run)
+    with Archive(copy) as view:
+        counted = [(records.read_receipts(view.run_folder(run)[1]) or {"counts": {"receipts": 0}})["counts"]["receipts"]
+                   for run in runs]
     # The cohort's checkouts hold 179 run_analysis.py receipts; each is indexed into at most one delivery.
     assert sum(counted) > 0
     seen = {}
@@ -396,10 +402,10 @@ def test_a_successful_write_refreshes_the_store_outside_the_get_handler(demo):
         assert graphstore.reader(view).status()["board:posts"] == "fresh"
 
 
-def test_cohort_graph_store_build_update_and_per_node_latency(cohort, tmp_path):
+def test_cohort_graph_store_build_update_and_per_node_latency(cohort_rw):
     """Measured on the real board: full build, incremental update, and per-node latency of the map node and
     artifact page (target well under 50 ms; the bound here is generous for CI machines)."""
-    copy = _cohort_copy(cohort, tmp_path)
+    copy = cohort_rw
     began = time.perf_counter()
     built = graphstore.refresh(copy, full=True)
     full_seconds = time.perf_counter() - began
