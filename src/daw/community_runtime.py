@@ -21,6 +21,7 @@ from daw.agent_capture import execute, transcript_text
 from daw.agent_setup import copy_research_tools
 from daw.catalog import Workspace
 from daw.commons import budgets, sandbox, tasks
+from daw.commons.claims import final_claims
 from daw.community import exclusive
 from daw.util import DawError, canonical, file_hash, now, read_json, write_json
 
@@ -212,9 +213,14 @@ ANALYSIS = ("Prefer the strongest computation you can execute now on bytes you h
             "Register measurements and derived tables; verification, readback and packaging files are LABBOOK "
             "notes, not artifacts. When a frozen prediction passes or a headline result is registered, publish "
             "it before further verification; after the final result, one verification pass, then finish.\n"
-            "Your final response will be posted automatically as a reply. Structure it as: the finding, the "
-            "evidence pointers (posts, artifacts, notebook), its limits, and the next computable step. Receipt "
-            "and lint details stay in the LABBOOK.\n")
+            "Your final response will be posted automatically as a reply. Structure it claims first, prose second: "
+            "begin with one fenced ```claims block holding a JSON list of {text, status, scope, pointers} whose "
+            "pointers name records that already exist (artifacts you published, posts, receipts, accessions; a table "
+            "cell as a locator pointer with row=KEY;col=NAME); .agents/skills/bio-research/scripts/claims_draft.py "
+            "drafts entries from your registered tables for you to edit. The block becomes your answer's ledger "
+            "claims; an invalid block is refused with a recorded reason and the answer is posted without claims. "
+            "Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
+            "computable step. Receipt and lint details stay in the LABBOOK.\n")
 SERVICE = ("With the operator's community service running, peer questions wake eligible idle agents. "
            "Answers appear in community inbox --sent; a notification turn is queued only for questions asked "
            "with --notify. Busy sessions receive queued work after their current turn. "
@@ -427,6 +433,11 @@ def _record_outcome(board, request, content, agent, run_id, started, answer, par
                    "Compare the outputs and publish a correction if a reported value changes.",
                    parent=original_post, evidence={"request": request["id"], "run": run_id, "replication": result},
                    key=f"replication-mismatch:{run_id}:{result['original']}")
+    if request["task_type"] == "scouting":
+        # V5: the datasets a scouting task inspected (work events or its answer's ```datasets block) are indexed
+        # into the frontier projection on this write path; a failed refresh is recorded, never fatal.
+        from daw.commons.frontier import reindex_after_publish
+        reindex_after_publish(board, answer)
     # Studio follow-up (M6.2, M6.3): review verdicts become marks; replications are confirmed or corrected.
     from daw.commons.studio import after_delivery
     followup = after_delivery(board, request)
@@ -591,10 +602,17 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             if request["task_type"]:
                 evidence["task_type"] = request["task_type"]
             with board.writer(), board.library.writer():
-                answer = board._post(agent["id"], "Re: " + post["content"]["title"], answers[-1],
+                # V1: the agent's own ```claims block becomes the answer's ledger claims (as publish --claims);
+                # an invalid block is refused with a recorded reason and the answer is still posted verbatim.
+                body, claims_evidence, refused = final_claims(board, answers[-1])
+                evidence.update(claims_evidence)
+                answer = board._post(agent["id"], "Re: " + post["content"]["title"], body,
                                      parent=post["id"], kind="answer_review" if notification else "answer", request_key="answer:" + request_id,
                                      evidence=evidence)
                 with board.db:
+                    if refused:
+                        board.event("answer_claims_refused", {"request": request_id, "run": run_id, "answer": answer,
+                                                              **refused})
                     board.db.execute("UPDATE request SET state='completed',answer=?,updated=? WHERE id=?", (answer, now(), request_id))
                     board.db.execute("UPDATE attempt SET state='completed',finished=? WHERE id=?", (now(), run_id))
                     board.event("delivery_completed", {"request": request_id, "run": run_id, "answer": answer,

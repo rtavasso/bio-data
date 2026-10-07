@@ -135,6 +135,155 @@ def validate_status(ws, payload, question):
     return {"question": question, "item": payload["item"], "status": payload["status"], "reason": reason}
 
 
+# ---- Scouting deliverables (V5): datasets inspected for an item, eligible or rejected with a reason ----------
+#
+# A scouting agent records each dataset it inspected for a frontier item, in its own workspace, as a
+# `frontier_item_dataset` work event (`bio work frontier-dataset`), or lists them in one fenced ```datasets JSON
+# block in its scouting answer. Either way an entry is {item, accession, inspected: true, eligible, reason,
+# receipt}: `item` is a frontier_item/retrieval_gap event of the question (own workspace) or a board frontier
+# item id (`frontier_…`, form-checked only, as a workspace cannot see the board); `receipt` is a receipt blob,
+# artifact or locator in the recording workspace. Only inspected datasets are deliverables: a candidate nobody
+# opened is a watcher query or a gap, not a scouting result. The projection indexes them per item.
+
+DATASET_EVENT = "frontier_item_dataset"
+DATASET_FIELDS = {"item", "accession", "inspected", "eligible", "reason", "receipt", "question"}
+FRONTIER_ID = re.compile(r"frontier_[0-9a-f]{32}")
+DATASETS_FENCE = re.compile(r"^ {0,3}```datasets[ \t]*\r?\n(.*?)\r?\n {0,3}```[ \t]*$", re.MULTILINE | re.DOTALL)
+YES, NO = (True, "yes", "true"), (False, "no", "false")
+
+
+def _flag(value, field):
+    if isinstance(value, str):
+        value = value.strip().casefold()
+    if value in YES:
+        return True
+    if value in NO:
+        return False
+    raise DawError("invalid_frontier_dataset", f"{field} is yes or no")
+
+
+def validate_dataset(ws, payload, question=None):
+    """One inspected dataset for a frontier item. With `question` (a work event), a local item must be an event
+    of that question; without it (an answer block), the item's own question is used."""
+    if not isinstance(payload, dict):
+        raise DawError("invalid_frontier_dataset", "use a JSON object")
+    unknown = set(payload) - DATASET_FIELDS
+    if unknown:
+        raise DawError("invalid_frontier_dataset", f"unknown fields {', '.join(sorted(unknown))}")
+    if question and payload.get("question", question) != question:
+        raise DawError("frontier_question_mismatch")
+    item = payload.get("item")
+    if not isinstance(item, str) or not item:
+        raise DawError("invalid_frontier_dataset", "item names a frontier item")
+    if not FRONTIER_ID.fullmatch(item):
+        target = ws.one("SELECT * FROM work_event WHERE id=?", (item,))
+        if not target or target["kind"] not in ("frontier_item", "retrieval_gap") \
+                or (question and target["question_id"] != question):
+            raise DawError("invalid_frontier_dataset_target",
+                           "name a frontier_item or retrieval_gap event of this question, or a board frontier_ id")
+        question = target["question_id"]
+    if not _flag(payload.get("inspected"), "inspected"):
+        raise DawError("frontier_dataset_not_inspected",
+                       "record only datasets you inspected; record a candidate as a watcher query or a gap instead")
+    receipt = payload.get("receipt")
+    if receipt is None:
+        raise DawError("invalid_frontier_dataset", "receipt names the inspection receipt (receipt, artifact or locator)")
+    receipt = check_workspace_pointer(ws, receipt)
+    if receipt["kind"] not in ("receipt", "artifact", "locator"):
+        raise DawError("invalid_frontier_dataset", "receipt is a receipt blob, an artifact or a locator")
+    return {"question": question, "item": item, "accession": _text(payload, "accession", 300, required=True),
+            "inspected": True, "eligible": _flag(payload.get("eligible"), "eligible"),
+            "reason": _text(payload, "reason", 2000, required=True), "receipt": receipt}
+
+
+def record_dataset(ws, question, *, item, accession, eligible, reason, receipt, inspected=True):
+    """Record one inspected dataset for an item (scouting deliverable). Caller holds the workspace writer lock."""
+    from daw.work import record_event
+    return record_event(ws, question, DATASET_EVENT, {"item": item, "accession": accession, "inspected": inspected,
+                                                      "eligible": eligible, "reason": reason, "receipt": receipt})
+
+
+def dataset_block(text):
+    """(entries, problems) from the one fenced ```datasets block of a scouting answer; ([], []) without one."""
+    blocks = DATASETS_FENCE.findall(text or "")
+    if not blocks:
+        return [], []
+    if len(blocks) > 1:
+        return [], [f"{len(blocks)} ```datasets blocks; write exactly one"]
+    try:
+        value = json.loads(blocks[0])
+    except ValueError as error:
+        return [], [f"invalid JSON: {error}"]
+    if isinstance(value, dict) and "datasets" in value:
+        value = value["datasets"]
+    if not isinstance(value, list) or len(value) > 500:
+        return [], ["the block holds a JSON list of at most 500 datasets"]
+    return value, []
+
+
+def check_dataset_block(ws, text):
+    """(valid entries, problems) of a scouting answer's block, resolved against the answering agent's workspace."""
+    entries, problems = dataset_block(text)
+    valid = []
+    for n, entry in enumerate(entries):
+        try:
+            valid.append(validate_dataset(ws, entry))
+        except DawError as error:
+            problems.append(f"dataset {n}: {error.reason}" + (f" ({error.detail})" if error.detail else ""))
+    return valid, problems
+
+
+def scouting_answers(owner):
+    """{author: [(post, created, body)]} of answers to scouting requests (the fenced block's source)."""
+    found = {}
+    for row in owner.rows("SELECT r.answer,p.author,p.created,p.body_blob FROM request r JOIN post p ON p.id=r.answer "
+                          "WHERE r.task_type='scouting' AND r.answer IS NOT NULL ORDER BY p.seq"):
+        try:
+            body = read_json(owner.library.blob_path(row["body_blob"])).get("body") or ""
+        except (DawError, OSError, ValueError):
+            continue
+        found.setdefault(row["author"], []).append((row["answer"], row["created"], body))
+    return found
+
+
+def _dataset_entries(agent, ws, owners, answers):
+    """(board item id, entry) pairs recorded by one participant: work events and scouting-answer blocks."""
+    out = []
+    for event in _events(ws, (DATASET_EVENT,)):
+        try:
+            payload = read_json(ws.blob_path(event["body_blob"]))
+        except (DawError, OSError, ValueError):
+            continue
+        if not isinstance(payload, dict) or not isinstance(payload.get("item"), str) \
+                or not isinstance(payload.get("eligible"), bool) or payload.get("inspected") is not True:
+            continue
+        out.append((payload, {"source": "work_event", "event": event["id"], "question": event["question_id"],
+                              "created": event["created"]}))
+    for post, created, body in answers.get(agent["id"], []):
+        for entry in check_dataset_block(ws, body)[0]:
+            out.append((entry, {"source": "answer_block", "post": post, "question": entry["question"],
+                                "created": created}))
+    pairs = []
+    for payload, origin in out:
+        item = payload["item"]
+        if not FRONTIER_ID.fullmatch(item):
+            owner = owners.get((origin["question"] if origin["source"] == "work_event" else payload.get("question"), item))
+            if not owner:
+                continue
+            item = item_id(owner, item)
+        pairs.append((item, {"accession": payload.get("accession"), "eligible": payload["eligible"],
+                             "reason": payload.get("reason"), "receipt": payload.get("receipt"),
+                             "recorded_by": agent["id"], **origin}))
+    return pairs
+
+
+def datasets_summary(datasets):
+    shown = [d for d in datasets or [] if not d.get("hidden")]
+    return {"inspected": len(shown), "eligible": sum(1 for d in shown if d.get("eligible")),
+            "rejected": sum(1 for d in shown if d.get("eligible") is False),
+            "withheld": sum(1 for d in datasets or [] if d.get("hidden"))}
+
+
 def parse_items(ws, question, value):
     """Validate a list of items (publish --frontier) without recording; returns record_item keyword sets."""
     if isinstance(value, dict) and "items" in value:
@@ -257,15 +406,15 @@ def refresh_key(owner):
     return f"{sequence}:{digest(counts)[:32]}"
 
 
-SOURCE_EVENTS = ("frontier_item", "frontier_item_status", "retrieval_gap", "retrieval_gap_withdrawal")
+SOURCE_EVENTS = ("frontier_item", "frontier_item_status", "retrieval_gap", "retrieval_gap_withdrawal", DATASET_EVENT)
 
 
 def frontier_key(owner):
     """What the projection is a function of: the last board event of a kind that owns frontier state, the
     participants with checkouts, and each workspace's frontier-relevant work events (count and latest time).
     Stored in projection_state by every rebuild; a read compares it to say whether the projection is behind."""
-    marks = ",".join("?" for _ in BOARD_EVENTS)
-    sequence = owner.one(f"SELECT coalesce(max(seq),0) AS n FROM event WHERE kind IN ({marks})", BOARD_EVENTS)["n"]
+    marks = ",".join("?" for _ in KEY_EVENTS)
+    sequence = owner.one(f"SELECT coalesce(max(seq),0) AS n FROM event WHERE kind IN ({marks})", KEY_EVENTS)["n"]
     kinds = ",".join("?" for _ in SOURCE_EVENTS)
     counts = []
     for agent, ws in workspaces(owner):
@@ -286,6 +435,8 @@ def stored_key(owner, name="frontier"):
 # Board events that own frontier state. The projection is a pure function of these events and the
 # participants' workspace records, so dropping the table and rebuilding reproduces it byte for byte.
 BOARD_EVENTS = ("promotion_created", "watcher_added", "watcher_disabled", "watcher_ran")
+# The projection key also covers completed deliveries: a scouting answer's ```datasets block is a source (V5).
+KEY_EVENTS = BOARD_EVENTS + ("delivery_completed",)
 COLUMNS = ("question", "author", "workspace", "kind", "text", "status", "blocked_by", "watcher_query",
            "pointers", "source", "created", "updated", "promoted_to")
 
@@ -355,15 +506,30 @@ def board_state(owner):
     return state
 
 
-def _status(agent_item, owned):
-    """(status, updated, candidate). An agent's closed/withdrawn status always wins; then a person's promotion;
-    then a watcher's candidate evidence recorded at or after the agent's latest status; otherwise the agent's
-    own status (an agent may record candidate_evidence itself, attributed to the author)."""
+def _status(agent_item, owned, datasets=()):
+    """(status, updated, candidate). An agent's closed/withdrawn status always wins. Then scouting (V5): inspected
+    datasets recorded at or after the agent's latest status and the latest promotion settle that promotion: any
+    eligible dataset makes the item candidate evidence (source `scouting`, so the analysis can be promoted from
+    it); none eligible returns the item to the agent's own status. Then a person's promotion; then a watcher's
+    candidate evidence recorded at or after the agent's latest status; otherwise the agent's own status (an agent
+    may record candidate_evidence itself, attributed to the author). Without datasets nothing here changes."""
     status, when = agent_item["status"], agent_item["status_time"]
     if status in ("closed", "withdrawn"):
         return status, when, None
-    if owned["promotions"]:
-        return "promoted", owned["promotions"][0]["created"], None
+    promoted = bool(owned["promotions"])
+    if datasets:
+        since = max([when] + [p["created"] for p in owned["promotions"][-1:]])
+        settled = [d for d in datasets if d["created"] >= since]
+        if settled:
+            eligible = [d for d in settled if d["eligible"]]
+            latest = max(d["created"] for d in settled)
+            if eligible:
+                return "candidate_evidence", latest, {"source": "scouting", "inspected": len(settled),
+                                                      "eligible": len(eligible),
+                                                      "records": [d.get("event") or d.get("post") for d in eligible]}
+            promoted = False  # scouting found nothing eligible: the promotion is settled, the item is the agent's again
+    if promoted:  # with scouting records, the promotion after them (an analysis promoted from candidate evidence)
+        return "promoted", owned["promotions"][-1 if datasets else 0]["created"], None
     latest = owned["candidates"][-1] if owned["candidates"] else None
     if latest and when <= latest["created"]:
         return "candidate_evidence", latest["created"], {k: v for k, v in latest.items() if k != "created"}
@@ -403,18 +569,26 @@ def _drop_documents(library, identities):
 def project(board):
     """The projection rows {id: values} computed from workspaces and board events, plus scan counts."""
     owners, computed, inherited = {}, [], 0
+    answers = scouting_answers(board)
+    found = {}
     for agent, ws in workspaces(board):
         for item in workspace_items(ws):
             if owners.setdefault((item["question"], item["event"]), agent["id"]) != agent["id"]:
                 inherited += 1
                 continue
             computed.append((agent, item))
+        for identity, entry in _dataset_entries(agent, ws, owners, answers):
+            # A fork's copy of an inherited event counts once, attributed to the original recorder (oldest first).
+            found.setdefault(identity, {}).setdefault((entry.get("event") or entry.get("post"), entry["accession"]), entry)
+    datasets = {i: sorted(entries.values(), key=lambda d: (d["created"], d.get("event") or d.get("post") or "",
+                                                           d.get("accession") or ""))
+                for i, entries in found.items()}
     state = board_state(board)
     rows = {}
     for agent, item in computed:
         identity = item_id(agent["id"], item["event"])
         owned = state.get(identity) or _empty_state()
-        status, when, candidate = _status(item, owned)
+        status, when, candidate = _status(item, owned, datasets.get(identity, ()))
         promotion = owned["promotions"][-1] if owned["promotions"] else None
         source = {"event": item["event"], "event_kind": item["event_kind"], "body_blob": item["body_blob"],
                   "missing_measurement": item["missing_measurement"], "key": item["key"], "post": item["post"],
@@ -423,6 +597,8 @@ def project(board):
                   "candidate_source": candidate["source"] if candidate else None, "candidate": candidate,
                   "promotion": {k: promotion[k] for k in ("request", "actor", "event_seq")} if promotion else None,
                   "watchers": sorted(owned["watchers"])}
+        if datasets.get(identity):  # only when recorded, so boards without scouting keep their rows byte for byte
+            source["datasets"] = datasets[identity]
         rows[identity] = {"question": item["question"], "author": agent["id"],
                           "workspace": str(Path(agent["trial"]) / "workspace"), "kind": item["kind"],
                           "text": item["text"], "status": status, "blocked_by": item["blocked_by"],
@@ -482,7 +658,11 @@ def rebuild_frontier(board, *, reason=None):
     question and event as an older participant) stay attributed to the original author; the fork's status
     events on inherited items are not applied. Operators run it as `bio commons frontier rebuild`."""
     with board.writer(), board.library.writer():
-        return reindex(board, reason=reason)
+        summary = reindex(board, reason=reason)
+        # Shared experiments (V5) read member questions from confirmation events; refreshed alongside.
+        from daw.commons.planning import rebuild_experiments
+        summary["shared_experiments"] = rebuild_experiments(board, reason=reason)
+        return summary
 
 
 def reindex_after_publish(board, post):
@@ -559,7 +739,8 @@ def confirm_cluster(board, actor, items, note=""):
     items = sorted(set(items or []))
     if len(items) < 2 or len(items) > 50:
         raise DawError("invalid_cluster", "confirm 2 to 50 frontier items")
-    rows = board.rows(f"SELECT id,question,text FROM frontier_item WHERE id IN ({','.join('?' for _ in items)})", items)
+    rows = board.rows(f"SELECT id,question,kind,text FROM frontier_item WHERE id IN ({','.join('?' for _ in items)})",
+                      items)
     if len(rows) != len(items):
         raise DawError("unknown_frontier_item", ", ".join(sorted(set(items) - {r["id"] for r in rows})))
     if len({r["question"] for r in rows}) < 2:
@@ -567,11 +748,20 @@ def confirm_cluster(board, actor, items, note=""):
     if not isinstance(note, str) or len(note) > 2000:
         raise DawError("invalid_cluster", "note is text up to 2000 characters")
     shared = sorted(frozenset.intersection(*(tokens(r["text"]) for r in rows)))
-    body = {"items": items, "participant": participant["id"], "note": note.strip(), "shared_terms": shared}
-    with board.writer(), board.db:
-        board.event("frontier_cluster_confirmed", body)
-        seq = board.db.execute("SELECT last_insert_rowid()").fetchone()[0]
-    return {"seq": seq, **body, "note_on_meaning": "attribution only; items are not merged or re-scoped"}
+    kinds = {r["kind"] for r in rows}
+    # V5: the event names the member questions (and the common kind), so the shared experiment it creates is
+    # rebuildable from the event alone.
+    body = {"items": items, "participant": participant["id"], "note": note.strip(), "shared_terms": shared,
+            "questions": sorted({r["question"] for r in rows}), "kind": kinds.pop() if len(kinds) == 1 else None}
+    from daw.commons.planning import experiment_id, rebuild_experiments
+    with board.writer():
+        with board.db:
+            board.event("frontier_cluster_confirmed", body)
+            seq = board.db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        # The confirmation merges nothing; it creates (or adds a confirmation to) a shared experiment record.
+        rebuild_experiments(board, reason=f"frontier_cluster_confirmed {seq}")
+    return {"seq": seq, **body, "shared_experiment": experiment_id(items),
+            "note_on_meaning": "attribution only; items are not merged or re-scoped"}
 
 
 def describe_item(row):
@@ -584,6 +774,7 @@ def describe_item(row):
     return {**row, "pointers": json.loads(row["pointers"]), "source": source, "watcher_query": query,
             "missing_measurement": source.get("missing_measurement"), "status_reason": source.get("status_reason"),
             "candidate_source": source.get("candidate_source"), "detail": source.get("detail") or {},
+            "datasets": source.get("datasets") or [], "datasets_summary": datasets_summary(source.get("datasets")),
             "content_is_untrusted_data": True}
 
 
@@ -642,6 +833,10 @@ def annotate(owner, items):
         records = list(by_watcher[item["id"]])
         if source.get("agent_status") == "candidate_evidence":
             records.insert(0, {"by": "author", "event": source.get("status_event"), "reason": source.get("status_reason")})
+        if source.get("candidate_source") == "scouting":  # V5: eligible datasets a scouting task inspected
+            candidate = source.get("candidate") or {}
+            records.append({"by": "scouting", "eligible": candidate.get("eligible"), "inspected": candidate.get("inspected"),
+                            "records": candidate.get("records")})
         by = sorted({r["by"] for r in records})
         item["candidate_evidence"] = {"set_by": " and ".join(by) if by else "unrecorded", "records": records}
     posts = {p["id"] for i in items for p in i.get("pointers") or [] if isinstance(p, dict) and _is_post_pointer(p)}
@@ -655,6 +850,14 @@ def annotate(owner, items):
                             for p in item.get("pointers") or []]
         post = item["source"].get("post") if isinstance(item.get("source"), dict) else None
         item["post_present"] = (post in present) if isinstance(post, str) else None
+    # A dataset listed in a scouting answer hidden by moderation is that post's content (spec v2 C2).
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(owner)
+    for item in items:
+        if item.get("datasets"):
+            item["datasets"] = [{"hidden": True, "post": d["post"], "reason": vis.reason(d["post"])}
+                                if d.get("post") and vis.withheld(d["post"]) else d for d in item["datasets"]]
+            item["datasets_summary"] = datasets_summary(item["datasets"])
     return items
 
 

@@ -53,6 +53,17 @@ test("post-scoped numbers are listed as this post's evidence, not linked from th
   expect(screen.getByLabelText("Number coverage").textContent).toContain("1 verified");
 });
 
+test("a refused final-answer claims block is shown; claim cell pointers open the artifact at the cell (V1)", async () => {
+  const cell = "row=B_vs_A;col=log2_ratio";
+  renderPost({ ...postDetail,
+    content: { ...postDetail.content!, evidence: { claims_refused: { reason: "claim_pointer_unresolved", detail: "artifact:artifact_0" } } },
+    claims: [{ ...postDetail.claims[0], pointers: [{ kind: "locator", id: ART, locator: cell }] }] } as PostResponse);
+  await screen.findByRole("heading", { name: "Marker contrast between conditions" });
+  expect(screen.getByText(/claims block was refused \(claim_pointer_unresolved: artifact:artifact_0\)/)).toBeTruthy();
+  const link = screen.getAllByRole("link").find((a) => a.getAttribute("href") === `/artifact/${ART}?locator=${encodeURIComponent(cell)}`);
+  expect(link?.textContent).toContain(cell);
+});
+
 test("a write-up the checker refused is a placeholder with its problem locations (C5)", async () => {
   renderPost({ ...postDetail, content: null, numbers: [], unpointed_numbers: [],
     withheld: { status: "refused", source: "recorded", title: "Write-up withheld: refused by the number checker",

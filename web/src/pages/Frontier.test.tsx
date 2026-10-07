@@ -110,4 +110,65 @@ test("wishlist links each measurement to the questions that need it", async () =
   render(<MemoryRouter initialEntries={["/frontier?tab=wishlist"]}><Frontier /></MemoryRouter>);
   expect(await screen.findByText("Donor identity per sample")).toBeTruthy();
   expect(screen.getByRole("link", { name: "Normalization" }).getAttribute("href")).toBe("/question/agent_b/q_b");
+  // V5: the proposal export, Markdown and static HTML.
+  expect(screen.getByRole("link", { name: "Markdown" }).getAttribute("href")).toBe("/api/wishlist/export?format=md&download=true");
+  expect(screen.getByRole("link", { name: "HTML" }).getAttribute("href")).toBe("/api/wishlist/export?format=html");
+});
+
+const request = { id: "request_1", post: "post_req", target: "agent_b", target_name: "bob", state: "pending",
+  task_type: "scouting", budget: { minutes: 20 }, deadline: null, answer: null, created: "2026-10-02T00:00:00+00:00" };
+const scouted = item({ id: "frontier_s", kind: "gap", text: "Per-donor counts.", status: "candidate_evidence",
+  candidate_evidence: { set_by: "scouting", records: [{ by: "scouting" }] },
+  datasets: [
+    { accession: "GSE2", eligible: false, reason: "No donor identity.", receipt: { kind: "receipt", id: "a".repeat(64) },
+      recorded_by: "agent_b", source: "work_event", event: "event_1" },
+    { accession: "GSE4", eligible: true, reason: "Donor-matched.", source: "answer_block", post: "post_answer" },
+  ],
+  datasets_summary: { inspected: 2, eligible: 1, rejected: 1, withheld: 0 } });
+const column = (key: string, label: string, extra: object = {}) => ({
+  key, label, items: [], experiments: [], count: 0, budget: {}, requests: 0, targets: [], ...extra });
+routes["/api/frontier/board"] = {
+  total: 4, experiments: 1, policy: "Columns follow recorded states.",
+  by_kind: {}, by_column: {}, allowance: { allowance: { minutes: 120 }, spent: { minutes: 20 }, remaining: { minutes: 100 }, unlimited: false },
+  columns: [
+    column("open", "Open", { items: [{ ...item({}), column: "open" }], count: 1 }),
+    column("blocked", "Blocked", { items: [{ ...items[2], status: "open", candidate_evidence: null, column: "blocked" }], count: 1 }),
+    column("candidate_evidence", "Candidate evidence", { items: [{ ...scouted, column: "candidate_evidence" }], count: 1 }),
+    column("promoted", "Promoted", {
+      items: [{ ...item({ id: "frontier_p", status: "promoted", promoted_to: "request_1" }), column: "promoted", request }],
+      experiments: [{ id: "experiment_1", kind: "proposed_experiment", text: "Shared proposed experiment confirmed across 2 questions",
+        status: "promoted", column: "promoted", questions: ["q_a", "q_b"], confirmations: [], shared_terms: ["qpcr"],
+        items: [{ id: "frontier_a", present: true, question: "q_a", question_title: "Marker question", author: "agent_a", status: "open" },
+                { id: "frontier_b", present: true, question: "q_b", question_title: "Normalization", author: "agent_b", status: "open" }],
+        promoted_to: "request_2", request: { ...request, id: "request_2", task_type: "research", state: "running" },
+        created: "2026-10-02T00:00:00+00:00", updated: "2026-10-02T00:00:00+00:00", note: "nothing was merged" }],
+      count: 2, budget: { minutes: 40 }, requests: 2, targets: [{ target: "agent_b", name: "bob", requests: 2 }] }),
+    column("closed", "Closed", { withdrawn: 0 }),
+  ],
+};
+
+test("board mode shows columns by state with requests, budgets, targets and promotion from a card", async () => {
+  render(<MemoryRouter initialEntries={["/frontier?tab=board"]}><Frontier /></MemoryRouter>);
+  const promoted = within(await screen.findByLabelText("Promoted column"));
+  expect(promoted.getByText(/2 requests · budget 40 minutes · targets bob \(2\)/)).toBeTruthy();
+  const card = within(promoted.getByLabelText("Card frontier_p"));
+  expect(card.getByLabelText("Promotion request").textContent).toMatch(/scouting.*bob.*20 minutes.*pending/);
+  expect(card.queryByRole("button", { name: "Promote" })).toBeNull(); // promoted cards are not promoted twice
+  // A shared experiment lists its member questions; its running request blocks a second promotion.
+  const experiment = within(promoted.getByLabelText("Shared experiment experiment_1"));
+  expect(experiment.getByRole("link", { name: "Normalization" }).getAttribute("href")).toBe("/question/agent_b/q_b");
+  expect(experiment.queryByRole("button", { name: "Promote" })).toBeNull();
+  expect(screen.getByLabelText("Your allowance").textContent).toContain("100 minutes remaining of 120 minutes");
+  // The blocked column holds open items with a recorded blocker; promotion from its card defaults to scouting.
+  const blocked = within(screen.getByLabelText("Blocked column"));
+  fireEvent.click(within(blocked.getByLabelText("Card frontier_c")).getByRole("button", { name: "Promote" }));
+  expect((blocked.getByLabelText("Task type") as HTMLSelectElement).value).toBe("scouting");
+  // Candidate evidence from scouting: inspected datasets, eligible and rejected with reasons; analysis promotes as research.
+  const candidate = within(screen.getByLabelText("Candidate evidence column"));
+  const scout = within(candidate.getByLabelText("Card frontier_s"));
+  expect(scout.getByText("Datasets inspected: 2 (1 eligible, 1 rejected)")).toBeTruthy();
+  expect(scout.getByText("No donor identity.")).toBeTruthy();
+  expect(scout.getByText("rejected")).toBeTruthy();
+  fireEvent.click(scout.getByRole("button", { name: "Promote" }));
+  expect((candidate.getByLabelText("Task type") as HTMLSelectElement).value).toBe("research");
 });
