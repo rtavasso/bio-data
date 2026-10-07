@@ -75,6 +75,10 @@ no catalog migration:
   object), missing_measurement?, pointers?, key?, post?}`; `kind` in
   `open_question|untestable|gap|proposed_experiment|next_step`. Validated in
   `work.record_event`, so `bio work event --kind frontier_item` is checked too.
+  A common alias (`blocked`, `wishlist`, `question`, `experiment`, `todo`, …;
+  `frontier.KIND_ALIASES`) is refused, never remapped: `invalid_frontier_kind`
+  names the kind to use and lists the vocabulary (v3 B4). A test checks that
+  every kind named in a preset or skill text is in `frontier.KINDS`.
   Pointers resolve in the author's workspace (artifact, receipt blob,
   accession form, locator); a post pointer is checked for form only because a
   workspace cannot see the board. With `key`, a retry returns the same event

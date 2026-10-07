@@ -1,5 +1,7 @@
 """Spec v2 V5: the frontier as the planning surface (board view, shared experiments, wishlist proposal, scouting)."""
 import json
+import re
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -266,3 +268,75 @@ def test_frontier_board_and_wishlist_export_on_the_cohort(cohort):
             + board["by_column"]["open"] == total
         text, _ = planning.export_wishlist(view, "md")
         assert text.count("\n## ") == frontier.wishlist(view)["total"] > 0
+
+
+# ---- v3 B4: every frontier kind named to an agent is one the validator accepts ---------------------------
+
+REPO = Path(__file__).resolve().parents[1]
+# A kind as agents are told to write it: `--kind a|b`, `kind a or b` / `kinds a, b and c` (parentheticals
+# skipped), `kind: a` and JSON `"kind": "a"`. `kind:id` (a pointer) and `kind of` are not kind names.
+_PROSE = frozenset("of is are the a an and or to in with that for when if by as at on from its your".split())
+_WORD = r"`?[a-z][a-z_]*`?(?:\s*\([^()]*\))?"
+_MENTION = re.compile(r"(?:--kind[ =]|\bkinds?:?\s+(?!(?:" + "|".join(_PROSE) + r")\b)|"
+                      r"\"kind\"\s*:\s*\")(" + _WORD + r"(?:\s*(?:,|\bor\b|\band\b|\||/)\s*" + _WORD + r")*)")
+
+
+def kinds_named(text):
+    """Frontier kinds named in `text`: kind mentions on lines that mention the frontier."""
+    found = []
+    for line in text.splitlines():
+        if "frontier" not in line.lower():
+            continue
+        for span in _MENTION.findall(line):
+            words = re.findall(r"[a-z][a-z_]*", re.sub(r"\([^()]*\)", " ", span))
+            found += [w for w in words if w not in _PROSE]
+    return found
+
+
+def _strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _strings(item)
+
+
+def test_every_frontier_kind_named_in_presets_and_skills_is_a_kind():
+    # The detector finds the v2 round-two wording that the validator rejected.
+    assert kinds_named("record a frontier item of kind blocked or wishlist with the exact missing measurement.") \
+        == ["blocked", "wishlist"]
+    assert kinds_named("frontier: `--kind open_question|gap`, `--pointer kind:id`; a kind of evidence") \
+        == ["open_question", "gap"]
+    texts = {}
+    for path in sorted((REPO / "docs" / "colloquy" / "presets").glob("*.json")):
+        texts[path] = "\n".join(_strings(json.loads(path.read_text())))
+    for path in sorted((REPO / ".agents" / "skills").rglob("*")):
+        if path.is_file() and path.suffix in {".md", ".py", ".yaml", ".json", ".txt"}:
+            texts[path] = path.read_text()
+    named = {(str(path.relative_to(REPO)), kind) for path, text in texts.items() for kind in kinds_named(text)}
+    assert {kind for _, kind in named} >= {"untestable", "proposed_experiment", "open_question", "next_step", "gap"}
+    assert [entry for entry in sorted(named) if entry[1] not in frontier.KINDS] == []
+
+
+def test_a_kind_alias_is_refused_with_the_kind_to_use_and_the_vocabulary(tmp_path):
+    from daw.work import create_question
+    ws = Workspace.create(tmp_path / "ws")
+    try:
+        with ws.writer():
+            question = create_question(ws, "Aliases")["question"]
+            for alias, use in (("blocked", "use untestable"), ("wishlist", "use proposed_experiment"),
+                               ("Question", "use open_question")):
+                with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
+                    frontier.record_item(ws, question, kind=alias, text="An item.")
+                assert use in refused.value.detail and "is not a frontier kind" in refused.value.detail
+                assert all(kind in refused.value.detail for kind in frontier.KINDS)
+            with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
+                frontier.record_item(ws, question, kind="hunch", text="An item.")
+            assert refused.value.detail == "unknown kind 'hunch'; frontier kinds are " + ", ".join(frontier.KINDS)
+            assert not ws.rows("SELECT id FROM work_event WHERE kind='frontier_item'")  # nothing remapped or recorded
+            assert frontier.record_item(ws, question, kind="untestable", text="An item.", blocked_by="No data.")["id"]
+    finally:
+        ws.close()
