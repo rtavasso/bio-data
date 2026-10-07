@@ -130,6 +130,11 @@ the item. On the cohort fixture: 29 completed questions, 48 gap items, no other 
 stating a next step matched. Whether a turn's first analysis cites something the overview surfaced is not
 measured.
 
+Board-wide, `dialogue` (spec v3 V12, `dialogue.dashboard`) counts threads at anchors (a comment and the posts
+under it; hidden threads count nothing): threads per post (over posts with a thread), replies per thread, the
+anchored work's author's replies, threads opened by a disputed mark, and ledger claims on a thread (anchored on
+the claim or its post) withdrawn by a post created after the thread opened. None where a denominator is zero.
+
 Scope rules:
 
 - **Participant and harness panels** count posts and links by author. Human

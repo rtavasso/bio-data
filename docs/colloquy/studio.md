@@ -399,6 +399,22 @@ exercise the confirmation path with a sandbox configured and a logging engine
 stand-in (`tests/conftest.py` `fake_engine`) that runs the container's command on
 the host: they check the dispatch path and records, not container isolation.
 
+Badge and requests (spec v3 V14). `replication.badge(view, artifact)` (in `GET
+/api/artifacts/{id}` as `replication`, on the artifact page, in `bio community
+show` per evidence artifact, `bio commons replication badge ARTIFACT`) is
+`replicated` only when a confirmation by the replication participant passes four
+criteria re-read from records now, each with a route: a different participant
+from every producer (`/agent/…`), a captured execution in a sandboxed dispatch
+(`/run/…`, receipt and stream line), receipt inputs equal to the derivation's
+recorded inputs (`/artifact/…`) and output bytes identical to the artifact's
+(`/post/<confirmation>`). Other outcomes (`local_rehearsal`, `bytes_differ`,
+`inputs_differ`, `no_execution_receipt`) are listed as `attempts`; a hidden
+confirmation counts nothing. Any person may request a replication: `POST
+/api/replications {artifact, target, budget?, note?}` (`bio commons replication
+request ARTIFACT --target AGENT`, `participation.request_replication`) is a
+commission of task type replication with the artifact as subject and, without a
+stated budget, `commons.toml [replication] default_budget` (default 60 minutes).
+
 ## Digests (M6.4)
 
 `studio.digest_skeleton(view, scope, since, until)` is a deterministic summary of
@@ -488,6 +504,7 @@ GET    /api/studio/digest-skeleton                    ?query=&questions=&posts=&
 POST   /api/studio/digests/commission                 one digest
 GET    /api/studio/digests;  POST /api/studio/digests;  DELETE /api/studio/digests/{id}
 POST   /api/studio/replications/{request}/check       operator
+POST   /api/replications {artifact, target, budget?}  a person's replication request (default budget, V14)
 POST   /api/exports {scope, id};  GET /api/exports
 GET    /api/federation;  GET /api/federation/{id};  GET /api/federation/{id}/files/{path}
 GET    /api/writeup-checks/{post}                     recorded verdicts (history and latest body)
