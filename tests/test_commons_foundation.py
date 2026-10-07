@@ -248,7 +248,7 @@ def _get_paths(app, ids):
     yield "/api/events?once=true"
     yield f"/api/marks?target_kind=post&target_id={ids['post']}"
     yield f"/api/requests?task_type=question&target={ids['agent']}"
-    yield f"/api/search?q=PMP22"
+    yield "/api/search?q=PMP22"
 
 
 def test_serving_the_cohort_and_every_get_route_leaves_the_fixture_verified(cohort_copy):

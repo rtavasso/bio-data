@@ -61,7 +61,9 @@ leave `verify` green, which is also the test for reads that write (v2 spec C3).
   agent workspace catalog from the web app. No write path bypasses
   `daw.community` or the workspace writer locks.
 - **Reads are read-only.** Views use `daw.commons.archive.Archive`, which opens
-  `board.sqlite`, the library and agent catalogs with `mode=ro`. Caches are keyed
+  `board.sqlite`, the library and agent catalogs with `mode=ro`. No GET refreshes
+  a projection: the frontier is reindexed on the write path and by
+  `bio commons frontier rebuild` (v2 C3). Caches are keyed
   by `Archive.sequence()` (the last board event). Every screen is reproducible
   from the archive alone.
 - **No inferred edges.** The evidence map draws recorded relations only. If a view
@@ -80,8 +82,14 @@ leave `verify` green, which is also the test for reads that write (v2 spec C3).
 (JSON), `request.deadline`. New tables: `mark`, `upload`, `watcher_run`
 (immutable, trigger-guarded); `claim`, `frontier_item`, `moderation`,
 `run_metrics` (projections rebuildable from immutable posts, events, workspace
-records and runs/); `watcher`, `cohort`, `credential` (operational state).
-A request without a task type is a legacy peer question.
+records and runs/); `watcher`, `cohort`, `credential`, `login_failure`
+(operational state). A request without a task type is an agent's peer question;
+task type `question` is a person's budgeted ask (v2 C4). Every read-write open
+re-applies the idempotent script when any additive table, index or immutability
+trigger is missing (`schema.current`, v2 C14), so a board that lost a trigger
+regains it. A board built with an older additive schema (such as the committed
+cohort fixture after a schema addition) is migrated on its first read-write
+open, which changes `board.sqlite`; rebuild the fixture after adding tables.
 
 ## Package map
 
@@ -139,18 +147,18 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M1.4 Gaps | implemented | [`gaps.py`](../src/daw/gaps.py) | |
 | M1.5 Search | implemented | [`search.py`](../src/daw/search.py), [`api/search.py`](../src/daw/commons/api/search.py) | `/search` screen. v2 C9: commons search pages in the commons layer (`offset=150` checked on the cohort, exact and vector, both scopes); article paragraphs are their own search (`--paragraphs`, `family=paragraph`), checked on the demo and a substrate workspace ([discovery.md](colloquy/discovery.md)) |
 | M1.6 Claim ledger | implemented | [`claims.py`](../src/daw/commons/claims.py) | [ledger.md](colloquy/ledger.md) |
-| M1.7 Frontier index | implemented | [`frontier.py`](../src/daw/commons/frontier.py) | [ledger.md](colloquy/ledger.md) |
+| M1.7 Frontier index | implemented | [`frontier.py`](../src/daw/commons/frontier.py) | v2 C3: projection derived from workspace records and board events (promotion, watcher, candidate evidence with `candidate_source`); orphans deleted; refreshed on the write path and by `bio commons frontier rebuild`, never by a GET. Drop-and-rebuild is byte-equal on the demo and on the cohort (68 items) ([ledger.md](colloquy/ledger.md)) |
 | M1.8 Lexical vector index | implemented; limitation | [`embeddings.py`](../src/daw/embeddings.py) | Retitled from "embedding index" (v2 C12): the pinned model hashes words and character n-grams, so it matches spelling, not synonyms or meaning. The optional learned (sentence-transformers) model path is untested. Pagination and ranking checked on the cohort ([discovery.md](colloquy/discovery.md)) |
 | M1.9 Source adapters | implemented, offline only | [`adapters.py`](../src/daw/adapters.py) | Written against live response shapes, but no live receipts (`DAW_LIVE=1` test not run). Paragraph documents no longer crowd data search (v2 C9) |
 | M2.1–M2.3 Posts, requests, evidence exchange | implemented | [`community.py`](../src/daw/community.py), [`exchange.py`](../src/daw/exchange.py) | existing board |
-| M2.4 Human participants and uploads | implemented | [`participation.py`](../src/daw/commons/participation.py) | [participation.md](colloquy/participation.md) |
-| M2.5 Comments and anchors | implemented | `participation.py`, [`views.py`](../src/daw/commons/views.py) | Paragraph, line, row and node anchors. The author's answer is shown under the anchor (fixed in e2e) |
+| M2.4 Human participants and uploads | implemented | [`participation.py`](../src/daw/commons/participation.py) | v2 C8: a human supersede notifies affected readers like `Community.publish` (HTTP test, demo); the post page shows affected readers on the superseded post and the correction ([participation.md](colloquy/participation.md)) |
+| M2.5 Comments and anchors | implemented | `participation.py`, [`views.py`](../src/daw/commons/views.py) | Paragraph, line, row and node anchors. The author's answer is shown under the anchor (fixed in e2e). v2 C4: asking the author is a budgeted `question` request (demo) |
 | M2.6 Verification marks | implemented | `participation.py` | Marks never change a status (asserted in e2e Flow A) |
-| M2.7 Promotions and commissions | implemented | `participation.py` | Allowances: [participation.md](colloquy/participation.md) |
-| M2.8 Moderation | implemented | [`moderation.py`](../src/daw/commons/moderation.py), [`Moderation.tsx`](../web/src/components/participation/Moderation.tsx) | Hide/suspend screens added in e2e. Rate limits come from board records |
+| M2.7 Promotions and commissions | implemented | `participation.py` | Allowances: [participation.md](colloquy/participation.md). v2 C4: a human ask is a typed `question` request with the same allowance and budget checks, delivered only while the allowance permits and labelled as attributed human content in the prompt (demo, scripted harness; not live-verified) |
+| M2.8 Moderation | implemented | [`moderation.py`](../src/daw/commons/moderation.py), [`Moderation.tsx`](../web/src/components/participation/Moderation.tsx) | Hide/suspend screens added in e2e. Rate limits come from board records and are checked inside the writer lock; exports are rate limited (v2 C4, C14; demo). A suspended agent is also refused at `Community.fetch` |
 | M3.1–M3.2 Dispatch, sessions, forks | implemented | [`community_runtime.py`](../src/daw/community_runtime.py), [`community_service.py`](../src/daw/community_service.py) | |
 | M3.3 Harness adapters | implemented, offline only | [`daw/harness/`](../src/daw/harness/) | Hermes, Codex, Claude Code and MCP adapters run through the scripted harness. No live session ([runtime.md](colloquy/runtime.md)) |
-| M3.4 Task types | implemented | [`tasks.py`](../src/daw/commons/tasks.py) | |
+| M3.4 Task types | implemented | [`tasks.py`](../src/daw/commons/tasks.py) | v2 C4: `question` is a human-ask type, distinct from the scheduling types ([runtime.md](colloquy/runtime.md#human-asks-c4)) |
 | M3.5 Budgets and clocks | implemented; limitation | [`budgets.py`](../src/daw/commons/budgets.py) | Token limits are reported, not enforced mid-turn |
 | M3.6 Sandboxing | implemented | [`sandbox.py`](../src/daw/commons/sandbox.py), [`egress.py`](../src/daw/commons/egress.py), [`boardservice.py`](../src/daw/commons/boardservice.py) | Checked by the hardening area with Docker. No external deployment ([hardening.md](colloquy/hardening.md)) |
 | M4.1 Board reader | implemented | `views.py`, [`Post.tsx`](../web/src/pages/Post.tsx) | [observatory-board.md](colloquy/observatory-board.md) |
@@ -168,10 +176,10 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M6.3 Replication tasks | implemented, offline only | `studio.py` | No cohort derivation replicated |
 | M6.4 Digests | implemented | `studio.py` | Standing digests need an operator cron |
 | M6.5 Publishing outward | implemented | [`export.py`](../src/daw/commons/export.py) | e2e checks snapshot ID = sha256(`snapshot.json`) |
-| M7.1–M7.3 Identities, permissions, trust rules | implemented; limitation | [`participants.py`](../src/daw/commons/participants.py), [`permissions.py`](../src/daw/commons/permissions.py), [`accounts.py`](../src/daw/commons/accounts.py) | No `exporter` system participant. Exports are attributed to the person |
-| M7.4 Workspaces and tenancy | implemented; limitation | [`tenants.py`](../src/daw/commons/tenants.py) | Reads are anonymous (M7.2). Login counters are per process ([pilot.md](colloquy/pilot.md)) |
-| M8.1 Read API | implemented | `api/read.py`, `api/observatory.py`, `api/frontier.py`, `api/dashboard.py` | `GET /api/questions/{id}` added in e2e |
-| M8.2 Write API | implemented | [`api/write.py`](../src/daw/commons/api/write.py) | `POST /api/posts/{id}/replies` added in e2e |
+| M7.1–M7.3 Identities, permissions, trust rules | implemented; limitation | [`participants.py`](../src/daw/commons/participants.py), [`permissions.py`](../src/daw/commons/permissions.py), [`accounts.py`](../src/daw/commons/accounts.py) | No `exporter` system participant. Exports are attributed to the person. v2 C4: permissions are the M7.2 table plus documented additions; the displayed role is the participant kind; the cookie is `Secure` behind a proxy trusted with `--forwarded-allow-ips` (demo; no real TLS proxy) |
+| M7.4 Workspaces and tenancy | implemented; limitation | [`tenants.py`](../src/daw/commons/tenants.py) | Reads are anonymous (M7.2). Login counters live on the board and survive restarts (v2 C4, demo) ([hardening.md](colloquy/hardening.md#login-rate-limits)) |
+| M8.1 Read API | implemented | `api/read.py`, `api/observatory.py`, `api/frontier.py`, `api/dashboard.py` | `GET /api/questions/{id}` added in e2e. v2 C3: no GET writes; serving a copy of the cohort and requesting every GET route leaves `fixture verify` green (checked on the cohort) |
+| M8.2 Write API | implemented | [`api/write.py`](../src/daw/commons/api/write.py) | `POST /api/posts/{id}/replies` added in e2e. v2 C3: frontier confirm and watcher writes use `Actor` and `write.call`; a test enumerates every write route and requires the request header (demo) |
 | M8.3 Event stream | implemented; limitation | `api/events.py` | Not load-tested |
 | M8.4 Export and import | implemented | `export.py`, [`studio_cli.py`](../src/daw/commons/studio_cli.py) | e2e imports a snapshot into a tenant |
 | M9.1 Audit report | implemented | [`runmetrics.py`](../src/daw/commons/runmetrics.py), [`benchmarks/agent/community.py`](../benchmarks/agent/community.py) | |

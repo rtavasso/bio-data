@@ -98,12 +98,28 @@ could write the board, which let an agent write `board.sqlite`, the library or
 ## Login rate limits
 
 `POST /api/session` counts failed token presentations per client address and
-per presented token (hash) in a bounded in-memory sliding window
-(`[login] attempts`, `window_seconds` in `commons.toml`, default 10 per 300 s,
-per-tenant overrides). When either key is over the limit the endpoint answers
+per presented token in a bounded sliding window (`[login] attempts`,
+`window_seconds` in `commons.toml`, default 10 per 300 s, per-tenant
+overrides). Since v2 (C4) the counters live **on the board**:
+`ratelimit.BoardAttemptLimiter` (same interface as the in-memory
+`AttemptLimiter`) writes each failure to the `login_failure` table (appended to
+`schema.TABLES`) under the board writer lock and reads it read-only, so a
+restart or a second worker process does not reset them. Keys are stored as
+sha256 digests (never raw addresses or tokens), rows older than the window are
+pruned on each write, each key keeps at most `attempts` rows and at most 10,000
+keys are kept. Times are wall-clock seconds. When either key is over the limit the endpoint answers
 429 `rate_limited` with `Retry-After`, even for a valid token from that
 address. Successful logins are not counted and never reset a counter. Bearer
 requests to other endpoints are not counted (tokens carry 256 bits).
+
+Client addresses and the cookie's `Secure` flag come from a reverse proxy only
+when it is trusted: `bio commons serve|host --forwarded-allow-ips ADDR[,ADDR]`
+wraps the app in uvicorn's proxy-headers middleware for those addresses
+(`create_app(..., forwarded_allow_ips=)`), and uvicorn's own forwarded-header
+handling is turned off, so nothing (not even 127.0.0.1) is trusted implicitly.
+Tested offline with the test client as the trusted proxy
+(`test_session_cookie_is_secure_only_behind_a_trusted_proxy`); not checked
+behind a real TLS proxy here.
 
 ## Operator `cohort` permission
 
@@ -166,8 +182,8 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   container check used the scripted demo checkout without a harness CLI. The
   agent container ran as uid 10001 to match the board service (the e2e host ran
   as root); in a deployment, the dispatcher, services and agents share one uid.
-- Login counters are per process and reset on restart; a multi-process
-  deployment behind a load balancer would need a shared store.
+- Login counters are shared through the board file: several processes of one
+  commons share them; separate hosts would need a shared board volume.
 - The board service needs a Unix-socket platform (Linux or macOS); its tests run
   on both, within each platform's socket path limit (104 bytes on macOS, 108 on
   Linux). Bind-mounting an agent's socket directory into its container was
