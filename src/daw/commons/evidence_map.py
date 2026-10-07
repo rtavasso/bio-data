@@ -280,13 +280,18 @@ def build(view, vis=None):
             graph.edge(body["reader"], body["post"], "fetched",
                        {"store": "board", "table": "event", "seq": event["seq"], "question": body.get("question")},
                        created=event["created"])
+    from daw.commons.checks import verified_claim_pointers
+    verified = verified_claim_pointers(view)  # V2: numbers in recorded write-up verdicts verified against the claim
     for claim in view.rows("SELECT id,post,author,ordinal,status,created FROM claim ORDER BY created,id"):
         if vis.withheld(claim["post"]):
             graph.node(claim["id"], "claim", store="board", label="claim of a hidden post", hidden=True,
                        reason=vis.reason(claim["post"]))
         else:
-            graph.node(claim["id"], "claim", store="board", label=f"claim {claim['ordinal']} · {claim['status']}",
-                       status=claim["status"], author=claim["author"], created=claim["created"])
+            count = verified.get(claim["id"], 0)
+            graph.node(claim["id"], "claim", store="board", label=f"claim {claim['ordinal']} · {claim['status']}"
+                       + (f" · {count} verified" if count else ""),
+                       status=claim["status"], author=claim["author"], created=claim["created"],
+                       verified_pointers=count)
         graph.edge(claim["id"], claim["post"], "claim_of", {"store": "board", "table": "claim", "id": claim["id"]},
                    created=claim["created"])
     for mark in view.rows("SELECT id,participant,target_kind,target_id,kind,created FROM mark ORDER BY created,id"):
@@ -309,7 +314,16 @@ def build(view, vis=None):
     for node in graph.nodes.values():
         node["stores"].sort()
     _label_superseded(graph)
+    _label_withheld(vis, graph)
     return graph
+
+
+def _label_withheld(vis, graph):
+    """C5: a write-up the number checker refused is a placeholder here too; its recorded edges stay."""
+    for pid in vis.refused_writeups:
+        node = graph.nodes.get(pid)
+        if node is not None and vis.refused(pid):
+            node.update(label=vis.title(pid, None), title=None, withheld=True)
 
 
 def _label_superseded(graph):
@@ -650,6 +664,10 @@ def node_record(view, identity, *, caller=None, full=False):
         if vis.withheld(identity):
             return {"kind": "post", "id": identity, "record": vis.stub(identity), "hidden": True,
                     "reason": vis.reason(identity)}
+        if vis.refused(identity):  # C5: a refused write-up is a placeholder on every surface
+            post = view.one("SELECT id,author,created,channel,parent,supersedes FROM post WHERE id=?", (identity,))
+            return {"kind": "post", "id": identity, "record": vis.placeholder(identity, {**post, "excerpt": None}),
+                    "content_is_untrusted_data": True}
         post = view.post(identity)
         content = post["content"]
 

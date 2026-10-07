@@ -30,7 +30,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from daw.commons import tasks, views, writeup
+from daw.commons import checks, tasks, views, writeup
 from daw.commons.archive import Archive
 from daw.commons.moderation import check_rate
 from daw.commons.permissions import require
@@ -417,9 +417,12 @@ def replication_check(board, request_id, *, actor=None):
 
 
 def after_delivery(board, request):
-    """Runtime post-delivery hook for typed requests: review marks and replication checks. Never raises."""
+    """Runtime post-delivery hook for typed requests: review marks, replication checks and (writing, digest) the
+    number checker's verdict recorded as a `writeup_check` event (daw.commons.checks). Never raises."""
     request = board.one("SELECT * FROM request WHERE id=?", (request["id"],))
     try:
+        if request["task_type"] in checks.WRITEUP_TYPES:
+            return {"writeup_checks": checks.after_delivery(board, request)}
         if request["task_type"] == "review" and request["answer"]:
             return {"review": record_review_marks(board, request["answer"])}
         if request["task_type"] == "replication":
@@ -507,10 +510,10 @@ def digest_skeleton(view, scope, since, until):
         if vis.withheld(pid):
             return {**vis.stub(pid), "created": row["created"], "supersedes": row["supersedes"]}
         author = index["people"].get(row["author"], {})
-        return {"id": pid, "title": row["content"].get("title"),
+        return {"id": pid, "title": vis.title(pid, row["content"].get("title")),
                 "author": row["author"], "author_name": author.get("name"), "kind": row["content"].get("kind"),
                 "created": row["created"], "parent": row["parent"], "supersedes": row["supersedes"],
-                "hidden": False}
+                "hidden": False, "withheld": vis.refused(pid)}
 
     posts = [brief(pid) for pid, row in index["posts"].items()
              if pid in in_scope and within(row["created"]) and row["content"].get("kind") != "notice"]
@@ -677,7 +680,7 @@ def _display(view, index, pid, vis):
     row = index["posts"].get(pid)
     if vis.withheld(pid):
         return vis.stub(pid)
-    return {"id": pid, "title": row["content"].get("title") if row else None,
+    return {"id": pid, "title": vis.title(pid, row["content"].get("title")) if row else None,
             "author": row["author"] if row else None, "kind": row["content"].get("kind") if row else None}
 
 

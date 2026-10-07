@@ -2,7 +2,7 @@ import hashlib
 import sqlite3
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 from daw.catalog import Workspace, restore_check
 from daw.models import Asset, Budgets
@@ -62,6 +62,7 @@ def test_nonfinite_work_keys_rejected(number):
         canonical({"value": number})
 
 
+@settings(deadline=None)  # wall-clock deadlines flake under a loaded full suite; the property is unchanged
 @given(st.dictionaries(st.text(max_size=15), st.integers(), max_size=8))
 def test_canonical_key_order_property(value):
     assert digest(value) == digest(dict(reversed(list(value.items()))))

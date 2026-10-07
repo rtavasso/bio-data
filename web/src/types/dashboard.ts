@@ -53,6 +53,21 @@ export interface BoardCriteria {
   registered_artifacts: number;
   reuse: { backed: number; unbacked: number; backed_ratio: Num };
   claims: ClaimCounts | null;
+  numbers?: NumberCoverage | null;
+}
+
+// Number coverage of a group's finals (spec v2 C11, V1): pointers at the number (cell, claim, line) versus only the
+// post's evidence list (post) or none; statuses from the value-in-record check. null: no final in the group.
+export interface NumberCoverage {
+  finals: number;
+  numbers: number;
+  scopes: { cell: number; claim: number; line: number; post: number; none: number };
+  statuses: { verified: number; unverified: number; post_scoped: number; unpointed: number };
+  number_level: number;
+  number_level_share: Num;
+  claim_share: Num;
+  cell_share: Num;
+  verified_share: Num;
 }
 
 export interface Group {

@@ -17,10 +17,11 @@ const rendered: Writeup = {
     type: "paragraph", offset: 0, byline: false,
     sentences: [{
       id: "s1", offset: 0, length: 40, pointers: [claim],
-      numbers: [{ text: "1.45", offset: 20, length: 4, covered_by: [claim], scope: "pointer" }],
+      numbers: [{ text: "1.45", offset: 14, length: 4, covered_by: [claim], scope: "claim", status: "verified",
+        pointers: [{ id: claim, kind: "claim", result: "verified", at: "claim_text" }] }],
       tokens: [
         { t: "text", text: "The ratio is ", offset: 0 },
-        { t: "pointer", id: claim, kind: "claim", text: "1.45", form: "link", offset: 13, length: 50 },
+        { t: "pointer", id: claim, kind: "claim", text: "1.45", form: "link", offset: 13, length: 50, text_offset: 14 },
         { t: "text", text: ".", offset: 63 },
       ],
     }],
@@ -89,4 +90,53 @@ test("a refused write-up lists every unpointed number with its location and is n
   expect(within(refusal).getByText(/line 2, offset 31/)).toBeTruthy();
   expect(refusal.querySelector("mark")?.textContent).toBe("3");
   expect(screen.queryByLabelText("Pointer detail")).toBeNull();
+});
+
+test("numbers are marked in place: verified underlined, unverified marked with the reason", async () => {
+  const cell = `${artifact}#row=B_vs_A;col=log2_ratio`;
+  mount({
+    ...rendered, flagged: false, regeneration_required: null,
+    stats: { numbers: 2, pointed: 2, units: 1, pointers: 2, verified: 1, unverified: 1, unpointed: 0 },
+    verdict: { source: "recorded", rules: "writeup-pointers/2", created: "2026-10-06T00:00:00+00:00" },
+    blocks: [{
+      type: "paragraph", offset: 0, byline: false,
+      sentences: [{
+        id: "s1", offset: 0, length: 60, pointers: [artifact],
+        numbers: [
+          { text: "1.54", offset: 9, length: 4, covered_by: [artifact], scope: "cell", status: "verified",
+            pointers: [{ id: artifact, kind: "artifact", locator: "row=B_vs_A;col=log2_ratio", result: "verified", at: "cell" }] },
+          { text: "1.45", offset: 30, length: 4, covered_by: [artifact], scope: "line", status: "unverified",
+            pointers: [{ id: artifact, kind: "artifact", result: "unverified", reason: "the value does not occur in the output bytes" }] },
+        ],
+        tokens: [
+          { t: "text", text: "Measured ", offset: 0 },
+          { t: "pointer", id: artifact, kind: "artifact", locator: "row=B_vs_A;col=log2_ratio", text: "1.54", form: "link", offset: 8, length: 80, text_offset: 9 },
+          { t: "text", text: "; reported ", offset: 19 },
+          { t: "text", text: "1.45 ", offset: 30 },
+          { t: "pointer", id: artifact, kind: "artifact", text: cell, form: "citation", offset: 35, length: 70 },
+        ],
+      }],
+    }],
+    pointers: { [artifact]: { id: artifact, kind: "artifact", present: true, title: "Contrast", output_role: "contrast-table" } },
+  });
+  const verified = await screen.findByText("1.54", { selector: ".num-verified" });
+  expect(verified.closest("a")).toBeTruthy();
+  const unverified = screen.getByText("1.45", { selector: ".num-unverified" });
+  expect(unverified.getAttribute("title")).toContain("the value does not occur in the output bytes");
+  expect(screen.getByText(/1 verified/)).toBeTruthy();
+  expect(screen.getByText(/verdict recorded/)).toBeTruthy();
+});
+
+test("a withheld write-up shows the recorded verdict's locations without its source", async () => {
+  mount({
+    status: "refused", rules: "writeup-pointers/2", post: { ...rendered.post, title: "Write-up withheld: refused by the number checker" },
+    request: null, regeneration_required: null, placeholder: "This write-up was refused by the number checker (1 problem).",
+    verdict: { source: "recorded", rules: "writeup-pointers/2" },
+    problems: [{ kind: "unpointed_number", text: "4", offset: 48, length: 1, line: 1, reason: "no claim or artifact pointer at this number",
+      context: "The ratio is 1.54 [claim] across 4 samples.", context_start: 15 }],
+  }, 422);
+  const refusal = await screen.findByRole("alert", { name: "Renderer refusal" });
+  expect(within(refusal).getByText(/refused by the number checker/)).toBeTruthy();
+  expect(refusal.querySelector("mark")?.textContent).toBe("4");
+  expect(screen.getByRole("heading", { name: "Write-up withheld: refused by the number checker" })).toBeTruthy();
 });

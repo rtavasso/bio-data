@@ -25,6 +25,7 @@ export interface MapNode {
   hidden?: boolean;
   status?: string;
   superseded_by?: string[];
+  verified_pointers?: number;  // claim nodes: verified number->claim pointers in recorded write-up verdicts (V2)
   [field: string]: unknown;
 }
 

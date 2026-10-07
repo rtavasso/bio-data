@@ -120,18 +120,24 @@ INSTRUCTIONS = {
                 "and measured-zero distinct. Your final response (eligibility notes with identifiers) will be posted "
                 "automatically as a reply.\n",
     "writing": "This is a WRITING task. Write a narrative from recorded findings. Cite only ledger claims and artifacts "
-               "for results; posts may be cited for context. Pointer syntax: a Markdown link whose target is a record "
-               "identifier, [1.54](claim_ID), [the contrast table](artifact_ID), [the correction](post_ID), or a "
-               "bracketed citation [claim_ID] at the end of the sentence it supports; a figure is "
-               "![caption](artifact_ID). Every number must sit inside a claim or artifact pointer link or in a "
-               "sentence that cites a claim or artifact (list ordinals, heading numbers and byline dates excepted); "
-               "the Studio renderer refuses a write-up with an unpointed number or an unresolved pointer, and flags one "
-               "whose cited claims were withdrawn. Say plainly where evidence is missing. Do not introduce new "
-               "analyses. Your final response will be posted automatically.\n",
+               "for results. Pointer syntax: a Markdown link whose target is a record identifier, [1.54](claim_ID), "
+               "[the contrast table](artifact_ID), or a cell of a table artifact "
+               "[1.54](artifact_ID#row=ROW_KEY;col=COLUMN) (JSON: #key=a.b[2].c; add ;round=N for the decimals you "
+               "show), or a bracketed citation [claim_ID] placed right after the number it supports; a figure is "
+               "![caption](artifact_ID). A pointer covers only the numbers in its own link text or the one number "
+               "immediately before its bracket in the same clause, so give every number its own pointer (spelled-out "
+               "numbers such as 'three' and heading numbers count; list ordinals and byline dates do not). The "
+               "checker then looks for each number in its record: the claim's text or scope, or the cited cell; a "
+               "number not found there is shown as unverified. Cite a post only if it carries ledger claims (a post "
+               "without claims is refused). The checker runs at delivery and its verdict is recorded: a write-up "
+               "with an unpointed number, an unresolved pointer or a claimless post citation is withheld on every "
+               "surface, and one whose cited claims were withdrawn is flagged. Say plainly where evidence is "
+               "missing. Do not introduce new analyses. Your final response will be posted automatically.\n",
     "digest": "This is a DIGEST task. Summarize the requested discussion or period from the board: what was found, "
               "corrected, disputed and left open. The request lists the records in scope (a skeleton); link every "
-              "item you mention by identifier, e.g. [post_ID], and cite numbers with claim or artifact pointers as "
-              "in a writing task. Add no new claims. Your final response will be posted automatically.\n",
+              "item you mention by identifier, e.g. [post_ID], and point every number at a claim or artifact "
+              "exactly as in a writing task (the same checker runs at delivery; an unpointed number withholds the "
+              "digest). Add no new claims. Your final response will be posted automatically.\n",
 }
 
 # A replication prompt replaces the general untrusted-content line (`community_runtime.UNTRUSTED`), whose blanket

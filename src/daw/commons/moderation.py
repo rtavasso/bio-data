@@ -16,6 +16,7 @@ hold across processes. Operator-tunable limits live in `<commons>/commons.toml`:
     uploads_per_hour = 20
     upload_bytes = 26214400 # 25 MiB per file
 """
+import threading
 import tomllib
 from datetime import UTC, datetime, timedelta
 
@@ -157,10 +158,13 @@ class Visibility:
     the SSE framing and export resolve visibility here. Built per request from the moderation projection.
     """
 
-    def __init__(self, records=None, *, reveal=False, blobs=None):
+    def __init__(self, records=None, *, reveal=False, blobs=None, refused=None):
         self.records = dict(records or {})
         self.reveal = bool(reveal)
         self.blobs = dict(blobs or {})
+        # Write-ups the number checker refused (spec v2 C5): {post: verdict summary}, or a loader called on first
+        # use (the checker itself reads claims through a Visibility, so loading is lazy and never re-entered).
+        self._refused = refused
 
     @classmethod
     def of(cls, owner, caller=None, full=False):
@@ -175,7 +179,26 @@ class Visibility:
                                          "event_seq": row["event_seq"]}
             if row["body_blob"]:
                 blobs[row["body_blob"]] = row["target_id"]
-        return cls(records, reveal=reveal, blobs=blobs)
+        return cls(records, reveal=reveal, blobs=blobs, refused=lambda: _refused_writeups(owner))
+
+    # -------------------------------------------------------------- write-ups refused by the number checker (C5)
+    @property
+    def refused_writeups(self):
+        if callable(self._refused):
+            loader, self._refused = self._refused, {}  # a re-entrant read during loading sees none
+            self._refused = loader()
+        return self._refused or {}
+
+    def refused(self, post):
+        """True when this caller sees the post as a refused write-up's placeholder (hidden posts stay stubs)."""
+        return not self.reveal and post not in self.records and post in self.refused_writeups
+
+    def placeholder(self, post, card):
+        """A refused write-up as readers see it: identity and structure, the placeholder title and snippet."""
+        from daw.commons.checks import PLACEHOLDER_TITLE, snippet
+        info = self.refused_writeups[post]
+        return {**card, "title": PLACEHOLDER_TITLE, **({"snippet": snippet(info)} if "snippet" in card else {}),
+                "withheld": info}
 
     # -------------------------------------------------------------- posts
     def hidden(self, post):
@@ -192,7 +215,7 @@ class Visibility:
 
     def key(self):
         """Cache-key component: the hidden set and whether this caller reads through it."""
-        return {"hidden": sorted(self.records), "reveal": self.reveal}
+        return {"hidden": sorted(self.records), "reveal": self.reveal, "refused": sorted(self.refused_writeups)}
 
     def stub(self, post, **structure):
         """The whole of what a reader learns about a hidden post (plus caller-supplied structural keys,
@@ -206,10 +229,17 @@ class Visibility:
         if post in self.records:
             return {**card, "id": post, "hidden": True, "reason": self.reason(post),
                     "moderation": self.records[post], "revealed": True}
+        if self.refused(post):
+            return {**self.placeholder(post, card), "hidden": False}
         return {**card, "hidden": False}
 
     def title(self, post, title):
-        return None if self.withheld(post) else title
+        if self.withheld(post):
+            return None
+        if self.refused(post):
+            from daw.commons.checks import PLACEHOLDER_TITLE
+            return PLACEHOLDER_TITLE
+        return title
 
     # -------------------------------------------------------------- quoted text
     def anchor(self, anchor, target=None):
@@ -263,6 +293,31 @@ class Visibility:
         if self.withheld(post):
             return {"id": row.get("id"), "post": post, "hidden": True, "reason": self.reason(post)}
         return row
+
+
+_LOADING = threading.local()
+
+
+def _refused_writeups(owner):
+    """{post: verdict summary} of refused write-ups: recorded `writeup_check` verdicts on any board owner; on a
+    read-only Archive also write-ups without a record, checked now (daw.commons.checks.withheld)."""
+    from daw.commons.archive import Archive
+    if getattr(_LOADING, "active", False):
+        return {}  # the checker reads posts and claims through a Visibility while computing verdicts
+    if isinstance(owner, Archive):
+        from daw.commons.checks import withheld
+        _LOADING.active = True
+        try:
+            return withheld(owner)
+        finally:
+            _LOADING.active = False
+    import json
+    latest = {}
+    for row in owner.rows("SELECT seq,body FROM event WHERE kind='writeup_check' ORDER BY seq"):
+        body = json.loads(row["body"])
+        latest[body["post"]] = {"status": body["status"], "source": "recorded",
+                                "problems": len(body.get("problems") or []), "seq": row["seq"]}
+    return {post: info for post, info in latest.items() if info["status"] == "refused"}
 
 
 def visibility(owner, caller=None, full=False):
