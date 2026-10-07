@@ -434,7 +434,8 @@ def _suspended_run(root, view):
     (folder / "events.jsonl").write_text("\n".join(rewritten) + "\n")
     with sqlite3.connect(folder / "agent-state" / "state.db") as db:
         inside = started.timestamp() + 3600
-        db.execute("INSERT INTO messages VALUES(?,?,?)", ("s", "[CONTEXT COMPACTION] deterministic fallback summary", inside))
+        db.execute("INSERT INTO messages VALUES(?,?,?)", ("s", "[CONTEXT COMPACTION] deterministic fallback summary\n\n"
+                   "## Goal\nRecovered from a deterministic fallback because the summarizer was unavailable.", inside))
         db.execute("INSERT INTO messages VALUES(?,?,?)", ("s", "[CONTEXT COMPACTION] earlier delivery", inside - 86400))
     return run["id"], started
 

@@ -9,7 +9,7 @@ The runtime writes these records into each run folder at capture time, beside th
 - `compactions.jsonl`: after the turn, the compaction summaries the harness wrote to its session store
   during the delivery window (source row id, timestamp, size and sha256), read from the run's own session
   snapshot (`adapter.compaction_store`: the Hermes session database, or Claude Code's session transcripts). A
-  summary is labelled the deterministic fallback by a marker match (its text contains FALLBACK_MARKER), never
+  summary is labelled the deterministic fallback by a marker match (`is_fallback`: Hermes's fallback `## Goal`), never
   by a harness signal; the header and every item say so. Each summary is also a `compaction_observed` board
   event (v3 B10) carrying the source row id and its length as captured. A harness whose session state does
   not expose summaries gets a header line with `available: false` and the reason: unavailable, never zero.
@@ -56,12 +56,22 @@ MAX_RECEIPT_BYTES = 1_000_000
 MAX_SCANNED_FILES = 20000
 WINDOW_SLACK_SECONDS = 2
 COMPACTION_PREFIX = "[CONTEXT COMPACTION"
-# A summary whose text contains this marker is counted as the deterministic fallback (the summarizer failed).
-# It is a text match, not a signal from the harness: records and the UI label it "marker match".
-FALLBACK_MARKER = "deterministic fallback"
+# A summary is counted as the deterministic fallback (the summarizer failed) when its `## Goal` section opens with
+# the sentence Hermes's context compressor writes only into its local fallback (agent/context_compressor.py):
+# "## Goal\nRecovered from a deterministic fallback ...". A model summary that merely mentions earlier fallbacks
+# (e.g. under "## Errors & Fixes") is not one. It is a text match, not a signal from the harness: records and the
+# UI label it "marker match".
+FALLBACK_MARKER = "## Goal\nRecovered from a deterministic fallback"
+FALLBACK_PATTERN = re.compile(r"^## Goal[ \t]*\r?\nRecovered from a deterministic fallback", re.MULTILINE)
 FALLBACK_DETECTION = {"method": "marker_match", "marker": FALLBACK_MARKER,
-                      "note": "a summary counts as the deterministic fallback when its text contains the marker"}
-ANALYSIS = re.compile(r"run_analysis\.py")
+                      "note": "a summary counts as the deterministic fallback when a line `## Goal` is followed by "
+                              "`Recovered from a deterministic fallback` (Hermes's local fallback form)"}
+ANALYSIS = re.compile(r"(?:run|\br)_analysis\.py")
+
+
+def is_fallback(content):
+    """Is this compaction summary Hermes's deterministic fallback (not a summary that mentions one)?"""
+    return bool(FALLBACK_PATTERN.search(content or ""))
 AGENT_DIR = re.compile(r"/agents/(agent_[0-9a-f]+)/")
 
 
@@ -247,7 +257,7 @@ def state_db_compactions(path, execution):
         data = content.encode("utf-8", errors="replace")
         items.append({"kind": "compaction", "message_id": value[identity], "timestamp": ts,
                       "session": value.get(session) if session else None,
-                      "fallback": FALLBACK_MARKER in content, "fallback_detection": "marker_match",
+                      "fallback": is_fallback(content), "fallback_detection": "marker_match",
                       "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
     return items, None
 
