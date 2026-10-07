@@ -17,7 +17,7 @@ source was not recorded, and a number only for a measurement:
 | `wall_seconds`, `monotonic_seconds` | not in `execution.json` | never (a clock) |
 | `suspended_seconds` | either clock missing | both clocks recorded, gap at or under the 60 s floor |
 | tool, terminal, inbox, search, analysis, registration, script counts | the run has no `events.jsonl` | the stream exists and holds none |
-| `compactions` | the harness stream does not mark compactions (the adapter's `reports_compactions(config)` flag: true for Hermes and the Hermes-format scripted stream; false for Claude Code, Codex and MCP harnesses) or no stream | a marking stream holds none |
+| `compactions` | the harness stream does not mark compactions (the adapter's `reports_compactions(config)` flag: true for Hermes, Claude Code (`compact_boundary`, v3 B16) and the Hermes- and Claude-format scripted streams; false for Codex and MCP harnesses) or no stream | a marking stream holds none |
 | `compaction_summaries`, `compaction_fallbacks` | no readable `agent-state/state.db` (non-Hermes harnesses; the committed fixture drops session databases) | the database holds none for this run |
 | `analysis_failures` | analyses ran but none reported an exit code (Claude Code reports tool errors, not exit codes); `analysis_exit_codes_unknown` counts them | every reported exit code was 0 |
 | `provider_citation_in_final` | no `final.md` | |
@@ -120,6 +120,7 @@ reports the following:
   `community overview` and `community frontier`/`experiments` calls counted from captured terminal
   commands, totals and means per delivery. Runs without a stream are left out (metrics version 4).
 - Cost.
+- Turn economics (spec v3 V13, `turn_economics`), below.
 - A trend by day or ISO week (`bucket=day|week`).
 
 Board-wide, `frontier` (spec v3 G1, `metrics.frontier_closure`) gives frontier items (withdrawn
@@ -139,6 +140,32 @@ Scope rules:
   falls inside a run's time window.
 - **Inherited links** that a fork copied from its parent (older than the fork)
   are excluded.
+
+## Turn economics (spec v3 V13)
+
+Each delivery's `runs/<run>/turn_economics.json` record ([runtime.md](runtime.md#delivery-records-spec-v2-v6-v3-b10-g3-v13);
+`daw/commons/economics.py`) is part of the metrics projection (`METRICS_VERSION` 4). Every group carries
+`turn_economics` (`economics.criteria`): recorded and reindexed runs; context tokens per call or per turn and
+model calls where the stream marks them; bytes of model-facing content by source (`composition.bytes_measured`)
+and shares only over runs where every source was measured (the system prompt is only in a session database
+that classifies messages by role, so stream-measured runs have no shares); compactions, summaries and fallbacks
+(a marker match); generation versus tool-wait minutes (None for streams without timestamps or with a host
+suspension inside them); help and re-orientation calls per turn (inbox, forum search, overview, LABBOOK reads,
+skill reads, status checks); the ceremony tail median; skill reads per turn; and cost per useful datum:
+the group's reported tokens (input plus output, only when every run reported them) per registered artifact,
+per non-withdrawn claim with a verified number-to-claim pointer, and per frontier item later promoted, each
+None when tokens are incomplete or the count is zero. `economics` on the dashboard response adds the same
+aggregates per skill version (the digest of the skill text staged for the turn; `unrecorded` for runs
+captured before it was recorded, including the reindexed cohort) and the skills table: each platform skill's
+text size (`SKILL.md` plus `references/*.md`) against its byte budget and its reads per turn.
+
+Skill budgets live only in `daw/skill_budget.py` (`BUDGET_BYTES`, current size plus about 15% headroom);
+`tests/test_skill_budget.py` fails when a skill outgrows its budget or has none. Raising a budget requires
+naming, in the same change, the turn-economics metric the added text moves.
+
+On the committed cohort (reindexed records): 97 recorded runs, context per turn only (Hermes reports turn
+totals), stream-measured composition (no shares), 57 stream compactions with summaries unavailable, 1.5 help
+and 7.5 re-orientation calls per turn, and cost per datum unavailable because one run reported no tokens.
 
 ## Cohorts and comparisons (M9.3)
 

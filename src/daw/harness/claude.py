@@ -52,6 +52,11 @@ class ClaudeAdapter(Adapter):
     state_globs = ("projects/*/*.jsonl",)
     supports_fork = True
     config_files = ("settings.json", "CLAUDE.md")
+    # Claude Code's stream-json marks each compaction with a `system` message of subtype `compact_boundary`
+    # (`daw.commons.runmetrics.stream_compactions`); the summary is a transcript entry marked
+    # `isCompactSummary` in the session file the run folder snapshots. Claude Code writes no fallback marker.
+    emits_compactions = True
+    compaction_store = "agent-state/projects"
 
     def stage(self, trial, home, config):
         trial = Path(trial)

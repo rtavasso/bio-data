@@ -31,8 +31,9 @@ QUESTION_SUFFIXES = {".md", ".json", ".tsv", ".csv", ".txt", ".py", ".r", ".sh",
 SOURCE_LIKE = ("PMC", "PMID", "GSE", "GSM", "ENCSR", "PXD", "E-MTAB", "E-MEXP")
 RUN_FILES = ("execution.json", "state-receipt.json", "heartbeat.json", "final.md", "prompt.txt", "task-outcome.json",
              "budget.json", "sandbox.json", "stall.json",
-             # V6 delivery records: clocks, compaction ids/hashes (no summary text), the receipt index.
-             "clock.jsonl", "compactions.jsonl", "receipts.json")
+             # V6 delivery records: clocks, compaction ids/hashes (no summary text), the receipt index; V13 turn
+             # economics (byte counts and call counts, no text).
+             "clock.jsonl", "compactions.jsonl", "receipts.json", "turn_economics.json")
 DROP_BOARD_TABLES = ("credential",)
 # Working directories of every workspace (the library and each agent's). Git does not carry empty directories, so
 # an empty one holds an empty KEEP file: a checkout is complete and serving it creates no directory (B2).
@@ -290,19 +291,49 @@ def keep_working_dirs(root):
     return written
 
 
-def resettle_fixture(root, *, reason):
+def _reindex_runs(root):
+    """v3 G3: `bio commons runs reindex --all` on the fixture, as the operator: run records (clock samples from
+    execution.json, heartbeat.json and the stream's timestamps, compaction headers, receipt indexes, turn
+    economics) for runs captured before records existed. Existing records are kept; nothing is fabricated."""
+    from daw.commons.records import reindex_run
+    from daw.community import Community
+    written, unavailable, runs = {}, {}, 0
+    with Community(root) as board:
+        for row in board.rows("SELECT id FROM attempt WHERE state!='running' ORDER BY created,id"):
+            result = reindex_run(board, "operator", row["id"])
+            runs += 1
+            for name in result["written"]:
+                written[name] = written.get(name, 0) + 1
+            for name, why in result["unavailable"].items():
+                key = f"{name}: {why}"
+                unavailable[key] = unavailable.get(key, 0) + 1
+    return {"runs": runs, "written": dict(sorted(written.items())), "unavailable": dict(sorted(unavailable.items()))}
+
+
+def _run_record(rel):
+    """A run record reindexing may add: runs/<run>/<record file> or runs/<run>/receipts/<sha256>.json."""
+    from daw.commons.records import RECEIPT_DIR, RECORD_FILES
+    parts = Path(rel).parts
+    return (len(parts) == 3 and parts[0] == "runs" and parts[2] in RECORD_FILES) or (
+        len(parts) == 4 and parts[0] == "runs" and parts[2] == RECEIPT_DIR and parts[3].endswith(".json"))
+
+
+def resettle_fixture(root, *, reason, reindex_runs=False):
     """Bring a committed fixture to the current schema and projections in place, then re-record its hashes.
 
     Schema additions (new tables, indexes, triggers) and projection rebuilds would otherwise be applied by the
     first read-write open of a served copy, so serving would change board.sqlite and `verify` would fail (C0).
     Only verified fixtures are resettled; the settle step is the same one `build` runs, so no record a
-    participant wrote changes. The previous board sequence, the settle outcomes and the reason are kept."""
+    participant wrote changes. With `reindex_runs` (v3 G3) the runs are first reindexed (`_reindex_runs`), which
+    adds run record files and `receipts_indexed` board events. The previous board sequence, the settle outcomes
+    and the reason are kept."""
     from daw.community import Community
     root = Path(root).expanduser().resolve()
     before = verify_fixture(root)
     if not before["verified"] or before["untracked"]:
         raise DawError("fixture_not_verified", "resettle only an unchanged fixture; rebuild it from its source otherwise")
     manifest = json.loads((root / "FIXTURE.json").read_text())
+    reindexed = _reindex_runs(root) if reindex_runs else None
     outcomes = _settle(root)
     with Community(root) as board:
         sequence = board.one("SELECT coalesce(max(seq),0) AS n FROM event")["n"]
@@ -310,14 +341,18 @@ def resettle_fixture(root, *, reason):
              if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(root))
              and not _kept(root, p.relative_to(root))}
     changed = sorted(rel for rel, digest in files.items() if manifest["files"].get(rel) != digest)
-    # Settling may add content-addressed library blobs (projection documents); nothing else may appear.
+    # Settling may add content-addressed library blobs (projection documents); reindexing adds run records;
+    # nothing else may appear.
     added = sorted(set(files) - set(manifest["files"]))
-    unexpected = [rel for rel in added if not rel.startswith("library/blobs/sha256/")]
+    records = [rel for rel in added if reindex_runs and _run_record(rel)]
+    unexpected = [rel for rel in added if not rel.startswith("library/blobs/sha256/") and rel not in records]
     if unexpected:
         raise DawError("fixture_resettle_added_files", ", ".join(unexpected))
     entry = {"at": now(), "reason": reason, "board_sequence_before": manifest["board_sequence"],
              "board_sequence": sequence, "settle": outcomes, "changed": [rel for rel in changed if rel not in added],
-             "added_library_blobs": len(added)}
+             "added_library_blobs": len(added) - len(records)}
+    if reindex_runs:
+        entry.update(reindexed=reindexed, added_run_records=len(records))
     manifest.update(files=files, board_sequence=sequence, resettled=[*manifest.get("resettled", []), entry])
     manifest["counts"]["files"] = len(files)
     manifest["counts"]["bytes"] = sum((root / p).stat().st_size for p in files)

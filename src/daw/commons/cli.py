@@ -27,11 +27,13 @@ def fixture_build(source: Path, out: Path, name: str | None = None):
 
 
 @fixture_app.command("resettle")
-def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why the fixture is resettled (recorded)")]):
+def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why the fixture is resettled (recorded)")],
+                     reindex_runs: Annotated[bool, typer.Option(
+                         "--reindex-runs", help="First build run records for runs that predate them (v3 G3)")] = False):
     """Apply the current schema and projection rebuilds to a verified fixture in place and re-record its hashes,
     so that serving it writes nothing (C0). Records the reason and the previous board sequence."""
     from daw.commons.fixture import resettle_fixture
-    emit(resettle_fixture(root, reason=reason))
+    emit(resettle_fixture(root, reason=reason, reindex_runs=reindex_runs))
 
 
 @fixture_app.command("verify")

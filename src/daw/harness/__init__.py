@@ -14,8 +14,10 @@ own agent loop does the work, and the bio CLI and skills staged by
     snapshot(home, destination) -> {relative path: sha256}
     session_exists(home, identity)          raises DawError when a saved session is missing
     native_session(executable, home, identity, cwd, *, fork=False) -> {"session", "fork_on_launch", ...}
-    compaction_store                        run-folder path of the session database holding compaction
-                                            summaries (Hermes, scripted), or None: unavailable (V6)
+    emits_compactions                       whether the stream marks compactions (Hermes, Claude Code)
+    compaction_store                        run-folder path of the session store holding compaction
+                                            summaries: a session database (Hermes, scripted) or the
+                                            snapshotted transcripts (Claude Code); None: unavailable (V6, B10)
 
 Parsed items are normalized so behavioural metrics compare across harnesses:
 shell calls are `{"name": "terminal", "type": "command_execution", "command"}`,
