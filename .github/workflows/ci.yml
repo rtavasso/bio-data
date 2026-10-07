@@ -91,4 +91,5 @@ jobs:
             web/e2e/.out/*/screenshots/
             web/e2e/.out/*/*.log
           if-no-files-found: ignore
+          include-hidden-files: true  # web/e2e/.out is a dot directory
           retention-days: 14
