@@ -122,13 +122,23 @@ def _decimals(token):
     return len(mantissa.split(".")[1]) if "." in mantissa else 0
 
 
-def numbers_against_tables(library, body, evidence_artifacts):
-    """Each number in the prose, matched against the cells of the post's TSV/CSV artifacts, exactly or rounded
-    to the prose's own precision. Unmatched numbers are reported, never judged: a count or a citation number
-    may legitimately come from elsewhere. Tables larger than 8 MB are skipped and named."""
+def numbers_against_tables(library, body, evidence_artifacts, *, pointed=None):
+    """Each number in the prose, checked first against the pointer written at it and otherwise against the cells
+    of the post's own TSV/CSV artifacts and of every library table the body links to, exactly or rounded to the
+    prose's own precision. `pointed` maps a number's text to the write-up checker's verdict for the pointer at it
+    (`[1.54](artifact_…#row=…;col=…)` or a claim): verified is a match, a pointer whose cell holds another value is
+    a mismatch (an error to fix), and an unpointed number falls back to the table search. Unmatched numbers are
+    reported, never judged: a count or a citation number may legitimately come from elsewhere. Tables larger than
+    8 MB are skipped and named. Round three: an answer linking both of its numbers to the exact cells was reported
+    unmatched because those tables were not attached to that post."""
+    from daw.commons.claims import ARTIFACT_ID
     from daw.commons.locators import LocatorError, read_table
+    pointed = pointed or {}
     cells, tables, skipped = set(), [], []
-    for item in evidence_artifacts:
+    linked = [{"id": aid, "present": True, "linked": True} for aid in dict.fromkeys(ARTIFACT_ID.findall(body))
+              if aid not in {i["id"] for i in evidence_artifacts}
+              and library.one("SELECT id FROM artifact WHERE id=?", (aid,))]
+    for item in [*evidence_artifacts, *linked]:
         if not item.get("present"):
             continue
         row = library.one("SELECT output_blob,manifest_blob FROM artifact WHERE id=?", (item["id"],))
@@ -142,7 +152,7 @@ def numbers_against_tables(library, body, evidence_artifacts):
             header, rows = read_table(path.read_bytes(), name)
         except LocatorError:
             continue
-        tables.append({"artifact": item["id"], "name": name, "rows": len(rows)})
+        tables.append({"artifact": item["id"], "name": name, "rows": len(rows), "source": "linked" if item.get("linked") else "evidence"})
         for line in rows:
             for cell in line:
                 value = cell.strip().replace("−", "-")
@@ -154,10 +164,19 @@ def numbers_against_tables(library, body, evidence_artifacts):
             numeric_cells.append(float(value))
         except ValueError:
             continue
-    checked, matched, unmatched = [], [], []
+    checked, matched, unmatched, by_pointer, mismatched = [], [], [], 0, []
     for token in dict.fromkeys(m.group(0) for m in PROSE_NUMBER.finditer(body)):
         plain = token.replace("−", "-").lstrip("+")
         checked.append(token)
+        verdict = pointed.get(token)
+        if verdict and verdict.get("status") == "verified":
+            matched.append(token)
+            by_pointer += 1
+            continue
+        if verdict and verdict.get("pointers"):
+            reasons = [p.get("reason") for p in verdict["pointers"] if p.get("reason")]
+            mismatched.append({"number": token, "reason": reasons[0] if reasons else verdict.get("reason")})
+            continue
         try:
             target = float(plain)
         except ValueError:
@@ -167,8 +186,10 @@ def numbers_against_tables(library, body, evidence_artifacts):
             matched.append(token)
         else:
             unmatched.append(token)
-    return {"tables": tables, "skipped": skipped, "checked": len(checked), "matched": len(matched), "unmatched": unmatched,
-            "note": "unmatched numbers appear in the prose but in no cell of the post's own tables; confirm each against its source"}
+    return {"tables": tables, "skipped": skipped, "checked": len(checked), "matched": len(matched),
+            "matched_by_pointer": by_pointer, "pointer_mismatches": mismatched, "unmatched": unmatched,
+            "note": "a pointer mismatch is a number whose own pointer names a cell holding another value (fix it); "
+                    "unmatched numbers have no pointer and appear in no cell of the post's or its linked tables"}
 
 
 def find(owner, text="", *, limit=20, offset=0, family="forum", full=False, moderate=False, reader=None):
@@ -383,7 +404,8 @@ class Community:
             if published != body:
                 extra["body_difference"] = first_difference(published, body)
         if numbers:
-            extra["numbers"] = numbers_against_tables(self.library, shown["content"]["body"], shown["evidence_artifacts"])
+            extra["numbers"] = numbers_against_tables(self.library, shown["content"]["body"], shown["evidence_artifacts"],
+                                                      pointed=self._pointer_verdicts(identity, shown["content"]))
         artifacts = []
         for item in shown["evidence_artifacts"]:
             ok = item["present"]
@@ -406,8 +428,26 @@ class Community:
         return {"post": identity, "body_sha256": shown["body_blob"], "body_verified": True,
                 "artifacts": artifacts, "notebook_verified": notebook_ok, **extra,
                 "verified": all(a["verified"] for a in artifacts) and notebook_ok is not False
-                and extra.get("body_matches_local", True) and not (extra.get("numbers") or {}).get("unmatched"),
+                and extra.get("body_matches_local", True) and not (extra.get("numbers") or {}).get("unmatched")
+                and not (extra.get("numbers") or {}).get("pointer_mismatches"),
                 "note": "Byte readback only; it establishes neither scientific validity nor reuse."}
+
+    def _pointer_verdicts(self, identity, content):
+        """{number text: checker record} for the numbers that carry a pointer, from the write-up checker every
+        surface uses (daw.commons.checks.post_numbers). A checker failure leaves the table search alone."""
+        try:
+            from daw.commons import checks
+            from daw.commons.archive import Archive
+            with Archive(self.root) as view:
+                records = checks.post_numbers(view, identity, content.get("body") or "", content.get("evidence"),
+                                              curated=False)
+        except Exception:  # noqa: BLE001 - the pointer check is an aid; byte readback must not fail on it
+            return {}
+        out = {}
+        for record in records:
+            if record.get("pointers") and record.get("scope") not in ("none", "post"):
+                out.setdefault(record["text"], record)
+        return out
 
     def _index(self, post):
         body = read_json(self.library.blob_path(post["body_blob"]))

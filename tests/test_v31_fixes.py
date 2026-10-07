@@ -217,3 +217,64 @@ def test_turn_unit_context_states_it_is_a_turn_total(tmp_path):
     stream.write_text(json.dumps({"type": "result", "tokens": {"input": 1000, "cache_read": 9000, "output": 10}}) + "\n")
     value = context_per_call(stream)
     assert value["unit"] == "turn" and value["max_input_tokens"] == 10000 and "not a context-window size" in value["meaning"]
+
+
+# ---- round three: Codex could not write the board in local mode; verify --numbers missed linked cells
+
+def test_unsandboxed_codex_dispatch_can_write_the_board_root(tmp_path):
+    from daw import harness
+    codex, hermes = harness.get("codex"), harness.get("hermes")
+    argv = ["codex", "--no-daemon", "--ask-for-approval", "never", "exec", "--json", "--sandbox", "workspace-write", "-"]
+    board = tmp_path / "board"
+    board.mkdir()
+    out = codex.local_board_access(argv, board)
+    assert out[out.index("exec") + 1:out.index("exec") + 3] == ["--add-dir", str(board.resolve())]
+    assert codex.local_board_access(out, board) == out  # idempotent
+    assert hermes.local_board_access(argv, board) == argv  # no sandbox of its own
+    decision = {"config": None, "override": None, "tenancy": "local"}
+    wrapped, _, _ = sandbox.apply(decision, argv, {}, trial=tmp_path, board_root=board, adapter=codex,
+                                  agent_config={}, run="run_x")
+    assert "--add-dir" in wrapped
+
+
+def test_verify_numbers_checks_the_pointer_at_each_number_and_linked_tables(tmp_path):
+    from daw.artifacts import register_artifact
+    from daw.catalog import Workspace
+    from daw.substrate_models import ArtifactRegistration, Derivation, ObjectInput
+    from daw.work import create_question
+    board = Community.create(tmp_path / "community")
+    (board.library.root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0\n")
+    board.library.close()
+    from daw.catalog import Workspace as W
+    board.library = W(board.root / "library")
+    root = tmp_path / "ws"
+    Workspace.create(root).close()
+    (root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0\n")
+    ws = Workspace(root)
+    try:
+        q = create_question(ws, "linked cells")["question"]
+        src = tmp_path / "in.tsv"
+        src.write_text("x\n1\n")
+        asset = ws.local_asset(src, "input")
+        code = ws.put_bytes(b"# analysis\n")
+        out = tmp_path / "contrast.tsv"
+        out.write_text("contrast\tlog2FC\ncAMP_vs_vehicle\t0.8389319311268126\nother\t1.883111717902116\n")
+        spec = ArtifactRegistration(title="contrast", summary="s", derivation=Derivation(
+            inputs=[ObjectInput(blob=asset["blob"], source_identity=asset["asset_revision"])], code=[code],
+            parameters={}, references=[], environment={"t": True}))
+        aid = register_artifact(ws, out, spec, question=q)["artifact"]
+        board.publish("operator", "Tables", "The contrast table.", workspace=root, artifacts=[aid], question=q)
+        # The answer cites cells of a table it does not itself attach (round three's false "unmatched").
+        good = board.publish("operator", "Answer",
+                             f"The response difference is [0.84]({aid}#row=cAMP_vs_vehicle;col=log2FC;round=2), "
+                             f"and the other value is 1.883.")
+        result = board.verify(good["id"], numbers=True)
+        numbers = result["numbers"]
+        assert numbers["matched_by_pointer"] == 1 and numbers["unmatched"] == [] and numbers["pointer_mismatches"] == []
+        assert [t["source"] for t in numbers["tables"]] == ["linked"] and result["verified"]
+        wrong = board.publish("operator", "Wrong", f"The difference is [0.91]({aid}#row=cAMP_vs_vehicle;col=log2FC;round=2).")
+        bad = board.verify(wrong["id"], numbers=True)
+        assert [m["number"] for m in bad["numbers"]["pointer_mismatches"]] == ["0.91"] and bad["verified"] is False
+    finally:
+        ws.close()
+        board.close()

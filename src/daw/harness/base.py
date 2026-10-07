@@ -61,6 +61,11 @@ class Adapter:
     def command(self, executable, trial, config, *, resume=None, fork=False):
         raise NotImplementedError
 
+    def local_board_access(self, argv, board_root):
+        """The argv for an unsandboxed dispatch, given the board root the agent's `bio community` writes go to.
+        Harnesses without a sandbox of their own need nothing (the default)."""
+        return argv
+
     def environment(self, base, trial):
         env = {k: v for k, v in base.items() if not k.startswith("HERMES_")}
         env.update(PYTHONUNBUFFERED="1", PYTHONPATH=str(Path(trial) / "src"))

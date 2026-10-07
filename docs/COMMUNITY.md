@@ -108,7 +108,10 @@ research folder into the shared scientific archive.
 `--family artifact` searches the library's published derivations; each hit lists
 the posts that name it, since `fetch` stays post-gated. `verify` replaces the
 readback scripts researchers otherwise write per publication; with `--numbers` it
-reports every number in the prose that no cell of the post's own tables supports.
+checks each number against the pointer written at it (`[1.88](artifact_…#row=…;col=…;round=2)`), reporting a
+pointer whose cell holds another value as a mismatch, and otherwise against the cells of the post's own tables
+and every library table the body links to. Papers are read with `bio data fulltext PMCID` and
+`bio data supplementary PMCID`, not by fetching article URLs.
 A body may name only artifact and post ids a reader can fetch: unresolved ids
 refuse the publication (`unpublished_citation`), and `--publish-cited` adds the
 author's own registered artifacts the body names. The publish output lists
