@@ -1,4 +1,4 @@
-"""GET /api/search: exact-term (default) or vector search over the library and, optionally, agent workspaces.
+"""GET /api/search: exact-term (default) or lexical-vector search over the library and, optionally, agent workspaces.
 
 Hits on posts hidden by moderation (forum documents) and on their claims are not served (C2): matching a
 hidden post's text would disclose it. The response counts them in `withheld_hidden`; `total` is the
@@ -30,10 +30,11 @@ def hidden_hit(view, vis, item):
 
 @router.get("/search")
 def search_endpoint(view: View, q: str = "", family: str | None = None, vector: bool = False, scope: str = "library",
-                    model: str | None = None, limit: int = 20, offset: int = 0):
-    """`scope=workspaces` adds every agent workspace (read-only) to the library; items name their catalog."""
+                    model: str | None = None, limit: int = 20, offset: int = 0, paragraphs: bool = False):
+    """`scope=workspaces` adds every agent workspace (read-only) to the library; items name their catalog.
+    Article paragraphs are their own search: `paragraphs=true` (or `family=paragraph`); otherwise left out."""
     result = search_commons(view, q, family=family or None, vector=vector, scope=scope, model=model,
-                            limit=limit, offset=offset)
+                            limit=limit, offset=offset, paragraphs=paragraphs)
     vis = Visibility.of(view)
     items = [_redacted(vis, item) for item in result["items"] if not hidden_hit(view, vis, item)]
     return {**result, "items": items, "withheld_hidden": len(result["items"]) - len(items)}

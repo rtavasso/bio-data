@@ -242,4 +242,8 @@ tests sit beside `Me.tsx` and `Actions.tsx`.
   The web, export and SSE surfaces are the ones covered.
 - `/api/search` `total` is each catalog's own count and may include hits on hidden
   posts that were withheld (`withheld_hidden` counts those on the page).
-- Multi-tenant deployment (M7.4) is out of scope.
+- Tenancy (M7.4) is implemented outside this area: `daw/commons/tenants.py`
+  (`bio commons host --config tenants.toml`) serves one commons per
+  organisation from one process, each with its own root, accounts and limits
+  ([hardening.md](hardening.md)). The participation functions here run
+  unchanged inside each tenant's commons.

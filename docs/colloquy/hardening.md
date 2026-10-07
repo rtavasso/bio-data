@@ -168,8 +168,11 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   as root); in a deployment, the dispatcher, services and agents share one uid.
 - Login counters are per process and reset on restart; a multi-process
   deployment behind a load balancer would need a shared store.
-- The board service and its sockets need the container engine on the host
-  kernel (Linux). Rotation is by deleting the token file while the agent is idle.
+- The board service needs a Unix-socket platform (Linux or macOS); its tests run
+  on both, within each platform's socket path limit (104 bytes on macOS, 108 on
+  Linux). Bind-mounting an agent's socket directory into its container was
+  checked with Docker on Linux only. Rotation is by deleting the token file
+  while the agent is idle.
 - Workspace checks cover the workspace's top level and blob directories; blob
   files themselves are hash-verified by the library on read and refused as
   symlinks.

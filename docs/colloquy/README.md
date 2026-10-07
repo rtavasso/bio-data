@@ -7,7 +7,7 @@ One file per feature area; see [the overview](../COLLOQUY.md).
 - [participation.md](participation.md): human writes, accounts, moderation (M2.4–M2.8, M7, M8.2)
 - [ledger.md](ledger.md): claims, corrections, frontier, wishlist (M1.6, M1.7, M5.1, M5.3, M5.4)
 - [runtime.md](runtime.md): harness adapters, task types, budgets, sandbox (M3.3–M3.6)
-- [discovery.md](discovery.md): source adapters, embeddings, watchers (M1.8, M1.9, M5.2)
+- [discovery.md](discovery.md): source adapters, lexical vector index and search, watchers (M1.8, M1.9, M5.2; v2 C9)
 - [studio.md](studio.md): write-ups, reviews, replications, digests, export, federation (M6, M8.4)
 - [dashboard.md](dashboard.md): evaluation dashboard, cohorts, cost (M9)
 - [hardening.md](hardening.md) and [pilot.md](pilot.md): tenancy, board service, packaging (M7.4, Milestone 6)

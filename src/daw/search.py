@@ -40,12 +40,25 @@ def add_embedding(ws, value: Embedding):
     return {"document_id": value.document_id, "model": value.model, "dimensions": len(value.vector)}
 
 
+PARAGRAPH_FORMAT = "jats-paragraph"
+
+
 def search(ws, text="", *, family=None, feature=None, provider=None, format=None, min_level=0,
-           limit=20, offset=0, include_historical=False, vector=None, model=None):
+           limit=20, offset=0, include_historical=False, vector=None, model=None, paragraphs=False):
+    """Exact-term (FTS5), literal-content or supplied-vector search over one catalog.
+
+    Article paragraphs (`format=jats-paragraph`, one document per JATS paragraph) are their own
+    search: they are left out unless `paragraphs=True` (paragraphs only) or `format` names them, so
+    one long article cannot crowd dataset hits. The article itself stays findable as one `jats` document.
+    """
     if not 1 <= limit <= 100 or offset < 0 or min_level not in range(4):
         raise DawError("invalid_search_bounds")
     if family not in {None, "data", "artifact", "work", "resource", "forum", "claim", "frontier"}:
         raise DawError("unknown_search_family")
+    if paragraphs:
+        if format not in (None, PARAGRAPH_FORMAT):
+            raise DawError("conflicting_search_format", f"paragraph search is format={PARAGRAPH_FORMAT}")
+        format = PARAGRAPH_FORMAT
     tokens = re.findall(r"[\w-]+", text, re.UNICODE)[:30]
     match = " AND ".join('"' + token.replace('"', '""') + '"' for token in tokens)
     conditions, params = ["d.level>=?"], [min_level]
@@ -53,6 +66,9 @@ def search(ws, text="", *, family=None, feature=None, provider=None, format=None
         if value is not None:
             conditions.append(f"d.{field}=?")
             params.append(value)
+    if format is None:
+        conditions.append("coalesce(d.format,'')!=?")
+        params.append(PARAGRAPH_FORMAT)
     if not include_historical:
         conditions.append("NOT EXISTS(SELECT 1 FROM asset_revision a WHERE a.id=d.subject AND NOT EXISTS(SELECT 1 FROM current_asset c WHERE c.revision=a.id))")
     if feature is not None:
@@ -85,7 +101,11 @@ def search(ws, text="", *, family=None, feature=None, provider=None, format=None
             exact_params = params + [text.strip()]
             total = ws.one("SELECT count(*) AS n FROM (SELECT d.id" + base + " UNION SELECT d.id" + exact_base + ")",
                            lexical_params + exact_params)["n"]
-            lexical = ws.rows("SELECT d.*,bm25(search_fts,0,5,3,1) AS score" + base + " ORDER BY score,d.id LIMIT ?", lexical_params + [offset + limit])
+            # Literal content matches rank first; the lexical list leaves them out, so the two ranked lists are
+            # disjoint and any offset pages through one stable order.
+            lexical_only = base + " AND NOT EXISTS(SELECT 1 FROM feature_term f WHERE f.profile_id=d.record_id AND f.value=?)"
+            lexical = ws.rows("SELECT d.*,bm25(search_fts,0,5,3,1) AS score" + lexical_only + " ORDER BY score,d.id LIMIT ?",
+                              lexical_params + [text.strip(), offset + limit])
             exact = ws.rows("SELECT d.*,-1000000 AS score" + exact_base + " ORDER BY d.id LIMIT ?", exact_params + [offset + limit])
             combined = {r["id"]: r for r in lexical + exact}
             rows = sorted(combined.values(), key=lambda r: (r["score"], r["id"]))[offset:offset + limit]

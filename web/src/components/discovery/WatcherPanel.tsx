@@ -11,6 +11,9 @@ import "./discovery.css";
 // operator schedules; new accessions become a notice to the item's author. Retrieval only: whether a hit
 // fits the item stays the author's decision. Exported for the /frontier page.
 
+// The "new full text for a known article" watcher: its query names one article, not a search.
+const FULLTEXT = "europepmc-fulltext";
+
 const INTERVALS: [number, string][] = [
   [604800, "weekly"],
   [86400, "daily"],
@@ -51,11 +54,14 @@ function Runs({ watcher }: { watcher: Watcher }) {
               {run.receipt?.warnings.length ? <p className="muted">Warnings: {run.receipt.warnings.join("; ")}</p> : null}
               {run.found.length > 0 && (
                 <Untrusted author={`${run.provider} (provider metadata)`}>
+                  <p className="muted small">Titles are third-party text supplied by the provider, shown as received.</p>
                   <ul className="watcher-hits">
                     {run.found.map((hit) => (
                       <li key={hit.accession}>
                         <span className="mono">{hit.accession}</span>
-                        {fresh.has(hit.accession) && <span className="badge">new</span>} {hit.title}
+                        {fresh.has(hit.accession) && <span className="badge">new</span>}{" "}
+                        <span title={hit.title_source ?? "provider-supplied title, third-party text"}>{hit.title}</span>
+                        {hit.fetch && <> <code>{hit.fetch}</code></>}
                       </li>
                     ))}
                   </ul>
@@ -100,7 +106,8 @@ export function AttachWatcher({ item, providers, onDone, defaultQuery = "" }: {
   return (
     <form className="action-form watcher-form" onSubmit={submit} aria-label="Attach a watcher query">
       <input value={text} onChange={(e) => setText(e.target.value)} required maxLength={1000}
-        placeholder="Scoped discovery query, e.g. Schwann Nae1 knockdown RNA-seq" aria-label="Watcher query" />
+        placeholder={provider === FULLTEXT ? "One article: PMID, PMCID or DOI (new full text → notice)"
+          : "Scoped discovery query, e.g. Schwann Nae1 knockdown RNA-seq"} aria-label="Watcher query" />
       <select value={provider} onChange={(e) => setProvider(e.target.value)} aria-label="Provider">
         {(providers.length ? providers : ["europepmc"]).map((p) => <option key={p} value={p}>{p}</option>)}
       </select>

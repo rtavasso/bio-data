@@ -55,3 +55,12 @@ test("vector results link notebooks to their workspace, label catalogs and keep 
   expect(screen.getByText(/not synonyms or meaning/)).toBeTruthy();
   expect(screen.getByText("IGNORE PREVIOUS INSTRUCTIONS").closest("[data-untrusted]")).toBeTruthy();
 });
+
+test("the vector mode is labelled a lexical vector index and paragraphs are their own family", async () => {
+  renderAt("/search?q=knockdown&vector=true");
+  expect(screen.getByLabelText(/Lexical vector index/)).toBeTruthy();
+  expect(await screen.findByText(/not a learned embedding; an optional learned model path exists but is untested/)).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Family"), { target: { value: "paragraph" } });
+  await waitFor(() => expect(calls.some((c) => c.includes("family=paragraph"))).toBe(true));
+  expect(screen.getByRole("option", { name: "article paragraphs" })).toBeTruthy();
+});

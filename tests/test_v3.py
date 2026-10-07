@@ -171,3 +171,53 @@ def test_research_instructions_do_not_require_historical_specs():
     text = Path("AGENTS.md").read_text()
     assert "bio --help" in text and len(text.split()) < 400
     assert not any(name in text for name in ("BUILD_SPEC.md", "v2_SPEC.md", "v3_SPEC.md"))
+
+
+def _article_with_paragraphs(count):
+    paragraphs = "".join(f"<p>Paragraph {i} reports knockdown counts in Schwann cells.</p>" for i in range(count))
+    return (b'<?xml version="1.0" encoding="UTF-8"?><article><front><article-meta><title-group><article-title>'
+            b"A long knockdown article</article-title></title-group></article-meta></front><body><sec><title>Results"
+            b"</title>" + paragraphs.encode() + b"</sec></body></article>")
+
+
+def test_data_search_leaves_out_article_paragraphs_unless_asked(ws):
+    """Spec v2 C9: a 200-paragraph article cannot crowd dataset hits; paragraph search is its own flag."""
+    import httpx
+
+    from daw.adapters import Sources
+    from daw.embeddings import embed_documents
+    from daw.search import index_document, search
+    from daw.transport import Transport
+    with ws.writer():
+        for n in range(3):
+            body = ws.put_json({"dataset": n})
+            index_document(ws, key=f"dataset:{n}", family="data", subject=f"dataset_{n}", record_id=body,
+                           title=f"Dataset {n}: knockdown counts per sample", summary="Per-sample counts.",
+                           body_blob=body, provider="geo", format="tsv", level=2)
+        transport = Transport(ws, http_transport=httpx.MockTransport(
+            lambda r: httpx.Response(200, content=_article_with_paragraphs(200))), sleep=lambda _: None)
+        fetched = Sources(ws, transport).fulltext("PMC4242")
+        assert fetched["paragraphs"] == 200
+        embed_documents(ws)
+    runner = CliRunner()
+    prefix = ["-w", str(ws.root)]
+
+    def run(*args):
+        result = runner.invoke(app, prefix + list(args))
+        assert result.exit_code == 0, result.output
+        return json.loads(result.output)
+    default = run("data", "search", "--text", "knockdown")
+    assert default["total"] == 4 and {i["format"] for i in default["items"]} == {"tsv", "jats"}
+    assert run("search", "--text", "knockdown")["total"] == 4
+    assert run("data", "search", "--text", "knockdown", "--limit", "100", "--offset", "3")["total"] == 4
+    paragraphs = run("data", "search", "--text", "knockdown", "--paragraphs", "--limit", "100")
+    assert paragraphs["total"] == 200 and {i["format"] for i in paragraphs["items"]} == {"jats-paragraph"}
+    assert paragraphs["items"][0]["record_id"].startswith("sec[1]/p[")
+    assert run("data", "search", "--text", "knockdown", "--format", "jats-paragraph")["total"] == 200
+    # An empty query lists the inventory: still no paragraphs unless asked.
+    assert run("data", "search")["total"] == 4
+    vector = run("search", "--vector-text", "knockdown counts", "--family", "data", "--limit", "100")
+    assert vector["total"] == 4 and "jats-paragraph" not in {i["format"] for i in vector["items"]}
+    assert run("search", "--vector-text", "knockdown counts", "--paragraphs")["total"] == 200
+    with pytest.raises(DawError, match="conflicting_search_format"):
+        search(ws, "knockdown", paragraphs=True, format="tsv")

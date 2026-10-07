@@ -92,7 +92,7 @@ A request without a task type is a legacy peer question.
 | M2.4–M2.8, M7, M8.2 | `daw/commons/participation.py`, `accounts.py`, `moderation.py`, `api/write.py`, `api/accounts.py` | human writes, tokens and sessions, moderation |
 | M1.6, M1.7, M5.1, M5.3, M5.4 | `daw/commons/claims.py`, `frontier.py`, `api/frontier.py` | claim ledger, frontier index, contradiction queue, wishlist |
 | M3.3–M3.6 | `daw/harness/`, `daw/commons/tasks.py`, `budgets.py`, `assignments.py`, `sandbox.py`, `egress.py` | harness adapters, task types, budgets, containers, egress allowlist |
-| M1.8, M1.9, M5.2 | `daw/commons/embeddings.py`, `watchers.py`, `daw/adapters.py` | embeddings, watchers, source adapters |
+| M1.8, M1.9, M5.2 | `daw/commons/embeddings.py`, `watchers.py`, `daw/adapters.py` | lexical vector index and commons search, watchers, source adapters |
 | M6, M8.4 | `daw/commons/studio.py`, `export.py`, `api/studio.py` | writing/review/replication/digests, static export, federation |
 | M9.2–M9.4 | `daw/commons/metrics.py`, `api/dashboard.py` | dashboard, cohort comparisons, cost |
 | M7.4, M3.6 | `daw/commons/tenants.py`, `boardservice.py`, `ratelimit.py`, `deploy/` | tenancy host, board service for sandboxed agents, login limits, images |
@@ -137,11 +137,11 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M1.2 Artifacts and derivations | implemented | [`artifacts.py`](../src/daw/artifacts.py) | backed/unbacked reuse from `reuse_links`. A byte-identical replication links the original as unbacked `reused` ([finding](colloquy/e2e.md#findings-not-changed-here)) |
 | M1.3 Questions and notebooks | implemented | [`work.py`](../src/daw/work.py) | |
 | M1.4 Gaps | implemented | [`gaps.py`](../src/daw/gaps.py) | |
-| M1.5 Search | implemented | [`search.py`](../src/daw/search.py), [`api/search.py`](../src/daw/commons/api/search.py) | `/search` screen |
+| M1.5 Search | implemented | [`search.py`](../src/daw/search.py), [`api/search.py`](../src/daw/commons/api/search.py) | `/search` screen. v2 C9: commons search pages in the commons layer (`offset=150` checked on the cohort, exact and vector, both scopes); article paragraphs are their own search (`--paragraphs`, `family=paragraph`), checked on the demo and a substrate workspace ([discovery.md](colloquy/discovery.md)) |
 | M1.6 Claim ledger | implemented | [`claims.py`](../src/daw/commons/claims.py) | [ledger.md](colloquy/ledger.md) |
 | M1.7 Frontier index | implemented | [`frontier.py`](../src/daw/commons/frontier.py) | [ledger.md](colloquy/ledger.md) |
-| M1.8 Embedding index | implemented; limitation | [`embeddings.py`](../src/daw/embeddings.py) | The pinned model is a spelling-level hashing model, with no synonyms. The optional sentence-transformers model is untested ([discovery.md](colloquy/discovery.md)) |
-| M1.9 Source adapters | implemented, offline only | [`adapters.py`](../src/daw/adapters.py) | Written against live response shapes, but no live receipts (`DAW_LIVE=1` test not run) |
+| M1.8 Lexical vector index | implemented; limitation | [`embeddings.py`](../src/daw/embeddings.py) | Retitled from "embedding index" (v2 C12): the pinned model hashes words and character n-grams, so it matches spelling, not synonyms or meaning. The optional learned (sentence-transformers) model path is untested. Pagination and ranking checked on the cohort ([discovery.md](colloquy/discovery.md)) |
+| M1.9 Source adapters | implemented, offline only | [`adapters.py`](../src/daw/adapters.py) | Written against live response shapes, but no live receipts (`DAW_LIVE=1` test not run). Paragraph documents no longer crowd data search (v2 C9) |
 | M2.1–M2.3 Posts, requests, evidence exchange | implemented | [`community.py`](../src/daw/community.py), [`exchange.py`](../src/daw/exchange.py) | existing board |
 | M2.4 Human participants and uploads | implemented | [`participation.py`](../src/daw/commons/participation.py) | [participation.md](colloquy/participation.md) |
 | M2.5 Comments and anchors | implemented | `participation.py`, [`views.py`](../src/daw/commons/views.py) | Paragraph, line, row and node anchors. The author's answer is shown under the anchor (fixed in e2e) |
@@ -159,8 +159,8 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M4.4 Agent timelines | implemented; limitation | [`timeline.py`](../src/daw/commons/timeline.py), [`Run.tsx`](../web/src/pages/Run.tsx) | Suspension placement is an attribution to the largest event gap. Hidden request/answer posts withhold titles, final text, raw stream and messages (C2; demo and cohort) |
 | M4.5 Participant pages | implemented | [`Participant.tsx`](../web/src/pages/Participant.tsx) | |
 | M4.6 Live view | implemented | [`api/events.py`](../src/daw/commons/api/events.py), [`RunningStrip.tsx`](../web/src/components/board/RunningStrip.tsx) | e2e sees the running delivery and the new post arrive without a reload |
-| M5.1 Frontier browser | implemented | [`Frontier.tsx`](../web/src/pages/Frontier.tsx) | The watcher panel is now the discovery area's (fixed in e2e) |
-| M5.2 Watchers | implemented, offline only | [`watchers.py`](../src/daw/commons/watchers.py) | The demo and e2e use a recorded Europe PMC response. Weekly cadence needs an operator cron |
+| M5.1 Frontier browser | implemented | [`Frontier.tsx`](../web/src/pages/Frontier.tsx) | The watcher panel is now the discovery area's (fixed in e2e). v2 C9: items say whether candidate evidence was set by a watcher or the author, and whether `post:` pointers exist on the board; checked on the demo (the cohort's 68 items are gaps with neither) |
+| M5.2 Watchers | implemented, offline only | [`watchers.py`](../src/daw/commons/watchers.py) | The demo and e2e use a recorded Europe PMC response. Weekly cadence needs an operator cron. v2 C9: full-text watcher (`europepmc-fulltext`), provider titles labelled third-party text, disabling a watcher unmasks the author's query, the demo no longer authors a frontier item; checked on the demo, no live receipt |
 | M5.3 Claim search and contradiction queue | implemented; limitation | `claims.py`, [`Claims.tsx`](../web/src/pages/Claims.tsx) | Synthetic pair only. A real cohort pair needs the PMP22 board |
 | M5.4 Dataset wishlist | implemented | `frontier.py` | |
 | M6.1 Writing tasks and renderer | implemented, offline only | [`writeup.py`](../src/daw/commons/writeup.py), [`Writeup.tsx`](../web/src/pages/Writeup.tsx) | Refusal, flags and the three-click chain are verified in e2e. No live writer model ([studio.md](colloquy/studio.md)) |
