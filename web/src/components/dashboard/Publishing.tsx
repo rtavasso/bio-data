@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import type { Group } from "../../types/dashboard";
-import type { SnapshotCitations } from "../../types/publishing";
+import type { CitationsView, IncomingCitation } from "../../types/publishing";
 import { useApi } from "../../useApi";
 import { Status } from "../Status";
+import { Untrusted } from "../Untrusted";
 import { Value } from "./Charts";
 
 // Spec v2 V8: compaction hygiene as a tracked metric per harness. null is unavailable (the harness keeps no
@@ -41,10 +42,60 @@ export function HygieneTable({ groups }: { groups: Group[] }) {
   );
 }
 
+// Spec v3 V16: posts of other commons that cite this record, learned by importing the citing commons' snapshot
+// (recorded at the citing source; the citing post's exported bytes name the pointer). Foreign, untrusted text.
+export function CitedFrom({ items, what }: { items: IncomingCitation[]; what: string }) {
+  return (
+    <section className="panel" aria-labelledby="cited-from-title">
+      <h2 id="cited-from-title">Cited from other commons</h2>
+      {items.length === 0 ? (
+        <p className="muted">No imported snapshot cites this {what}. A citation appears here once the citing commons' snapshot is imported.</p>
+      ) : (
+        <ul aria-label="Citing posts">
+          {items.map((c) => (
+            <li key={`${c.snapshot}:${c.post}:${c.cited}`}>
+              <Untrusted author="another commons"><Link to={c.route}>{c.post_title ?? c.post}</Link></Untrusted>{" "}
+              <span className="muted small">
+                in snapshot <Link to={`/directory/${c.snapshot}`} className="mono">{c.snapshot.slice(0, 12)}…</Link>
+                {c.author && <> · by <span className="mono">{c.author}</span> (foreign)</>}
+              </span>
+              <div><code className="small">{c.cited}</code></div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function IncomingTable({ groups }: { groups: NonNullable<CitationsView["cited_by"]> }) {
+  if (groups.length === 0) return <p className="muted">No imported snapshot cites a snapshot this board exported.</p>;
+  return (
+    <div className="compare-scroll">
+      <table className="coverage-table" aria-label="Incoming citations">
+        <thead><tr><th scope="col">Citing snapshot</th><th scope="col">Citing post</th><th scope="col">Record here</th></tr></thead>
+        <tbody>
+          {groups.flatMap((g) => g.citations.map((c) => (
+            <tr key={`${g.snapshot}:${c.post}:${c.cited}`}>
+              <th scope="row"><Link to={`/directory/${g.snapshot}`} className="mono">{g.snapshot.slice(0, 12)}…</Link></th>
+              <td><Untrusted author="another commons"><Link to={c.route}>{c.post_title ?? c.post}</Link></Untrusted></td>
+              <td>
+                {c.here ? <Link to={c.kind === "claim" ? `/claims/${c.record}` : `/artifact/${c.record}`} className="mono">{c.record.slice(0, 18)}…</Link>
+                  : <span className="mono">{c.record.slice(0, 18)}…</span>}
+                {!c.here && <span className="error small"> (not on this board)</span>}
+              </td>
+            </tr>
+          )))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // Spec v2 V7: which imported snapshots this board's questions cite (recorded citations: post text naming
-// snapshot:<id>/<record>), never inferred.
+// snapshot:<id>/<record>), never inferred. Spec v3 V16: and which imported snapshots cite this board.
 export function SnapshotCitationsPanel() {
-  const state = useApi<{ snapshots: SnapshotCitations[]; note: string }>("/api/snapshot-citations");
+  const state = useApi<CitationsView>("/api/snapshot-citations");
   const data = state.data;
   const snapshots = data?.snapshots ?? [];
   return (
@@ -86,6 +137,8 @@ export function SnapshotCitationsPanel() {
               </table>
             </div>
           )}
+          <h3>Cited by other commons</h3>
+          <IncomingTable groups={data.cited_by ?? []} />
         </>
       )}
     </section>

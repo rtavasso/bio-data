@@ -10,7 +10,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
 
-from daw.commons import views
+from daw.commons import federation, views
 from daw.commons.api.deps import View
 from daw.commons.api.scoping import Scoped, question_lookup, scoped
 from daw.util import DawError
@@ -53,7 +53,9 @@ def thread(identity: str, view: View, caller: Reader, full: bool = False):
 @router.get("/artifacts/{identity}")
 def artifact(identity: str, view: View, caller: Reader, depth: Annotated[int, Query(ge=0, le=6)] = 3,
              full: bool = False):
-    return views.artifact_view(view, identity, depth=depth, caller=caller, full=full)
+    # V16: posts of other commons citing this artifact, learned by importing their snapshots (foreign, untrusted).
+    return {**views.artifact_view(view, identity, depth=depth, caller=caller, full=full),
+            "cited_from": federation.cited_by(view, identity)}
 
 
 @router.get("/artifacts/{identity}/bytes")

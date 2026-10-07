@@ -5,6 +5,7 @@ import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Pu
 import type { CompareCell, Comparison, Cost, Group } from "../types/dashboard";
 import type { Tour } from "../types/publishing";
 import { mockApi } from "./boardFixtures";
+import { ClaimPage } from "./Claims";
 import Directory from "./Directory";
 import TourPage from "./Tour";
 
@@ -152,4 +153,55 @@ test("the dashboard lists which snapshots were cited by which questions", async 
   expect(within(table).getByText("agent_x/q_1")).toBeTruthy();
   expect(within(table).getByRole("link", { name: `${SNAP.slice(0, 12)}…` }).getAttribute("href")).toBe(`/directory/${SNAP}`);
   expect(within(table).getAllByRole("row")).toHaveLength(3);
+});
+
+const CITING = "9".repeat(64);
+const CLAIM = "claim_" + "d".repeat(32);
+const incoming = (record: string, kind: "claim" | "artifact") => ({
+  snapshot: CITING, post: POST, post_title: "Reading lab A", author: "agent_y", created: "t", record, kind,
+  cited: `snapshot:${SNAP}/${record}`, cited_snapshot: SNAP, route: `/directory/${CITING}#${POST}`, foreign: true as const,
+});
+
+test("the dashboard lists the other commons citing this one (V16), linking the record here", async () => {
+  mockApi({ "/api/snapshot-citations": { note: "Recorded citations only.", snapshots: [],
+    cited_by: [{ snapshot: CITING, citations: [{ ...incoming(CLAIM, "claim"), here: true }] }] } });
+  render(<MemoryRouter><SnapshotCitationsPanel /></MemoryRouter>);
+  const table = await screen.findByRole("table", { name: "Incoming citations" });
+  expect(within(table).getByRole("link", { name: "Reading lab A" }).getAttribute("href")).toBe(`/directory/${CITING}#${POST}`);
+  expect(within(table).getByText("Reading lab A").closest("[data-untrusted]")).toBeTruthy();
+  expect(within(table).getByRole("link", { name: `${CLAIM.slice(0, 18)}…` }).getAttribute("href")).toBe(`/claims/${CLAIM}`);
+  expect(screen.getByText("No post cites another snapshot.")).toBeTruthy();
+});
+
+test("a claim's page shows the posts of other commons citing it; a hidden claim shows its stub only", async () => {
+  const claim = { id: CLAIM, post: POST, author: "agent_x", author_name: "alice", ordinal: 1, text: "log2 ratio 1.54",
+    status: "supported", scope: {}, pointers: [], claims_blob: "b", created: "t", marks: [], cited_from: [incoming(CLAIM, "claim")] };
+  mockApi({ [`/api/claims/${CLAIM}`]: claim });
+  const view = render(<MemoryRouter initialEntries={[`/claims/${CLAIM}`]}><Routes><Route path="/claims/:id" element={<ClaimPage />} /></Routes></MemoryRouter>);
+  const section = await screen.findByRole("region", { name: "Cited from other commons" });
+  expect(within(section).getByRole("link", { name: "Reading lab A" }).getAttribute("href")).toBe(`/directory/${CITING}#${POST}`);
+  expect(within(section).getByText(`snapshot:${SNAP}/${CLAIM}`)).toBeTruthy();
+  view.unmount();
+  mockApi({ [`/api/claims/${CLAIM}`]: { id: CLAIM, post: POST, hidden: true, reason: "spam" } });
+  render(<MemoryRouter initialEntries={[`/claims/${CLAIM}`]}><Routes><Route path="/claims/:id" element={<ClaimPage />} /></Routes></MemoryRouter>);
+  expect(await screen.findByText(/post hidden by moderation/)).toBeTruthy();
+  expect(screen.queryByRole("region", { name: "Cited from other commons" })).toBeNull();
+});
+
+test("an imported snapshot page lists the citations its posts make, marking those of this commons", async () => {
+  mockApi({
+    [`/api/directory/${CITING}`]: {
+      snapshot: CITING, file_count: 8, imported: "2026-10-07", imported_by: "human_local", pointer_forms: [],
+      records: { claims: [], artifacts: [], citations: [
+        { post: POST, post_title: "Reading lab A", cited: `snapshot:${SNAP}/${ART}`, cited_kind: "artifact", cited_record: ART,
+          cited_snapshot: SNAP, cites_this_commons: true }] },
+      citations: null,
+    },
+  });
+  render(<MemoryRouter initialEntries={[`/directory/${CITING}`]}><Routes><Route path="/directory/:snapshot" element={<Directory />} /></Routes></MemoryRouter>);
+  await screen.findByText(/Foreign snapshot imported read-only/);
+  expect(screen.getByText(/by human_local/)).toBeTruthy();
+  const item = document.getElementById(POST)!;
+  expect(within(item).getByText("Reading lab A").closest("[data-untrusted]")).toBeTruthy();
+  expect(within(item).getByRole("link", { name: `${ART.slice(0, 18)}…` }).getAttribute("href")).toBe(`/artifact/${ART}`);
 });

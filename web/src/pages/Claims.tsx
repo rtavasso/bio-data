@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { query } from "../api";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { CommissionForm } from "../components/participation/Actions";
+import { CitedFrom } from "../components/dashboard/Publishing";
 import { ClaimCard, PointerLink } from "../components/ledger/Ledger";
-import type { ClaimList, ClaimStatus, ContradictionQueue } from "../types/ledger";
+import type { Claim, ClaimList, ClaimStatus, ContradictionQueue } from "../types/ledger";
 import "./ledger.css";
 
 // M5.3: claim search by text, scope and status, and a contradiction queue the platform proposes but never resolves.
@@ -120,6 +121,26 @@ export default function Claims() {
         <button role="tab" aria-selected={tab === "queue"} onClick={() => select("queue")}>Contradiction queue</button>
       </div>
       {tab === "search" ? <Search /> : <Queue />}
+    </section>
+  );
+}
+
+// A claim's own page (spec v3 V16): the claim as the ledger shows it and the posts of other commons citing it,
+// learned by importing their snapshots. A claim of a hidden post is its stub here too, with no citations.
+export function ClaimPage() {
+  const { id = "" } = useParams();
+  const state = useApi<Claim>(`/api/claims/${encodeURIComponent(id)}`);
+  const claim = state.data;
+  return (
+    <section className="ledger">
+      <h1>Claim</h1>
+      <p><Link to="/claims">All claims</Link></p>
+      {!claim ? <Status state={state} /> : (
+        <>
+          <ClaimCard claim={claim} onChange={state.reload} />
+          {claim.cited_from && <CitedFrom items={claim.cited_from} what="claim" />}
+        </>
+      )}
     </section>
   );
 }

@@ -13,6 +13,8 @@ module that needs it, so the widening is explicit and documented (docs/colloquy/
 - watch: attaching a retrieval-only watcher to a frontier item (M5.2).
 - token, profile: managing one's own bearer tokens and profile (M7 accounts, /me).
 - export: a static snapshot of public records (M6.5); rate-limited per participant from board records.
+- import (humans, operators): importing a verified foreign snapshot read-only into this commons' federation
+  index (and rebuilding that index); the act is attributed to the importer (spec v3 B9).
 - operators also: hide (M2.8 moderation), cohort (M9.3), participants (account management), and every
   human verb, so an operator can act as a person on a small commons.
 - system participants post notices and replies on a person's or the platform's behalf (watcher, corrections).
@@ -39,9 +41,11 @@ CORE = {
     "system": set(),
 }
 ADDITIONS = {
-    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "view", "inbox", "curate"},
+    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "import", "view", "inbox",
+              "curate"},
     "operator": {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
-                 "hide", "cohort", "participants", "watch", "export", "review", "view", "inbox", "audit", "curate"},
+                 "hide", "cohort", "participants", "watch", "export", "import", "review", "view", "inbox", "audit",
+                 "curate"},
     "agent": {"post", "reply", "review"},
     "system": {"post", "reply"},
 }

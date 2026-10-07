@@ -277,7 +277,7 @@ def test_imported_snapshot_claims_and_artifacts_resolve_to_bytes_across_commons(
     # Lab B: a separate commons with only the core records.
     lab_b, ctx_b = demo_only()
     with Community(lab_b) as board:
-        imported = federation.import_and_index(board, tmp_path / "snap", expect=snapshot)
+        imported = federation.import_and_index(board, tmp_path / "snap", actor="operator", expect=snapshot)
     assert imported["index"]["claims"] >= 1 and imported["index"]["artifacts"] >= 2 and imported["index"]["changed"]
     with Community(lab_b) as board:  # idempotent: unchanged rows write nothing
         assert federation.index_snapshot(board, snapshot)["changed"] is False
@@ -325,12 +325,12 @@ def test_federation_index_is_rebuilt_from_imported_directories_and_drops_tampere
     root, ctx = demo
     snapshot = export_thread(root, ctx["claims"]["correction"], tmp_path / "snap")
     with Community(root) as board:
-        federation.import_and_index(board, tmp_path / "snap", expect=snapshot)
+        federation.import_and_index(board, tmp_path / "snap", actor="operator", expect=snapshot)
         rows = board.rows("SELECT * FROM federation_record ORDER BY record")
         board.db.execute("DELETE FROM federation_record")
         board.db.execute("DELETE FROM projection_state WHERE name LIKE 'federation:%'")
         board.db.commit()
-        rebuilt = federation.reindex(board)
+        rebuilt = federation.reindex(board, "operator")
         assert rebuilt["indexed"][0]["changed"] and not rebuilt["refused"]
         assert [dict(r) | {"indexed": None} for r in board.rows("SELECT * FROM federation_record ORDER BY record")] == \
             [dict(r) | {"indexed": None} for r in rows]
@@ -338,7 +338,7 @@ def test_federation_index_is_rebuilt_from_imported_directories_and_drops_tampere
         stored = root / "federation" / snapshot / "records.json"
         stored.chmod(stat.S_IWUSR | stat.S_IRUSR)
         stored.write_bytes(stored.read_bytes().replace(b"1.54", b"9.99"))
-        dropped = federation.reindex(board)
+        dropped = federation.reindex(board, "operator")
         assert dropped["refused"][0]["snapshot"] == snapshot and dropped["removed"] == [snapshot]
         assert board.one("SELECT count(*) AS n FROM federation_record")["n"] == 0
 
@@ -356,7 +356,7 @@ def test_snapshots_exported_before_records_json_index_their_artifacts(demo, tmp_
     (folder / "snapshot.id").write_text(hashlib.sha256(data).hexdigest())
     snapshot = hashlib.sha256(data).hexdigest()
     with Community(root) as board:
-        index = federation.import_and_index(board, folder, expect=snapshot)["index"]
+        index = federation.import_and_index(board, folder, actor="operator", expect=snapshot)["index"]
     assert index["claims"] == 0 and index["artifacts"] >= 2
 
 
@@ -395,7 +395,7 @@ def test_directory_publish_list_and_fetch_over_paths_and_http(demo, demo_only, t
     # Fetch over a local path into another commons: verified, imported read-only and indexed.
     lab_b, _ = demo_only()
     with Community(lab_b) as board:
-        fetched = directory.fetch(board, str(site / "directory.json"), snapshot)
+        fetched = directory.fetch(board, str(site / "directory.json"), snapshot, actor="operator")
     assert fetched["receipt"]["executed"] is False and fetched["receipt"]["index"]["artifacts"] >= 2
     assert (lab_b / "federation" / f"{snapshot}.fetch.json").is_file()
     # Over http(s): the directory and every file are downloaded and checked byte for byte.
@@ -410,7 +410,7 @@ def test_directory_publish_list_and_fetch_over_paths_and_http(demo, demo_only, t
             board.db.execute("DELETE FROM federation_record")
             board.db.execute("DELETE FROM projection_state WHERE name LIKE 'federation:%'")
             board.db.commit()
-            over_http = directory.fetch(board, url, snapshot)
+            over_http = directory.fetch(board, url, snapshot, actor="operator")
         assert over_http["receipt"]["location"].startswith("http://127.0.0.1")
         with Archive(lab_c) as view:
             known = directory.known(view)
@@ -426,10 +426,10 @@ def test_directory_publish_list_and_fetch_over_paths_and_http(demo, demo_only, t
         original = served.read_bytes()
         served.write_bytes(original[:-2] + b"9\n")  # same size, other bytes
         with Community(lab_d) as board, pytest.raises(DawError, match="snapshot_hash_mismatch"):
-            directory.fetch(board, url, snapshot)
+            directory.fetch(board, url, snapshot, actor="operator")
         served.write_bytes(original + b"more\n")  # longer than listed: the download is capped
         with Community(lab_d) as board, pytest.raises(DawError, match="download_too_large"):
-            directory.fetch(board, url, snapshot)
+            directory.fetch(board, url, snapshot, actor="operator")
         assert not (lab_d / "federation" / snapshot).exists()
         assert not list((lab_d / "federation").glob(".fetch-*"))
     finally:
@@ -462,6 +462,169 @@ def test_directory_cli_publishes_lists_and_fetches(demo, tmp_path):
     assert records["artifacts"]
 
 
+# ---- v3 B9 attributed imports, V16 a second commons whose citation shows on both sides -----------------------
+
+def test_imports_are_attributed_to_the_importing_participant_and_listed_on_me(demo, demo_only, tmp_path):
+    root, ctx = demo
+    snapshot = export_thread(root, ctx["claims"]["correction"], tmp_path / "snap")
+    lab, lab_ctx = demo_only()
+    with Community(lab) as board:
+        from daw.commons.participants import add_participant
+        rhea = add_participant(board, "rhea", "human")["id"]
+        # Agents do not import; the refusal comes before any byte is stored.
+        with pytest.raises(DawError, match="permission_denied"):
+            federation.import_and_index(board, tmp_path / "snap", actor=lab_ctx["agents"]["alice"], expect=snapshot)
+    assert not (lab / "federation" / snapshot).exists()
+    runner = CliRunner()
+    out = runner.invoke(app, ["--root", str(lab), "federation", "import", str(tmp_path / "snap"), "--expect", snapshot,
+                              "--as", "rhea"])
+    assert out.exit_code == 0, out.output
+    assert json.loads(out.output)["importer"] == rhea
+    receipt = json.loads((lab / "federation" / f"{snapshot}.import.json").read_text())
+    assert receipt["importer"] == rhea
+    assert events(lab, "federation_indexed")[-1]["actor"] == rhea
+    imported = events(lab, "snapshot_imported")
+    assert [(e["actor"], e["snapshot"], e["already_imported"]) for e in imported] == [(rhea, snapshot, False)]
+    # A second import act by the operator is its own attributed event; the index is unchanged.
+    with Community(lab) as board:
+        again = federation.import_and_index(board, tmp_path / "snap", actor="operator", expect=snapshot)
+        operator = board.agent("operator")["id"]
+    assert again["already_imported"] and not again["index"]["changed"]
+    assert [(e["actor"], e["already_imported"]) for e in events(lab, "snapshot_imported")] == [(rhea, False), (operator, True)]
+    # Directory fetch and reindex pass the --as identity through as well.
+    directory.publish(tmp_path / "snap", tmp_path / "site", lab="Lab A")
+    fetched = runner.invoke(app, ["--root", str(lab), "directory", "fetch", str(tmp_path / "site"), snapshot, "--as", "rhea"])
+    assert fetched.exit_code == 0, fetched.output
+    assert json.loads(fetched.output)["receipt"]["importer"] == rhea and events(lab, "snapshot_imported")[-1]["actor"] == rhea
+    rebuilt = runner.invoke(app, ["--root", str(lab), "federation", "reindex", "--as", "rhea"])
+    assert rebuilt.exit_code == 0, rebuilt.output
+    # /me lists the person's own imports (newest first), and only theirs; the read writes nothing.
+    api = TestClient(create_app(lab, local_user="rhea", static_dir=lab / "missing"))
+    before = sequence(lab)
+    mine = api.get("/api/me").json()["imports"]
+    assert [i["snapshot"] for i in mine] == [snapshot, snapshot] and [i["already_imported"] for i in mine] == [True, False]
+    assert mine[1]["index"]["claims"] >= 1 and mine[1]["scope"]["kind"] == "thread"
+    assert api.get(f"/api/directory/{snapshot}").json()["imported_by"] == rhea
+    assert sequence(lab) == before
+
+
+def test_federation_demo_with_claims_shows_the_citation_on_the_claims_page(tmp_path):
+    from daw.commons import federationdemo
+    summary = federationdemo.build(tmp_path / "fed", cited="demo")
+    claim, post = summary["cited_record"], summary["citing_post"]
+    assert claim.startswith("claim_") and summary["checker"]["numbers"][0]["status"] == "verified"
+    shown = client(tmp_path / "fed" / "cited").get(f"/api/claims/{claim}").json()["cited_from"]
+    assert [(c["post"], c["snapshot"]) for c in shown] == [(post, summary["second_snapshot"])]
+    assert f"/claims/{claim}" in summary["open"]["cited"]
+    with pytest.raises(DawError, match="federation_demo_output_not_empty"):
+        federationdemo.build(tmp_path / "fed", cited="demo")
+    with pytest.raises(DawError, match="invalid_cited_commons"):
+        federationdemo.build(tmp_path / "other", cited="elsewhere")
+
+
+def cite_and_export(lab, ctx, text, out):
+    """Deliver a write-up in `lab` and export its thread as a recorded snapshot; (post, snapshot id)."""
+    done = deliver_writing(lab, ctx, text)
+    with Archive(lab) as view:
+        assert writeup.verdict(view, done["answer"])[0]["status"] == "rendered"
+    with Community(lab) as board:
+        return done["answer"], export.export_snapshot(board, "operator", "thread", done["answer"], out)["snapshot"]
+
+
+def test_a_second_commons_cites_a_claim_and_the_citation_shows_on_both_sides(demo, demo_only, tmp_path):
+    """V16 on commons that have claims: lab B imports lab A's snapshot and cites a claim and a cell; lab A learns of
+    the citation by importing lab B's snapshot, and shows it on the claim's page, the artifact's page and the
+    dashboard. Only recorded citations of snapshots lab A exported count; hidden posts count nowhere."""
+    lab_a, ctx_a = demo
+    with Community(lab_a) as board:
+        exported = export.export_snapshot(board, "operator", "thread", ctx_a["claims"]["correction"], tmp_path / "a")
+    snapshot = exported["snapshot"]
+    claim = next(c for c in json.loads((tmp_path / "a" / "records.json").read_bytes())["claims"] if "1.54" in c["text"])
+    contrast = ctx_a["artifacts"]["contrast"]
+    lab_b, ctx_b = demo_only()
+    with Community(lab_b) as board:
+        federation.import_and_index(board, tmp_path / "a", actor="operator", expect=snapshot)
+    cites = (f"# Lab A's contrast, cited\n\nLab A's corrected contrast is [1.54](snapshot:{snapshot}/{claim['id']}); its "
+             f"table holds [1.54](snapshot:{snapshot}/{contrast}#row=B_vs_A;col=log2_ratio).\n")
+    post, back = cite_and_export(lab_b, ctx_b, cites, tmp_path / "b")
+    records = json.loads((tmp_path / "b" / "records.json").read_bytes())
+    assert sorted((c["post"], c["record"]) for c in records["citations"]) == sorted([(post, claim["id"]), (post, contrast)])
+    # Citing side: the dashboard's citations panel.
+    api_b = client(lab_b)
+    cited = api_b.get("/api/snapshot-citations").json()
+    assert cited["snapshots"][0]["snapshot"] == snapshot and {c["record"] for c in cited["snapshots"][0]["citations"]} == {claim["id"], contrast}
+    assert all(c["resolves"] for c in cited["snapshots"][0]["citations"]) and cited["cited_by"] == []
+    # Cited side: nothing before lab A imports lab B's snapshot (no inferred edges) ...
+    api_a = client(lab_a)
+    assert api_a.get(f"/api/claims/{claim['id']}").json()["cited_from"] == []
+    with Community(lab_a) as board:
+        index = federation.import_and_index(board, tmp_path / "b", actor="operator", expect=back)["index"]
+    assert index["citations"] == 2
+    before = sequence(lab_a)
+    # ... then the claim's page, the artifact's page and the dashboard show the citing post.
+    shown = api_a.get(f"/api/claims/{claim['id']}").json()["cited_from"]
+    assert [(c["snapshot"], c["post"], c["cited"]) for c in shown] == [(back, post, f"snapshot:{snapshot}/{claim['id']}")]
+    assert shown[0]["route"] == f"/directory/{back}#{post}" and shown[0]["foreign"] and shown[0]["post_title"]
+    assert [c["post"] for c in api_a.get(f"/api/artifacts/{contrast}").json()["cited_from"]] == [post]
+    incoming = api_a.get("/api/snapshot-citations").json()["cited_by"]
+    assert incoming[0]["snapshot"] == back and {c["record"] for c in incoming[0]["citations"]} == {claim["id"], contrast}
+    assert all(c["here"] for c in incoming[0]["citations"])
+    page = api_a.get(f"/api/directory/{back}").json()["records"]["citations"]
+    assert {c["cited_record"] for c in page} == {claim["id"], contrast} and all(c["cites_this_commons"] for c in page)
+    cli = json.loads(CliRunner().invoke(app, ["--root", str(lab_a), "federation", "cited-by", claim["id"]]).output)
+    assert [c["post"] for c in cli["cited_by"]] == [post]
+    assert sequence(lab_a) == before  # reads never write
+    # A claim of a hidden post is its stub here too: no citations are shown with it.
+    with Community(lab_a) as board:
+        from daw.commons.moderation import moderate
+        moderate(board, "operator", "hide", claim["post"], "test")
+    assert "cited_from" not in api_a.get(f"/api/claims/{claim['id']}").json()
+
+
+def test_only_recorded_citations_of_this_commons_exports_reach_the_cited_side(demo, demo_only, tmp_path):
+    lab_a, ctx_a = demo
+    # A copy of lab A before it exported anything: it holds the same claim but never published the snapshot id.
+    lab_c = tmp_path / "lab-c"
+    shutil.copytree(lab_a, lab_c, symlinks=True)
+    with Community(lab_a) as board:
+        snapshot = export.export_snapshot(board, "operator", "thread", ctx_a["claims"]["correction"], tmp_path / "a")["snapshot"]
+    claim = next(c for c in json.loads((tmp_path / "a" / "records.json").read_bytes())["claims"] if "1.54" in c["text"])
+    lab_b, ctx_b = demo_only()
+    with Community(lab_b) as board:
+        federation.import_and_index(board, tmp_path / "a", actor="operator", expect=snapshot)
+    text = f"Lab A's contrast is [1.54](snapshot:{snapshot}/{claim['id']}).\n"
+    hidden_post = deliver_writing(lab_b, ctx_b, text)["answer"]
+    post = deliver_writing(lab_b, ctx_b, text)["answer"]
+    with Community(lab_b) as board:
+        from daw.commons.moderation import moderate
+        moderate(board, "operator", "hide", hidden_post, "test")
+        back = export.export_snapshot(board, "operator", "board", None, tmp_path / "b")["snapshot"]
+    # The hidden citing post is withheld from lab B's board export: its citation is not listed.
+    records = json.loads((tmp_path / "b" / "records.json").read_bytes())
+    assert hidden_post in {p["id"] for p in records["posts"] if p.get("withheld")}
+    assert [c["post"] for c in records["citations"]] == [post]
+    with Community(lab_a) as board:
+        assert federation.import_and_index(board, tmp_path / "b", actor="operator", expect=back)["index"]["citations"] == 1
+    # A citation listed in records.json whose post's own bytes do not name it is not indexed (re-hashed copy).
+    forged = tmp_path / "forged"
+    shutil.copytree(tmp_path / "b", forged)
+    records = json.loads((forged / "records.json").read_bytes())
+    other = next(p["id"] for p in records["posts"] if not p.get("withheld") and p["id"] != post)
+    records["citations"].append({"post": other, "snapshot": snapshot, "record": claim["id"]})
+    (forged / "records.json").write_bytes(canonical(records))
+    rehash(forged)
+    forged_id = (forged / "snapshot.id").read_text().strip()
+    with Community(lab_a) as board:
+        assert federation.import_and_index(board, forged, actor="operator", expect=forged_id)["index"]["citations"] == 1
+    with Archive(lab_a) as view:
+        assert {(c["snapshot"], c["post"]) for c in federation.cited_by(view, claim["id"])} == {(back, post), (forged_id, post)}
+    # A commons that never exported the cited snapshot is not attributed the citation, even holding the record.
+    with Community(lab_c) as board:
+        assert federation.import_and_index(board, tmp_path / "b", actor="operator", expect=back)["index"]["citations"] == 1
+    with Archive(lab_c) as view:
+        assert federation.cited_by(view, claim["id"]) == [] and federation.citations(view)["cited_by"] == []
+
+
 # ---- V3 the cohort as the first public demo commons, and the reading path ------------------------------------
 
 def test_the_cohort_board_exports_as_a_citable_snapshot_and_resolves_in_another_commons(cohort, demo_only, tmp_path):
@@ -477,7 +640,7 @@ def test_the_cohort_board_exports_as_a_citable_snapshot_and_resolves_in_another_
     assert len(records["artifacts"]) == 281 and absent and all(not a["output"].get("path") for a in absent)
     lab, ctx = demo_only()
     with Community(lab) as board:
-        index = federation.import_and_index(board, tmp_path / "cohort-snapshot", expect=snapshot)["index"]
+        index = federation.import_and_index(board, tmp_path / "cohort-snapshot", actor="operator", expect=snapshot)["index"]
     assert index["artifacts"] == 281
     step = json.loads(TOUR.read_text())["steps"][0]  # the paired Pmp22 effect, key=primary[0].effect_log2
     pointer = f"snapshot:{snapshot}/{step['artifact']}#{step['locator']}"
@@ -605,6 +768,44 @@ def test_public_demo_commons_from_the_cohort_fixture(tmp_path):
     with pytest.raises(DawError, match="tour_steps_broken"):
         publicdemo.build(tmp_path / "public-2", tour=tmp_path / "broken.json")
     assert not (tmp_path / "public-2").exists()
+
+
+def test_a_second_commons_cites_the_public_cohort_with_the_citation_visible_on_both_sides(cohort_copy, tmp_path):
+    """Milestone E (v3 V16, B9) on a copy of the cohort: `bio commons federation-demo` builds the public cohort
+    commons and a second (synthetic) commons on another question set; the second imports the cohort snapshot and
+    cites a cohort artifact cell (the cohort has no claims yet), the cohort imports the citing snapshot back, and
+    the citation shows on both sides. Each import is attributed and listed on the importer's /me."""
+    from daw.commons.fixture import verify_fixture
+    out = tmp_path / "federation"
+    built = CliRunner().invoke(app, ["federation-demo", str(out), "--fixture", str(cohort_copy)])
+    assert built.exit_code == 0, built.output
+    summary = json.loads((out / "FEDERATION.json").read_text())
+    step = json.loads(TOUR.read_text())["steps"][0]
+    cohort_snapshot, post, artifact = summary["cited_snapshot"], summary["citing_post"], step["artifact"]
+    assert summary["cited_record"] == artifact and summary["checker"]["status"] == "rendered"
+    assert summary["checker"]["numbers"] == [{"text": step["number"]["text"], "status": "verified", "scope": "cell"}]
+    cited, second = client(out / "cited"), client(out / "second")
+    # The second commons: its dashboard citations panel lists the cohort snapshot, resolving.
+    panel = second.get("/api/snapshot-citations").json()["snapshots"]
+    assert [(s["snapshot"], [c["record"] for c in s["citations"]]) for s in panel] == [(cohort_snapshot, [artifact])]
+    assert panel[0]["citations"][0]["resolves"] and panel[0]["indexed"]["artifacts"] == 281
+    # The cohort: the cited artifact's page and the dashboard list the second commons' post.
+    before = sequence(out / "cited")
+    page = cited.get(f"/api/artifacts/{artifact}").json()["cited_from"]
+    assert [(c["snapshot"], c["post"], c["cited"]) for c in page] == \
+        [(summary["second_snapshot"], post, f"snapshot:{cohort_snapshot}/{artifact}")]
+    incoming = cited.get("/api/snapshot-citations").json()["cited_by"]
+    assert [c["post"] for g in incoming for c in g["citations"]] == [post] and incoming[0]["citations"][0]["here"]
+    # B9: each import is attributed to the importing participant and on their /me (local mode acts as "local").
+    for api, snapshot in ((second, cohort_snapshot), (cited, summary["second_snapshot"])):
+        me = api.get("/api/me").json()
+        assert me["name"] == "local" and [i["snapshot"] for i in me["imports"]] == [snapshot]
+    assert sequence(out / "cited") == before  # reads never write
+    # The cohort's own records are unchanged (no claims written for its agents); the fixture copy still verifies.
+    with Archive(out / "cited") as view:
+        assert view.one("SELECT count(*) AS n FROM claim")["n"] == 0
+        assert view.one("SELECT count(*) AS n FROM post")["n"] == 269
+    assert verify_fixture(cohort_copy)["verified"]
 
 
 def test_public_cohort_commons_reads_publicly_and_visitors_comment_and_mark_after_signing_in(tmp_path):

@@ -144,10 +144,46 @@ export interface Citation {
 export interface SnapshotCitations {
   snapshot: string;
   imported: boolean;
-  indexed: { claims: number; artifacts: number } | null;
+  indexed: { claims: number; artifacts: number; citations?: number } | null;
   citations: Citation[];
   questions: { question: string | null; thread: string | null; posts: string[]; records: string[] }[];
   citing_posts: number;
+}
+
+/** Spec v3 V16: a post of an imported snapshot that cites a record of a snapshot this board exported. Foreign. */
+export interface IncomingCitation {
+  snapshot: string;
+  post: string;
+  post_title?: string | null;
+  author?: string | null;
+  created?: string | null;
+  record: string;
+  kind: "claim" | "artifact";
+  cited: string;
+  cited_snapshot: string;
+  route: string;
+  foreign: true;
+  here?: boolean;
+}
+
+export interface CitationsView {
+  snapshots: SnapshotCitations[];
+  /** Absent on servers before spec v3 V16. */
+  cited_by?: { snapshot: string; citations: IncomingCitation[] }[];
+  note: string;
+}
+
+/** A citation an imported snapshot's post makes (indexed from its records.json, backed by the post's bytes). */
+export interface ForeignCitation {
+  post: string;
+  post_title?: string | null;
+  author?: string | null;
+  created?: string | null;
+  cited: string;
+  cited_kind: "claim" | "artifact";
+  cited_record: string;
+  cited_snapshot: string;
+  cites_this_commons: boolean;
 }
 
 export interface SnapshotPage {
@@ -155,8 +191,9 @@ export interface SnapshotPage {
   scope?: Record<string, unknown> | null;
   counts?: Record<string, number> | null;
   imported?: string | null;
+  imported_by?: string | null;
   file_count: number;
-  records: { claims: ForeignClaim[]; artifacts: ForeignArtifact[] };
+  records: { claims: ForeignClaim[]; artifacts: ForeignArtifact[]; citations?: ForeignCitation[] };
   citations: SnapshotCitations | null;
   pointer_forms: string[];
   note?: string;

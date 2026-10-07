@@ -1,5 +1,5 @@
-"""`bio commons preprint|directory|tour|curate|public-demo|harness-check|invite|pilot-report` and
-`bio commons federation reindex|records|citations` (spec v2 V3, V7, V8; v3 G2, V15).
+"""`bio commons preprint|directory|tour|curate|public-demo|federation-demo|harness-check|invite|pilot-report` and
+`bio commons federation reindex|records|citations|cited-by` (spec v2 V3, V7, V8; v3 G2, V15, V16, B9).
 
 Each command calls the same function as the HTTP API. Commands that write take an explicit acting participant
 (`--as`); agents act through `bio community` in their own checkout instead.
@@ -63,13 +63,13 @@ def directory_list(source: str):
 
 
 @directory_app.command("fetch")
-def directory_fetch(ctx: typer.Context, source: str, snapshot: str):
-    """Fetch a listed snapshot into this commons: verified byte for byte, imported read-only and indexed."""
+def directory_fetch(ctx: typer.Context, source: str, snapshot: str, as_: As = "operator"):
+    """Fetch a listed snapshot into this commons: verified byte for byte, imported read-only and indexed, the
+    import attributed to the --as participant."""
     from daw.commons.directory import fetch
     from daw.community import Community
-    acting("operator")
     with Community(ctx.obj) as board:
-        emit(fetch(board, source, snapshot))
+        emit(fetch(board, source, snapshot, actor=acting(as_)))
 
 
 @directory_app.command("show")
@@ -81,13 +81,12 @@ def directory_show(ctx: typer.Context):
         emit(known(view))
 
 
-def federation_reindex(ctx: typer.Context):
-    """Rebuild the federation index from <commons>/federation/ (operator; snapshots that no longer verify drop out)."""
+def federation_reindex(ctx: typer.Context, as_: As = "operator"):
+    """Rebuild the federation index from <commons>/federation/ (snapshots that no longer verify drop out)."""
     from daw.commons.federation import reindex
     from daw.community import Community
-    acting("operator")
     with Community(ctx.obj) as board:
-        emit(reindex(board))
+        emit(reindex(board, acting(as_)))
 
 
 def federation_records(ctx: typer.Context, snapshot: str):
@@ -104,6 +103,14 @@ def federation_citations(ctx: typer.Context):
     from daw.commons.federation import citations
     with Archive(ctx.obj) as view:
         emit(citations(view))
+
+
+def federation_cited_by(ctx: typer.Context, record: Annotated[str | None, typer.Argument(help="claim_… or artifact_… of this board")] = None):
+    """Posts of imported snapshots that cite records of snapshots this board exported (V16; recorded only)."""
+    from daw.commons.archive import Archive
+    from daw.commons.federation import cited_by
+    with Archive(ctx.obj) as view:
+        emit({"cited_by": cited_by(view, record)})
 
 
 @tour_app.command("list")
@@ -205,6 +212,15 @@ def public_demo_command(out: Path, fixture: Annotated[Path | None, typer.Option(
     emit(build(out, fixture=fixture, tour=tour, snapshot=snapshot, visitors=visitors))
 
 
+def federation_demo_command(out: Path,
+                            cited: Annotated[str, typer.Option(help="cohort (the public PMP22 cohort; artifact cells, it has no claims yet) or demo (a synthetic commons with claims)")] = "cohort",
+                            fixture: Annotated[Path | None, typer.Option(help="Real-data fixture for --cited cohort (default fixtures/pmp22-cohort)")] = None):
+    """Build a second commons that imports and cites a snapshot, and the cited commons that imports the citing
+    snapshot back, so the citation shows on both sides (V16). Offline; the second commons is synthetic."""
+    from daw.commons.federationdemo import build
+    emit(build(out, cited=cited, fixture=fixture))
+
+
 def harness_check_command(harness: Annotated[str, typer.Option(help="codex, claude or hermes")],
                           executable: Annotated[str | None, typer.Option(help="Harness CLI (default: on PATH)")] = None,
                           model: str | None = None,
@@ -253,6 +269,7 @@ def register(app, federation_app):
     """Attach the commands to `bio commons` (called from daw.commons.cli)."""
     app.command("preprint")(preprint_command)
     app.command("public-demo")(public_demo_command)
+    app.command("federation-demo")(federation_demo_command)
     app.command("harness-check")(harness_check_command)
     app.command("invite")(invite_command)
     app.command("pilot-report")(pilot_report_command)
@@ -262,3 +279,4 @@ def register(app, federation_app):
     federation_app.command("reindex")(federation_reindex)
     federation_app.command("records")(federation_records)
     federation_app.command("citations")(federation_citations)
+    federation_app.command("cited-by")(federation_cited_by)

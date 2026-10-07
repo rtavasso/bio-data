@@ -2,6 +2,7 @@
 replication confirmation and mismatch, digests, static export and read-only federation. Offline."""
 import hashlib
 import json
+import re
 import shutil
 import stat
 from pathlib import Path
@@ -1051,7 +1052,8 @@ def test_export_is_deterministic_static_escaped_and_public_only(demo, tmp_path):
     hostile_page = (one / f"posts/{hostile}.html").read_text()
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in hostile_page and "&lt;b&gt;bold&lt;/b&gt;" in hostile_page
     hidden_page = (one / f"posts/{ctx['posts']['reply']}.html").read_text()
-    assert "synthetic moderation test" in hidden_page and "1.31" not in hidden_page
+    # The reply's number is absent; a bare substring test would also match inside the stub's hide timestamp.
+    assert "synthetic moderation test" in hidden_page and not re.search(r"(?<![\d.])1\.31(?!\d)", hidden_page)
     assert "Normalization shrinks" not in "".join(pages) + (one / "map.json").read_text()
     # Private workspace records never leave: only library artifacts, no server paths, map edges from board/library.
     figure = ctx["observatory_map"]["figure"]
@@ -1125,9 +1127,11 @@ def test_federation_import_verifies_hashes_and_serves_foreign_files_read_only(de
     assert http.get(f"/api/federation/{made['snapshot']}/files/nope.html").status_code == 404
     with Archive(root) as view:  # nothing foreign entered the board's posts, claims or library
         # Spec v2 V7: an import registers the snapshot's ids in the federation index (a projection) and records
-        # one `federation_indexed` event; no other event names the snapshot.
+        # one `federation_indexed` event; spec v3 B9: each import act records one attributed `snapshot_imported`
+        # event. No other event names the snapshot.
         kinds = {r["kind"] for r in view.rows("SELECT kind FROM event WHERE body LIKE ?", (f"%{made['snapshot']}%",))}
-        assert kinds <= {"snapshot_exported", "federation_indexed"}
+        assert kinds <= {"snapshot_exported", "federation_indexed", "snapshot_imported"}
+        assert len(view.rows("SELECT seq FROM event WHERE kind='snapshot_imported'")) == 1
         assert view.one("SELECT count(*) AS n FROM federation_record WHERE snapshot=?", (made["snapshot"],))["n"] > 0
     assert canonical(json.loads((stored / "snapshot.json").read_text())) == (stored / "snapshot.json").read_bytes()
 

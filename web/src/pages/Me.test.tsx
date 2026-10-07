@@ -54,6 +54,16 @@ test("me shows identity, budget, anchored comments, marks as attribution, and pr
   expect(screen.queryByText("Operator: accounts")).toBeNull();
 });
 
+test("me lists the snapshots this participant imported (v3 B9)", async () => {
+  const snapshot = "c".repeat(64);
+  respond({ "/api/me": [200, { ...SUMMARY, imports: [{ snapshot, already_imported: false, scope: { kind: "board" },
+    counts: { posts: 3 }, index: { claims: 2, artifacts: 5, citations: 1, changed: true }, seq: 9, created: "2026-10-07" }] }] });
+  render(<MemoryRouter><Me /></MemoryRouter>);
+  const section = await screen.findByRole("region", { name: "Imported snapshots" });
+  expect(section.querySelector(`a[href="/directory/${snapshot}"]`)).toBeTruthy();
+  expect(section.textContent).toContain("2 claims, 5 artifacts, 1 citations indexed");
+});
+
 test("a person without an allowance is told their budgeted requests are refused and where it is configured", async () => {
   const setting = "[allowance] in commons.toml (e.g. minutes = 120)";
   respond({ "/api/me": [200, { ...SUMMARY, budget: { allowance: {}, spent: SUMMARY.budget.spent, remaining: {},

@@ -6,6 +6,7 @@ other write (see `daw.commons.auth`). Failed logins are rate limited per client
 address and per presented token (`daw.commons.ratelimit`); session cookies are
 scoped to the commons' base path, so tenants on one host never share a cookie.
 """
+import json
 import math
 from typing import Annotated
 
@@ -94,6 +95,13 @@ def summary(view, participant, mode):
         row["kind"] = view.library.json_blob(view.one("SELECT body_blob FROM post WHERE id=?", (row["post"],))["body_blob"]
                                              ).get("kind")
     marks = view.rows("SELECT * FROM mark WHERE participant=? ORDER BY created DESC LIMIT ?", (pid, RECENT))
+    # Federation imports this participant made (spec v3 B9): one `snapshot_imported` event per import act.
+    imports = []
+    for row in view.rows("SELECT seq,body,created FROM event WHERE kind='snapshot_imported' AND "
+                         "json_extract(body,'$.actor')=? ORDER BY seq DESC LIMIT ?", (pid, RECENT)):
+        body = json.loads(row["body"])
+        imports.append({**{k: body.get(k) for k in ("snapshot", "already_imported", "scope", "counts", "index")},
+                        "seq": row["seq"], "created": row["created"]})
     kind = participant.get("kind", "agent")
     return {**describe(participant), "mode": mode, "auth": participant.get("auth"),
             "permissions": sorted(actions(participant)), "visitor": is_visitor(participant), "writes_over_http": kind in WRITERS,
@@ -103,6 +111,7 @@ def summary(view, participant, mode):
             "commissions": [participation.request_row(r) for r in tasks if r["kind"] == "commission"],
             "marks": [participation.mark_row(r) for r in marks],
             "uploads": view.rows("SELECT * FROM upload WHERE uploader=? ORDER BY created DESC LIMIT ?", (pid, RECENT)),
+            "imports": imports,
             "inbox": view.rows("SELECT * FROM request WHERE target=? AND state!='completed' ORDER BY created", (pid,)),
             "tokens": accounts.tokens(view, pid),
             "csrf_header": CSRF_HEADER}

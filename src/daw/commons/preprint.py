@@ -281,6 +281,8 @@ def build_preprint(view, post_id):
     site.add(f"source/{post_id}.md", source.encode("utf-8"))
     site.add(f"records/{post_id}.json", record_bytes)
     site.add(f"checks/{post_id}.json", canonical(export._check_record(view, post_id, row, set(artifacts))))
+    # V16: the foreign records the write-up names (recorded citations), so a cited commons importing this learns of them.
+    cited = [{"post": post_id, "snapshot": s, "record": r} for s, r in dict.fromkeys(federation.FOREIGN.findall(source))]
     site.add("records.json", canonical({
         "format": federation.RECORDS_FORMAT,
         "posts": [{"id": post_id, "title": title, "author": row["author"], "kind": content.get("kind"),
@@ -291,6 +293,7 @@ def build_preprint(view, post_id):
                        "derivation_key": a.get("derivation_key"), "manifest_path": a.get("manifest_path"),
                        "output": {"path": a["path"], "sha256": a["sha256"], "bytes": a["bytes"], "name": a["name"]}}
                       for a in artifacts.values() if not a.get("foreign")],
+        **({"citations": cited} if cited else {}),
         "note": "Records of this preprint for federation indexes; records of other snapshots stay theirs."}))
     preprint = {"format": FORMAT, "rules": writeup.RULES_VERSION, "sequence": view.sequence(),
                 "post": {"id": post_id, "title": title, "author": row["author"], "created": row["created"],
