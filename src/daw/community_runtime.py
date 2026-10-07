@@ -428,6 +428,10 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
     executable = executable or adapter.default_executable
     trial = board.trial(agent)
     decision = sandbox.policy(board.root, allow_unsandboxed, request["task_type"])
+    from daw.commons.moderation import Visibility
+    if Visibility.of(board).withheld(request["post"]):
+        # Hidden content is withheld from every reader, the delivered agent included (spec v2 C2).
+        raise DawError("hidden_by_moderation", f"request {request_id} asks with a hidden post; unhide it to deliver")
     try:
         # Per-agent uid and checkout disk quota (spec v2 V9), decided before any state changes.
         decision = sandbox.preflight(decision, board.root, agent["id"], trial)

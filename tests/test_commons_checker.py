@@ -273,3 +273,23 @@ def test_refused_writeups_are_resolved_by_the_visibility_resolver_and_hidden_sta
         hide(board, "operator", post, "checker test")
     stub = http.get(f"/api/posts/{post}").json()
     assert stub == {"id": post, "hidden": True, "reason": "checker test"}
+
+
+def test_refused_writeup_is_a_placeholder_for_agents_and_in_raw_run_streams(demo):
+    """C5 on the remaining surfaces: an agent reading the refused write-up (CLI/board service) gets the
+    placeholder, and the run's raw stream and model messages, which carry the prose verbatim, are withheld."""
+    from daw.commons import boardservice
+    root, ctx = demo
+    done = deliver_writing(root, ctx, "Zebrafinch: the ratio is 4.")
+    post = done["answer"]
+    with Community(root) as board:
+        read = board.read(post, ctx["agents"]["bob"])
+        assert read["content"]["title"] == checks.PLACEHOLDER_TITLE and "Zebrafinch" not in json.dumps(read)
+        served = boardservice.execute(root, ctx["agents"]["bob"], "show", {"post": post})
+        assert "Zebrafinch" not in json.dumps(served)
+        assert board.read(post, "operator", full=True)["content"]["body"].startswith("Zebrafinch")
+    http = client(root)
+    run = http.get(f"/api/posts/{post}").json()["run"]
+    for path in ("raw", "messages"):
+        refused = http.get(f"/api/runs/{run}/{path}")
+        assert refused.status_code == 403 and refused.json()["error"] == "writeup_withheld"
