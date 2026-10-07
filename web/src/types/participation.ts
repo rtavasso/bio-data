@@ -52,7 +52,9 @@ export interface BudgetSummary {
   allowance: Budget | null;
   spent: Required<Budget>;
   remaining: Budget | null;
-  unlimited: boolean;
+  unlimited: boolean;       // operators: not budget-limited
+  configured?: boolean;     // false: a person without an allowance; budgeted requests are refused (B13)
+  setting?: string;         // where an operator configures the commons default
 }
 
 export interface StoredAnchor extends Anchor {

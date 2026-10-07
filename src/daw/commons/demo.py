@@ -225,6 +225,8 @@ def build_demo(root, *, extensions=True):
     board.library.close()
     board.library = Workspace(board.root / "library")
     write_json(root / "DEMO.json", {"synthetic": True, "created": now(), "note": SYNTHETIC})
+    # A person's asks, promotions and commissions spend an allowance; without one they are refused (B13).
+    (root / "commons.toml").write_text("[allowance]\nminutes = 600\n")
     ctx = {}
     try:
         with scripted_runtime(root) as (harness, answers):

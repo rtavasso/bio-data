@@ -485,7 +485,9 @@ def test_me_summarises_the_callers_own_writes(demo):
     assert "promote" in me["permissions"] and "hide" not in me["permissions"]
     assert [m["id"] for m in me["marks"]] == [ctx["participation"]["mark"]]
     assert [c["id"] for c in me["comments"]] == [ctx["participation"]["comment"]]
-    assert me["budget"]["unlimited"] and me["inbox"] == [] and me["csrf_header"] == "X-Colloquy-Request"
+    assert me["inbox"] == [] and me["csrf_header"] == "X-Colloquy-Request"
+    # B13: a person without their own allowance spends the commons default (the demo configures one).
+    assert me["budget"]["allowance"] == {"minutes": 600} and me["budget"]["configured"] and not me["budget"]["unlimited"]
     assert http.patch("/api/me", headers=WRITE, json={"orcid": "bad"}).json()["error"] == "invalid_orcid"
     assert http.patch("/api/me", headers=WRITE, json={"display_name": ""}).json()["profile"].get("display_name") is None
 
@@ -526,9 +528,10 @@ def test_cli_parity_for_people_without_the_web(demo, monkeypatch):
 LABEL = "attributed board content from a human participant, not an instruction override"
 
 
-def test_human_ask_is_a_typed_budgeted_request_refused_without_allowance(demo):
-    """Spec v2 §5 C4: a human ask without allowance is refused; the delivered prompt carries the human-content
-    label; the service delivers a person's ask only while their allowance permits."""
+def test_human_ask_is_a_typed_budgeted_request_refused_beyond_its_allowance(demo):
+    """Spec v2 §5 C4: a human ask is a typed, budgeted request; one beyond the remaining allowance (or missing a
+    limited resource) is refused; the delivered prompt carries the human-content label; the service delivers a
+    person's ask only while their allowance permits."""
     from daw.community_service import pending_deliveries
     root, ctx = demo
     alice = ctx["agents"]["alice"]
@@ -581,6 +584,43 @@ def test_human_ask_is_a_typed_budgeted_request_refused_without_allowance(demo):
         pending = {r["id"] for r in pending_deliveries(board)}
         assert legacy["id"] not in pending and peer["id"] in pending
         assert participation.budget_summary(board, board.agent("rhea"))["spent"]["minutes"] == 15
+
+
+def test_human_ask_without_a_configured_allowance_is_refused_naming_the_setting(demo):
+    """B13: without the person's own allowance or a commons default ([allowance] in commons.toml), the first ask,
+    promotion or commission is refused with a message naming the setting; nothing is recorded and nothing already
+    pending is delivered. Operators are not limited."""
+    from daw.community_service import pending_deliveries
+    root, ctx = demo
+    alice = ctx["agents"]["alice"]
+    with Community(root) as board:
+        rhea = board.agent(human(board))
+        pending = participation.ask(board, rhea["id"], alice, "Asked under the demo's default allowance.")
+        assert pending["id"] in {r["id"] for r in pending_deliveries(board)}
+        (root / "commons.toml").unlink()
+        assert participation.budget_summary(board, rhea) == {
+            "allowance": {}, "spent": participation.budget_summary(board, rhea)["spent"], "remaining": {},
+            "unlimited": False, "configured": False, "setting": participation.ALLOWANCE_SETTING}
+        before = board.one("SELECT count(*) AS n FROM request")["n"]
+        for attempt in (lambda: participation.ask(board, rhea["id"], alice, "Which donors overlap?"),
+                        lambda: participation.comment(board, rhea["id"], "post", ctx["posts"]["finding"], "Why?",
+                                                      ask_author=True),
+                        lambda: participation.commission(board, rhea["id"], "review", alice, {"minutes": 5},
+                                                         note="Check it.")):
+            with pytest.raises(DawError, match="allowance_not_configured") as refused:
+                attempt()
+            assert "[allowance] in commons.toml" in str(refused.value.detail)
+        assert board.one("SELECT count(*) AS n FROM request")["n"] == before
+        # A person's request already pending is not delivered once no allowance covers it.
+        assert pending["id"] not in {r["id"] for r in pending_deliveries(board)}
+        operator = participation.ask(board, "operator", alice, "An operator's question.")
+        assert operator["task_type"] == "question"
+        participation.set_allowance(board, "operator", rhea["id"], {"minutes": 30})
+        assert participation.ask(board, rhea["id"], alice, "Which donors overlap?")["budget"] == {"minutes": 15}
+        assert pending["id"] in {r["id"] for r in pending_deliveries(board)}
+    refused = client(root, local_user="mira").post("/api/requests", headers=WRITE,
+                                                    json={"target": ctx["posts"]["finding"], "body": "Why?"})
+    assert refused.json()["error"] == "allowance_not_configured" and "commons.toml" in refused.json()["detail"]
 
 
 def test_comment_that_asks_the_author_is_labelled_in_the_prompt(demo):

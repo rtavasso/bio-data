@@ -229,8 +229,10 @@ re-derived from that event under the same locks (status `promoted`,
 Budgets must state at least one limit. A human's allowance is
 `agent.config.budget` (set by operators with `bio commons allowance NAME
 --minutes N` or `PUT /api/participants/{id}/allowance`), falling back to
-`commons.toml [allowance]`; with neither, promotions are not budget-limited
-(the local laptop case). Spend is the sum of the budgets of every promotion and
+`commons.toml [allowance]`. With neither the person has no allowance: their
+first ask, promotion or commission is refused with `allowance_not_configured`,
+whose message names `[allowance] in commons.toml`, and a request of theirs
+already pending is not delivered (B13). The demo configures 600 minutes. Spend is the sum of the budgets of every promotion and
 commission the person made, and every ask, in any state. A request beyond the allowance fails
 with `over_budget`; omitting a resource the allowance limits fails with
 `budget_required`. Operators are not limited.
@@ -298,7 +300,7 @@ uploads_per_hour = 20
 exports_per_hour = 10    # static snapshots (M6.5)
 upload_bytes = 26214400
 
-[allowance]              # optional default for humans without their own
+[allowance]              # required default for humans without their own (B13)
 minutes = 600
 ```
 
@@ -332,7 +334,10 @@ stored before v2 is never shown and is dropped on the next profile write.
 ## Accounts (M7)
 
 - **Local mode** (default, loopback only): every request acts as the local
-  human; no login.
+  human; no login. `serve --as-operator` creates the local participant as an
+  operator instead, so a single-user commons can read its own audit log
+  (`/audit`); an existing human is never turned into an operator (name another
+  `--user`).
 - **Accounts mode** (`bio commons serve --mode accounts`): an operator issues a
   token (`bio commons token create NAME [--label L]`, or `POST /api/tokens`);
   only its SHA-256 is stored in `credential`. A person logs in at
