@@ -45,6 +45,10 @@ const dashboard: DashboardData = {
     task_type: [group("peer_question", { posts_scope: "run" })],
   },
   projection: { runs: 2, stored: 1, stale: 1, missing: 0, note: "Stale or missing rows are computed in memory." },
+  frontier: { completed_questions: 4, completed_with_non_gap_item: 1, completed_with_non_gap_share: 0.25,
+    items_by_kind: { open_question: 0, untestable: 1, gap: 6, proposed_experiment: 0, next_step: 2 },
+    items_per_completed_question: { open_question: 0, untestable: 0.25, gap: 1.5, proposed_experiment: 0, next_step: 0.5 },
+    finals_stating_next_step: 3, finals_next_step_matched: 1, finals_next_step_matched_share: 0.3333 },
   pricing: { available: false, reason: "no pricing.toml in this commons" },
   limitations: ["Counts are behaviour, not scientific value."],
 };
@@ -194,4 +198,14 @@ test("claims authoring per cohort: claims per post, evidence posts with claims a
   expect(summary.textContent).toContain("14 / 1 / 0 / 5");
   expect(summary.textContent).toContain("30%");
   expect(summary.textContent).toContain("25%");
+});
+
+test("frontier closure: items per completed question by kind and finals whose next step has an item (v3 G1)", async () => {
+  show();
+  const table = await screen.findByRole("table", { name: "Frontier closure" });
+  const rows = within(table).getAllByRole("row").slice(1).map((r) => r.textContent);
+  expect(rows).toContain("next step20.50");
+  expect(rows).toContain("gap61.50");
+  expect(screen.getByText(/1 of 4 completed questions record an item beyond gaps/).textContent).toContain(
+    "1 of 3 finals");
 });

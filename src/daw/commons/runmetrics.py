@@ -98,6 +98,8 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
             "inbox_calls": count(sum("community inbox" in c for c in commands)),
             "forum_searches": count(sum("community search" in c for c in commands)),
             "library_family_searches": count(sum("--family" in c and "community search" in c for c in commands)),
+            "overview_calls": count(sum("community overview" in c for c in commands)),
+            "frontier_reads": count(sum(bool(re.search(r"community (?:frontier|experiments)\b", c)) for c in commands)),
             "analysis_receipts": count(len(analyses)),
             "analysis_failures": count(sum(1 for a in known_exit if a["exit_code"] != 0)) if known_exit or not analyses else None,
             "analysis_exit_codes_unknown": count(len(analyses) - len(known_exit)),

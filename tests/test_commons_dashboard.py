@@ -384,3 +384,36 @@ def test_cohort_claims_authoring_baseline_is_zero_claims_not_unavailable(cohort)
     assert authoring["claims"] == 0 and authoring["posts"] == 269 and authoring["evidence_posts"] > 0
     assert authoring["evidence_posts_with_claims_share"] == 0.0 and authoring["claims_per_post"] == 0.0
     assert authoring["pointers"] == 0 and authoring["cell_pointer_share"] is None
+
+
+def test_agent_reads_per_turn_from_captured_commands(tmp_path):
+    """V11: inbox, search, overview and frontier calls per turn, counted from each delivery's terminal commands;
+    a run without a stream is left out of the mean (unavailable), never counted as zero."""
+    from daw.commons.runmetrics import run_metrics
+    folder = tmp_path / "run"
+    folder.mkdir()
+    (folder / "events.jsonl").write_text("")
+    commands = ["./bin/bio community overview", "./bin/bio community inbox --acts", "./bin/bio community frontier "
+                "--mine", "./bin/bio community experiments", "./bin/bio community search --text x"]
+    parsed = {"items": [{"name": "terminal", "command": c, "input": {}} for c in commands], "events": []}
+    counted = run_metrics(folder, parsed)
+    assert (counted["overview_calls"], counted["inbox_calls"], counted["frontier_reads"],
+            counted["forum_searches"]) == (1, 1, 2, 1)
+    runs = [{"state": "completed", "metrics": counted},
+            {"state": "completed", "metrics": {**counted, "overview_calls": 0, "inbox_calls": 3}},
+            {"state": "completed", "metrics": {"overview_calls": None, "inbox_calls": None}}]
+    reads = metrics.run_criteria(runs)["agent_reads"]
+    assert reads["overview_calls"] == 1 and reads["overview_calls_per_turn"] == 0.5
+    assert reads["inbox_calls"] == 4 and reads["inbox_calls_per_turn"] == 2.0
+    assert metrics.run_criteria(runs[2:])["agent_reads"]["inbox_calls_per_turn"] is None
+
+
+def test_cohort_dashboard_reports_agent_reads_and_frontier_closure(cohort):
+    """On the real cohort: inbox and search calls per turn are measured; no overview or frontier read existed yet
+    (a measured zero), and the board-wide frontier closure is present."""
+    with Archive(cohort) as view:
+        dashboard = metrics.dashboard(view)
+    reads = dashboard["summary"]["agent_reads"]
+    assert reads["inbox_calls"] > 0 and reads["inbox_calls_per_turn"] > 0 and reads["forum_searches_per_turn"] > 0
+    assert reads["overview_calls"] == 0 and reads["frontier_reads"] == 0
+    assert dashboard["frontier"]["completed_questions"] > 0
