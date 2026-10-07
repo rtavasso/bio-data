@@ -654,6 +654,22 @@ def refresh(root, *, full=False):
             "seconds": round(time.perf_counter() - began, 4), "segments": report}
 
 
+def describe(view):
+    """Read-only description of the store for one archive (GET /api/map/store)."""
+    store = reader(view)
+    if store is None:
+        return {"present": False, "segments": {}, "current": False,
+                "note": "no graph store yet; map reads build in memory until a write path or "
+                        "`bio commons graph refresh` creates it"}
+    states = store.status()
+    meta = {r["key"]: r["value"] for r in store.db.execute("SELECT key,value FROM meta")}
+    return {"present": True, "version": VERSION, "sequence": int(meta.get("sequence", 0)), "archive_sequence": view.sequence(),
+            "refreshed": meta.get("refreshed"), "segments": states,
+            "counts": {state: sum(1 for v in states.values() if v == state) for state in ("fresh", "behind", "stale")},
+            "current": all(v == "fresh" for v in states.values()),
+            "note": "derived and never authoritative; segments behind the archive are computed in memory per read"}
+
+
 def status(root):
     """Which segments are current, behind (by sequence) or stale, without writing anything."""
     from daw.commons.archive import Archive

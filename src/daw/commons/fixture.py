@@ -30,7 +30,9 @@ QUESTION_SKIP_DIRS = {"inputs", "sources", "cache", "staging", "raw"}
 QUESTION_SUFFIXES = {".md", ".json", ".tsv", ".csv", ".txt", ".py", ".r", ".sh", ".yaml", ".yml", ".toml", ".jsonl"}
 SOURCE_LIKE = ("PMC", "PMID", "GSE", "GSM", "ENCSR", "PXD", "E-MTAB", "E-MEXP")
 RUN_FILES = ("execution.json", "state-receipt.json", "heartbeat.json", "final.md", "prompt.txt", "task-outcome.json",
-             "budget.json", "sandbox.json", "stall.json")
+             "budget.json", "sandbox.json", "stall.json",
+             # V6 delivery records: clocks, compaction ids/hashes (no summary text), the receipt index.
+             "clock.jsonl", "compactions.jsonl", "receipts.json")
 DROP_BOARD_TABLES = ("credential",)
 STREAM_KEEP_INPUT_KEYS = {"command", "path", "name", "names", "pattern", "query", "limit", "offset", "role_filter",
                           "detail", "start_line", "end_line", "offset_line", "timeout", "session_id", "cwd"}
@@ -214,6 +216,13 @@ def build_fixture(source_root, out, *, name=None):
             if (src_run / name).is_file():
                 shutil.copyfile(src_run / name, dst_run / name)
                 manifest["files"][str((dst_run / name).relative_to(out))] = file_hash(dst_run / name)
+        receipts = src_run / "receipts"  # V6: content-addressed copies of indexed run_analysis.py receipts
+        if receipts.is_dir() and not receipts.is_symlink():
+            for path in sorted(receipts.glob("*.json")):
+                if path.is_file() and not path.is_symlink() and path.stat().st_size <= QUESTION_FILE_CAP:
+                    (dst_run / "receipts").mkdir(exist_ok=True)
+                    shutil.copyfile(path, dst_run / "receipts" / path.name)
+                    manifest["files"][str((dst_run / "receipts" / path.name).relative_to(out))] = file_hash(path)
         stream = src_run / "events.jsonl"
         if stream.is_file():
             with stream.open(encoding="utf-8", errors="replace") as src_lines, (dst_run / "events.jsonl").open("w", encoding="utf-8") as dst_lines:

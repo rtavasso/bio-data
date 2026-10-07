@@ -28,7 +28,6 @@ import hashlib
 import json
 import re
 import shlex
-import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -574,20 +573,3 @@ def reindex_run(board, actor, run):
                                              "actor": actor, "unreceipted_calls": len(index["unreceipted_calls"])})
     return {"run": run, "written": written, "kept": kept, "unavailable": unavailable, "receipts": counts}
 
-
-def copy_records(source, destination):
-    """Record files and receipt copies of one run folder (for fixture builds): {relative path: path}."""
-    copied = {}
-    source, destination = Path(source), Path(destination)
-    for name in RECORD_FILES:
-        if (source / name).is_file() and not (source / name).is_symlink():
-            shutil.copyfile(source / name, destination / name)
-            copied[name] = destination / name
-    receipts = source / RECEIPT_DIR
-    if receipts.is_dir() and not receipts.is_symlink():
-        for path in sorted(receipts.glob("*.json")):
-            if path.is_file() and not path.is_symlink():
-                (destination / RECEIPT_DIR).mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(path, destination / RECEIPT_DIR / path.name)
-                copied[f"{RECEIPT_DIR}/{path.name}"] = destination / RECEIPT_DIR / path.name
-    return copied
