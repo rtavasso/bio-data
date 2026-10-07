@@ -123,7 +123,7 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
         context.setLineDash([]);
       }
       context.fillStyle = token("ink-2");
-      context.fillText(`suspended ${formatSeconds(s.seconds)}${s.attributed ? " (attributed)" : ""}`, left - 20, TOP - 24);
+      context.fillText(`suspended ${formatSeconds(s.seconds)}${s.attributed ? " (attributed)" : s.reindexed ? " (reindexed)" : ""}`, left - 20, TOP - 24);
     }
     // Calls as thin bars; failed exit codes outlined in the critical colour.
     const laneIndex = new Map(lanes.map((l, i) => [l.id, i]));

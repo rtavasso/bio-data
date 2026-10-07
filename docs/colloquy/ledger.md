@@ -316,6 +316,14 @@ lists all 59 requirements with their questions.
 Shared experiments, scouting datasets and the promotion flow are checked on the
 demo (offline, scripted harness); no live scouting task has run.
 
+## Useful data for cost (spec v3 V13)
+
+The dashboard's cost per useful datum reads the ledger without writing it: claims count when they are not
+withdrawn and at least one number in a rendered write-up points at them with a `verified` checker verdict
+(`checks.verified_claim_pointers`); frontier items count when the projection says `promoted` (or names
+`promoted_to`). Scope follows the group: by author for participant and harness panels, made during the group's
+runs otherwise ([dashboard.md](dashboard.md#turn-economics-spec-v3-v13)).
+
 ## Demo
 
 `daw.commons.claims:extend_demo` and `daw.commons.frontier:extend_demo` add,

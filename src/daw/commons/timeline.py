@@ -15,9 +15,12 @@ records (`daw.commons.records`): `clock.jsonl` (heartbeats with both clocks),
 between the clock records whose wall clock advanced more than their monotonic
 clock, receipts are the indexed run_analysis.py receipt files, and compaction
 summaries are the recorded ones: all `attributed: false`. Runs captured before
-the records existed (the cohort fixture) keep the heuristics, each carrying
+the records existed and never reindexed keep the heuristics, each carrying
 `attributed: true` with its rule in `basis`: the suspension (largest timestamp
-gap), receipts (the exit code of the run_analysis.py call). The headline result
+gap), receipts (the exit code of the run_analysis.py call). Reindexed runs (the
+cohort fixture, v3 G3) place a suspension "between reindexed samples" when the
+samples derived from execution.json, heartbeat.json and the stream's own
+timestamps narrow it to one gap (`reindexed: true`). The headline result
 (first successful registration, publication or analysis) and peer answers
 consumed (a post id seen in a show, inbox or verify call) are always attributed.
 The web app draws attributed items in a distinct style under the legend
@@ -31,9 +34,9 @@ from datetime import datetime
 
 from daw import harness as harnesses
 from daw import hermes
-from daw.commons import records
+from daw.commons import economics, records
 from daw.commons.moderation import Visibility
-from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, compactions_reported, run_metrics
+from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, compactions_reported, run_metrics, stream_compactions
 from daw.util import DawError, read_json
 
 TERMINAL = [("help", re.compile(r"(^|\s)(--help|-h)(\s|$)")), ("analysis", re.compile(r"run_analysis\.py")),
@@ -179,8 +182,11 @@ def _recorded_suspensions(positions, unit, origin, clock):
     """Place suspensions between consecutive clock records whose wall clock advanced more than their monotonic
     clock (spec v2 V6). Inside the recorded window the break goes at the largest gap between event timestamps
     (no event can be emitted while the host sleeps). A window no wider than RECORDED_PRECISION_SECONDS of
-    monotonic time is placed by record (`attributed: false`); a wider one (reindexed runs, whose only samples are
-    the launch, the last heartbeat and the finish) only bounds it, so its position stays attributed.
+    monotonic time is placed by record (`attributed: false`); a wider one only bounds it, so its position stays
+    attributed. Reindexed runs (v3 G3) carry samples derived from execution.json, heartbeat.json and the stream's
+    own event timestamps: a window between such samples with no event inside it (or a narrow one) is placed
+    "between reindexed samples" (`attributed: false`, `reindexed: true`, placement `reindexed_samples`); a wide
+    window of launch, heartbeat and finish alone stays attributed.
     Returns (suspensions, mapper to the monotonic axis)."""
     windows = records.clock_windows(clock)
     if unit != "seconds" or origin is None or not windows:
@@ -203,7 +209,16 @@ def _recorded_suspensions(positions, unit, origin, clock):
         else:
             entry.update(placement="clock_records" if w["precise"] else "largest_event_gap_within_clock_window",
                          at_raw=before, after_raw=after, removed=min(w["seconds"], gap))
-        if w["precise"]:
+        if w["reindexed"] and (w["bracketed_by_events"] or w["precise"]):
+            # G3: samples reindexed from execution.json, heartbeat.json and the stream's own event timestamps.
+            if entry["placement"] not in ("before_first_event", "after_last_event"):
+                entry["placement"] = "reindexed_samples"
+            entry.update(attributed=False, reindexed=True,
+                         basis=f"placed between reindexed samples {w['records'][0]} and {w['records'][1]} "
+                               f"({', '.join(w['sources'])}): wall time advanced {w['seconds']} s more than "
+                               f"monotonic time between them" + (", and no stream event lies between them"
+                                                                  if w["bracketed_by_events"] else ""))
+        elif w["precise"]:
             entry.update(attributed=False, basis=f"recorded: clock records {w['records'][0]} and {w['records'][1]} "
                                                  f"({round(width, 1)} s of monotonic time apart) show wall time "
                                                  f"advancing {w['seconds']} s more than monotonic time")
@@ -388,8 +403,8 @@ def run_timeline(view, run, *, caller=None, full=False):
         matched = {r["line"] for r in receipts if r["line"] is not None}
         unreceipted = [{k: v for k, v in r.items() if k not in ("outcome", "source", "attributed", "basis")}
                        for r in stream_receipts.values() if r["line"] not in matched]
-    compactions = [{"line": e["line"], "t": at(e["line"]), "source": "stream", "text": e["event"].get("text", "").strip()}
-                   for e in parsed["events"] if e["event"].get("type") == "runtime_status"]
+    compactions = [{"line": c["line"], "t": at(c["line"]), "source": "stream", "text": c["text"]}
+                   for c in stream_compactions(parsed)]
     summaries, _, _ = state_messages(folder, execution, where="content LIKE ?", params=("[CONTEXT COMPACTION%",),
                                      limit=MAX_MESSAGES)
     header, recorded_items = recorded_compactions
@@ -407,7 +422,8 @@ def run_timeline(view, run, *, caller=None, full=False):
         excerpts = {hashlib.sha256((row["content"] or "").encode("utf-8", errors="replace")).hexdigest():
                     (row["content"] or "")[:400] for row in summaries or []}
         if header.get("available"):
-            compaction_summaries = [{"timestamp": item.get("timestamp"), "fallback": bool(item.get("fallback")),
+            compaction_summaries = [{"timestamp": item.get("timestamp"), "fallback": item.get("fallback"),
+                                     "fallback_detection": item.get("fallback_detection"),
                                      "excerpt": excerpts.get(item.get("sha256")), "t": place(item.get("timestamp")),
                                      "message_id": item.get("message_id"), "sha256": item.get("sha256"),
                                      "source": records.COMPACTIONS_FILE} for item in recorded_items]
@@ -415,7 +431,8 @@ def run_timeline(view, run, *, caller=None, full=False):
     else:
         for row in summaries or []:
             compaction_summaries.append({"timestamp": row.get("timestamp"),
-                                         "fallback": "deterministic fallback" in (row["content"] or ""),
+                                         "fallback": records.FALLBACK_MARKER in (row["content"] or ""),
+                                         "fallback_detection": "marker_match",
                                          "excerpt": (row["content"] or "")[:400], "t": place(row.get("timestamp")),
                                          "source": "state.db"})
     headline = next(({**c, "basis": "first successful " + c["lane"].split(":")[1], "attributed": True} for c in calls
@@ -475,14 +492,21 @@ def run_timeline(view, run, *, caller=None, full=False):
                         "receipts": {k: indexed.get(k) for k in ("indexed", "counts", "scanned", "window", "reindexed")}
                         if indexed is not None else None,
                         "compactions": {k: header.get(k) for k in ("available", "source", "reason", "count", "fallbacks",
-                                                                   "reindexed")} if header is not None else None},
+                                                                   "reindexed", "fallback_detection")}
+                        if header is not None else None},
+            # V13: the turn_economics.json record (None for a run without one).
+            "turn_economics": economics.read(folder),
             "inbox_reads": inbox, "answers_consumed": consumed, "headline": headline,
             "final": {**final, "content_is_untrusted_data": True},
             "tokens": _tokens(parsed["usage"], bool(answers_text)),
             "metrics": metrics, "malformed_lines": parsed["malformed_lines"], "errors": len(parsed["errors"]),
             "links": {"raw": f"/api/runs/{run}/raw", "messages": f"/api/runs/{run}/messages"},
             "limitations": metrics["limitations"] + [
-                ("Suspensions are placed between clock records (clock.jsonl) whose wall clock advanced more than "
+                ("Suspensions are placed between reindexed samples (clock.jsonl rebuilt from execution.json, "
+                 "heartbeat.json and the stream's event timestamps, assuming one contiguous suspension per window); "
+                 "a window those samples cannot narrow is placed at its largest event-timestamp gap."
+                 if clock is not None and len(clock) >= 2 and any(r.get("reindexed") for r in clock) else
+                 "Suspensions are placed between clock records (clock.jsonl) whose wall clock advanced more than "
                  "their monotonic clock; inside such a window, at the largest event-timestamp gap."
                  if clock is not None and len(clock) >= 2 else
                  "The suspension is placed at the largest event-timestamp gap; this run has no clock records."),

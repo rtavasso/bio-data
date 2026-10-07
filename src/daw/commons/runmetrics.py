@@ -41,6 +41,22 @@ def compaction_summaries(folder, execution):
     return len(chosen), sum("deterministic fallback" in content for content in chosen)
 
 
+def stream_compactions(parsed):
+    """Compaction markers the harness wrote into its stream, as {line, text}: Hermes's plain-text
+    "⟳ compacting context…" (parsed as `runtime_status`) and Claude Code's `system` event with subtype
+    `compact_boundary` (its `compact_metadata` names the trigger and the context size before compaction)."""
+    found = []
+    for entry in parsed.get("events", []):
+        event = entry["event"]
+        if event.get("type") == "runtime_status":
+            found.append({"line": entry["line"], "text": str(event.get("text", "")).strip()})
+        elif event.get("type") == "system" and event.get("subtype") == "compact_boundary":
+            meta = event.get("compact_metadata") if isinstance(event.get("compact_metadata"), dict) else {}
+            detail = ", ".join(f"{k} {meta[k]}" for k in ("trigger", "pre_tokens") if meta.get(k) is not None)
+            found.append({"line": entry["line"], "text": "compact_boundary" + (f" ({detail})" if detail else "")})
+    return found
+
+
 def compactions_reported(harness_name, config=None):
     """The adapter's capability flag: does this harness's stream mark context compactions?"""
     from daw import harness
@@ -104,7 +120,7 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
             "registrations": count(sum(bool(re.search(r"\bbio\s+register\b", c)) for c in commands)),
             "scripts_written": count(len(scripts)),
             "plumbing_scripts": count(sum(bool(PLUMBING.search(Path(p).name)) for p in scripts)),
-            "compactions": count(sum(1 for e in parsed["events"] if e["event"].get("type") == "runtime_status"))
+            "compactions": count(len(stream_compactions(parsed)))
             if compactions_reported else None,
             "minutes_after_last_successful_analysis": tail,
             "provider_citation_in_final": bool(PROVIDER_CITATION.search(final.read_text())) if final.exists() else None,

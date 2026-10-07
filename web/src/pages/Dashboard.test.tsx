@@ -195,3 +195,46 @@ test("claims authoring per cohort: claims per post, evidence posts with claims a
   expect(summary.textContent).toContain("30%");
   expect(summary.textContent).toContain("25%");
 });
+
+test("turn economics per harness and per skill version, skills against budget and cost per datum (V13)", async () => {
+  const economics = {
+    runs: 2, recorded_runs: 2, unrecorded_runs: 0, reindexed_runs: 1,
+    context: { unit: "turn", records: 2, mean_input_tokens: 1500, max_input_tokens: 1800, model_calls: null },
+    composition: { bytes_measured: { system_prompt: null, delivery_prompt: 7000, skills: 10240, tool_outputs: 51200,
+      summaries: null, conversation: null }, complete_runs: 0, shares: null },
+    compactions: { stream_markers: 2, summaries: null, fallbacks: null, fallback_detection: "marker_match" },
+    time: { runs: 2, generation_minutes: 30, tool_wait_minutes: 10, tool_wait_share: 0.25 },
+    orientation: { runs: 2, help_calls_per_turn: 1.5, reorientation_calls_per_turn: 7, by_kind: { inbox: 4 } },
+    ceremony_tail_minutes: { runs: 2, median: 5.1 },
+    skill_reads: { runs: 2, total: 3, per_turn: { "bio-research": 1 } },
+    tokens: 4000, tokens_reported_runs: 2,
+    useful_data: { registered_artifacts: 4, verified_claims: 0, promoted_frontier_items: 0 },
+    tokens_per: { registered_artifact: 1000, verified_claim: null, promoted_frontier_item: null },
+  };
+  Object.assign(dashboard, {
+    summary: { ...dashboard.summary, turn_economics: economics },
+    panels: { ...dashboard.panels, harness: [{ ...dashboard.panels.harness[0], turn_economics: economics }, dashboard.panels.harness[1]] },
+    economics: {
+      skill_versions: [{ key: "e0f9879bfc1c", label: "e0f9879bfc1c", first: "t", harnesses: ["hermes"], turn_economics: economics }],
+      skills: { runs: 2, items: [{ skill: "bio-research", bytes: 12185, budget: 14336, reads: 2, reads_per_turn: 1 }] },
+      limitations: [],
+    },
+  });
+  show();
+  const byHarness = await screen.findByRole("table", { name: "Harness" });
+  const [summary, hermes, claude] = within(byHarness).getAllByRole("row").slice(1);
+  expect(summary.textContent).toContain("2 of 2");
+  expect(hermes.textContent).toContain("per turn");
+  expect(hermes.textContent).toContain("system prompt unmeasured");
+  expect(within(hermes).getByRole("img", { name: "Generation 30 min, tool wait 10 min" })).toBeTruthy();
+  expect(claude.textContent).toContain("unavailable");  // no record: unavailable, never zero
+  const versions = screen.getByRole("table", { name: "Skill version" });
+  expect(versions.textContent).toContain("e0f9879bfc1c (hermes)");
+  const skills = screen.getByRole("table", { name: "Skill sizes and reads" });
+  expect(skills.textContent).toContain("12185 / 14336");
+  expect(within(skills).getByRole("img", { name: "12185 of 14336 budget bytes" })).toBeTruthy();
+  const datum = screen.getByRole("table", { name: "Cost per useful datum" });
+  const [, hermesDatum] = within(datum).getAllByRole("row").slice(1);
+  expect(hermesDatum.textContent).toContain("1000");
+  expect(within(hermesDatum).getAllByText("unavailable").length).toBe(2);
+});

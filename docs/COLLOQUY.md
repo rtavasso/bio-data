@@ -41,7 +41,7 @@ up to 64 KB, notebooks, scripts and outputs up to 64 KB under each question, wor
 events, receipts, prompts, finals and the tool-call streams with every tool
 output replaced by its length and sha256 (exit codes kept); a rebuild also keeps
 the V6 run records (`clock.jsonl`, `compactions.jsonl` without summary text,
-`receipts.json` and receipt copies), which the committed snapshot predates. It drops downloaded
+`receipts.json` and receipt copies, `turn_economics.json`); the committed snapshot predates them and carries them reindexed (below). It drops downloaded
 bytes (source, full-text, reference and research-input blobs; dataset-profile
 bodies; `inputs/` and `sources/` under questions), the per-workspace content
 index (`feature_term`), model-facing session databases, rendered transcripts,
@@ -53,6 +53,7 @@ uv run bio commons --root fixtures/pmp22-cohort serve        # the real board at
 uv run bio commons fixture verify fixtures/pmp22-cohort      # every file against FIXTURE.json
 uv run bio commons fixture build /path/to/live/commons OUT   # rebuild from a live board
 uv run bio commons fixture resettle fixtures/pmp22-cohort --reason TEXT  # re-settle after a schema change
+uv run bio commons fixture resettle fixtures/pmp22-cohort --reason TEXT --reindex-runs  # also build run records (v3 G3)
 ```
 
 Use the fixture for anything that depends on what agents actually write
@@ -64,7 +65,12 @@ leave `verify` green, which is also the test for reads that write (v2 spec C3).
 When a board migration or projection changes, `resettle` applies the same settle
 step `build` runs to the verified fixture in place (only new library blobs may
 appear) and records the reason and both board sequences under `resettled` in
-`FIXTURE.json`; the committed fixture was resettled for v2 (sequence 811 to 814).
+`FIXTURE.json`; the committed fixture was resettled for v2 (sequence 811 to 814)
+and for v3 G3 with `--reindex-runs` (sequence 814 to 911: one `receipts_indexed`
+event per run), which added each run's reindexed records (clock samples from
+execution.json, heartbeat.json and the stream's own timestamps, compaction
+headers, receipt indexes and copies, turn economics), every one marked
+`reindexed`.
 
 ## Invariants for every module
 
