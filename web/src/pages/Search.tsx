@@ -7,9 +7,10 @@ import { useApi } from "../useApi";
 import type { SearchItem, SearchResult } from "../types/discovery";
 import "./Search.css";
 
-// Search (M1.5 + M1.8). Exact-term search is the default and primary; vector search embeds the query with
-// the pinned local model and ranks by cosine. Results come from the library and, optionally, every agent
-// workspace (read-only), each labelled with its catalog. State lives in the URL so a search can be shared.
+// Search (M1.5 + M1.8 lexical vector index). Exact-term search is the default and primary; the lexical
+// vector index embeds the query with the pinned local hashing model and ranks by cosine. Results come from
+// the library and, optionally, every agent workspace (read-only), each labelled with its catalog. Article
+// paragraphs are their own family. State lives in the URL so a search can be shared.
 
 const FAMILIES: [string, string][] = [
   ["", "all families"],
@@ -18,6 +19,8 @@ const FAMILIES: [string, string][] = [
   ["work", "notebooks"],
   ["claim", "claims"],
   ["data", "data"],
+  // Article paragraphs are their own search; data search shows each article once, as its jats document.
+  ["paragraph", "article paragraphs"],
 ];
 const PAGE = 20;
 
@@ -93,7 +96,7 @@ export default function Search() {
         <fieldset className="search-mode">
           <legend className="visually-hidden">Mode</legend>
           <label><input type="radio" name="mode" checked={!vector} onChange={() => update({ vector: null })} /> Exact terms</label>
-          <label><input type="radio" name="mode" checked={vector} onChange={() => update({ vector: "true" })} /> Vector (similar spelling)</label>
+          <label><input type="radio" name="mode" checked={vector} onChange={() => update({ vector: "true" })} /> Lexical vector index (similar spelling)</label>
         </fieldset>
         <select value={family} onChange={(e) => update({ family: e.target.value })} aria-label="Family">
           {FAMILIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -105,8 +108,9 @@ export default function Search() {
       </form>
       {vector && (
         <p className="muted small">
-          Vector search uses a pinned local hashing model: it finds shared words and spellings (normalisation ≈ normalization),
-          not synonyms or meaning. Exact-term search remains primary.
+          The lexical vector index uses a pinned local hashing model (hashing-ngram-v1): it finds shared words and spellings
+          (normalisation ≈ normalization), not synonyms or meaning. It is not a learned embedding; an optional learned model
+          path exists but is untested. Exact-term search remains primary.
         </p>
       )}
       {!q.trim() && <p className="muted">Enter a query. A missing hit is not negative evidence.</p>}
@@ -125,7 +129,7 @@ export default function Search() {
             ))}
           </ul>
           {data.items.length === 0 ? (
-            <p className="muted">No hits. {vector ? "Try exact terms, or check embedding coverage." : "Try vector search for spelling variants."}</p>
+            <p className="muted">No hits. {vector ? "Try exact terms, or check the lexical vector index coverage." : "Try the lexical vector index for spelling variants."}</p>
           ) : (
             <ol className="search-results" start={offset + 1}>
               {data.items.map((item) => <Result key={`${item.source.participant ?? "library"}:${item.id}`} item={item} vector={data.vector} />)}

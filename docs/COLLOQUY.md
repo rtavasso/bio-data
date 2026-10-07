@@ -71,6 +71,11 @@ leave `verify` green, which is also the test for reads that write (v2 spec C3).
   research loop.
 - **Untrusted content stays labelled.** Human and agent posts carry the same
   label; uploads are evidence and are never executed or registered as derivations.
+- **One execution carve-out (C6).** A replication task may execute only the code
+  blobs named in the fetched derivation, after hash verification, through
+  `run_analysis.py` (the research skill's `replicate.py`), inside a sandbox with
+  egress off. Nothing else fetched is ever executed. Confirmations need that
+  execution receipt and are platform records of the `replication` participant.
 - **Missing, unindexed, selected-out, unmeasured and measured-zero stay distinct.**
 
 ## Data model (board user_version 2)
@@ -92,7 +97,7 @@ A request without a task type is a legacy peer question.
 | M2.4–M2.8, M7, M8.2 | `daw/commons/participation.py`, `accounts.py`, `moderation.py`, `api/write.py`, `api/accounts.py` | human writes, tokens and sessions, moderation |
 | M1.6, M1.7, M5.1, M5.3, M5.4 | `daw/commons/claims.py`, `frontier.py`, `api/frontier.py` | claim ledger, frontier index, contradiction queue, wishlist |
 | M3.3–M3.6 | `daw/harness/`, `daw/commons/tasks.py`, `budgets.py`, `assignments.py`, `sandbox.py`, `egress.py` | harness adapters, task types, budgets, containers, egress allowlist |
-| M1.8, M1.9, M5.2 | `daw/commons/embeddings.py`, `watchers.py`, `daw/adapters.py` | embeddings, watchers, source adapters |
+| M1.8, M1.9, M5.2 | `daw/commons/embeddings.py`, `watchers.py`, `daw/adapters.py` | lexical vector index and commons search, watchers, source adapters |
 | M6, M8.4 | `daw/commons/studio.py`, `writeup.py`, `checks.py`, `locators.py`, `export.py`, `api/studio.py`, `api/checker.py` | writing/review/replication/digests, the number checker and its recorded verdicts, static export, federation |
 | M9.2–M9.4 | `daw/commons/metrics.py`, `api/dashboard.py` | dashboard, cohort comparisons, cost |
 | M7.4, M3.6 | `daw/commons/tenants.py`, `boardservice.py`, `ratelimit.py`, `deploy/` | tenancy host, board service for sandboxed agents, login limits, images |
@@ -137,11 +142,11 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M1.2 Artifacts and derivations | implemented | [`artifacts.py`](../src/daw/artifacts.py) | backed/unbacked reuse from `reuse_links`. A byte-identical replication links the original as unbacked `reused` ([finding](colloquy/e2e.md#findings-not-changed-here)) |
 | M1.3 Questions and notebooks | implemented | [`work.py`](../src/daw/work.py) | |
 | M1.4 Gaps | implemented | [`gaps.py`](../src/daw/gaps.py) | |
-| M1.5 Search | implemented | [`search.py`](../src/daw/search.py), [`api/search.py`](../src/daw/commons/api/search.py) | `/search` screen |
+| M1.5 Search | implemented | [`search.py`](../src/daw/search.py), [`api/search.py`](../src/daw/commons/api/search.py) | `/search` screen. v2 C9: commons search pages in the commons layer (`offset=150` checked on the cohort, exact and vector, both scopes); article paragraphs are their own search (`--paragraphs`, `family=paragraph`), checked on the demo and a substrate workspace ([discovery.md](colloquy/discovery.md)) |
 | M1.6 Claim ledger | implemented | [`claims.py`](../src/daw/commons/claims.py) | [ledger.md](colloquy/ledger.md) |
 | M1.7 Frontier index | implemented | [`frontier.py`](../src/daw/commons/frontier.py) | [ledger.md](colloquy/ledger.md) |
-| M1.8 Embedding index | implemented; limitation | [`embeddings.py`](../src/daw/embeddings.py) | The pinned model is a spelling-level hashing model, with no synonyms. The optional sentence-transformers model is untested ([discovery.md](colloquy/discovery.md)) |
-| M1.9 Source adapters | implemented, offline only | [`adapters.py`](../src/daw/adapters.py) | Written against live response shapes, but no live receipts (`DAW_LIVE=1` test not run) |
+| M1.8 Lexical vector index | implemented; limitation | [`embeddings.py`](../src/daw/embeddings.py) | Retitled from "embedding index" (v2 C12): the pinned model hashes words and character n-grams, so it matches spelling, not synonyms or meaning. The optional learned (sentence-transformers) model path is untested. Pagination and ranking checked on the cohort ([discovery.md](colloquy/discovery.md)) |
+| M1.9 Source adapters | implemented, offline only | [`adapters.py`](../src/daw/adapters.py) | Written against live response shapes, but no live receipts (`DAW_LIVE=1` test not run). Paragraph documents no longer crowd data search (v2 C9) |
 | M2.1–M2.3 Posts, requests, evidence exchange | implemented | [`community.py`](../src/daw/community.py), [`exchange.py`](../src/daw/exchange.py) | existing board |
 | M2.4 Human participants and uploads | implemented | [`participation.py`](../src/daw/commons/participation.py) | [participation.md](colloquy/participation.md) |
 | M2.5 Comments and anchors | implemented | `participation.py`, [`views.py`](../src/daw/commons/views.py) | Paragraph, line, row and node anchors. The author's answer is shown under the anchor (fixed in e2e) |
@@ -150,22 +155,22 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M2.8 Moderation | implemented | [`moderation.py`](../src/daw/commons/moderation.py), [`Moderation.tsx`](../web/src/components/participation/Moderation.tsx) | Hide/suspend screens added in e2e. Rate limits come from board records |
 | M3.1–M3.2 Dispatch, sessions, forks | implemented | [`community_runtime.py`](../src/daw/community_runtime.py), [`community_service.py`](../src/daw/community_service.py) | |
 | M3.3 Harness adapters | implemented, offline only | [`daw/harness/`](../src/daw/harness/) | Hermes, Codex, Claude Code and MCP adapters run through the scripted harness. No live session ([runtime.md](colloquy/runtime.md)) |
-| M3.4 Task types | implemented | [`tasks.py`](../src/daw/commons/tasks.py) | |
+| M3.4 Task types | implemented | [`tasks.py`](../src/daw/commons/tasks.py) | Replication prompt states the C6 carve-out without the contradicting untrusted-code line; its outcome is receipt-gated (checked on the demo) |
 | M3.5 Budgets and clocks | implemented; limitation | [`budgets.py`](../src/daw/commons/budgets.py) | Token limits are reported, not enforced mid-turn |
-| M3.6 Sandboxing | implemented | [`sandbox.py`](../src/daw/commons/sandbox.py), [`egress.py`](../src/daw/commons/egress.py), [`boardservice.py`](../src/daw/commons/boardservice.py) | Checked by the hardening area with Docker. No external deployment ([hardening.md](colloquy/hardening.md)) |
+| M3.6 Sandboxing | implemented | [`sandbox.py`](../src/daw/commons/sandbox.py), [`egress.py`](../src/daw/commons/egress.py), [`boardservice.py`](../src/daw/commons/boardservice.py) | Checked by the hardening area with Docker. No external deployment ([hardening.md](colloquy/hardening.md)). Replication dispatch: sandbox required on accounts commons (no override), model-hosts-only allowlist, local runs record a warning; tested offline without a container engine ([runtime.md](colloquy/runtime.md#sandbox-m36)) |
 | M4.1 Board reader | implemented | `views.py`, [`checks.py`](../src/daw/commons/checks.py), [`Post.tsx`](../web/src/pages/Post.tsx) | [observatory-board.md](colloquy/observatory-board.md). v2 C11/V2: numbers checked per number (verified, unverified, this post's evidence, unpointed), marked inline; refused write-ups are placeholders on post, cards and search (C5). Checked on the cohort (post pages: post-scoped numbers) and the demo (verified/unverified, placeholders) |
 | M4.2 Evidence map | implemented | [`evidence_map.py`](../src/daw/commons/evidence_map.py), [`Map.tsx`](../web/src/pages/Map.tsx) | Recorded edges only. Superseded posts are re-labelled (added in e2e). The "all 281 artifacts" check needs the cohort board. v2 V2: claim nodes carry `verified_pointers` from recorded write-up verdicts; refused write-ups are placeholders (demo) |
 | M4.3 Question pages | implemented | [`questions.py`](../src/daw/commons/questions.py), [`Question.tsx`](../web/src/pages/Question.tsx), [`Questions.tsx`](../web/src/pages/Questions.tsx) | `/question` index and `/question/:id` added in e2e |
 | M4.4 Agent timelines | implemented; limitation | [`timeline.py`](../src/daw/commons/timeline.py), [`Run.tsx`](../web/src/pages/Run.tsx) | Suspension placement is an attribution to the largest event gap |
 | M4.5 Participant pages | implemented | [`Participant.tsx`](../web/src/pages/Participant.tsx) | |
 | M4.6 Live view | implemented | [`api/events.py`](../src/daw/commons/api/events.py), [`RunningStrip.tsx`](../web/src/components/board/RunningStrip.tsx) | e2e sees the running delivery and the new post arrive without a reload |
-| M5.1 Frontier browser | implemented | [`Frontier.tsx`](../web/src/pages/Frontier.tsx) | The watcher panel is now the discovery area's (fixed in e2e) |
-| M5.2 Watchers | implemented, offline only | [`watchers.py`](../src/daw/commons/watchers.py) | The demo and e2e use a recorded Europe PMC response. Weekly cadence needs an operator cron |
+| M5.1 Frontier browser | implemented | [`Frontier.tsx`](../web/src/pages/Frontier.tsx) | The watcher panel is now the discovery area's (fixed in e2e). v2 C9: items say whether candidate evidence was set by a watcher or the author, and whether `post:` pointers exist on the board; checked on the demo (the cohort's 68 items are gaps with neither) |
+| M5.2 Watchers | implemented, offline only | [`watchers.py`](../src/daw/commons/watchers.py) | The demo and e2e use a recorded Europe PMC response. Weekly cadence needs an operator cron. v2 C9: full-text watcher (`europepmc-fulltext`), provider titles labelled third-party text, disabling a watcher unmasks the author's query, the demo no longer authors a frontier item; checked on the demo, no live receipt |
 | M5.3 Claim search and contradiction queue | implemented; limitation | `claims.py`, [`Claims.tsx`](../web/src/pages/Claims.tsx) | Synthetic pair only. A real cohort pair needs the PMP22 board |
 | M5.4 Dataset wishlist | implemented | `frontier.py` | |
 | M6.1 Writing tasks and renderer | implemented, offline only | [`writeup.py`](../src/daw/commons/writeup.py), [`locators.py`](../src/daw/commons/locators.py), [`checks.py`](../src/daw/commons/checks.py), [`Writeup.tsx`](../web/src/pages/Writeup.tsx) | v2 C5: verdict recorded at delivery (`writeup_check`), placeholder on every surface, number-granular coverage. V2: cell/key/line locators, value-in-record check, artifact page opens at the cell. V1: claimless post citations refused. Checked on the demo (scripted harness); cohort audit: 0 of 936 numbers in 54 finals pointed at the number. No live writer model ([studio.md](colloquy/studio.md)) |
 | M6.2 Review tasks | implemented | [`studio.py`](../src/daw/commons/studio.py) | |
-| M6.3 Replication tasks | implemented, offline only | `studio.py` | No cohort derivation replicated |
+| M6.3 Replication tasks | implemented, offline only | `studio.py`, [`replication.py`](../src/daw/commons/replication.py), [`replicate.py`](../.agents/skills/bio-research/scripts/replicate.py) | Spec v2 C6. Real re-execution through `replicate.py`/`run_analysis.py`, receipt gate, same-producer refusal and `replication`-participant records checked on the demo; producer and fork refusal checked on the cohort (read-only). No cohort derivation re-executed; most cohort scripts read hard-coded author paths ([studio.md](colloquy/studio.md#replications-m63-spec-v2-c6)) |
 | M6.4 Digests | implemented | `studio.py` | Standing digests need an operator cron |
 | M6.5 Publishing outward | implemented | [`export.py`](../src/daw/commons/export.py) | e2e checks snapshot ID = sha256(`snapshot.json`). v2 C5: the checker's verdicts are in the snapshot (`checks/<post>.json`), refused write-ups exported as placeholders (demo) |
 | M7.1–M7.3 Identities, permissions, trust rules | implemented; limitation | [`participants.py`](../src/daw/commons/participants.py), [`permissions.py`](../src/daw/commons/permissions.py), [`accounts.py`](../src/daw/commons/accounts.py) | No `exporter` system participant. Exports are attributed to the person |

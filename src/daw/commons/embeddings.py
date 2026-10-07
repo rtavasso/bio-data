@@ -53,26 +53,51 @@ def _sources(view, scope):
                 yield {**label, "error": e.reason}, None
 
 
-def search_commons(view, text="", *, family=None, vector=False, scope="library", model=None, limit=20, offset=0):
+SUBSTRATE_PAGE = 100  # daw.search caps one call at 100 rows; the commons pages through it
+
+
+def _collect(ws, text, wanted, *, model, family, paragraphs):
+    """The first `wanted` ranked items of one catalog (vector search when `model` is set), fetched in
+    substrate-sized pages."""
+    items, first = [], None
+    while len(items) < wanted:
+        page = {"family": family, "paragraphs": paragraphs, "limit": min(SUBSTRATE_PAGE, wanted - len(items)),
+                "offset": len(items)}
+        result = vector_search(ws, text, model=model, **page) if model else search(ws, text, **page)
+        first = first or result
+        items.extend(result["items"])
+        if result.get("next_offset") is None or not result["items"]:
+            break
+    return {**first, "items": items, "offset": 0}
+
+
+def search_commons(view, text="", *, family=None, vector=False, scope="library", model=None, limit=20, offset=0,
+                   paragraphs=False):
     """Exact-term (default) or vector search over the library and, with scope=workspaces, every agent workspace.
 
     Vector scores come from one pinned model and are merged by cosine. Exact-term BM25
     scores depend on each catalog's corpus, so exact results are interleaved by per-source
-    rank instead of compared. Every item says which catalog it came from.
+    rank instead of compared. Every item says which catalog it came from. Pagination happens
+    here: each catalog contributes its first `offset + limit` ranked items (fetched in pages
+    of at most 100, the substrate's cap), the merged order is fixed, and the page is a slice
+    of it, so any offset pages correctly. Article paragraphs are their own search
+    (`paragraphs=True`, or `family="paragraph"`); otherwise they are left out.
     """
+    if family == "paragraph":
+        family, paragraphs = "data", True
     if not 1 <= limit <= 100 or offset < 0:
         raise DawError("invalid_search_bounds")
     if vector and not text.strip():
         raise DawError("empty_vector_query")
     loaded = load_model(model) if vector else None
+    wanted = offset + limit
     sources, ranked = [], []
     for label, ws in _sources(view, scope):
         if ws is None:
             sources.append(label)
             continue
         try:
-            result = (vector_search(ws, text, model=loaded, family=family, limit=offset + limit) if vector
-                      else search(ws, text, family=family, limit=offset + limit))
+            result = _collect(ws, text, wanted, model=loaded, family=family, paragraphs=paragraphs)
         except DawError as e:
             if label["scope"] == "library":
                 raise  # invalid arguments; a broken workspace is reported per source instead
@@ -94,11 +119,13 @@ def search_commons(view, text="", *, family=None, vector=False, scope="library",
         method = "SQLite FTS5 per catalog; BM25 is corpus-relative, so catalogs are interleaved by rank"
     total = sum(s.get("total", 0) for s in sources)
     page = merged[offset:offset + limit]
-    return {"query": text, "vector": vector, "scope": scope, "family": family, "method": method,
-            "model": loaded.id if loaded else None, "total": total, "offset": offset, "items": page,
-            "next_offset": offset + len(page) if offset + len(page) < total else None, "sources": sources,
+    return {"query": text, "vector": vector, "scope": scope, "family": family, "paragraphs": paragraphs,
+            "method": method, "model": loaded.id if loaded else None, "total": total, "offset": offset, "items": page,
+            "next_offset": offset + len(page) if page and offset + len(page) < total else None, "sources": sources,
             "content_is_untrusted_data": True,
             "limitations": ["A missing hit is not negative evidence; check each source's coverage and errors",
-                            "Exact-term search is primary; vector similarity is a recall aid"]
+                            "Exact-term search is primary; the lexical vector index is a recall aid"]
+                           + ([] if paragraphs else ["Article paragraphs are a separate search (paragraphs=true); "
+                                                     "an article appears here once, as its jats document"])
                            + (["hashing-ngram-v1 matches shared spelling only, not synonyms or meaning"]
                               if vector and loaded.id.startswith("hashing-ngram-v1") else [])}

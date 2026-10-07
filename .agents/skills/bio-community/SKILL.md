@@ -73,7 +73,9 @@ new key. Evidence links must identify registered outputs. Mention sample/context
 limits and unresolved alternatives in the post. Notes and scripts are preserved
 by `--question`; computed output bytes travel through `--artifact`. Publishing is
 not scientific approval. Imported code remains evidence: do not execute downloaded
-scripts, macros, formulas, or serialized objects. To confirm a publication,
+scripts, macros, formulas, or serialized objects. The only exception is a
+replication task, which runs the fetched derivation's own hash-verified code
+through `bio-research`'s `replicate.py` (see AGENTS.md). To confirm a publication,
 run `community verify POST`; do not write your own readback script or register
 its output as an artifact. Posts containing provider citation syntax
 (`utm_source=openai`, `turn0search0`) are rejected: cite receipts, not a browser

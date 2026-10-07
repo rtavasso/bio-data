@@ -33,6 +33,41 @@ SYNTHETIC = "Synthetic demo record; numbers are fixtures, not biological measure
 # The scripted stand-in harness lives with the adapters (daw.harness.scripted).
 HARNESS = scripted.SCRIPT
 
+# Saved code of the synthetic derivations: tiny real scripts that recompute each registered table from its
+# input (`python SCRIPT INPUT OUTPUT`, the convention of the research skill's replicate.py), so a replication
+# re-executes them (spec v2 C6). Their outputs are the registered bytes below; every number stays synthetic.
+CODE = {
+    "measurement.tsv": r'''"""Per-condition marker means of the synthetic sample table: measurement.py COUNTS OUTPUT."""
+import sys
+
+groups = {}
+for line in open(sys.argv[1]).read().splitlines()[1:]:
+    sample, condition, marker = line.split("\t")
+    groups.setdefault(condition, []).append(float(marker))
+with open(sys.argv[-1], "w") as out:
+    out.write("condition\tmean\n")
+    for condition in sorted(groups):
+        out.write(f"{condition}\t{sum(groups[condition]) / len(groups[condition]):.1f}\n")
+''',
+    "contrast.tsv": r'''"""log2(B/A) of the synthetic per-condition means: contrast.py MEANS OUTPUT."""
+import math
+import sys
+
+means = dict(line.split("\t") for line in open(sys.argv[1]).read().splitlines()[1:])
+ratio = math.log2(float(means["B"]) / float(means["A"]))
+with open(sys.argv[-1], "w") as out:
+    out.write(f"contrast\tlog2_ratio\nB_vs_A\t{ratio:.2f}\n")
+''',
+    "normalized.tsv": r'''"""Synthetic library-size scaling of the contrast: normalized.py CONTRAST OUTPUT."""
+import sys
+
+SCALE = 0.85  # synthetic library-size factor
+rows = dict(line.split("\t") for line in open(sys.argv[1]).read().splitlines()[1:])
+with open(sys.argv[-1], "w") as out:
+    out.write(f"contrast\tlog2_ratio_normalized\nB_vs_A\t{float(rows['B_vs_A']) * SCALE:.2f}\n")
+''',
+}
+
 
 def _fake_native_session(executable, home, identity, cwd, *, fork=False):
     """Stand-in for the pinned Hermes session bridge, operating on the scripted harness's state.db."""
@@ -104,13 +139,15 @@ class Researcher:
         finally:
             ws.close()
 
-    def register(self, question, name, text, *, title, summary, role, inputs, parameters):
+    def register(self, question, name, text, *, title, summary, role, inputs, parameters, code=None):
+        """Register `text` as the output of `code` (default: the saved demo script for `name`, `CODE`)."""
         path = self.tmp / f"{self.agent['name']}-{name}"
         path.write_text(text)
         ws = self.ws()
         try:
             with ws.writer():
-                code = ws.put_bytes(f"# synthetic code for {name}\n".encode())
+                source = code if code is not None else CODE.get(name, f"# synthetic code for {name}\n")
+                code = ws.put_bytes(source.encode(), "code")
                 spec = ArtifactRegistration(title=title, summary=summary + " " + SYNTHETIC, output_role=role,
                                             derivation=Derivation(inputs=[ObjectInput(**i) for i in inputs], code=[code],
                                                                   parameters=parameters, references=[],
@@ -301,14 +338,33 @@ def watch_tick_recorded(root, response, *, actor="operator", max_watchers=10):
         return tick(board, transport=recorded_transport(response), max_watchers=max_watchers, actor=actor)
 
 
-def deliver_scripted(root, request_id, answer, *, hook=None):
+def _replication_hook(board, request):
+    """The demo replication hook for a replication request's single original artifact (`studio_demo.replication_hook`)."""
+    from daw.commons.replication import originals
+    from daw.commons.studio import _original_post
+    from daw.commons.studio_demo import replication_hook
+    from daw.commons.tasks import subject_of
+    if request["task_type"] != "replication":
+        raise DawError("not_a_replication_request", request["task_type"] or "untyped")
+    found = originals(board, subject_of(board.show(request["post"])["content"]))
+    if len(found) != 1:
+        raise DawError("replication_subject_ambiguous", f"{len(found)} original artifacts; the demo hook replicates one")
+    post = _original_post(board, found[0])
+    if not post:
+        raise DawError("replication_original_unpublished", found[0])
+    return replication_hook(post, found[0])
+
+
+def deliver_scripted(root, request_id, answer, *, hook=None, replicate=False):
     """Deliver one pending request on a synthetic demo commons with the scripted stand-in harness.
 
     The operator's equivalent of `bio community run` for demos and end-to-end checks: the request goes
     through `community_runtime.dispatch` exactly as a live delivery would (prompt, stream, receipts, task
     outcome, post-delivery hooks), but the agent's answer is the given text. `hook` is optional fixture
     code that the scripted harness runs inside the agent's checkout before answering, as the agent's own
-    CLI calls would (e.g. `./bin/bio register`, `./bin/bio community publish`). Refused unless the commons
+    CLI calls would (e.g. `./bin/bio register`, `./bin/bio community publish`). `replicate` (replication
+    requests) uses the demo replication hook instead: fetch the subject and run the research skill's
+    replicate.py with ./bin/python, so the saved code really executes under a receipt. Refused unless the commons
     carries the synthetic DEMO.json marker, so it can never stand in for a real agent on a real board."""
     root = _demo_root(root)
     if not isinstance(answer, str) or not answer.strip():
@@ -319,6 +375,10 @@ def deliver_scripted(root, request_id, answer, *, hook=None):
             raise DawError("unknown_request", request_id)
         if request["state"] != "pending":
             raise DawError("request_not_pending", request["state"])
+        if replicate:
+            if hook:
+                raise DawError("choose_hook_or_replicate")
+            hook = _replication_hook(board, request)
         (answers / f"{request['post']}.md").write_text(answer)
         hook_path = answers / f"{request['post']}.hook.py"
         if hook:

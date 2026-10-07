@@ -3,9 +3,11 @@
 Everything goes through the ordinary functions: a synthetic person (`mira`, from the participation
 demo) commissions tasks, the scripted harness delivers them through `community_runtime.dispatch`,
 and the runtime's post-delivery hook records review marks, the replication confirmation and each
-write-up's checker verdict (`writeup_check`). One write-up cites current ledger claims and artifact cells
-(renders, every number verified), one cites a withdrawn claim (flagged for regeneration) and one has
-numbers without claim or artifact pointers (refused, withheld on every surface). All synthetic.
+write-up's checker verdict (`writeup_check`). The replication really re-executes the synthetic contrast
+script (`daw.commons.demo.CODE`) through the research skill's replicate.py and run_analysis.py, and its
+answer is worded from that receipt. One write-up cites current ledger claims and artifact cells (renders,
+every number verified), one cites a withdrawn claim (flagged for regeneration) and one has numbers
+without claim or artifact pointers (refused, withheld on every surface). All synthetic.
 
 It is not in `daw.commons.demo.EXTENSIONS`, because other areas' tests pin the core demo's exact runs
 and task outcomes. `bio commons demo-studio DIR` (`apply`) adds these records to a built demo commons;
@@ -17,25 +19,48 @@ from pathlib import Path
 from daw.commons import participation, studio
 from daw.commons.demo import SYNTHETIC
 
-REPLICATE = '''import os
-from daw.artifacts import artifact_info, register_artifact
-from daw.catalog import Workspace
-from daw.substrate_models import ArtifactRegistration, Derivation
-from daw.work import create_question
-ws = Workspace(os.environ["BIO_WORKSPACE"])
-try:
-    with ws.writer():
-        info = artifact_info(ws, {original!r})
-        manifest = info["manifest"]
-        question = create_question(ws, "Replicate the demo contrast")["question"]
-        with open("replicated-contrast.tsv", "wb") as out:
-            out.write(ws.blob_path(info["output_blob"]).read_bytes())
-        register_artifact(ws, "replicated-contrast.tsv", ArtifactRegistration(
-            title="Replication of the demo contrast", summary="Re-executed saved code on recorded inputs (synthetic).",
-            output_role=manifest["output_role"], derivation=Derivation(**manifest["derivation"])), question=question)
-finally:
-    ws.close()
+# Scripted-harness hook for a replication (spec v2 C6): inside the agent's checkout, as the agent's own CLI
+# calls would, it creates a question, fetches the original into it and runs the research skill's
+# replicate.py with ./bin/python, which hash-checks the derivation's saved code and inputs, executes the code
+# through run_analysis.py (a receipt is written) and registers the output with the same derivation. The
+# answer is then worded from that receipt, so it claims an execution only when one is recorded.
+REPLICATE_HOOK = r'''import json, os, pathlib, subprocess
+trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+
+
+def run(*argv, ok=(0,)):
+    done = subprocess.run(list(argv), cwd=trial, capture_output=True, text=True)
+    if done.returncode not in ok:
+        raise SystemExit(f"{argv[:4]} exited {done.returncode}: {done.stdout[-2000:]} {done.stderr[-2000:]}")
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+question = run("./bin/bio", "work", "new", __TITLE__)["question"]
+run("./bin/bio", "community", "fetch", __POST__, "--question", question, "--artifact", __ORIGINAL__)
+result = run("./bin/python", ".agents/skills/bio-research/scripts/replicate.py", __ORIGINAL__, "--question", question,
+             ok=(0, 1))
+(trial / "replication-result.json").write_text(json.dumps(result, indent=1))
+if result.get("replica"):
+    text = (f"Executed code blob {result['code_blob']} of derivation {result['derivation_key']} on its recorded inputs "
+            f"through run_analysis.py (receipt blob {result['receipt_blob']}, exit code {result['exit_code']}) and "
+            f"registered the output as {result['replica']}; its bytes "
+            + ("are identical to" if result["byte_identical"] else "differ from") + f" the original {__ORIGINAL__}.")
+else:
+    text = (f"The saved code of {__ORIGINAL__} did not complete under run_analysis.py (receipt blob "
+            f"{result.get('receipt_blob')}, exit code {result.get('exit_code')}); nothing was registered.")
+answers = pathlib.Path(os.environ["COLLOQUY_DEMO_ANSWERS"])
+post = pathlib.Path(__file__).name.removesuffix(".hook.py")
+(answers / f"{post}.md").write_text(text + "\n\n" + __SYNTHETIC__)
 '''
+
+
+def replication_hook(post, original, title="Replicate the demo contrast"):
+    """Hook text for `bio commons demo-deliver --hook` or a test: replicate `original`, fetched from `post`."""
+    values = {"__TITLE__": title, "__POST__": post, "__ORIGINAL__": original, "__SYNTHETIC__": SYNTHETIC}
+    text = REPLICATE_HOOK
+    for key, value in values.items():
+        text = text.replace(key, repr(value))
+    return text
 
 
 def extend(board, ctx):
@@ -84,7 +109,7 @@ def extend(board, ctx):
         {"criterion": "claims_traceable_to_pointers", "verdict": "supported", "pointers": [artifacts["contrast"]],
          "note": "The corrected value is the contrast table's B_vs_A row."},
         {"criterion": "methods_reproducible_from_receipts", "verdict": "partially_supported",
-         "pointers": [artifacts["contrast"]], "note": "The analysis script is a synthetic placeholder."},
+         "pointers": [artifacts["contrast"]], "note": "The saved analysis script is synthetic demo code."},
         {"criterion": "limitations_stated", "verdict": "supported", "pointers": [claims["correction"]],
          "note": "States that the records are synthetic."},
         {"criterion": "scope_matches_evidence", "verdict": "not_assessable", "pointers": [],
@@ -92,8 +117,9 @@ def extend(board, ctx):
     review = deliver(review, "Review of the correction.\n\n```review\n" + json.dumps(block, indent=1) + "\n```\n")
     replication = commission("replication", agents["bob"], "Re-execute the contrast derivation from its saved inputs.",
                              subject_kind="artifact", subject_id=artifacts["contrast"])
-    replication = deliver(replication, "Re-executed the contrast derivation; the output bytes match the original.",
-                          hook=REPLICATE.format(original=artifacts["contrast"]))
+    # The hook re-executes the saved contrast script and words the answer from its run_analysis receipt.
+    replication = deliver(replication, "No answer was recorded by the replication hook.",
+                          hook=replication_hook(ctx["posts"]["finding"], artifacts["contrast"]))
     schedule = studio.schedule_digest(board, person, agents["dana"], {"questions": [ctx["questions"]["alice"]]},
                                       "weekly", budget)
     ticked = studio.digest_tick(board, "operator")["ticked"][0]

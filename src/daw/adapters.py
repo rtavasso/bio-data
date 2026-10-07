@@ -524,7 +524,7 @@ class Sources:
                       "snapshot": sid, "paragraphs_blob": obj, "paragraphs": len(paragraphs), "title": title,
                       "parser": JATS_PARSER, "run": run,
                       "warnings": [] if paragraphs else ["no paragraphs parsed; inspect the source XML"],
-                      "next": "bio data search TEXT --format jats-paragraph returns paragraph locators in record_id"}
+                      "next": "bio data search TEXT --paragraphs returns paragraph locators in record_id"}
             self.ws.finish_run(run, output)
         except DawError as e:
             output = {"pmcid": pmcid, "outcome": e.reason, "reason": str(e), "snapshots": self.snapshots[before:], "run": run,
