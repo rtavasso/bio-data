@@ -279,3 +279,73 @@ def test_audit_report_has_harness_and_task_type_columns(demo, tmp_path):
     assert summary["analysis_receipts"] == 4 and summary["analysis_failures"] == 2 and summary["inbox_calls"] == 2
     assert "wall_hours" in summary and summary["finals_with_provider_citations"] == 0
     assert "| Harness | Task type |" in (tmp_path / "report" / "report.md").read_text()
+
+
+# ---- spec v2 C10: honest metrics (None is unavailable, never 0) ---------------------------------
+
+def test_cohort_dashboard_and_audit_reproduce_the_review_numbers(cohort, tmp_path):
+    """Spec v2 §0 quotes the review's audit of the real PMP22 board: 23.47 compute hours, 11.65 suspended,
+    279 of 440 plumbing scripts, 57 compactions, 13 fallbacks. The committed fixture keeps every stream and
+    clock, so the first four reproduce exactly. Fallbacks are read from agent-state/state.db, which the fixture
+    excludes (session databases are dropped), so on the fixture they are unavailable: None, never 0."""
+    from benchmarks.agent.community import report
+    with Archive(cohort) as view:
+        summary = metrics.dashboard(view)["summary"]
+    assert summary["runs"] == 97 and summary["clock_unavailable_runs"] == 0
+    assert round(summary["monotonic_hours"], 2) == 23.47 and round(summary["cost"]["compute_hours"], 2) == 23.47
+    assert round(summary["suspended_hours"], 2) == 11.65
+    assert (summary["plumbing_scripts"], summary["scripts_written"]) == (279, 440)
+    assert summary["compactions"] == 57 and summary["compaction_unavailable_runs"] == 0
+    assert summary["compaction_fallbacks"] is None and summary["compaction_summaries"] is None
+    audit = report(cohort, tmp_path / "audit")["summary"]
+    assert (audit["monotonic_hours"], audit["suspended_hours"]) == (23.47, 11.65)
+    assert (audit["plumbing_scripts"], audit["scripts_written"], audit["compactions"]) == (279, 440, 57)
+    assert audit["compaction_fallbacks"] is None and audit["compaction_summaries"] is None
+    assert "| compaction_fallbacks | unavailable |" in (tmp_path / "audit" / "report.md").read_text()
+
+
+def test_unavailable_clocks_streams_and_compactions_are_none_not_zero(tmp_path):
+    from daw.commons.runmetrics import run_metrics
+    from daw.harness import get
+    folder = tmp_path / "run"
+    folder.mkdir()
+    empty = {"items": [], "events": []}
+    m = run_metrics(folder, empty)  # no execution.json, no events.jsonl, no final.md
+    assert m["wall_seconds"] is None and m["monotonic_seconds"] is None and m["suspended_seconds"] is None
+    assert m["tool_calls"] is None and m["compactions"] is None and m["plumbing_scripts"] is None
+    assert m["provider_citation_in_final"] is None and m["analysis_failures"] is None
+    (folder / "execution.json").write_text(json.dumps({"wall_seconds": 100.0, "monotonic_seconds": 90.0}))
+    (folder / "events.jsonl").write_text("")
+    m = run_metrics(folder, empty)
+    assert m["suspended_seconds"] == 0 and m["tool_calls"] == 0 and m["compactions"] == 0  # measured zero
+    assert run_metrics(folder, empty, compactions_reported=False)["compactions"] is None
+    # Analyses whose harness reports no exit codes (Claude Code) have unknown, not zero, failures.
+    analysis = {"name": "terminal", "command": "./bin/python run_analysis.py x.py", "exit_code": None, "input": {}}
+    m = run_metrics(folder, {"items": [analysis], "events": []})
+    assert m["analysis_receipts"] == 1 and m["analysis_failures"] is None and m["analysis_exit_codes_unknown"] == 1
+    # The capability flag per adapter: Hermes marks compactions in its stream; the others do not.
+    assert get("hermes").reports_compactions({}) and not get("claude").reports_compactions({})
+    assert not get("codex").reports_compactions({}) and not get("mcp").reports_compactions({})
+    assert get("scripted").reports_compactions({}) and not get("scripted").reports_compactions(
+        {"harness_options": {"stream_format": "claude"}})
+    runs = [{"state": "completed", "metrics": {"monotonic_seconds": None, "wall_seconds": None, "suspended_seconds": None,
+                                               "compactions": None, "analysis_receipts": 0, "scripts_written": 0,
+                                               "plumbing_scripts": 0, "tool_calls": 3, "inbox_calls": 0,
+                                               "analysis_failures": 0}}]
+    criteria = metrics.run_criteria(runs)
+    assert criteria["suspended_hours"] is None and criteria["suspensions"] is None and criteria["compactions"] is None
+    assert criteria["monotonic_hours"] is None and criteria["clock_unavailable_runs"] == 1
+
+
+def test_claude_runs_report_compactions_unavailable_on_dashboard_and_timeline(demo_only):
+    root, _ = demo_only()
+    with Community(root) as board, scripted_runtime(root) as (executable, answers):
+        add_agent(board, "claudia", harness="claude")
+        request = board.ask("claudia", "operator", "One turn")
+        dispatch(board, request["id"], executable)
+        run = board.one("SELECT id FROM attempt WHERE request=?", (request["id"],))["id"]
+    client = TestClient(create_app(root, local_user="local", static_dir=root / "missing"))
+    timeline = client.get(f"/api/runs/{run}").json()
+    assert timeline["compactions"] is None and timeline["metrics"]["compactions"] is None
+    dashboard = client.get("/api/dashboard", params={"harness": "claude"}).json()
+    assert dashboard["summary"]["compactions"] is None and dashboard["summary"]["compaction_unavailable_runs"] == 1

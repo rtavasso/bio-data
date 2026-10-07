@@ -12,9 +12,23 @@ from daw import harness
 from daw.artifacts import reuse_links
 from daw.catalog import Workspace
 from daw.commons.metrics import task_type_of
-from daw.commons.runmetrics import PLUMBING, SUSPENSION_FLOOR_SECONDS, compaction_summaries, run_metrics  # noqa: F401
+from daw.commons.runmetrics import (PLUMBING, SUSPENSION_FLOOR_SECONDS, compaction_summaries,  # noqa: F401
+                                    compactions_reported, run_metrics)
 from daw.community import PROVIDER_CITATION, Community
 from daw.util import file_hash, now, write_json
+
+def total(runs, key, scale=1, digits=None):
+    """Sum of a metric over the runs that recorded it; None (unavailable) when none did, never 0 (spec v2 C10)."""
+    values = [r["metrics"][key] for r in runs if r["metrics"].get(key) is not None]
+    if not values:
+        return None
+    value = sum(values) / scale
+    return round(value, digits) if digits is not None else value
+
+
+def shown(value, scale=1, digits=1):
+    return "unavailable" if value is None else round(value / scale, digits)
+
 
 def report(root, output):
     output = Path(output)
@@ -26,7 +40,8 @@ def report(root, output):
         for attempt in audit["attempts"]:
             folder = board.root / attempt["path"]
             raw = folder / "events.jsonl"
-            parsed = harness.for_agent(board.agent(attempt["target"])).parse(raw)
+            agent = board.agent(attempt["target"])
+            parsed = harness.for_agent(agent).parse(raw)
             request = requests[attempt["request"]]
             runs.append({**attempt, "transcript": str(folder / "transcript.md"),
                          "harness": board.agent(attempt["target"])["config"].get("harness", "hermes"),
@@ -35,7 +50,8 @@ def report(root, output):
                          "native_sessions": parsed["thread_ids"], "turns_completed": parsed["turns_completed"],
                          "malformed_lines": parsed["malformed_lines"], "errors": parsed["errors"],
                          "tools": len([i for i in parsed["items"] if i.get("type") != "agent_message"]),
-                         "metrics": run_metrics(folder, parsed)})
+                         "metrics": run_metrics(folder, parsed, compactions_reported=compactions_reported(
+                             agent["config"].get("harness", "hermes"), agent["config"]))})
         links, reuse = [], []
         for agent in audit["agents"]:
             if not agent["trial"]:
@@ -54,21 +70,23 @@ def report(root, output):
         lint = [{"post": e["body"]["post"]} for e in audit["events"] if e["kind"] == "published"
                 and PROVIDER_CITATION.search(json.dumps(board.show(e["body"]["post"])["content"]["body"]))]
         summary = {"runs": len(runs),
-                   "wall_hours": round(sum((r["metrics"]["wall_seconds"] or 0) for r in runs) / 3600, 2),
-                   "monotonic_hours": round(sum((r["metrics"]["monotonic_seconds"] or 0) for r in runs) / 3600, 2),
-                   "suspended_hours": round(sum(r["metrics"]["suspended_seconds"] for r in runs) / 3600, 2),
+                   "wall_hours": total(runs, "wall_seconds", 3600, 2),
+                   "monotonic_hours": total(runs, "monotonic_seconds", 3600, 2),
+                   "suspended_hours": total(runs, "suspended_seconds", 3600, 2),
+                   "clock_unavailable_runs": sum(1 for r in runs if r["metrics"]["suspended_seconds"] is None),
                    "notification_runs": len(notifications),
-                   "compaction_summaries": sum(r["metrics"]["compaction_summaries"] or 0 for r in runs),
-                   "compaction_fallbacks": sum(r["metrics"]["compaction_fallbacks"] or 0 for r in runs),
+                   "compactions": total(runs, "compactions"),
+                   "compaction_summaries": total(runs, "compaction_summaries"),
+                   "compaction_fallbacks": total(runs, "compaction_fallbacks"),
                    "reused_links": sum(1 for r in reuse if r["relationship"] == "reused"),
                    "reused_links_backed": sum(1 for r in reuse if r["relationship"] == "reused" and r.get("backed")),
-                   "plumbing_scripts": sum(r["metrics"]["plumbing_scripts"] for r in runs),
-                   "scripts_written": sum(r["metrics"]["scripts_written"] for r in runs),
+                   "plumbing_scripts": total(runs, "plumbing_scripts"),
+                   "scripts_written": total(runs, "scripts_written"),
                    "suspensions": sum(1 for r in runs if r["metrics"]["suspended_seconds"]),
-                   "tool_calls": sum(r["metrics"]["tool_calls"] for r in runs),
-                   "inbox_calls": sum(r["metrics"]["inbox_calls"] for r in runs),
-                   "analysis_receipts": sum(r["metrics"]["analysis_receipts"] for r in runs),
-                   "analysis_failures": sum(r["metrics"]["analysis_failures"] for r in runs),
+                   "tool_calls": total(runs, "tool_calls"),
+                   "inbox_calls": total(runs, "inbox_calls"),
+                   "analysis_receipts": total(runs, "analysis_receipts"),
+                   "analysis_failures": total(runs, "analysis_failures"),
                    "harnesses": ", ".join(sorted({r["harness"] for r in runs})) or "none",
                    "task_types": ", ".join(sorted({r["task_type"] for r in runs})) or "none",
                    "posts_with_provider_citations": len(lint),
@@ -78,18 +96,19 @@ def report(root, output):
                  "limitations": ["Inherited artifact links are not new reuse; compare fork lineage and fetch events.",
                                  "A fetch or agent-authored reused link does not prove executed analysis; `backed` only means a reason or registration input exists.",
                                  "Inspect producing receipts, applicability judgments and notebook decisions before claiming scientific improvement.",
-                                 "Wall clock includes host sleep; compare monotonic_seconds."]}
+                                 "Wall clock includes host sleep; compare monotonic_seconds.",
+                                 "unavailable (None) means not recorded or not emitted by the harness; it is never zero."]}
     write_json(output / "report.json", value)
     lines = ["# Research community audit", "", f"Community: `{root}`", "",
              "## Summary", "", "| metric | value |", "|---|---|"]
-    lines += [f"| {k} | {v} |" for k, v in summary.items()]
+    lines += [f"| {k} | {'unavailable' if v is None else v} |" for k, v in summary.items()]
     lines += ["", "## Deliveries", "",
               "| Request | State | Agent | Harness | Task type | monotonic min | suspended min | tools | analyses (failed) | plumbing/scripts | inbox | compactions (fallbacks) | tail min | Transcript |",
               "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for run in runs:
-        m = run["metrics"]
-        mono = round((m["monotonic_seconds"] or 0) / 60, 1)
-        lines.append(f"| {run['request']} | {run['state']} | {run['target']} | {run['harness']} | {run['task_type']} | {mono} | {round(m['suspended_seconds'] / 60, 1)} | "
+        m = {k: "unavailable" if v is None else v for k, v in run["metrics"].items()}
+        mono, suspended = shown(run["metrics"]["monotonic_seconds"], 60), shown(run["metrics"]["suspended_seconds"], 60)
+        lines.append(f"| {run['request']} | {run['state']} | {run['target']} | {run['harness']} | {run['task_type']} | {mono} | {suspended} | "
                      f"{m['tool_calls']} | {m['analysis_receipts']} ({m['analysis_failures']}) | {m['plumbing_scripts']}/{m['scripts_written']} | "
                      f"{m['inbox_calls']} | {m['compactions']} ({m['compaction_fallbacks']}) | {m['minutes_after_last_successful_analysis']} | [Read]({run['transcript']}) |")
     lines += ["", "## Evidence acquisition", ""]

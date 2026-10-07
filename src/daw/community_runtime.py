@@ -91,6 +91,7 @@ def add_agent(board, name, *, seed_workspace=None, checkpoint=None, native_sessi
     if harness_options:
         config["harness_options"] = dict(harness_options)
     runtime = adapter.prepare(trial, config, checkpoint)
+    sandbox.seal_harness_config(trial, adapter)  # platform-owned copy, outside the checkout (C7)
     if native_session:
         adapter.session_exists(trial / adapter.home_dir, native_session)
     config.update(fork_pending=bool(native_session), runtime=runtime, tools=tools)
@@ -307,6 +308,56 @@ def _stalled(board, request_id, run_id, agent, info):
         info["notification_error"] = getattr(e, "reason", type(e).__name__)
 
 
+def _operator_report(board, kind, body, title, text, key):
+    """A board event plus an operator notice from the runtime; a failure is recorded, never fatal."""
+    from daw.commons.notices import notify
+    try:
+        with board.writer(), board.db:
+            board.event(kind, body)
+        notify(board, "runtime", "operator", title, text, evidence={kind: body}, key=key)
+    except (DawError, sqlite3.Error) as e:
+        body["notification_error"] = getattr(e, "reason", type(e).__name__)
+    return body
+
+
+def _policy_events(board, request_id, run_id, agent, budget_receipt, home_receipt):
+    """C7: a changed platform-owned budget file is a policy violation (event + operator notice), not a note;
+    a harness configuration found changed is recorded as an event (it was restored for this turn)."""
+    download = (budget_receipt or {}).get("download_bytes") or {}
+    if download.get("policy_violation"):
+        _operator_report(
+            board, "budget_policy_violation",
+            {"request": request_id, "run": run_id, "agent": agent["id"], "file": download["file"],
+             "expected_sha256": download["sha256"], "observed": download.get("observed"),
+             "observed_sha256": download.get("observed_sha256")},
+            f"Budget policy violation: {agent['name']}",
+            f"The platform-owned task budget file of run {run_id} (request {request_id}) was "
+            f"{download.get('observed')} during the turn. The transport caps came from that file; inspect the "
+            "run's task-budget-observed.json and transcript before trusting its downloads.",
+            f"budget-violation:{run_id}")
+    changed = sorted(set(home_receipt.get("restored_before_turn", [])) | set(home_receipt.get("changed_during_turn", [])))
+    if changed:
+        try:
+            with board.writer(), board.db:
+                board.event("harness_config_changed", {"request": request_id, "run": run_id, "agent": agent["id"],
+                                                       "harness": home_receipt["harness"],
+                                                       "restored_before_turn": home_receipt.get("restored_before_turn", []),
+                                                       "changed_during_turn": home_receipt.get("changed_during_turn", [])})
+        except (DawError, sqlite3.Error) as e:
+            home_receipt["event_error"] = getattr(e, "reason", type(e).__name__)
+
+
+def _token_budget_exceeded(board, request_id, run_id, agent, tokens):
+    _operator_report(
+        board, "token_budget_exceeded",
+        {"request": request_id, "run": run_id, "agent": agent["id"], "limit": tokens["limit"], "used": tokens["used"],
+         "counted": tokens["counted"]},
+        f"Token budget exceeded: {agent['name']}",
+        f"Run {run_id} (request {request_id}) used {tokens['used']} tokens against a limit of {tokens['limit']} "
+        "(harness telemetry, checked after the turn; stock harnesses cannot be stopped mid-turn).",
+        f"token-budget:{run_id}")
+
+
 def _record_outcome(board, request, content, agent, run_id, started, answer, parsed, budget_receipt, folder):
     try:
         outcome = tasks.evaluate(board, request, content, agent, run_id, started, answer, parsed)
@@ -409,7 +460,13 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             native = agent["native_session"] if resumable else None
             fork_on_launch = False
             if native:
-                prepared = adapter.native_session(executable, home, native, trial, fork=config["fork_pending"])
+                if decision["config"] is not None and adapter.name == "hermes":
+                    # Sandboxed: Hermes's own session code runs in the agent image, not on the host (C7).
+                    prepared = sandbox.hermes_native_session(
+                        decision["config"], executable, home, native, trial, fork=config["fork_pending"], env=env,
+                        board_root=board.root, name=f"colloquy-{run_id}-bridge")
+                else:
+                    prepared = adapter.native_session(executable, home, native, trial, fork=config["fork_pending"])
                 fork_on_launch = prepared.pop("fork_on_launch", False)
                 native = prepared["session"]
                 write_json(folder / "native-session.json", prepared)
@@ -423,17 +480,27 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             prompt_path = folder / "prompt.txt"
             prompt_path.write_text(prompt)
             args = adapter.command(executable, trial, config, resume=native, fork=fork_on_launch)
-            args, env, sandboxed = sandbox.apply(decision, args, env, trial=trial, board_root=board.root, adapter=adapter,
-                                                 agent_config=config, run=run_id)
-            if sandboxed:
-                write_json(folder / "sandbox.json", sandboxed)
             limit = budgets.execution_timeout(timeout, budget)
             budget_receipt = {"requested": budget, "timeout_seconds": limit} if budget else None
-            with budgets.download_budget(trial / "workspace", budget, budget_receipt if budget else {},
-                                         keep=folder / "workspace-config-during-task.toml"):
-                execution = execute(args, prompt_path, folder, trial, env, limit, pass_fds=(lock_fd,),
-                                    stall_seconds=stall_minutes * 60, stall_timeout=stall_timeout,
-                                    on_stall=lambda info: _stalled(board, request_id, run_id, agent, info))
+            # Per-turn copy of the sealed harness configuration (read-only in the sandbox), C7.
+            home_receipt = sandbox.turn_harness_config(trial, adapter)
+            try:
+                with budgets.download_budget(trial, budget, budget_receipt if budget else {},
+                                             keep=folder / "task-budget-observed.json", run=run_id):
+                    args, env, sandboxed = sandbox.apply(decision, args, env, trial=trial, board_root=board.root,
+                                                         adapter=adapter, agent_config=config, run=run_id, timeout=limit)
+                    if sandboxed:
+                        write_json(folder / "sandbox.json", sandboxed)
+                    execution = execute(args, prompt_path, folder, trial, env, limit, pass_fds=(lock_fd,),
+                                        stall_seconds=stall_minutes * 60, stall_timeout=stall_timeout,
+                                        on_stall=lambda info: _stalled(board, request_id, run_id, agent, info))
+            finally:
+                if sandboxed:
+                    write_json(folder / "sandbox.json", sandbox.release(board.root, sandboxed))
+                write_json(folder / "harness-config.json", sandbox.check_harness_config(trial, adapter, home_receipt))
+                if budget_receipt:
+                    write_json(folder / "budget.json", budget_receipt)
+                _policy_events(board, request_id, run_id, agent, budget_receipt, home_receipt)
             if execution["state"] in {"timed_out", "stalled", "interrupted", "log_budget_exceeded"}:
                 sandbox.cleanup(sandboxed)
             if execution.get("host_sleep_detected"):
@@ -448,6 +515,8 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                                       wall_seconds=execution.get("wall_seconds"),
                                       tokens=budgets.token_report(budget, parsed["usage"]))
                 write_json(folder / "budget.json", budget_receipt)
+                if budget_receipt["tokens"]["exceeded"]:
+                    _token_budget_exceeded(board, request_id, run_id, agent, budget_receipt["tokens"])
             answers = [i["text"] for i in parsed["items"] if i.get("type") == "agent_message"]
             # Save native state even on model failure; an explicit retry can resume it.
             session_ids = parsed["thread_ids"]

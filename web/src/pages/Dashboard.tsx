@@ -38,18 +38,24 @@ function Summary({ g }: { g: Group }) {
       <Stat label="Monotonic vs wall hours" hint="Wall time includes host sleep">
         <Value value={g.monotonic_hours} digits={3} /> / <Value value={g.wall_hours} digits={3} />
       </Stat>
-      <Stat label="Suspensions">{g.suspensions} <span className="muted small">({g.suspended_hours.toFixed(2)} h)</span></Stat>
+      <Stat label="Suspensions" hint="Runs whose wall or monotonic clock was not recorded are left out (unavailable, not zero)">
+        <Value value={g.suspensions} /> <span className="muted small">(<Value value={g.suspended_hours} digits={2} /> h)</span>
+        {g.clock_unavailable_runs ? <span className="muted small"> · {g.clock_unavailable_runs} without clocks</span> : null}
+      </Stat>
       <Stat label="Minutes per executed analysis"><Value value={g.minutes_per_executed_analysis} /></Stat>
-      <Stat label="Analyses (failed)">{g.analysis_receipts} ({g.analysis_failures})</Stat>
-      <Stat label="Tool / inbox calls">{g.tool_calls} / {g.inbox_calls}</Stat>
+      <Stat label="Analyses (failed)"><Value value={g.analysis_receipts} /> (<Value value={g.analysis_failures} />)</Stat>
+      <Stat label="Tool / inbox calls"><Value value={g.tool_calls} /> / <Value value={g.inbox_calls} /></Stat>
       <Stat label="Plumbing share">{ratioText(g.plumbing_share)}</Stat>
-      <Stat label="Compactions (fallbacks)">{g.compactions} (<Value value={g.compaction_fallbacks} />)</Stat>
+      <Stat label="Compactions (fallbacks)" hint="Harnesses whose stream does not mark compactions are unavailable, not zero">
+        <Value value={g.compactions} /> (<Value value={g.compaction_fallbacks} />)
+        {g.compaction_unavailable_runs ? <span className="muted small"> · {g.compaction_unavailable_runs} runs unavailable</span> : null}
+      </Stat>
       <Stat label="Ceremony tail, median min" hint="Minutes after the last successful analysis">
         <Value value={g.ceremony_tail_minutes.median} digits={1} />
       </Stat>
       <Stat label="Reuse backed">{ratioText(g.board.reuse.backed_ratio)} <span className="muted small">({g.board.reuse.backed}/{g.board.reuse.backed + g.board.reuse.unbacked})</span></Stat>
       <Stat label="Human marks per post"><Value value={g.board.human_marks_per_post} /></Stat>
-      <Stat label="Provider-citation hits">{g.provider_citation_finals} finals · {g.board.provider_citation_posts} posts</Stat>
+      <Stat label="Provider-citation hits"><Value value={g.provider_citation_finals} /> finals · {g.board.provider_citation_posts} posts</Stat>
       <Stat label="Numbers pointed at the number" hint="Share of numbers in finals with a line, claim or cell pointer (C11)">
         {ratioText(g.board.numbers?.number_level_share ?? null)}
         {g.board.numbers && <span className="muted small"> ({g.board.numbers.number_level}/{g.board.numbers.numbers})</span>}
@@ -81,7 +87,7 @@ function Panel({ g, scale }: { g: Group; scale: { tail: number; fallbacks: numbe
       <dl className="panel-facts">
         <dt>Human marks per post</dt><dd><Value value={g.board.human_marks_per_post} /> <span className="muted small">({g.board.human_marks}/{g.board.posts})</span></dd>
         <dt>Corrections</dt><dd>{g.board.corrections}</dd>
-        <dt>Analyses (failed)</dt><dd>{g.analysis_receipts} ({g.analysis_failures})</dd>
+        <dt>Analyses (failed)</dt><dd><Value value={g.analysis_receipts} /> (<Value value={g.analysis_failures} />)</dd>
         <dt>Monotonic h</dt><dd><Value value={g.monotonic_hours} digits={3} /></dd>
       </dl>
       {g.runs > 0 && <details>

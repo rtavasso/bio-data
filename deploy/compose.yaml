@@ -48,7 +48,9 @@ services:
 
   egress:
     <<: *commons
-    # The only route out for sandboxed agents: allowlisted source and model hosts (sandbox.toml).
+    # The only route out for sandboxed agents. Each dispatch writes a token-scoped policy (its agent's provider
+    # hosts, the source adapter hosts, sandbox.toml extras) to $COMMONS_ROOT/service/egress/policies/; the proxy
+    # reads it per connection, so agents added after start are served and no client gets egress without one.
     command: ["commons", "egress", "--host", "0.0.0.0", "--port", "3128"]
     networks: [egress, web]
     healthcheck:
@@ -60,9 +62,21 @@ services:
   board:
     <<: *commons
     profiles: [agents]
-    # One Unix socket per agent under $COMMONS_ROOT/service/board/; no network at all.
+    # One Unix socket per agent under a short host directory (sun_path is 104 bytes on macOS, 108 on Linux):
+    # $COLLOQUY_SOCKET_DIR/<sha256(root)[:12]>/<index>/<index>.sock, recorded in
+    # $COMMONS_ROOT/service/board/sockets.json (dispatch reads it) and symlinked from
+    # $COMMONS_ROOT/service/board/<agent>/board.sock. Create the directory first, owned by COMMONS_UID:
+    #   install -d -m 700 -o "$COMMONS_UID" -g "$COMMONS_GID" "${COLLOQUY_SOCKET_DIR:-/tmp/colloquy-sockets}"
+    # No network at all.
     command: ["commons", "board-service"]
     network_mode: none
+    environment:
+      BIO_COMMUNITY: ${COMMONS_ROOT:?set COMMONS_ROOT to the commons directory}
+      BIO_BOARD_SOCKET_DIR: ${COLLOQUY_SOCKET_DIR:-/tmp/colloquy-sockets}
+      HOME: /tmp
+    volumes:
+      - ${COMMONS_ROOT}:${COMMONS_ROOT}
+      - ${COLLOQUY_SOCKET_DIR:-/tmp/colloquy-sockets}:${COLLOQUY_SOCKET_DIR:-/tmp/colloquy-sockets}
     healthcheck:
       test: ["CMD", "python", "-c", "import os, pathlib, sys; d = pathlib.Path(os.environ['BIO_COMMUNITY'], 'service/board'); sys.exit(0 if not d.is_dir() or any(p.is_socket() for p in d.glob('*/board.sock')) else 1)"]
       interval: 30s

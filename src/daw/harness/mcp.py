@@ -69,6 +69,7 @@ def check_options(options):
 class McpAdapter(Adapter):
     name = "mcp"
     home_dir = ".mcp-home"
+    config_files = ("mcp.json",)
     default_executable = None
 
     def options(self, config):

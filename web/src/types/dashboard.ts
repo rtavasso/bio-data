@@ -7,7 +7,7 @@ export interface TrendPoint {
   bucket: string;
   runs: number;
   ceremony_tail_median: Num;
-  compactions: number;
+  compactions: Num;
   compaction_fallbacks: Num;
   minutes_per_executed_analysis: Num;
   monotonic_hours: Num;
@@ -78,21 +78,25 @@ export interface Group {
   failed: number;
   wall_hours: Num;
   monotonic_hours: Num;
-  suspensions: number;
-  suspended_hours: number;
-  tool_calls: number;
-  inbox_calls: number;
-  analysis_receipts: number;
-  analysis_failures: number;
+  // Spec v2 C10: totals are null when no run in the group recorded the value (clock, stream or harness
+  // capability unavailable); the *_unavailable_runs counts say how many runs were left out of a sum.
+  suspensions: Num;
+  suspended_hours: Num;
+  clock_unavailable_runs?: number;
+  tool_calls: Num;
+  inbox_calls: Num;
+  analysis_receipts: Num;
+  analysis_failures: Num;
   minutes_per_executed_analysis: Num;
-  scripts_written: number;
-  plumbing_scripts: number;
+  scripts_written: Num;
+  plumbing_scripts: Num;
   plumbing_share: Num;
-  compactions: number;
+  compactions: Num;
+  compaction_unavailable_runs?: number;
   compaction_summaries: Num;
   compaction_fallbacks: Num;
   ceremony_tail_minutes: { runs: number; median: Num; mean: Num; max: Num };
-  provider_citation_finals: number;
+  provider_citation_finals: Num;
   board: BoardCriteria;
   cost: Cost;
   trend: TrendPoint[];
@@ -138,7 +142,7 @@ export interface CompareCell {
   participants: string[];
   harnesses: string[];
   models: string[];
-  yield: { posts: number; registered_artifacts: number; analysis_receipts: number; analysis_failures: number };
+  yield: { posts: number; registered_artifacts: number; analysis_receipts: Num; analysis_failures: Num };
   calibration: ClaimCounts | null;
   corrections: { corrections: number; posts_superseded: number; human_marks: number };
   cost: Cost;

@@ -109,6 +109,19 @@ test("panels show behaviour per group and unavailable values are never zero", as
   expect(within(cost).getAllByText(/harness did not report/).length).toBeGreaterThan(0);
 });
 
+test("unrecorded clocks and compactions show as unavailable in the summary, never 0 (spec v2 C10)", async () => {
+  const blind = group("all runs", { suspensions: null, suspended_hours: null, clock_unavailable_runs: 2, compactions: null,
+    compaction_unavailable_runs: 2, tool_calls: null, analysis_receipts: null, analysis_failures: null });
+  globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ ...dashboard, summary: blind }), { status: 200 })) as typeof fetch;
+  show();
+  const summary = await screen.findByLabelText("Summary");
+  const stat = (label: string) => within(summary).getByText(label).parentElement as HTMLElement;
+  expect(stat("Suspensions").textContent).toMatch(/^Suspensionsunavailable \(unavailable h\) · 2 without clocks$/);
+  expect(stat("Compactions (fallbacks)").textContent).toContain("unavailable (unavailable) · 2 runs unavailable");
+  expect(stat("Analyses (failed)").textContent).toBe("Analyses (failed)unavailable (unavailable)");
+  expect(stat("Tool / inbox calls").textContent).toBe("Tool / inbox callsunavailable / 2");
+});
+
 test("tabs switch the small multiples and filters live in the request URL", async () => {
   show("/dashboard?harness=claude");
   await screen.findByLabelText("Summary");

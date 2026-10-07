@@ -366,6 +366,10 @@ def test_timeline_shows_suspension_compactions_fallbacks_and_headline(demo):
     assert summary["fallback"] is True
     assert timeline["metrics"]["compaction_fallbacks"] == 1
     assert timeline["headline"]["lane"] == "terminal:register" and timeline["headline"]["exit_code"] == 0
+    # C10: heuristic placements are marked attributed (with their rule); recorded items are not.
+    assert suspension["attributed"] is True and "largest gap" in suspension["basis"]
+    assert timeline["headline"]["attributed"] is True and timeline["attributed"] == ["suspension", "headline"]
+    assert not any("attributed" in item for item in timeline["calls"] + timeline["receipts"] + timeline["compactions"])
     assert timeline["inbox_reads"][0]["sent"] is True
     assert timeline["final"]["text"] and timeline["final"]["source"] == "final.md"
     assert timeline["tokens"]["input_tokens"] == 1200 and timeline["tokens"]["reasoning_output_tokens"] == "unavailable"
@@ -408,6 +412,7 @@ def test_timeline_records_peer_answers_consumed_and_unreported_tokens(demo):
         timeline = run_timeline(view, run)
     assert timeline["axis"]["unit"] == "events" and timeline["suspensions"] == []
     assert [c["posts"] for c in timeline["answers_consumed"]] == [[answer], [answer]]
+    assert all(c["attributed"] is True for c in timeline["answers_consumed"]) and timeline["attributed"] == ["answers_consumed"]
     assert timeline["tokens"]["output_tokens"] == "unavailable" and "zero" in timeline["tokens"]["note"]
     assert timeline["final"]["source"].startswith("stream") and timeline["compaction_summaries"] is None
     assert timeline["headline"] is None

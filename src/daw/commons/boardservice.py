@@ -9,9 +9,11 @@ functions the local CLI calls:
     publish  answer  ask  fetch                   (writes: permission publish, answer, ask, fetch)
     inbox  show  search  verify  claims  agents  (reads)
 
-Identity is bound twice. Each agent's socket lives in its own directory
-`<commons>/service/board/<agent>/`, which dispatch mounts read-only into that
-agent's container only; and every request carries the agent's bearer token
+Identity is bound twice. Each agent's socket lives in its own short directory
+`$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/` (see "provisioning" below; the
+old location `<commons>/service/board/<agent>/board.sock` is a symlink to it),
+which dispatch mounts read-only into that agent's container only; and every
+request carries the agent's bearer token
 (`<commons>/secrets/board/<agent>.token`, 0600, passed to the container by
 environment name, never in argv). A socket answers only its own agent's token,
 and an `author` in a request must name that agent. The service never takes a
@@ -26,12 +28,13 @@ object, `Authorization: Bearer <token>`; replies `{"value": ...}` or
 `{"error", "detail"}`. Each request is one line in `<commons>/service/board-service.jsonl`
 (agent, operation, outcome; never content). The client below is stdlib-only, so
 it runs in the agent image without the commons extra:
-`BIO_BOARD_URL=unix:///path/board.sock` and `BIO_BOARD_TOKEN` select it.
+`BIO_BOARD_URL=unix:///path/<index>.sock` and `BIO_BOARD_TOKEN` select it.
 
 Rotate an agent's token by deleting its token file while the agent is idle;
 the service reads the file on every request.
 """
 import contextlib
+import hashlib
 import hmac
 import http.client
 import json
@@ -39,6 +42,8 @@ import os
 import secrets
 import socket
 import socketserver
+import sys
+import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler
@@ -67,8 +72,52 @@ OPERATIONS = {
 
 
 # ---- provisioning (operator side) --------------------------------------------------------------
+#
+# Socket paths are bounded by sun_path (104 bytes on macOS/BSD, 108 on Linux, NUL included), and a
+# commons under a long directory would exceed it. Sockets therefore live under a short per-commons
+# directory, `$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/<index>.sock` (or `$BIO_BOARD_SOCKET_DIR`
+# in place of `$TMPDIR/colloquy`), where <index> is a small stable per-agent number recorded in
+# `<commons>/service/board/sockets.json`. Each agent keeps its own directory so a container mounts
+# only its own socket, and the mount survives a service restart. The old location
+# `<commons>/service/board/<agent>/board.sock` is a symlink to the short socket.
 
-def socket_dir(root, agent_id):
+SOCKET_ROOT_ENV = "BIO_BOARD_SOCKET_DIR"
+STATE = "sockets.json"
+
+
+def socket_limit(platform=None):
+    """sun_path size in bytes, NUL terminator included: 108 on Linux, 104 on macOS and the BSDs."""
+    return 108 if (platform or sys.platform).startswith("linux") else 104
+
+
+def check_socket_path(path, platform=None):
+    """Refuse a socket path the platform cannot bind (resolved, so /var -> /private/var on macOS counts)."""
+    path = Path(path)
+    parent = path.parent.resolve() if path.parent.exists() else path.parent
+    resolved = parent / path.name
+    size, limit = len(os.fsencode(resolved)), socket_limit(platform)
+    if size + 1 > limit:
+        raise DawError("socket_path_too_long",
+                       f"{resolved} is {size} bytes; Unix socket paths are limited to {limit - 1} bytes here. "
+                       f"Set {SOCKET_ROOT_ENV} to a shorter directory.")
+    return resolved
+
+
+def socket_root(env=None):
+    """The short directory holding every commons' board sockets on this host."""
+    env = os.environ if env is None else env
+    if env.get(SOCKET_ROOT_ENV):
+        return Path(env[SOCKET_ROOT_ENV]).expanduser()
+    return Path(env.get("TMPDIR") or tempfile.gettempdir()) / "colloquy"
+
+
+def commons_socket_dir(root, env=None):
+    digest = hashlib.sha256(str(Path(root).expanduser().resolve()).encode()).hexdigest()[:12]
+    return socket_root(env) / digest
+
+
+def legacy_dir(root, agent_id):
+    """The pre-v2 per-agent directory under the commons; it now holds a symlink to the short socket."""
     return Path(root) / "service" / "board" / _safe_id(agent_id)
 
 
@@ -82,11 +131,90 @@ def _safe_id(agent_id):
     return agent_id
 
 
-def _private_dir(path):
+def _private_dir(path, *, owned=False):
     path.mkdir(parents=True, exist_ok=True, mode=0o700)
     if path.is_symlink():
         raise DawError("unsafe_service_path", str(path))
+    if owned:
+        info = path.stat()
+        if hasattr(os, "getuid") and info.st_uid != os.getuid():
+            raise DawError("unsafe_service_path", f"{path} belongs to another user; set {SOCKET_ROOT_ENV}")
     path.chmod(0o700)
+
+
+@contextlib.contextmanager
+def _state_lock(root):
+    import fcntl
+    folder = Path(root) / "service" / "board"
+    _private_dir(folder.parent)
+    _private_dir(folder)
+    with (folder / ".sockets.lock").open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield folder / STATE
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def socket_state(root):
+    """Recorded agent indexes and bound socket paths (`service/board/sockets.json`); read-only."""
+    path = Path(root) / "service" / "board" / STATE
+    if not path.is_file():
+        return {"format": 1, "agents": {}}
+    return json.loads(path.read_text())
+
+
+def provision_socket(root, agent_id, *, bind=False):
+    """The agent's stable index and socket path, recorded in the service state.
+
+    The board service (`bind=True`) is authoritative: it records the path it binds, computed from its
+    own environment. Dispatch reuses the recorded path, so both sides agree even when the service runs
+    with a different TMPDIR (for example in its own container); only before any service ran does dispatch
+    compute it. Paths over the platform limit are refused with `socket_path_too_long`."""
+    _safe_id(agent_id)
+    root = Path(root)
+    with _state_lock(root) as path:
+        state = json.loads(path.read_text()) if path.is_file() else {"format": 1, "agents": {}}
+        entry = state["agents"].get(agent_id)
+        if entry is None:
+            entry = {"index": 1 + max((e["index"] for e in state["agents"].values()), default=0)}
+        index = entry["index"]
+        recorded = entry.get("socket")
+        if bind or not recorded:
+            socket_path = commons_socket_dir(root) / str(index) / f"{index}.sock"
+        else:
+            socket_path = Path(recorded)
+        check_socket_path(socket_path)
+        _private_dir(socket_path.parent.parent.parent, owned=True)
+        _private_dir(socket_path.parent.parent)
+        _private_dir(socket_path.parent)
+        socket_path = check_socket_path(socket_path)
+        changed = entry.get("socket") != str(socket_path)
+        entry.update(socket=str(socket_path), **({"recorded": now()} if changed else {}))
+        state["agents"][agent_id] = entry
+        if changed or not path.is_file():
+            temporary = path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(state, indent=1, sort_keys=True))
+            os.replace(temporary, path)
+    link = _legacy_link(root, agent_id, socket_path)
+    return {"index": index, "socket": socket_path, "link": link}
+
+
+def _legacy_link(root, agent_id, target):
+    """`service/board/<agent>/board.sock` -> the short socket (the location older receipts name)."""
+    folder = legacy_dir(root, agent_id)
+    _private_dir(folder)
+    link = folder / SOCKET
+    if link.is_symlink():
+        if Path(os.readlink(link)) == target:
+            return link
+        link.unlink()
+    elif link.is_socket():
+        link.unlink()  # a socket bound there by a pre-v2 service
+    elif link.exists():
+        raise DawError("unsafe_service_path", str(link))
+    link.symlink_to(target)
+    return link
 
 
 def agent_token(root, agent_id):
@@ -114,14 +242,13 @@ def read_token(root, agent_id):
     return path.read_text().strip()
 
 
-def provision(root, agent_id):
-    """Socket directory and token for one agent. Returns what dispatch mounts and passes by name."""
-    folder = socket_dir(root, agent_id)
-    _private_dir(folder.parent.parent)
-    _private_dir(folder.parent)
-    _private_dir(folder)
-    return {"dir": folder, "socket": folder / SOCKET, "url": f"unix://{folder / SOCKET}",
-            "token": agent_token(root, agent_id)}
+def provision(root, agent_id, *, bind=False):
+    """Socket directory and token for one agent. Returns what dispatch mounts and passes by name:
+    {dir, socket, url, token, index, link} where `link` is the old in-commons location (a symlink)."""
+    placed = provision_socket(root, agent_id, bind=bind)
+    socket_path = placed["socket"]
+    return {"dir": socket_path.parent, "socket": socket_path, "url": f"unix://{socket_path}",
+            "token": agent_token(root, agent_id), "index": placed["index"], "link": placed["link"]}
 
 
 # ---- operations (run on the host as the bound agent) -------------------------------------------
@@ -169,11 +296,19 @@ def checkout_workspace(trial, value):
     return resolved
 
 
-def agents(board):
-    """Participants as `bio community agents` lists them (identity, checkout, session, harness)."""
+def local_agents(board):
+    """`bio community agents` on the host (direct board access): identity, checkout, session, harness."""
     return [{**{k: r[k] for k in ("id", "name", "trial", "native_session", "parent", "created")},
              "harness": json.loads(r["config"] or "{}").get("harness", "hermes") if r["trial"] else None}
             for r in board.rows("SELECT * FROM agent ORDER BY created")]
+
+
+def agents(board):
+    """The service's `agents` operation: public participant fields only (`participants.describe`, plus
+    `harness: null` for non-agents so rows share one shape), never another agent's host checkout path,
+    native session id, configuration or tool hashes (spec v2 C14)."""
+    from daw.commons.participants import describe
+    return [{"harness": None, **describe(r)} for r in board.rows("SELECT * FROM agent ORDER BY created,id")]
 
 
 def answer(board, author, request_id, body, *, title=None, **publish):
@@ -249,18 +384,18 @@ def execute(root, agent_id, operation, payload):
 
 # ---- server ------------------------------------------------------------------------------------
 
-@contextlib.contextmanager
 def _address(path):
-    """A bindable/connectable address for a socket path; long paths go through /proc/self/fd on Linux (108-byte limit)."""
+    """A connectable address: the path itself, or its symlink target when only that fits sun_path.
+
+    No /proc or abstract-socket tricks: the service binds short paths, and a long legacy URL (the
+    in-commons symlink) is followed to the short socket it names."""
     path = Path(path)
-    if len(os.fsencode(path)) < 100 or not Path("/proc/self/fd").is_dir():
-        yield str(path)
-        return
-    fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_PATH", 0) | os.O_DIRECTORY)
     try:
-        yield f"/proc/self/fd/{fd}/{path.name}"
-    finally:
-        os.close(fd)
+        return str(check_socket_path(path))
+    except DawError:
+        if not path.is_symlink():
+            raise
+    return str(check_socket_path(path.resolve()))
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -321,8 +456,7 @@ class _AgentServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
             path.unlink()  # a stale socket from a stopped service
         elif path.exists() or path.is_symlink():
             raise DawError("unsafe_service_path", str(path))
-        with _address(path) as address:
-            super().__init__(address, _Handler)
+        super().__init__(str(check_socket_path(path)), _Handler)
         path.chmod(0o600)
 
 
@@ -336,6 +470,8 @@ class BoardService:
             self.only = {board.agent(a)["id"] for a in agents}
         self.log_path = Path(log) if log else self.root / "service" / "board-service.jsonl"
         self.servers, self._lock = {}, threading.Lock()
+        # Refuse at startup, not at the first agent: the longest index this commons could need must fit.
+        check_socket_path(commons_socket_dir(self.root) / "999999" / "999999.sock")
 
     def log(self, agent, operation, outcome):
         line = canonical({"time": now(), "agent": agent, "operation": operation, "outcome": outcome}).decode()
@@ -353,11 +489,13 @@ class BoardService:
         for agent_id in ids:
             if agent_id in self.servers or (self.only and agent_id not in self.only):
                 continue
-            endpoint = provision(self.root, agent_id)
+            endpoint = provision(self.root, agent_id, bind=True)
             server = _AgentServer(self, agent_id, endpoint["socket"])
+            server.socket_path = endpoint["socket"]
             threading.Thread(target=server.serve_forever, name=f"board-{agent_id}", daemon=True).start()
             self.servers[agent_id] = server
-            started.append({"agent": agent_id, "url": endpoint["url"]})
+            started.append({"agent": agent_id, "index": endpoint["index"], "url": endpoint["url"],
+                            "link": str(endpoint["link"])})
         return started
 
     def serve_forever(self, poll_seconds=5.0):
@@ -369,11 +507,12 @@ class BoardService:
             self.close()
 
     def close(self):
-        for agent_id, server in list(self.servers.items()):
+        for server in list(self.servers.values()):
             server.shutdown()
             server.server_close()
             with contextlib.suppress(OSError):
-                (socket_dir(self.root, agent_id) / SOCKET).unlink()
+                server.socket_path.unlink()
+
         self.servers.clear()
 
 
@@ -388,8 +527,7 @@ class _UnixConnection(http.client.HTTPConnection):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
         try:
-            with _address(self.socket_path) as address:
-                sock.connect(address)
+            sock.connect(_address(self.socket_path))
         except OSError:
             sock.close()
             raise
