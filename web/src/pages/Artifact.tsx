@@ -6,6 +6,7 @@ import { Untrusted } from "../components/Untrusted";
 import { Badge, HiddenNotice, MarkList, ReuseBadge } from "../components/board/Badges";
 import { ParticipantLink } from "../components/board/People";
 import { ProvenanceTree } from "../components/board/ProvenanceTree";
+import { CitedFrom } from "../components/dashboard/Publishing";
 import { short, size, when } from "../components/board/format";
 import { Markdown } from "../components/Markdown";
 import { CommentBox, MarkForm, ReplicationRequestForm } from "../components/participation/Actions";
@@ -272,6 +273,7 @@ export default function Artifact() {
               </ul>
             )}
           </section>
+          {a.cited_from && <CitedFrom items={a.cited_from} what="artifact" />}
           <section className="panel">
             <h2>Fetched by</h2>
             {a.fetchers.length === 0 ? <p className="muted">No recorded fetches.</p> : (

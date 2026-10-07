@@ -25,6 +25,19 @@ unresolved (refused in a write-up), never guessed.
 **Citations.** `citations(view)` lists the posts on this board whose text contains a foreign pointer
 (recorded citations only: what the author wrote), grouped by snapshot, with the question each post
 published (its notebook) or else its thread. Hidden posts and withheld write-ups are not counted.
+
+**Incoming citations (spec v3 V16).** The cited commons learns of a citation the way it learns of anything
+foreign: by importing the citing commons' snapshot. Every export lists, in `records.json`, the foreign
+records its visible posts name (`citations`, read from the post text at the source); the index keeps an
+entry only when the citing post's exported page or source in the verified snapshot contains the pointer,
+so nothing is inferred. `cited_by(view, record)` then lists the indexed citations of snapshots this board
+exported itself (its `snapshot_exported` and `preprint_exported` events), for the claim and artifact pages
+and the dashboard. A citation of a snapshot this board did not export is never attributed to it, even when
+the record id also exists here.
+
+**Attribution (spec v3 B9).** `import_and_index` takes the importing participant (permission `import`):
+the import receipt names it, `federation_indexed` carries it as `actor`, and every import act records a
+`snapshot_imported` event (listed on the participant's `/me`). `reindex` is attributed the same way.
 """
 import hashlib
 import json
@@ -42,6 +55,7 @@ FOREIGN_SHAPE = re.compile(r"^snapshot:[^\s]*$")
 CLAIM_ID = re.compile(r"^claim_[0-9a-f]{32}$")
 ARTIFACT_ID = re.compile(r"^artifact_[0-9a-f]{64}$")
 POST_ID = re.compile(r"^post_[0-9a-f]{32}$")
+SNAPSHOT_ID = re.compile(r"^[0-9a-f]{64}$")
 READ_LIMIT = 32 * 1024 * 1024
 
 
@@ -106,10 +120,19 @@ def snapshot_records(folder):
             raise DawError("invalid_snapshot_records", f"{RECORDS} must be {RECORDS_FORMAT}")
     else:
         records = _records_from_manifests(folder, listed)
-    return snapshot, manifest, _validated(records, listed)
+    return snapshot, manifest, _validated(records, listed, folder)
 
 
-def _validated(records, listed):
+def _backed(folder, listed, post, cited):
+    """True when the citing post's exported page or source (files the verified snapshot lists) names `cited`."""
+    for path in (f"posts/{post}.html", f"source/{post}.md"):
+        entry = listed.get(path)
+        if entry and entry.get("bytes", READ_LIMIT + 1) <= READ_LIMIT and cited.encode() in (Path(folder) / path).read_bytes():
+            return True
+    return False
+
+
+def _validated(records, listed, folder=None):
     """Keep only well-formed entries whose paths are files the snapshot lists (foreign data is untrusted)."""
     def text(value, limit=20000):
         return value[:limit] if isinstance(value, str) else None
@@ -137,8 +160,21 @@ def _validated(records, listed):
                           "name": Path(path).name if path else text(output.get("name"), 300), "present": bool(path)})
     for post in records.get("posts") or []:
         if isinstance(post, dict) and POST_ID.match(str(post.get("id"))):
-            posts.append({"id": post["id"], "title": text(post.get("title"), 500), "withheld": bool(post.get("withheld"))})
-    return {"claims": claims, "artifacts": artifacts, "posts": posts, "derived": records.get("derived", RECORDS)}
+            posts.append({"id": post["id"], "title": text(post.get("title"), 500), "withheld": bool(post.get("withheld")),
+                          "author": text(post.get("author"), 200), "created": text(post.get("created"), 40)})
+    visible = {p["id"] for p in posts if not p["withheld"]}
+    citations, seen = [], set()
+    for item in (records.get("citations") or []) if folder is not None else []:
+        if not isinstance(item, dict) or item.get("post") not in visible or not SNAPSHOT_ID.match(str(item.get("snapshot"))) \
+                or not (CLAIM_ID.match(str(item.get("record"))) or ARTIFACT_ID.match(str(item.get("record")))):
+            continue
+        cited = pointer(item["snapshot"], item["record"])
+        if (item["post"], cited) in seen or not _backed(folder, listed, item["post"], cited):
+            continue  # recorded at the source only: the citing post's own exported text must name the record
+        seen.add((item["post"], cited))
+        citations.append({"post": item["post"], "snapshot": item["snapshot"], "record": item["record"]})
+    return {"claims": claims, "artifacts": artifacts, "posts": posts, "citations": citations,
+            "derived": records.get("derived", RECORDS)}
 
 
 # ---------------------------------------------------------------------------- the index (writes)
@@ -160,6 +196,14 @@ def _rows(snapshot, records, stamp):
     for item in records["artifacts"]:
         body = {k: item[k] for k in ("title", "output_role", "derivation_key", "manifest_path", "name", "bytes", "present")}
         rows.append((snapshot, item["id"], "artifact", None, item["path"], item["sha256"], canonical(body).decode(), stamp))
+    posts = {p["id"]: p for p in records["posts"]}
+    for item in records["citations"]:
+        post = posts[item["post"]]
+        body = {"cited_snapshot": item["snapshot"], "cited_record": item["record"],
+                "cited_kind": "claim" if item["record"].startswith("claim_") else "artifact",
+                "post_title": post["title"], "author": post["author"], "created": post["created"]}
+        rows.append((snapshot, f"citation:{item['post']}:{pointer(item['snapshot'], item['record'])}", "citation",
+                     item["post"], None, None, canonical(body).decode(), stamp))
     return rows
 
 
@@ -167,9 +211,10 @@ def _state_key(rows):
     return digest([list(r[:7]) for r in rows])
 
 
-def index_snapshot(board, snapshot, *, source=None):
-    """Register one imported snapshot's claims and artifacts (idempotent; one `federation_indexed` event when
-    the rows change). The snapshot directory is re-verified first."""
+def index_snapshot(board, snapshot, *, source=None, actor=None):
+    """Register one imported snapshot's claims, artifacts and citations (idempotent; one `federation_indexed`
+    event, attributed to `actor`, a participant id the caller has checked, when the rows change). The snapshot
+    directory is re-verified first."""
     folder = Path(board.root) / "federation" / snapshot
     if not re.match(r"^[0-9a-f]{64}$", snapshot or "") or not (folder / "snapshot.json").is_file():
         raise DawError("unknown_snapshot", str(snapshot)[:80])
@@ -183,9 +228,10 @@ def index_snapshot(board, snapshot, *, source=None):
     with board.writer():
         ensure_table(board)
         stored = board.one("SELECT key FROM projection_state WHERE name=?", (name,))
+        counts = {"claims": len(records["claims"]), "artifacts": len(records["artifacts"]),
+                  "citations": len(records["citations"])}
         if stored and stored["key"] == key:
-            return {"snapshot": snapshot, "claims": len(records["claims"]), "artifacts": len(records["artifacts"]),
-                    "changed": False}
+            return {"snapshot": snapshot, **counts, "changed": False}
         with board.db:
             board.db.execute("DELETE FROM federation_record WHERE snapshot=?", (snapshot,))
             board.db.executemany("INSERT INTO federation_record(snapshot,record,kind,post,path,sha256,body,indexed) "
@@ -193,23 +239,24 @@ def index_snapshot(board, snapshot, *, source=None):
             board.db.execute("INSERT INTO projection_state(name,key,updated) VALUES(?,?,?) "
                              "ON CONFLICT(name) DO UPDATE SET key=excluded.key, updated=excluded.updated",
                              (name, key, stamp))
-            board.event("federation_indexed", {"snapshot": snapshot, "claims": len(records["claims"]),
-                                               "artifacts": len(records["artifacts"]), "records_from": records["derived"],
-                                               **({"source": source} if source else {})})
-    return {"snapshot": snapshot, "claims": len(records["claims"]), "artifacts": len(records["artifacts"]),
-            "changed": True}
+            board.event("federation_indexed", {"snapshot": snapshot, **counts, "records_from": records["derived"],
+                                               **({"source": source} if source else {}),
+                                               **({"actor": actor} if actor else {})})
+    return {"snapshot": snapshot, **counts, "changed": True}
 
 
-def reindex(board):
-    """Rebuild the whole index from `<commons>/federation/` (operator). Snapshots that no longer verify or no
-    longer exist lose their rows; the result lists them."""
+def reindex(board, actor):
+    """Rebuild the whole index from `<commons>/federation/` (permission `import`; attributed to `actor`).
+    Snapshots that no longer verify or no longer exist lose their rows; the result lists them."""
+    from daw.commons.permissions import require
+    actor = require(board, board.agent(actor), "import")["id"]
     folder = Path(board.root) / "federation"
     present = sorted(p.name for p in folder.iterdir() if p.is_dir() and re.match(r"^[0-9a-f]{64}$", p.name)) \
         if folder.is_dir() else []
     out, refused = [], []
     for snapshot in present:
         try:
-            out.append(index_snapshot(board, snapshot))
+            out.append(index_snapshot(board, snapshot, actor=actor))
         except DawError as error:
             refused.append({"snapshot": snapshot, "problem": f"{error.reason}: {error.detail}"})
     keep = {r["snapshot"] for r in out}
@@ -221,15 +268,26 @@ def reindex(board):
                 for snapshot in stale:
                     board.db.execute("DELETE FROM federation_record WHERE snapshot=?", (snapshot,))
                     board.db.execute("DELETE FROM projection_state WHERE name=?", (f"federation:{snapshot}",))
-                board.event("federation_indexed", {"removed": stale})
+                board.event("federation_indexed", {"removed": stale, "actor": actor})
     return {"indexed": out, "refused": refused, "removed": stale}
 
 
-def import_and_index(board, source, *, expect=None, origin=None):
-    """Verify and store a snapshot directory read-only, then index it."""
+def import_and_index(board, source, *, actor, expect=None, origin=None):
+    """Verify and store a snapshot directory read-only, then index it. `actor` (name or id, permission
+    `import`) is the importing participant: named in the receipt and the index event, and one
+    `snapshot_imported` event per import act (spec v3 B9)."""
     from daw.commons import export
-    info = export.import_snapshot(board.root, source, expect=expect)
-    return {**info, "index": index_snapshot(board, info["snapshot"], source=origin)}
+    from daw.commons.permissions import require
+    person = require(board, board.agent(actor), "import")
+    info = export.import_snapshot(board.root, source, expect=expect, importer=person["id"])
+    index = index_snapshot(board, info["snapshot"], source=origin, actor=person["id"])
+    with board.writer(), board.db:
+        board.event("snapshot_imported", {"snapshot": info["snapshot"], "actor": person["id"],
+                                          "already_imported": info["already_imported"], "scope": info.get("scope"),
+                                          "counts": info.get("counts"),
+                                          "index": {k: index[k] for k in ("claims", "artifacts", "citations", "changed")},
+                                          **({"source": origin} if origin else {})})
+    return {**info, "importer": person["id"], "index": index}
 
 
 # ---------------------------------------------------------------------------- reads (never write)
@@ -254,15 +312,22 @@ def indexed(view):
     """{snapshot: {claims, artifacts}} counts from the index."""
     out = {}
     for row in _query(view, "SELECT snapshot,kind,count(*) AS n FROM federation_record GROUP BY snapshot,kind"):
-        out.setdefault(row["snapshot"], {"claims": 0, "artifacts": 0})[row["kind"] + "s"] = row["n"]
+        out.setdefault(row["snapshot"], {"claims": 0, "artifacts": 0, "citations": 0})[row["kind"] + "s"] = row["n"]
     return out
 
 
 def records(view, snapshot):
-    """Indexed claims and artifacts of one snapshot, as foreign untrusted data with byte routes."""
-    out = {"claims": [], "artifacts": []}
+    """Indexed claims, artifacts and outgoing citations of one snapshot, as foreign untrusted data with byte
+    routes. A citation says whether it names a snapshot this board exported (`cites_this_commons`)."""
+    out = {"claims": [], "artifacts": [], "citations": []}
+    own = own_snapshots(view)
     for row in _query(view, "SELECT * FROM federation_record WHERE snapshot=? ORDER BY kind,record", (snapshot,)):
         body = json.loads(row["body"])
+        if row["kind"] == "citation":
+            out["citations"].append({"post": row["post"], **body,
+                                     "cited": pointer(body["cited_snapshot"], body["cited_record"]),
+                                     "cites_this_commons": body["cited_snapshot"] in own})
+            continue
         entry = {"id": row["record"], "pointer": pointer(snapshot, row["record"]), **body}
         if row["kind"] == "claim":
             entry["post"] = row["post"]
@@ -325,6 +390,34 @@ def artifact_output(view, identity):
 
 # ---------------------------------------------------------------------------- citations (dashboard)
 
+def own_snapshots(view):
+    """Snapshot ids this board exported (its `snapshot_exported` and `preprint_exported` events)."""
+    rows = view.rows("SELECT json_extract(body,'$.snapshot') AS snapshot FROM event "
+                     "WHERE kind IN ('snapshot_exported','preprint_exported')")
+    return {r["snapshot"] for r in rows if r["snapshot"]}
+
+
+def cited_by(view, record=None):
+    """Incoming citations: posts of imported snapshots whose text names a record of a snapshot this board
+    exported, as indexed (recorded at the citing source, backed by the citing snapshot's bytes). Restricted to
+    one local record (`claim_…`, `artifact_…`) when given. Foreign, untrusted data. Reads only."""
+    own = own_snapshots(view)
+    if not own:
+        return []
+    out = []
+    for row in _query(view, "SELECT * FROM federation_record WHERE kind='citation' ORDER BY snapshot,record"):
+        body = json.loads(row["body"])
+        if body.get("cited_snapshot") not in own or (record and body.get("cited_record") != record):
+            continue
+        out.append({"snapshot": row["snapshot"], "post": row["post"], "post_title": body.get("post_title"),
+                    "author": body.get("author"), "created": body.get("created"),
+                    "record": body["cited_record"], "kind": body.get("cited_kind"),
+                    "cited": pointer(body["cited_snapshot"], body["cited_record"]),
+                    "cited_snapshot": body["cited_snapshot"], "route": f"/directory/{row['snapshot']}#{row['post']}",
+                    "foreign": True})
+    return out
+
+
 def citations(view):
     """Recorded citations of foreign snapshots: posts whose text names `snapshot:<id>/…`, grouped by snapshot,
     with the citing question (the notebook the post published) or thread. Hidden and withheld posts count
@@ -365,7 +458,19 @@ def citations(view):
         group["questions"] = sorted(group["questions"].values(), key=lambda q: (q["question"] or "~", q["thread"] or ""))
         group["citing_posts"] = len({c["post"] for c in group["citations"]})
         out.append(group)
-    return {"snapshots": out, "sequence": view.sequence(),
+    incoming = {}
+    for item in cited_by(view):
+        group = incoming.setdefault(item["snapshot"], {"snapshot": item["snapshot"], "citations": []})
+        group["citations"].append({**item, "here": _here(view, item["record"])})
+    return {"snapshots": out, "cited_by": [incoming[s] for s in sorted(incoming)], "sequence": view.sequence(),
             "note": "Recorded citations only: posts whose text names snapshot:<id>/<record>. A question is the "
                     "notebook a citing post published; otherwise its thread is shown. Hidden posts and withheld "
-                    "write-ups are not counted."}
+                    "write-ups are not counted. Cited by: posts of imported snapshots naming a record of a "
+                    "snapshot this board exported (learned by importing the citing snapshot)."}
+
+
+def _here(view, record):
+    """Whether a cited record exists on this board (a claim row or a library artifact)."""
+    if record.startswith("claim_"):
+        return bool(view.one("SELECT id FROM claim WHERE id=?", (record,)))
+    return bool(view.library.one("SELECT id FROM artifact WHERE id=?", (record,)))

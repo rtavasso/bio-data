@@ -75,11 +75,13 @@ fractions (`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty
 (`twenty-one` … `twenty-nine` as one number) and `a dozen` / `half a dozen`.
 **Heading numbers count** (the old heading-numbering exemption is gone), and
 **decimals, exponents and percentages glued to letters count** (`x2.5`,
-`FC1.54`, `v1.2`; the old letter-glued exemption is gone). **Not numbers:**
-record identifiers, hashes and URLs; integers glued to letters directly or
-through one hyphen, which are identifier characters (`PMP22`, `log2`,
-`GSE1234`, `H3K27me3`, `IL-6`, `chr10` in `chr10:49316968`, `measured-zero`),
-except a fold multiplier `x2`; strand ends `3′`/`5′` before a prime; digits
+`FC1.54`, `v1.2`; the old letter-glued exemption is gone), and so does **an
+integer glued to one lone lowercase letter** (`n12`, `k5`, `p14`, `v9`, the fold
+multiplier `x2`; spec v3 B6, rules `writeup-pointers/3`). **Not numbers:**
+record identifiers, hashes and URLs; integers glued to an uppercase letter, to
+two or more letters, or through one hyphen, which are identifier characters
+(`PMP22`, `P1`, `log2`, `GSE1234`, `H3K27me3`, `IL-6`, `chr10` in
+`chr10:49316968`, `measured-zero`); strand ends `3′`/`5′` before a prime; digits
 after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
 dates and times in a byline (a paragraph among the first two blocks starting
 with By / Written by / Prepared by / Author(s): / Date: / Updated:); spelled
@@ -109,17 +111,21 @@ abbreviations (e.g., i.e., et al., Fig., vs., approx.); bracketed citations
 that open the next sentence attach to the previous one.
 
 Each number gets a **scope**: `cell` (an artifact pointer with a cell or
-JSON-key locator), `claim`, `line` (any other artifact pointer at the number,
-including `line=N`) or `none`.
+JSON-key locator), `claim`, `line` (an artifact pointer with `line=N`), `text`
+(an artifact pointer without a locator, including figures and identifiers in
+code; spec v3 B6) or `none`. On posts, `curated` marks a person's curated
+pointer (below, G2) and `post` the post's evidence list.
 
 **Value-in-record check** (V2). Every covering pointer is checked:
 
 - a claim pointer verifies when the number occurs in the claim's text or in one
   of its scope fields;
 - an artifact pointer verifies when the number is at the cited cell, key or line;
-  without a locator, when it occurs anywhere in a text output of at most 64 KB.
-  Bytes are read from the archive and checked against their sha256 first; never
-  executed.
+  without a locator (scope `text`), only when exactly one numeric token of a text
+  output of at most 64 KB matches; a value that occurs twice is unverified with
+  the lines where it occurs (B6). A `text` match is shown with its own badge and
+  is never counted in `verified_share`. Bytes are read from the archive and
+  checked against their sha256 first; never executed.
 
 Equality uses the prose's precision: a prose number with d decimal places
 matches a cited value v when |v − p| ≤ 0.5·10⁻ᵈ (either rounding at the half);
@@ -224,9 +230,17 @@ See [observatory-board.md](observatory-board.md#numbers-and-pointers-spec-v2-c11
   `claim N · status · K verified`, and the node pane).
 - **Dashboard** (C11): every group's board criteria carry `numbers` over its
   finals (answers of research deliveries): counts by scope and status,
-  `number_level_share` (cell, claim or line scope), `claim_share`, `cell_share`,
-  `verified_share`; `null` when the group has no final. The dashboard shows the
-  summary and every cohort ("Number coverage") and a summary stat.
+  `number_level_share` (the author's cell, claim, line or text scope),
+  `claim_share`, `cell_share`, `verified_share` (the author's cell, claim and
+  line pointers only), `text_verified`, `curated_verified` and `pointers`
+  (author, curated, unpointed, unlocatable; spec v3 G2); `null` when the group has
+  no final. The dashboard shows the summary and every cohort ("Number
+  coverage") and a summary stat.
+- **Curated pointers** (spec v3 G2): a person's pointer at a number the author
+  did not point (`daw.commons.curation`; how to curate in
+  [publishing.md](publishing.md#curated-pointers-spec-v3-g2)) gives the number
+  scope `curated`, shown with the curator's name; it never counts as the
+  author's pointer, in `number_level_share` or in `verified_share`.
 
 ## Cohort audit (V2)
 
@@ -238,15 +252,20 @@ shown as a pointer, how many post-scoped numbers' values occur in a text artifac
 (≤ 64 KB) the post names. The receipt holds rules, board sequence, the fixture
 hash, totals and per-final counts by post id; no prose.
 
-On the committed PMP22 cohort fixture (board sequence 813, rules
-`writeup-pointers/2`): 54 finals (14 requested by the operator, 40 by peers), 936
+On the committed PMP22 cohort fixture (board sequence 814, rules
+`writeup-pointers/3`): 54 finals (14 requested by the operator, 40 by peers), 949
 numbers. **0 numbers (0%) have a pointer at the number**, so 0% are resolvable to
-a cell and none is verified or unverified; 914 (97.65%) are covered only by the
-post's evidence list and 22 (2.35%, all in peer answers) are unpointed. Of the
-914 post-scoped numbers, 556 have a value that occurs in an artifact the post
-names, 264 do not, and for 94 every named artifact's bytes are outside the
-fixture. The first cohort's agents never wrote a pointer at a number; the share
-is the baseline the claims-first authoring of V1 is meant to move.
+a cell and none is verified or unverified; 927 (97.68%) are covered only by the
+post's evidence list and 22 (2.32%, all in peer answers) are unpointed. Of the
+927 post-scoped numbers, 559 have a value that occurs in an artifact the post
+names (193 of them exactly once across the named artifacts, what a text match
+could verify under B6), 273 do not, and for 95 every named artifact's bytes are
+outside the fixture. The first cohort's agents never wrote a pointer at a number;
+the share is the baseline the claims-first authoring of V1 is meant to move.
+Under `writeup-pointers/2` the same fixture had 936 numbers (914 post-scoped;
+556 found, 264 not, 94 absent): the 13 added are integers glued to one lowercase
+letter (page and paragraph labels such as `p14` and `p0175`, versions such as
+`v9`, a run label `r003`).
 
 ## Regeneration flags (Flow B step 5)
 
@@ -611,7 +630,7 @@ bytes.
   (three groups, inline marks, placeholder), `Artifact.test.tsx` (opens at the
   locator, highlights the cell), `Dashboard.test.tsx` (coverage table),
   `NodeDetail.test.tsx` (verified pointer count). The e2e suite runs on the demo.
-- Checked on the cohort fixture: the number coverage share (0 of 936 numbers in
+- Checked on the cohort fixture: the number coverage share (0 of 949 numbers in
   54 finals have a pointer at the number; above), the dashboard summary and the
   post page reports. Checked on the demo only: verdict records, placeholders,
   verified and unverified pointers (the cohort has no write-ups, claims or
@@ -646,15 +665,18 @@ bytes.
 - Number detection is lexical: a number with a unit glued on counts; a range
   written `3-5` yields two numbers; times, dates and figure or chapter labels
   outside a byline count; spelled numbers above twenty (other than twenty-one to
-  twenty-nine) are not detected; `dozens` is not a number. Integers glued to
-  letters are identifier characters, so `n12` or `FC3` written without a space is
-  not detected (decimals glued to letters are).
+  twenty-nine) are not detected; `dozens` is not a number. An integer glued to
+  one lone lowercase letter counts (`n12`), so a lowercase gene or protein label
+  such as `p53` counts as 53; integers glued to an uppercase letter or to two or
+  more letters are identifier characters, so `FC3` or `N12` written without a
+  space is not detected (decimals glued to letters are).
 - Value-in-record verification compares numbers, not meaning: a claim verifies a
   number that occurs in its text or scope, whatever role it plays there; without
-  a locator, a number verifies when any equal value (at the prose's precision)
-  occurs anywhere in a text output of at most 64 KB, which is weaker for small
-  integers than a cell locator. Cohort artifacts whose bytes were dropped from the
-  fixture (outputs over 64 KB) cannot verify anything there.
+  a locator, a number verifies only when exactly one equal value (at the prose's
+  precision) occurs in a text output of at most 64 KB, which is still weaker than
+  a cell locator: it is scope `text` and kept out of `verified_share`. Cohort
+  artifacts whose bytes were dropped from the fixture (outputs over 64 KB) cannot
+  verify anything there.
 - Sentence splitting is heuristic (abbreviation list); a clause boundary is a
   punctuation rule (`,` `;` `:` dashes). A number followed by an unpunctuated,
   number-free aside before its citation is still covered by it.

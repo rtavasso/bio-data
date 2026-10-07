@@ -2,6 +2,7 @@
 replication confirmation and mismatch, digests, static export and read-only federation. Offline."""
 import hashlib
 import json
+import re
 import shutil
 import stat
 from pathlib import Path
@@ -84,10 +85,11 @@ def test_coverage_is_number_granular():
               f"| a | b |\n|---|---|\n| x | 3 |\n| y 8 [{C}] | 9 |\n\n![2 panels]({A})\n\n"
               f"```\nvalue 8 {A}\nother 6, {A}\n```\n")
     found = numbers(source)
-    assert found == [("1.54", "claim"), ("11.0", "none"), ("32.0", "line"), ("5", "none"), ("2", "claim"),
-                     ("7", "line"), ("4", "none"), ("1.54", "none"), ("0.003", "claim"), ("2", "claim"),
+    # An artifact pointer without a locator (a citation, a figure, an identifier in code) has scope text (v3 B6).
+    assert found == [("1.54", "claim"), ("11.0", "none"), ("32.0", "text"), ("5", "none"), ("2", "claim"),
+                     ("7", "text"), ("4", "none"), ("1.54", "none"), ("0.003", "claim"), ("2", "claim"),
                      ("1.54", "cell"), ("0.5", "cell"), ("3", "none"), ("8", "claim"), ("9", "none"),
-                     ("2", "line"), ("8", "line"), ("6", "none")]
+                     ("2", "text"), ("8", "text"), ("6", "none")]
     blocks = writeup.parse(source)
     sentences = blocks[0]["sentences"]
     assert len(sentences) == 8 and sentences[3]["pointers"] == [A]  # a citation after the period belongs to it
@@ -150,7 +152,7 @@ def test_rendered_writeup_is_three_clicks_from_bytes_with_the_cited_subgraph(dem
                                                                "unverified": 1, "unpointed": 0, "units": 6, "pointers": 4}
     assert [(n["text"], n["scope"], n["status"]) for n in rendered["numbers"]] == [
         ("1.54", "claim", "verified"), ("11.0", "cell", "verified"), ("32.0", "cell", "verified"),
-        ("1", "line", "unverified")]
+        ("1", "text", "unverified")]
     # Sentence -> claim pointer -> artifact -> verified bytes.
     sentence = next(s for b in rendered["blocks"] for s in b.get("sentences", []) if claim in s["pointers"])
     entry = rendered["pointers"][claim]
@@ -1106,7 +1108,8 @@ def test_export_is_deterministic_static_escaped_and_public_only(demo, tmp_path):
     hostile_page = (one / f"posts/{hostile}.html").read_text()
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in hostile_page and "&lt;b&gt;bold&lt;/b&gt;" in hostile_page
     hidden_page = (one / f"posts/{ctx['posts']['reply']}.html").read_text()
-    assert "synthetic moderation test" in hidden_page and "1.31" not in hidden_page
+    # The reply's number is absent; a bare substring test would also match inside the stub's hide timestamp.
+    assert "synthetic moderation test" in hidden_page and not re.search(r"(?<![\d.])1\.31(?!\d)", hidden_page)
     assert "Normalization shrinks" not in "".join(pages) + (one / "map.json").read_text()
     # Private workspace records never leave: only library artifacts, no server paths, map edges from board/library.
     figure = ctx["observatory_map"]["figure"]
@@ -1180,9 +1183,11 @@ def test_federation_import_verifies_hashes_and_serves_foreign_files_read_only(de
     assert http.get(f"/api/federation/{made['snapshot']}/files/nope.html").status_code == 404
     with Archive(root) as view:  # nothing foreign entered the board's posts, claims or library
         # Spec v2 V7: an import registers the snapshot's ids in the federation index (a projection) and records
-        # one `federation_indexed` event; no other event names the snapshot.
+        # one `federation_indexed` event; spec v3 B9: each import act records one attributed `snapshot_imported`
+        # event. No other event names the snapshot.
         kinds = {r["kind"] for r in view.rows("SELECT kind FROM event WHERE body LIKE ?", (f"%{made['snapshot']}%",))}
-        assert kinds <= {"snapshot_exported", "federation_indexed"}
+        assert kinds <= {"snapshot_exported", "federation_indexed", "snapshot_imported"}
+        assert len(view.rows("SELECT seq FROM event WHERE kind='snapshot_imported'")) == 1
         assert view.one("SELECT count(*) AS n FROM federation_record WHERE snapshot=?", (made["snapshot"],))["n"] > 0
     assert canonical(json.loads((stored / "snapshot.json").read_text())) == (stored / "snapshot.json").read_bytes()
 

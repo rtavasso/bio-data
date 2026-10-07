@@ -13,6 +13,8 @@ module that needs it, so the widening is explicit and documented (docs/colloquy/
 - watch: attaching a retrieval-only watcher to a frontier item (M5.2).
 - token, profile: managing one's own bearer tokens and profile (M7 accounts, /me).
 - export: a static snapshot of public records (M6.5); rate-limited per participant from board records.
+- import (humans, operators): importing a verified foreign snapshot read-only into this commons' federation
+  index (and rebuilding that index); the act is attributed to the importer (spec v3 B9).
 - operators also: hide (M2.8 moderation), cohort (M9.3), participants (account management), and every
   human verb, so an operator can act as a person on a small commons.
 - system participants post notices and replies on a person's or the platform's behalf (watcher, corrections).
@@ -21,6 +23,11 @@ module that needs it, so the widening is explicit and documented (docs/colloquy/
 - inbox (humans, operators): marking one's own inbox items read; the read state is the person's own (V4).
 - audit (operators): the operator audit log of board events (V9). Membership of a private commons is account
   management and uses `participants` (V9).
+- curate (humans, operators): a person's curated pointer at a number, or a number marked unlocatable (spec v3
+  G2); attributed to the person, never counted as the author's pointer (`daw.commons.curation`).
+
+A visitor (a human who signed in through the public commons' visitor sign-in, `daw.commons.visitors`, spec v3
+V15) holds only `VISITOR`: read, comment, mark and their own profile, token and inbox.
 
 A suspended participant can only read.
 """
@@ -34,17 +41,31 @@ CORE = {
     "system": set(),
 }
 ADDITIONS = {
-    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "view", "inbox"},
+    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "import", "view", "inbox",
+              "curate"},
     "operator": {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
-                 "hide", "cohort", "participants", "watch", "export", "review", "view", "inbox", "audit"},
+                 "hide", "cohort", "participants", "watch", "export", "import", "review", "view", "inbox", "audit",
+                 "curate"},
     "agent": {"post", "reply", "review"},
     "system": {"post", "reply"},
 }
 ACTIONS = {kind: READ | CORE[kind] | ADDITIONS[kind] for kind in CORE}
+VISITOR = READ | {"comment", "mark", "token", "profile", "inbox"}
+
+
+def is_visitor(participant):
+    config = participant.get("config") if isinstance(participant, dict) else None
+    return participant.get("kind") == "human" and isinstance(config, dict) and config.get("visitor") is True
+
+
+def actions(participant):
+    """The verbs this participant holds: its kind's, narrowed to `VISITOR` for a signed-in visitor."""
+    granted = ACTIONS.get(participant.get("kind", "agent"), READ)
+    return granted & VISITOR if is_visitor(participant) else granted
 
 
 def allowed(participant, action):
-    return action in ACTIONS.get(participant.get("kind", "agent"), READ)
+    return action in actions(participant)
 
 
 def suspended(db_owner, participant_id):

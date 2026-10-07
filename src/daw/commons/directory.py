@@ -27,7 +27,8 @@ against the directory, downloads `snapshot.json` (its hash must equal the reques
 file into a staging folder, checking each size and sha256 as it arrives (size-capped, http(s) only, no
 redirects to other schemes), imports it read-only (`export.import_snapshot`, which re-verifies everything),
 indexes its records (`federation.index_snapshot`), keeps a copy of the directory under
-`<commons>/directory/sources/` and writes a receipt `<commons>/federation/<id>.fetch.json`. Nothing fetched
+`<commons>/directory/sources/` and writes a receipt `<commons>/federation/<id>.fetch.json`. The fetch is
+attributed to the importing participant (`--as`, permission `import`; spec v3 B9). Nothing fetched
 is executed, imported as code, or written into this board's posts, claims or library.
 """
 import hashlib
@@ -247,9 +248,12 @@ def _download_snapshot(url, snapshot, entry, staging):
     return total
 
 
-def fetch(board, source, snapshot):
-    """Fetch one listed snapshot into this commons (read-only import + federation index), with a receipt."""
+def fetch(board, source, snapshot, *, actor):
+    """Fetch one listed snapshot into this commons (read-only import + federation index), with a receipt.
+    `actor` is the importing participant (permission `import`, checked before anything is downloaded)."""
     from daw.commons import federation
+    from daw.commons.permissions import require
+    importer = require(board, board.agent(actor), "import")["id"]
     if not HEX64.match(snapshot or ""):
         raise DawError("unknown_snapshot", str(snapshot)[:80])
     directory, base, data = read(source)
@@ -268,7 +272,7 @@ def fetch(board, source, snapshot):
             staging.mkdir(parents=True)
             _download_snapshot(location, snapshot, entry, staging)
             folder = staging
-        result = federation.import_and_index(board, folder, expect=snapshot, origin=origin)
+        result = federation.import_and_index(board, folder, actor=importer, expect=snapshot, origin=origin)
     finally:
         if staging is not None:
             shutil.rmtree(staging, ignore_errors=True)
@@ -278,7 +282,7 @@ def fetch(board, source, snapshot):
     (saved / f"{origin['directory_sha256']}.source.json").write_bytes(canonical({"source": source, "saved": now()}))
     receipt = {"format": "colloquy.directory-receipt/1", "action": "fetch", "snapshot": snapshot, **origin,
                "fetched": now(), "files": result.get("files") if isinstance(result.get("files"), int) else len(result.get("files") or []),
-               "already_imported": result.get("already_imported"), "index": result.get("index"),
+               "already_imported": result.get("already_imported"), "index": result.get("index"), "importer": importer,
                "verified": "snapshot.json hashes to the requested ID; every listed sha256 and size matched",
                "executed": False}
     (root / "federation" / f"{snapshot}.fetch.json").write_bytes(canonical(receipt))

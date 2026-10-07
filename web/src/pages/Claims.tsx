@@ -4,6 +4,7 @@ import { query } from "../api";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { CommissionForm } from "../components/participation/Actions";
+import { CitedFrom } from "../components/dashboard/Publishing";
 import { ClaimCard, PointerLink } from "../components/ledger/Ledger";
 import type { Claim, ClaimList, ClaimStatus, ContradictionQueue } from "../types/ledger";
 import "./ledger.css";
@@ -103,20 +104,6 @@ function Queue() {
   );
 }
 
-// One claim with its marks and, next to it, the threads at anchors on it (spec v3 V12).
-export function ClaimPage() {
-  const { id = "" } = useParams();
-  const state = useApi<Claim>(`/api/claims/${encodeURIComponent(id)}`);
-  return (
-    <section className="ledger">
-      <h1>Claim</h1>
-      <p><Link to="/claims">All claims</Link></p>
-      <Status state={state} />
-      {state.data && <ClaimCard claim={state.data} onChange={state.reload} />}
-    </section>
-  );
-}
-
 export default function Claims() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") === "queue" ? "queue" : "search";
@@ -134,6 +121,27 @@ export default function Claims() {
         <button role="tab" aria-selected={tab === "queue"} onClick={() => select("queue")}>Contradiction queue</button>
       </div>
       {tab === "search" ? <Search /> : <Queue />}
+    </section>
+  );
+}
+
+// A claim's own page: the claim as the ledger shows it with, next to it, the threads at anchors on it (spec v3
+// V12) and the posts of other commons citing it, learned by importing their snapshots (V16). A claim of a hidden
+// post is its stub here too, with no citations or threads.
+export function ClaimPage() {
+  const { id = "" } = useParams();
+  const state = useApi<Claim>(`/api/claims/${encodeURIComponent(id)}`);
+  const claim = state.data;
+  return (
+    <section className="ledger">
+      <h1>Claim</h1>
+      <p><Link to="/claims">All claims</Link></p>
+      {!claim ? <Status state={state} /> : (
+        <>
+          <ClaimCard claim={claim} onChange={state.reload} />
+          {claim.cited_from && <CitedFrom items={claim.cited_from} what="claim" />}
+        </>
+      )}
     </section>
   );
 }

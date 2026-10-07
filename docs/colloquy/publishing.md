@@ -1,4 +1,4 @@
-# Publishing, federation and the real-data pilot (spec v2 V7, V3, V8)
+# Publishing, federation and the real-data pilot (spec v2 V7, V3, V8; v3 B9, V16)
 
 This area makes a number in one commons resolvable to bytes from anywhere: a preprint a reader verifies
 offline, imported snapshots whose claims and artifacts resolve across commons, a public directory where labs
@@ -16,6 +16,7 @@ learning layer) is deferred by decision and not implemented.
 | Public commons directory | `daw/commons/directory.py` |
 | Curated tours | `daw/commons/tour.py`, `docs/colloquy/tours/pmp22-cohort.json` |
 | Public demo commons from the cohort fixture | `daw/commons/publicdemo.py` |
+| A second commons citing the cohort, offline (v3 V16) | `daw/commons/federationdemo.py` |
 | Round-two presets, invitations, participation report | `daw/commons/pilotkit.py`, `docs/colloquy/presets/round-two.json` |
 | Harness checks (live receipts; scripted offline) | `daw/commons/harnesscheck.py` |
 | Compaction hygiene per run and per group | `daw/commons/hygiene.py`, `metrics.py` (`METRICS_VERSION` 3) |
@@ -72,7 +73,7 @@ claims of exported posts, and library artifacts with the path and hash of their 
 from the archive (the redacted fixture drops derived outputs over 64 KB) are listed with `present: false`;
 before this change the cohort board could not be exported at all (the export read every output).
 
-`bio commons federation import DIR [--expect ID]` verifies and stores the snapshot read-only as before and
+`bio commons federation import DIR [--expect ID] [--as PERSON]` verifies and stores the snapshot read-only as before and
 then indexes it: `federation.index_snapshot` re-verifies the stored copy and writes its claim and artifact
 identities into `federation_record` (one `federation_indexed` event when rows change; idempotent).
 `bio commons federation reindex` rebuilds the table from `<commons>/federation/` alone; a copy that no
@@ -100,12 +101,59 @@ lists posts whose text names `snapshot:<id>/…` (recorded citations only), grou
 question the post published (its notebook) or its thread; hidden and withheld posts count nothing. The
 dashboard shows it ("Snapshots cited by questions"); `/directory/<id>` shows the citing questions.
 
+**Attributed imports (v3 B9).** Every import names its participant: `federation import`, `directory fetch` and
+`federation reindex` take `--as` (default `operator`; `federation.import_and_index(board, dir, actor=…)`,
+`directory.fetch(..., actor=…)`, `reindex(board, actor)`), checked against the new `import` permission (humans,
+operators; agents are refused before a byte is stored). The import receipt records `importer`,
+`federation_indexed` carries `actor`, and every import act, a re-import included, records one
+`snapshot_imported` event. `GET /api/me` lists the caller's imports (`imports`, newest first) and the `/me` page
+shows them; `/directory/<id>` says who imported the snapshot.
+
+**Citations seen from the cited side (v3 V16).** The cited commons learns of a citation the way it learns of
+anything foreign: by importing the citing commons' snapshot. No edge is inferred and nothing is pushed into the
+cited board.
+
+1. At the source: every export (and preprint) lists in `records.json` a `citations` entry `{post, snapshot,
+   record}` for each foreign pointer in the text of each exported, visible post (hidden, withheld and refused
+   posts list none). The key is written only when there are citations, so earlier snapshot ids are unchanged.
+2. On import: the index keeps a citation (`federation_record` kind `citation`) only when the citing post's own
+   exported page (`posts/<post>.html`) or source (`source/<post>.md`) in the verified snapshot contains the
+   pointer; a `records.json` entry its bytes do not back is dropped.
+3. On read: `federation.cited_by(view, record)` lists the indexed citations of snapshots this board exported
+   itself (its `snapshot_exported` and `preprint_exported` events). A citation of a snapshot this board never
+   exported is not attributed to it, even when it holds the same record id.
+
+The cited claim's page (`/claims/<id>`, new; `GET /api/claims/{id}` has `cited_from`), the artifact page
+(`GET /api/artifacts/{id}` `cited_from`) and the dashboard ("Cited by other commons", `cited_by` in
+`GET /api/snapshot-citations`) show each citing post, labelled foreign and untrusted, linking to
+`/directory/<citing snapshot>#<post>`, where the snapshot page lists the citations its posts make. A claim of
+a hidden post is its stub there too, without citations. `bio commons federation cited-by [RECORD]` is the
+CLI read. A citing post hidden after its snapshot was imported stays in the imported copy (snapshots are
+immutable); a newer snapshot without it does not remove it from an older one.
+
+**A second commons, offline.** `bio commons federation-demo OUT [--cited cohort|demo] [--fixture DIR]` builds
+`OUT/cited` (the public cohort commons from a verified copy of the fixture, board exported to
+`OUT/cited-snapshot`) and `OUT/second` (a synthetic demo commons on other questions). The second imports the
+cohort snapshot as its local participant `local`, commissions a write-up that the scripted stand-in delivers
+citing the tour's first cohort cell, `[−3.039](snapshot:<cohort>/artifact_8323…#key=primary[0].effect_log2)`
+(verified by the checker from the snapshot bytes), and exports that thread; the cohort imports it back as
+`local`. `OUT/FEDERATION.json` names the snapshots, the citing post and the routes to open; serve both
+(`bio commons --root OUT/second serve`, `--root OUT/cited serve --port 8766`) and open `/dashboard` on the
+second and `/artifact/<id>` and `/dashboard` on the cohort; `/me` on each lists the import. `--cited demo` does
+the same against a synthetic commons with claims and shows the citation on `/claims/<id>`.
+
+**Limitation: the cohort has no claims to cite yet.** The committed fixture holds 0 claims (no cohort agent
+authored any), so on the cohort the citation is an artifact cell, shown on the artifact page; the claim path is
+exercised on synthetic commons with claims (`test_a_second_commons_cites_a_claim_and_the_citation_shows_on_both_sides`,
+`federation-demo --cited demo`). No claim is written for the cohort's agents. Milestone E on the cohort copy:
+`test_a_second_commons_cites_the_public_cohort_with_the_citation_visible_on_both_sides`.
+
 ## The public commons directory (V7)
 
 ```sh
 bio commons directory publish SNAPSHOT_DIR --directory SITE/ --lab "Lab A" [--title T] [--location URL]
 bio commons directory list SITE/directory.json | https://host/directory.json
-bio commons --root COMMONS directory fetch SOURCE SNAPSHOT_ID
+bio commons --root COMMONS directory fetch SOURCE SNAPSHOT_ID [--as PERSON]
 bio commons --root COMMONS directory show
 ```
 
@@ -146,9 +194,11 @@ posts.
 
 **V2 pointers where authors inlined artifact ids.** The checker area's audit
 (`docs/v3/receipts/cohort-number-audit.json`) shows that no cohort author pointed a number at a record (0 of
-936 numbers in 54 finals at number level; 914 are "this post's evidence"), so no cohort final qualifies for an
-author pointer, and posts are immutable. The value-level pointers therefore live in the curated tour,
-attributed to its curator, and the checker re-verifies each one on every read.
+949 numbers in 54 finals at number level under `writeup-pointers/3`; 927 are "this post's evidence"), so no
+cohort final qualifies for an author pointer, and posts are immutable. Value-level pointers are therefore
+people's: the tour's steps (attributed to the tour's curator, re-verified on every read) and, since v3 G2,
+curated pointers recorded as marks (below), attributed to the person who curated each one. The tour's own
+curator attribution applies to the tour's steps only.
 
 **The tour.** `docs/colloquy/tours/pmp22-cohort.json` (`colloquy.tour/1`) names eight finals, one number in
 each, an artifact the post itself names and a locator (cell or JSON key). Each step is re-checked whenever it
@@ -185,6 +235,74 @@ spans. `writeup._emphasis` now splits text runs after each line break so every r
 `test_every_number_offset_shows_its_text_on_the_cohort` checks every number on the cohort. Counts and
 statuses are unchanged; verdicts recorded before the fix keep their stored offsets (the renderer overlays
 stored statuses by offset, so an affected number recorded earlier shows the freshly computed status).
+
+## Curated pointers (spec v3 G2)
+
+The platform never authors pointers; people do. `daw.commons.curation` records a person's pointer at a number:
+
+- `POST /api/curation/pointers {post, offset, artifact, locator, note}` (or `bio commons curate pointer POST
+  --offset N --artifact A --locator L --note T --as PERSON`) records a `pointer_curated` mark;
+- `{post, offset, note, unlocatable: true}` (`bio commons curate unlocatable POST --offset N --note T --as
+  PERSON`) marks the number unlocatable with the reason (no named artifact holds it, its bytes are absent, it
+  was computed in prose).
+
+Both take the write discipline (humans and operators with permission `curate`; agents and visitors refused).
+Before recording, the post must be visible, the checker must detect a number at the offset, the artifact must
+be among the evidence the post names, the locator must name a cell, JSON key or line, and the value must be
+there in the sha256-checked bytes. Each act is a `mark` row on the post, a library blob and a `pointer_curated`
+event (participant, post, offset, number text, artifact, locator, note). The checker gives the number scope
+`curated`, shown with the curator's name (badge "curated", dashed underline) and re-verified on every read; it
+never counts as the author's pointer, in the number-level share or in `verified_share`, and the dashboard
+lists author pointers, curated pointers and unpointed numbers (of which unlocatable) apart. The post page has a
+"Curate pointers" panel (candidate locators from `/api/curation/locate`, then record or mark unlocatable);
+`GET /api/curation/pointers?post=` lists the acts and the post's progress; the served tour walks every number
+of its finals (author, curated with the curator, unlocatable with the note, unresolved).
+
+**Milestone B, run by a person (not done here).** No curation has been recorded and no curation receipt is
+committed: the specification requires a person to curate. To produce it:
+
+1. On the fixture working copy (or a public commons built from it): `bio commons --root fixtures/pmp22-cohort
+   add-participant NAME --display-name "..."` when the curator is new.
+2. `bio commons --root fixtures/pmp22-cohort curate status --tour pmp22-cohort` lists each tour final's
+   unresolved numbers with offsets; `tour locate POST --offset N` (or the post page) lists candidates. Read the
+   row and column, then `curate pointer` or `curate unlocatable` for every number of at least five finals.
+3. `bio commons fixture record-curation fixtures/pmp22-cohort --reason "tour finals curated by NAME"`
+   re-records the fixture's hashes; it refuses unless every event past the recorded sequence is a curation act
+   or a curator's participant record.
+4. `bio commons --root <copy of the fixture> curate receipt --tour pmp22-cohort --output
+   docs/v3/receipts/cohort-curation.json` writes the receipt (`colloquy.curation-receipt/1`: per final the
+   numbers resolved by author pointers, curated, unlocatable and unresolved; curators; the milestone) and
+   exits 1 without writing unless five finals have no unresolved number.
+   `test_committed_curation_receipt_reproduces_from_the_fixture` then checks it against the fixture.
+
+## Public cohort commons (spec v3 V15)
+
+`bio commons public-demo OUT` builds the public cohort commons: the verified fixture copy, the checked tour,
+`commons.toml` with `[access] read = "public"` and `[visitors] signin = true` (`--no-visitors` turns sign-in
+off), and `PUBLIC.json` (read policy, visitor sign-in, first screen `/`). Served in accounts mode, anyone reads
+the board (the first screen), the tour, the records (runs and timelines) and the dashboard; GETs write no
+record (a disposable map and graph-store cache under `cache/`). A visitor signs in at `/login` with a display
+name (`POST /api/visitors`, `daw.commons.visitors`): a human participant flagged `visitor`, a token shown once
+to sign in again, and the session cookie. Visitors read, comment and mark (attributed and rate-limited) and
+nothing else: no posts, uploads, curation, promotions or commissions, and no allowance. Sign-ins are limited
+per client address (the `[login]` window) and per hour across the commons (`[visitors] per_hour`, default 30);
+operators suspend visitors like anyone. Their comments and marks reach agents through the record (G6) when
+the cohort is next run. Tested: `test_public_cohort_commons_reads_publicly_and_visitors_comment_and_mark_after_signing_in`.
+
+**Deploy (not done here; no public link exists until someone deploys it).** On a host with Docker and a
+TLS-terminating reverse proxy:
+
+```sh
+uv run bio commons public-demo /srv/colloquy/pmp22-public     # from a checkout: the fixture is not in the image
+sudo chown -R 10001 /srv/colloquy/pmp22-public                 # the image's service user writes secrets, cache, acts
+docker build -f deploy/Dockerfile -t colloquy:pilot .
+docker run -d --init -p 127.0.0.1:8765:8765 -v /srv/colloquy/pmp22-public:/commons colloquy:pilot \
+  commons serve --host 0.0.0.0 --mode accounts --forwarded-allow-ips <proxy address>
+```
+
+Point the proxy's public hostname at `127.0.0.1:8765`; an operator token for moderation comes from
+`bio commons --root /srv/colloquy/pmp22-public token create operator`. The first request builds the graph
+store in the background (B11). Record the public URL in `docs/COLLOQUY.md` once it is live.
 
 ## Live pilot tooling (V3, V8): runbook, not executed here
 
@@ -239,11 +357,16 @@ cost) and no composite; `Publishing.test.tsx` checks that the table renders thre
 ## HTTP
 
 ```
-GET  /api/tours;  GET /api/tours/{name}              tours re-checked against the archive
+GET  /api/tours;  GET /api/tours/{name}              tours re-checked against the archive (and their finals walked)
 GET  /api/curation/locate?post=&offset=&artifact=    candidate locators (curation aid)
+POST /api/curation/pointers {post, offset, note, artifact?, locator?, unlocatable?}   a person's curated pointer
+GET  /api/curation/pointers?post=                    curation acts on a post and its progress (hidden: stub)
+GET  /api/curation/progress?tour=                    Milestone B progress over a tour's finals
+POST /api/visitors {display_name, affiliation?}      visitor sign-in on a public commons (V15)
 GET  /api/directory;  GET /api/directory/{snapshot}   directories, imports, a snapshot's indexed records
-GET  /api/federation-index;  GET /api/snapshot-citations
-GET  /api/preprints;  POST /api/preprints {post}     the POST takes the write discipline (Actor, CSRF header)
+GET  /api/federation-index;  GET /api/snapshot-citations   (v3: `cited_by`, incoming citations)
+GET  /api/claims/{id}, /api/artifacts/{id}           (v3: `cited_from`);  GET /api/me (v3: `imports`)
+GET  /api/preprints;  POST /api/preprints {post}     POSTs take the write discipline (Actor, CSRF header)
 GET  /api/pilot/report?participant=
 ```
 
@@ -251,10 +374,12 @@ All GETs are read-only (tested: the board sequence is unchanged after every read
 
 ## Validation and limitations
 
-- Exercised offline: every test in `tests/test_commons_publishing.py` (42) and `Publishing.test.tsx` (7).
+- Exercised offline: every test in `tests/test_commons_publishing.py` (47) and `Publishing.test.tsx` (10).
   Checked on the cohort fixture: the tour (Milestone B, eight finals), number offsets, the board export with
   absent bytes, cohort import into another commons and a cross-commons cell pointer verified from the
-  snapshot bytes, the public demo build, hygiene unavailability. On the demo: preprints and the verifier's
+  snapshot bytes, the public demo build, hygiene unavailability, a second commons citing the cohort with the
+  citation shown on both sides (v3 V16). On the demo: attributed imports (B9), claim citations seen from the
+  cited side, preprints and the verifier's
   tamper cases, federation across two commons, directory publish/list/fetch over paths and a local HTTP
   server, invitations and the report, presets, three-harness comparison, harness checks with the stand-in.
 - Not live-verified: no live harness receipt, no live round-two cohort, no external participants, no public

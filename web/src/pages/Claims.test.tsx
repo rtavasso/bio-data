@@ -80,8 +80,8 @@ test("the claim page shows the exchange at the claim next to it (v3 V12)", async
     }],
   });
   render(
-    <MemoryRouter initialEntries={["/claim/claim_1"]}>
-      <Routes><Route path="/claim/:id" element={<ClaimPage />} /></Routes>
+    <MemoryRouter initialEntries={["/claims/claim_1"]}>
+      <Routes><Route path="/claims/:id" element={<ClaimPage />} /></Routes>
     </MemoryRouter>,
   );
   expect(await screen.findByText("Marker is higher in B.")).toBeTruthy();

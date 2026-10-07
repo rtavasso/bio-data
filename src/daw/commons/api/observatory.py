@@ -6,7 +6,7 @@ an attachment, and every response carries nosniff plus a sandboxing CSP. Hidden 
 the caller by `daw.commons.moderation.Visibility` (`full=true` reveals them only to a holder of `hide`).
 """
 from fastapi import APIRouter, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from daw.commons import evidence_map, questions, timeline
 from daw.commons.api.deps import View
@@ -24,13 +24,16 @@ def evidence_graph(view: View, caller: Reader, scope: Scoped, question: str | No
                    participant: str | None = None, since: str | None = None, until: str | None = None,
                    family: str | None = None,
                    limit: int = Query(evidence_map.DEFAULT_LIMIT, ge=1, le=evidence_map.MAX_LIMIT), full: bool = False):
-    return evidence_map.evidence_map(view, question=question, participant=participant, since=since, until=until,
-                                     family=family, limit=limit, caller=caller, full=full, scope=scope)
+    # B11: a cached map is served as its stored bytes (memory or the disposable layout cache), not re-encoded.
+    return Response(evidence_map.map_bytes(view, question=question, participant=participant, since=since, until=until,
+                                           family=family, limit=limit, caller=caller, full=full, scope=scope),
+                    media_type="application/json")
 
 
 @router.get("/map/store")
 def map_store(view: View):
-    """The graph store (spec v2 V6) as this request sees it: segments current, behind or stale. Read-only."""
+    """The graph store (spec v2 V6, v3 B11) as this request sees it: location, age (seconds since the last refresh,
+    events behind the archive) and coverage (segments current, behind or stale; stored operations current). Read-only."""
     from daw.commons import graphstore
     return graphstore.describe(view)
 

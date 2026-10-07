@@ -146,6 +146,92 @@ def test_cohort_map_at_default_limit_draws_every_library_artifact_and_post(cohor
                 == sum(1 for n in value["nodes"] if n["kind"] == kind)), kind
 
 
+def test_cohort_map_is_served_from_the_store_built_at_first_serve(cohort_copy):
+    """Spec v3 B11 on a copy of the real cohort board: the first request served schedules the graph store build in
+    the background; the map is then answered from the stored merged graph, a repeated map is served as its stored
+    bytes under 300 ms, /api/map/store reports age and coverage, and serving writes no record."""
+    import time
+
+    from daw.commons import evidence_map as maps
+    from daw.commons import graphstore
+    from daw.commons.fixture import verify_fixture
+    from daw.commons.moderation import Visibility
+    root = cohort_copy
+    assert not graphstore.location(root).is_file()
+    before = sqlite3.connect(root / "board.sqlite").execute("SELECT max(seq) FROM event").fetchone()[0]
+    http = TestClient(create_app(root, static_dir=root / "missing", graph_store=True))
+    assert http.get("/api/health").status_code == 200  # the first serve schedules the build; it never blocks a read
+    assert graphstore.wait(root, timeout=600)
+    store = http.get("/api/map/store").json()
+    assert store["present"] and store["current"] and store["location"] == "cache/graph/graph.sqlite"
+    assert store["age"]["events_behind"] == 0 and store["age"]["seconds"] is not None and store["age"]["seconds"] >= 0
+    coverage = store["coverage"]
+    assert coverage["segment_share"] == 1.0 and coverage["fresh_op_share"] == 1.0 and coverage["merged_nodes"] >= 3462
+    with Archive(root) as view:  # the merged graph, not a replay of every operation, equals the in-memory build
+        vis = Visibility.of(view)
+        stored = maps.build(view, vis)
+        replayed = maps.replay([op for ops in maps.record_all(view).values() for op in ops], vis)
+        assert stored.nodes.keys() == replayed.nodes.keys() and stored.edges.keys() == replayed.edges.keys()
+    first = http.get("/api/map")
+    assert first.status_code == 200
+    began = time.perf_counter()
+    second = http.get("/api/map")
+    elapsed = time.perf_counter() - began
+    assert second.status_code == 200 and second.json()["cached"] is True
+    assert second.json()["nodes"] == first.json()["nodes"]
+    print(json.dumps({"second_map_ms": round(elapsed * 1000, 1), "bytes": len(second.content)}))
+    assert elapsed < 0.3, elapsed
+    after = sqlite3.connect(root / "board.sqlite").execute("SELECT max(seq) FROM event").fetchone()[0]
+    checked = verify_fixture(root)
+    assert after == before and checked["verified"] and not checked["untracked"]  # the store and layouts are caches
+
+
+def test_a_read_only_commons_keeps_its_store_outside_and_the_stale_tail_merges_incrementally(demo, tmp_path,
+                                                                                             monkeypatch):
+    """B11: when the commons' cache directory cannot be written the store lives in a disposable per-commons
+    directory outside it; a stale segment (a workspace changed without a board event), a behind segment and a
+    hidden post are merged incrementally and equal the in-memory build for a reader and an operator."""
+    from daw.commons import evidence_map as maps
+    from daw.commons import graphstore
+    from daw.commons.moderation import Visibility
+    import shutil
+    root, ctx = demo
+    shutil.rmtree(root / "cache" / "graph", ignore_errors=True)
+    monkeypatch.setenv("COLLOQUY_CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setattr(graphstore, "_writable", lambda directory: False)
+    built = graphstore.refresh(root)
+    path = graphstore.location(root)
+    assert path.is_relative_to(tmp_path / "cache") and built["store"] == str(path)
+    assert not (root / "cache" / "graph").exists()
+    with Archive(root) as view:
+        described = graphstore.describe(view)
+    assert described["present"] and described["inside_commons"] is False and described["current"]
+    alice = Workspace(root / "agents" / ctx["agents"]["alice"] / "trial" / "workspace")
+    try:
+        with alice.writer():
+            alice.db.execute("UPDATE question SET updated='2099-01-01T00:00:00+00:00'")
+            alice.db.commit()
+    finally:
+        alice.close()
+    from daw.commons.moderation import hide
+    from daw.community import Community
+    with Community(root) as board:  # and a hidden post: the events segment is behind, the post's guards apply
+        hide(board, "operator", ctx["posts"]["finding"], "store test")
+    with Archive(root) as view:
+        reader = graphstore.reader(view)
+        assert reader.status()["workspace:" + ctx["agents"]["alice"]] == "stale"
+        assert reader.status()["board:events"] == "behind"
+        for caller, full in ((None, False), ({"id": "operator", "kind": "operator"}, True)):
+            vis = Visibility.of(view, caller, full)
+            merged = maps.build(view, vis)
+            replayed = maps.replay([op for ops in maps.record_all(view).values() for op in ops], vis)
+            for node in replayed.nodes.values():
+                node["stores"].sort()
+            maps._label_superseded(replayed)
+            maps._label_withheld(vis, replayed)
+            assert merged.nodes == replayed.nodes and merged.edges == replayed.edges
+
+
 def test_map_filters_layout_cache_and_unrecorded_changes(demo):
     root, ctx = demo
     with Archive(root) as view:

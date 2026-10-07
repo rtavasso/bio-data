@@ -100,12 +100,14 @@ def trusted_proxies(value):
 
 
 def create_app(root, *, mode="local", local_user="local", static_dir=None, base="/", login=None,
-               forwarded_allow_ips=None, read_policy=None, local_operator=False):
+               forwarded_allow_ips=None, read_policy=None, local_operator=False, graph_store=False):
     """One commons' API and web app. `login` overrides its `[login]` attempt limits (multi-tenant host);
     `forwarded_allow_ips` names trusted reverse proxies (see the module docstring); `read_policy` overrides the
     commons' `[access] read` (a tenant's setting). In accounts mode the read policy is enforced for every /api
     request by `daw.commons.access.ReadPolicy` (spec v2 V9). `local_operator` (local mode) acts as an operator
-    participant, created as one on first start, so a single-user commons can read its own audit log."""
+    participant, created as one on first start, so a single-user commons can read its own audit log.
+    `graph_store` builds the derived graph store in the background when the app serves its first request
+    (spec v3 B11; `bio commons serve` and `host` turn it on)."""
     from fastapi import FastAPI, Request
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
@@ -142,9 +144,10 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
 
     for name in ROUTER_MODULES:
         app.include_router(importlib.import_module(name).router)
-    # V6: a successful write schedules a graph store refresh; GET handlers never write it.
+    # V6: a successful write schedules a graph store refresh; GET handlers never write it. B11: with `graph_store`
+    # the first request served schedules a background build when the store is absent or behind.
     from daw.commons import graphstore
-    graphstore.install(app, settings.root)
+    graphstore.install(app, settings.root, at_first_serve=graph_store)
 
     static = settings.static_dir
     if static and (static / "index.html").is_file():

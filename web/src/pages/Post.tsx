@@ -5,6 +5,7 @@ import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import { Badge, HiddenNotice, KindBadge, MarkList, ReuseBadge } from "../components/board/Badges";
 import { DiffView } from "../components/board/DiffView";
+import { CurationPanel } from "../components/board/Curation";
 import { NumberPointers, statusOf } from "../components/board/NumberPointers";
 import { ParticipantLink } from "../components/board/People";
 import { ThreadTree } from "../components/board/ThreadTree";
@@ -12,8 +13,8 @@ import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
 import { ModeratePost } from "../components/participation/Moderation";
 import { ReplyBox, RequestReview } from "../components/workbench/AnchorActions";
-import { isWithheld, type CommentGroup, type Corrections, type HiddenStub, type PostCard, type PostDetail,
-  type PostResponse, type ThreadView, type Withheld } from "../types/board";
+import { isWithheld, type CommentGroup, type Corrections, type HiddenStub, type NumberPointer, type PostCard,
+  type PostDetail, type PostResponse, type ThreadView, type Withheld } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -280,6 +281,14 @@ function ClaimsRefused({ evidence }: { evidence?: Record<string, unknown> }) {
   );
 }
 
+// Inline marks: a curated pointer (G2) and a text match (B6) are marked apart from the author's verified pointers.
+function inlineStatus(n: NumberPointer): string {
+  const status = statusOf(n);
+  if (n.scope === "curated" && status === "verified") return "curated";
+  if (n.scope === "text" && status === "verified") return "text";
+  return status;
+}
+
 // M4.1 per-post view: body with anchors, corrections and diff, evidence, numbers, claims, marks, comments,
 // fetches with backed/unbacked reuse, and the human actions (comment, mark, promote, ask the author).
 export default function Post() {
@@ -350,7 +359,7 @@ export default function Post() {
           {content && (
             <div ref={setBodyNode}>
               <Untrusted author={author.name}>
-                <Markdown source={content.body} onAnchor={setAnchor} numbers={post.numbers.map((n) => ({ ...n, status: statusOf(n) }))} />
+                <Markdown source={content.body} onAnchor={setAnchor} numbers={post.numbers.map((n) => ({ ...n, status: inlineStatus(n) }))} />
               </Untrusted>
               <p className="meta">Select a passage to comment on it at an anchor.</p>
               {commented && !anchor && <p className="muted" role="status">Comment recorded at its anchor; it is listed under Comments at anchors.</p>}
@@ -369,6 +378,7 @@ export default function Post() {
           <section className="panel">
             <h2>Numbers and their pointers</h2>
             <NumberPointers numbers={post.numbers} />
+            <CurationPanel post={post.id} numbers={post.numbers} onDone={reload} />
           </section>
 
           <section className="panel">

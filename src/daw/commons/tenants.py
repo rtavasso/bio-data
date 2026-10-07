@@ -117,9 +117,10 @@ def index_page(config):
             "</body></html>")
 
 
-def create_host_app(config, *, forwarded_allow_ips=None):
+def create_host_app(config, *, forwarded_allow_ips=None, graph_store=False):
     """The host application: one mounted commons application per tenant plus an index and aggregate health.
-    `forwarded_allow_ips` names trusted reverse proxies for every tenant (daw.commons.app)."""
+    `forwarded_allow_ips` names trusted reverse proxies for every tenant (daw.commons.app); `graph_store` builds
+    each tenant's graph store at its first request (spec v3 B11)."""
     from fastapi import FastAPI
     from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
@@ -160,7 +161,8 @@ def create_host_app(config, *, forwarded_allow_ips=None):
 
     for tenant in config.tenants:
         host.mount(tenant.base.rstrip("/"), create_app(tenant.root, mode="accounts", static_dir=config.static_dir,
-                                                       base=tenant.base, login=tenant.login, read_policy=tenant.read))
+                                                       base=tenant.base, login=tenant.login, read_policy=tenant.read,
+                                                       graph_store=graph_store))
     from daw.commons.app import trusted_proxies
     if trusted_proxies(forwarded_allow_ips):
         from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware

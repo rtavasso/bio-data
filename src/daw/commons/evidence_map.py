@@ -25,13 +25,17 @@ The graph is replayed from recorded segments (spec v2 V6), kept on disk by
 a request no longer re-reads every store. The force layout is deterministic and
 disposable; it is cached under `<commons>/cache/map/` keyed by the board event
 sequence, a fingerprint of the workspace catalogs (which change without board
-events) and the filters.
+events) and the filters, and in process memory (so a read-only commons, whose cache
+directory cannot be written, still answers a repeated map from memory). A cached map
+is served as its stored bytes (`map_bytes`), never parsed and re-encoded per request.
 """
 import hashlib
 import json
 import math
 import os
 import tempfile
+import threading
+from collections import OrderedDict
 from datetime import UTC, datetime
 
 from daw.artifacts import reuse_links
@@ -767,20 +771,13 @@ def _cache_dir(view):
     return view.root / "cache" / "map"
 
 
-def _read_cache(path):
-    try:
-        return json.loads(path.read_text())
-    except (OSError, ValueError):
-        return None
-
-
-def _write_cache(directory, path, value, *, keep=256):
+def _write_cache(directory, path, value, *, keep=256, data=None):
     """Atomic, best effort: the cache is disposable and never authoritative."""
     try:
         directory.mkdir(parents=True, exist_ok=True)
         fd, temp = tempfile.mkstemp(dir=directory, suffix=".tmp")
         with os.fdopen(fd, "wb") as stream:
-            stream.write(canonical(value))
+            stream.write(data if data is not None else canonical(value))
         os.replace(temp, path)
         entries = sorted(directory.glob("*.json"), key=lambda p: p.stat().st_mtime)
         for old in entries[:-keep]:
@@ -800,6 +797,54 @@ def _instant(value, name):
     return (stamp if stamp.tzinfo else stamp.replace(tzinfo=UTC)).astimezone(UTC).isoformat()
 
 
+_SERVED: "OrderedDict[tuple, bytes]" = OrderedDict()  # (root, map key) -> canonical bytes (process memory, B11)
+_SERVED_BYTES = 256 * 1024 * 1024
+_SERVED_LOCK = threading.Lock()
+
+
+def _remember(view, key, data):
+    key = (str(view.root), key)
+    with _SERVED_LOCK:
+        _SERVED[key] = data
+        _SERVED.move_to_end(key)
+        while len(_SERVED) > 1 and sum(len(v) for v in _SERVED.values()) > _SERVED_BYTES:
+            _SERVED.popitem(last=False)
+
+
+def _served(view, key):
+    """The canonical bytes of a cached map (memory, else the disk cache, checked by its key), or None."""
+    with _SERVED_LOCK:
+        if (str(view.root), key) in _SERVED:
+            _SERVED.move_to_end((str(view.root), key))
+            return _SERVED[(str(view.root), key)]
+    try:
+        data = (_cache_dir(view) / f"{key}.json").read_bytes()
+    except OSError:
+        return None
+    if not (data.startswith(b"{") and b'"key":"' + key.encode() + b'"' in data):
+        return None
+    _remember(view, key, data)
+    return data
+
+
+def _flagged(data, cached):
+    """A stored canonical map with the `cached` flag added (prepended; the stored value has none)."""
+    return b'{"cached":' + (b"true" if cached else b"false") + b"," + data[1:]
+
+
+def map_bytes(view, **arguments):
+    """GET /api/map as JSON bytes: a cached map is served as stored (no parse, no re-encode), else built."""
+    key, compute = _map_request(view, **arguments)
+    data = _served(view, key)
+    if data is not None:
+        return _flagged(data, True)
+    value = compute()
+    data = canonical(value)
+    _write_cache(_cache_dir(view), _cache_dir(view) / f"{key}.json", value, data=data)
+    _remember(view, key, data)
+    return _flagged(data, False)
+
+
 def evidence_map(view, *, question=None, participant=None, since=None, until=None, family=None,
                  limit=DEFAULT_LIMIT, use_cache=True, caller=None, full=False, scope=None):
     """GET /api/map: recorded graph, filters and a cached deterministic layout.
@@ -807,6 +852,21 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
     `limit` caps the drawing by dropping only bare objects and assets (C13); `truncated_families` says which
     kinds lost nodes and how many. Hidden posts are resolved for this caller (C2) before caching. `scope` is a
     saved view (V4): its questions and participants select neighbourhoods and its window narrows since/until."""
+    key, compute = _map_request(view, question=question, participant=participant, since=since, until=until,
+                                family=family, limit=limit, caller=caller, full=full, scope=scope)
+    if use_cache and (data := _served(view, key)) is not None:
+        return {**json.loads(data), "cached": True}
+    value = compute()
+    if use_cache:
+        data = canonical(value)
+        _write_cache(_cache_dir(view), _cache_dir(view) / f"{key}.json", value, data=data)
+        _remember(view, key, data)
+    return {**value, "cached": False}
+
+
+def _map_request(view, *, question=None, participant=None, since=None, until=None, family=None,
+                 limit=DEFAULT_LIMIT, caller=None, full=False, scope=None):
+    """(cache key, compute) for one map request; the key covers the sequence, catalogs, filters and visibility."""
     if not 1 <= limit <= MAX_LIMIT:
         raise DawError("invalid_map_limit", f"1..{MAX_LIMIT}")
     questions = resolve_question(view, question) if question else []
@@ -823,9 +883,12 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
     vis = Visibility.of(view, caller, full)
     key = digest({"version": LAYOUT_VERSION, "sequence": sequence, "fingerprint": print_, "filters": filters,
                   "visibility": vis.key()})[:40]
-    path = _cache_dir(view) / f"{key}.json"
-    if use_cache and (cached := _read_cache(path)) and cached.get("key") == key:
-        return {**cached, "cached": True}
+    return key, lambda: _compute_map(view, vis, key, sequence, print_, filters, questions, participant_id, since,
+                                     until, families, limit, spec)
+
+
+def _compute_map(view, vis, key, sequence, print_, filters, questions, participant_id, since, until, families, limit,
+                 spec):
     graph = build(view, vis)
     nodes, edges, seeds, total, truncation = select(graph, questions=questions, participant=participant_id, since=since,
                                                     until=until, families=families, limit=limit, view=spec)
@@ -849,9 +912,7 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
              "note": "Edges are recorded relations only; each lists the rows or events it came from. "
                      "Nodes with present=false are named by a record but absent from every store.",
              "content_is_untrusted_data": True}
-    if use_cache:
-        _write_cache(_cache_dir(view), path, value)
-    return {**value, "cached": False}
+    return value
 
 
 def node_record(view, identity, *, caller=None, full=False):

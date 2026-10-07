@@ -21,6 +21,8 @@ from daw.community_runtime import dispatch
 from daw.util import DawError
 
 RECEIPT = Path(__file__).resolve().parents[1] / "docs" / "v3" / "receipts" / "cohort-number-audit.json"
+TOUR = Path(__file__).resolve().parents[1] / "docs" / "colloquy" / "tours" / "pmp22-cohort.json"
+CURATION_RECEIPT = Path(__file__).resolve().parents[1] / "docs" / "v3" / "receipts" / "cohort-curation.json"
 
 
 def client(root):
@@ -152,16 +154,17 @@ def test_post_page_separates_verified_unverified_post_scoped_and_unpointed_numbe
     http = client(root)
     finding = http.get(f"/api/posts/{ctx['posts']['finding']}").json()  # "log2 ratio 1.45 (artifact_contrast)"
     [number] = [n for n in finding["numbers"] if n["text"] == "1.45"]
-    assert number["scope"] == "line" and number["status"] == "unverified"  # the cited table holds 1.54
+    assert number["scope"] == "text" and number["status"] == "unverified"  # the cited table holds 1.54
     assert number["pointers"][0]["artifact"] == ctx["artifacts"]["contrast"]
     assert number["pointers"][0]["reason"] == "the value does not occur in the output bytes"
     correction = http.get(f"/api/posts/{ctx['posts']['correction']}").json()  # "1.54, not 1.45 (artifact)"
     statuses = {n["text"]: (n["scope"], n["status"]) for n in correction["numbers"]}
-    assert statuses == {"1.54": ("post", "post_scoped"), "1.45": ("line", "unverified")}
+    assert statuses == {"1.54": ("post", "post_scoped"), "1.45": ("text", "unverified")}
     assert correction["post_scoped_numbers"] == ["1.54"] and correction["unpointed_numbers"] == []
     post_scoped = next(n for n in correction["numbers"] if n["status"] == "post_scoped")
     assert post_scoped["pointers"] and all(p["post_evidence"] for p in post_scoped["pointers"])
-    assert correction["number_summary"]["scopes"] == {"cell": 0, "claim": 0, "line": 1, "post": 1, "none": 0}
+    assert correction["number_summary"]["scopes"] == {"cell": 0, "claim": 0, "line": 0, "text": 1, "curated": 0,
+                                                      "post": 1, "none": 0}
     with Community(root) as board:
         loose = board.publish(ctx["agents"]["dana"], "Loose", "About forty samples, of which 12 failed.")["id"]
     detail = http.get(f"/api/posts/{loose}").json()
@@ -293,3 +296,116 @@ def test_refused_writeup_is_a_placeholder_for_agents_and_in_raw_run_streams(demo
     for path in ("raw", "messages"):
         refused = http.get(f"/api/runs/{run}/{path}")
         assert refused.status_code == 403 and refused.json()["error"] == "writeup_withheld"
+
+
+# ---- spec v3 B6: a text-anywhere match is its own scope -------------------------------------------------------
+
+def test_a_text_anywhere_match_is_scope_text_unique_only_and_excluded_from_verified_share(demo):
+    # Without a locator a value verifies only when exactly one numeric token of the (small, text) output matches.
+    cache = {"t": (b"k\tv\nx\t0.51\ny\t0.51\nz\t7\n", "t.tsv", None)}
+    twice = locators.verify_artifact(None, "t", None, locators.parse_number("0.51"), cache)
+    assert twice["result"] == "unverified" and twice["at"] == "text" and twice["found"]["occurrences"] == 2
+    assert "unique" in twice["reason"] and twice["found"]["lines"] == [2, 3]
+    once = locators.verify_artifact(None, "t", None, locators.parse_number("7"), cache)
+    assert once["result"] == "verified" and once["at"] == "text" and once["found"]["line"] == 4
+    # n12 is a number like every other glued form; identifier characters stay identifiers.
+    found = [n["text"] for n in writeup.numbers_in("n12 of PMP22 and P1 (log2, IL-6, GSE1234, H3K27me3) at x2", 0)]
+    assert found == ["12", "2"]
+    assert writeup.numbers_in("an e2e test of p53b", 0) == []  # a letter after the integer: inside a word
+    root, ctx = demo
+    measurement, contrast = ctx["artifacts"]["measurement"], ctx["artifacts"]["contrast"]
+    done = deliver_writing(root, ctx, f"Means: [32.0]({measurement}); the ratio is [1.54]({contrast}#row=B_vs_A;"
+                                      "col=log2_ratio).")
+    [check] = [e for e in events(root, "writeup_check") if e["post"] == done["answer"]]
+    assert check["rules"] == "writeup-pointers/3" and [n["scope"] for n in check["numbers"]] == ["text", "cell"]
+    report = client(root).get(f"/api/posts/{done['answer']}").json()
+    assert {n["text"]: (n["scope"], n["status"]) for n in report["numbers"]} == {"32.0": ("text", "verified"),
+                                                                                 "1.54": ("cell", "verified")}
+    summary = report["number_summary"]
+    assert summary["statuses"]["verified"] == 2 and summary["author_verified"] == 1 and summary["text_verified"] == 1
+    assert summary["verified_share"] == 0.5 and summary["number_level"] == 2  # shown verified, never in the share
+    coverage = metrics.number_coverage({"numbers": {done["answer"]: summary}}, [{"id": done["answer"]}])
+    assert coverage["verified_share"] == 0.5 and coverage["text_verified"] == 1 and coverage["scopes"]["text"] == 1
+
+
+# ---- spec v3 G2: people curate pointers; the platform never authors them -------------------------------------
+
+def test_a_curated_pointer_is_scope_curated_attributed_and_never_author_verified(cohort_copy, tmp_path):
+    from daw.commons import curation
+    from daw.commons.fixture import record_curation, verify_fixture
+    from daw.commons.participants import add_participant
+    from daw.commons.participation import comment
+    root = cohort_copy
+    step = json.loads(TOUR.read_text())["steps"][0]
+    post, offset, artifact, locator = step["final"], step["number"]["offset"], step["artifact"], step["locator"]
+    with Community(root) as board:
+        add_participant(board, "rhea", "human", profile={"display_name": "Rhea"})
+        agent = board.one("SELECT id FROM agent WHERE kind='agent' ORDER BY created LIMIT 1")["id"]
+        with pytest.raises(DawError, match="permission_denied"):  # agents never author pointers
+            curation.curate(board, agent, post, offset, artifact=artifact, locator=locator, note="mine")
+        with pytest.raises(DawError, match="value_not_at_locator"):  # checked against the bytes before recording
+            curation.curate(board, "rhea", post, offset, artifact=artifact, locator="key=primary[0].ci95_low", note="x")
+        with pytest.raises(DawError, match="invalid_locator"):  # a curator names the place, never "anywhere"
+            curation.curate(board, "rhea", post, offset, artifact=artifact, locator="round=2", note="x")
+        with pytest.raises(DawError, match="unknown_number"):
+            curation.curate(board, "rhea", post, offset + 1, artifact=artifact, locator=locator, note="x")
+    http = TestClient(create_app(root, local_user="rhea", static_dir=root / "missing"))
+    body = {"post": post, "offset": offset, "artifact": artifact, "locator": locator,
+            "note": "primary[0].effect_log2 of the paired audit summary"}
+    assert http.post("/api/curation/pointers", json=body).status_code == 403  # the write discipline (CSRF header)
+    made = http.post("/api/curation/pointers", json=body, headers={"X-Colloquy-Request": "1"})
+    assert made.status_code == 200, made.text
+    assert made.json()["kind"] == "pointer_curated" and made.json()["participant_name"] == "rhea"
+    other = next(n for n in http.get(f"/api/posts/{post}").json()["numbers"] if n["offset"] != offset)
+    marked = CliRunner().invoke(app, ["--root", str(root), "curate", "unlocatable", post, "--offset", str(other["offset"]),
+                                      "--note", "computed in the prose from two cells", "--as", "rhea"])
+    assert marked.exit_code == 0, marked.output
+    before = sequence(root)
+    page = http.get(f"/api/posts/{post}").json()
+    [curated] = [n for n in page["numbers"] if n["offset"] == offset]
+    assert curated["scope"] == "curated" and curated["status"] == "verified"
+    [pointer] = curated["pointers"]
+    assert pointer["curated"] and pointer["curator_name"] == "rhea" and pointer["locator"] == locator
+    assert pointer["route"].startswith(f"/artifact/{artifact}?locator=") and pointer["at"] == "key"
+    unlocatable = next(n for n in page["numbers"] if n["offset"] == other["offset"])
+    assert unlocatable["unlocatable"]["curator_name"] == "rhea" and unlocatable["scope"] == other["scope"]
+    # Never the author's: not number-level, not in verified_share; the dashboard keeps the three apart.
+    summary = page["number_summary"]
+    assert summary["pointers"]["curated"] == 1 and summary["pointers"]["author"] == 0
+    assert summary["pointers"]["unlocatable"] == 1 and summary["curated_verified"] == 1
+    assert summary["verified_share"] == 0.0 and summary["number_level"] == 0
+    board_numbers = http.get("/api/dashboard").json()["summary"]["board"]["numbers"]
+    assert board_numbers["pointers"]["curated"] == 1 and board_numbers["pointers"]["author"] == 0
+    assert board_numbers["verified_share"] == 0.0 and board_numbers["number_level_share"] == 0.0
+    acts = http.get("/api/curation/pointers", params={"post": post}).json()
+    assert [a["kind"] for a in acts["acts"]] == ["pointer_curated", "unlocatable"]
+    assert acts["progress"]["curated"] == 1 and acts["progress"]["unlocatable"] == 1
+    # The tour walks the curated number: two clicks from bytes, with the curator named.
+    walked = http.get("/api/tours/pmp22-cohort").json()
+    final = next(f for f in walked["finals"] if f["post"] == post)
+    entry = next(n for n in final["numbers"] if n["offset"] == offset)
+    assert entry["resolution"] == "curated" and entry["curated"]["curator_name"] == "rhea" and final["curators"] == ["rhea"]
+    progress = http.get("/api/curation/progress", params={"tour": "pmp22-cohort"}).json()
+    assert progress["milestone"]["met"] is False and progress["milestone"]["required_finals"] == 5
+    assert sequence(root) == before  # reads never write
+    # The receipt is written only when the milestone is met: no receipt claims curation that did not happen.
+    output = tmp_path / "cohort-curation.json"
+    refused = CliRunner().invoke(app, ["--root", str(root), "curate", "receipt", "--output", str(output)])
+    assert refused.exit_code == 1 and not output.exists()
+    # A fixture records curation acts, and nothing else, through its own tool.
+    entry = record_curation(root, reason="test curation by rhea")
+    assert entry["curation_acts"] == 2 and verify_fixture(root)["verified"] and not verify_fixture(root)["untracked"]
+    with Community(root) as board:
+        comment(board, "rhea", "post", post, "Which table is this?")
+    with pytest.raises(DawError, match="fixture_curation_has_other_writes"):
+        record_curation(root, reason="laundering a comment")
+
+
+@pytest.mark.skipif(not CURATION_RECEIPT.is_file(), reason="no person has curated the tour finals yet (spec v3 G2)")
+def test_committed_curation_receipt_reproduces_from_the_fixture(cohort):
+    from daw.commons import curation, tour
+    receipt = json.loads(CURATION_RECEIPT.read_text())
+    with Archive(cohort) as view:
+        value = curation.receipt(view, tour.get(view, receipt["tour"]["name"], resolved=False))
+    assert value["finals"] == receipt["finals"] and value["milestone"] == receipt["milestone"]
+    assert value["milestone"]["met"] and all(f["unresolved"] == 0 for f in value["finals"] if f.get("resolved"))

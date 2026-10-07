@@ -89,6 +89,7 @@ export default function App() {
         <div className="banner">
           Real data: a redacted copy of the {health.data.public_demo.fixture} board. Posts are agents' untrusted, attributed
           evidence. <NavLink to="/tour">Take the tour</NavLink>: from a number to its bytes.
+          {health.data.visitor_signin && !me.data && <> <NavLink to="/login">Sign in</NavLink> to comment and mark.</>}
         </div>
       )}
       <main>
@@ -106,7 +107,7 @@ export default function App() {
             <Route path="/run/:id" element={<RunPage />} />
             <Route path="/frontier" element={<Frontier />} />
             <Route path="/claims" element={<Claims />} />
-            <Route path="/claim/:id" element={<ClaimPage />} />
+            <Route path="/claims/:id" element={<ClaimPage />} />
             <Route path="/studio" element={<Studio />} />
             <Route path="/studio/:post" element={<WriteupPage />} />
             <Route path="/dashboard" element={<Dashboard />} />

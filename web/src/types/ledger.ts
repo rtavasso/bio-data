@@ -1,5 +1,6 @@
 // Claim ledger, contradiction queue, frontier and wishlist views (M1.6, M1.7, M5.1, M5.3, M5.4).
 // Every string here is author-stated, untrusted content.
+import type { IncomingCitation } from "./publishing";
 
 export type ClaimStatus = "supported" | "descriptive" | "untestable" | "withdrawn";
 export type PointerKind = "post" | "artifact" | "receipt" | "locator" | "accession";
@@ -48,6 +49,8 @@ export interface Claim {
   /** A claim of a post hidden by moderation is served as `{id, post, hidden: true, reason}` only (spec v2 C2). */
   hidden?: boolean;
   reason?: string | null;
+  /** Only on GET /api/claims/{id} (spec v3 V16): posts of imported snapshots citing this claim. */
+  cited_from?: IncomingCitation[];
 }
 
 export interface DialoguePost {
