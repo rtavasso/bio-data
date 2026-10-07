@@ -264,11 +264,25 @@ def _comment_section(board, post):
     return text + "Answer it as you would a question; your final response is posted as a reply to the comment.\n"
 
 
+def _human_content(board, post):
+    """A person's words in a prompt: author kind and name, the attribution label, then the text (C4)."""
+    author = board.agent(post["author"])
+    return (f"{tasks.QUESTION.capitalize()} from {author['kind']} participant {author['name']} "
+            f"({tasks.HUMAN_CONTENT_LABEL}):\n\n" + post["content"]["body"])
+
+
 def compose_prompt(board, request, agent, trial, post, label):
-    """Legacy questions and notifications keep the assignment prompt; typed requests add their task section."""
+    """Legacy questions and notifications keep the assignment prompt; typed requests add their task section.
+    A person's ask (task type `question`, from `ask` or a comment that asks the author) is labelled as
+    attributed board content from a human participant, never appended as a bare instruction."""
     content = post["content"]
     notification = content["kind"] == "answer_notification"
     task_type = request.get("task_type")
+    author_kind = board.one("SELECT kind FROM agent WHERE id=?", (post["author"],))["kind"]
+    if not task_type and author_kind == "human" and content["kind"] in {"question", "comment"}:
+        # A person's untyped request recorded before v2 is labelled the same way (it is only delivered explicitly;
+        # operator briefs keep the assignment prompt).
+        task_type = tasks.QUESTION
     if not task_type:
         extra = _comment_section(board, post) if content["kind"] == "comment" else ""
         return assignment_prompt(agent["id"], trial, post, notification=notification, label=label, task=extra)
@@ -277,6 +291,11 @@ def compose_prompt(board, request, agent, trial, post, label):
                                  criteria=(content.get("evidence") or {}).get("criteria"))
     if task_type == "research":
         return assignment_prompt(agent["id"], trial, post, label=label, task=section)
+    if task_type == tasks.QUESTION:
+        comment = _comment_section(board, post) if content["kind"] == "comment" else ""
+        return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + UNTRUSTED + SERVICE + _honesty(label)
+                + comment + section + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
+                "Read that discussion with community show if relevant.\n\n" + _human_content(board, post))
     untrusted = tasks.REPLICATION_UNTRUSTED if task_type == "replication" else UNTRUSTED  # the C6 carve-out
     return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + untrusted + SERVICE + _honesty(label) + section
             + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
@@ -445,6 +464,12 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             if request["task_type"] and tasks.deadline_passed(request["deadline"]):
                 expire(board, request)
                 raise DawError("deadline_passed", request["deadline"])
+            if request["task_type"] in tasks.BUDGETED_TYPES:
+                # A person's promotion, commission or ask is delivered only while their allowance permits (C4);
+                # the request stays pending, so an operator can raise the allowance and deliver it later.
+                from daw.commons.participation import allowance_permits
+                if not allowance_permits(board, request):
+                    raise DawError("over_budget", "the asker's allowance no longer covers this request")
             if board.one("SELECT id FROM request WHERE target=? AND state='running'", (agent["id"],)):
                 raise DawError("unreconciled_agent_run")
             run_id = "run_" + uuid.uuid4().hex

@@ -1,10 +1,14 @@
-"""Watcher endpoints (M5.2): list and attach scoped discovery queries, read their immutable runs."""
+"""Watcher endpoints (M5.2): list and attach scoped discovery queries, read their immutable runs.
+
+Attaching and disabling are HTTP writes like any other: the caller is an `Actor` (human or operator,
+CSRF header unless bearer) and the board is opened in the worker thread by `call`."""
 from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict
 
-from daw.commons.api.deps import Board, Caller, View
+from daw.commons.api.deps import Config, View
+from daw.commons.api.write import Actor, call
 from daw.commons.watchers import PROVIDERS, WEEK, add_watcher, disable_watcher, list_watchers, runs
 
 router = APIRouter(prefix="/api", tags=["watchers"])
@@ -25,13 +29,13 @@ def watchers(view: View, item: str | None = None):
 
 
 @router.post("/watchers")
-def create_watcher(body: WatcherInput, board: Board, caller: Caller):
-    return add_watcher(board, caller, body.item, body.query, body.provider, body.interval_seconds)
+def create_watcher(body: WatcherInput, who: Actor, config: Config):
+    return call(config, add_watcher, who["id"], body.item, body.query, body.provider, body.interval_seconds)
 
 
 @router.post("/watchers/{watcher}/disable")
-def disable(watcher: str, board: Board, caller: Caller):
-    return disable_watcher(board, caller, watcher)
+def disable(watcher: str, who: Actor, config: Config):
+    return call(config, disable_watcher, who["id"], watcher)
 
 
 @router.get("/watchers/{watcher}/runs")

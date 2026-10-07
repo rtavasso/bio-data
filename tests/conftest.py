@@ -101,3 +101,16 @@ def cohort(tmp_path_factory):
     copy = tmp_path_factory.mktemp("cohort") / "commons"
     shutil.copytree(source, copy, symlinks=True)
     return copy
+
+
+@pytest.fixture
+def cohort_copy(tmp_path):
+    """A private, function-scoped copy of the committed real-data fixture (FIXTURE.json included), for tests
+    that write to the board or verify the copy afterwards; the session `cohort` copy is shared."""
+    import shutil
+    source = Path(__file__).resolve().parents[1] / "fixtures" / "pmp22-cohort"
+    if not (source / "FIXTURE.json").is_file():
+        pytest.skip("real-data fixture not checked out")
+    copy = tmp_path / "cohort"
+    shutil.copytree(source, copy, symlinks=True)
+    return copy

@@ -957,3 +957,42 @@ def test_writeup_check_cli_exit_codes(demo, monkeypatch):
     assert json.loads(refused.output)["verdict"]["source"] == "recorded"  # stored at delivery by the runtime hook
     skeleton = runner.invoke(app, ["--root", str(root), "digest", "skeleton", "--markdown"])
     assert skeleton.exit_code == 0 and skeleton.output.startswith("# Digest skeleton")
+
+
+def test_regeneration_flags_superseded_posts_and_artifacts_not_only_withdrawn_claims(demo):
+    """v2 C8: a write-up that cites a superseded post (and none of its later versions), or an artifact that only
+    superseded publications name, is flagged for regeneration; citing the replacement too clears the post flag."""
+    root, ctx = demo
+    with Community(root) as board:
+        alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
+        measurement = ctx["artifacts"]["measurement"]
+        interim = alice.register(ctx["questions"]["alice"], "interim.tsv", "condition\tvalue\nA\t1\n",
+                                 title="Interim table", summary="An interim table.", role="interim-table",
+                                 inputs=[{"blob": board.library.one("SELECT output_blob FROM artifact WHERE id=?",
+                                                                    (measurement,))["output_blob"],
+                                          "source_identity": measurement}], parameters={"stage": "interim"})["artifact"]
+        first = alice.publish("Interim note", f"Interim values ({interim}).", artifacts=[interim],
+                              request_key="studio-interim-1")
+        second = alice.publish("Interim note, corrected", "The interim table was mislabelled; see the correction.",
+                               supersedes=first["id"], parent=first["id"], request_key="studio-interim-2")
+        stale = board.publish(ctx["agents"]["dana"], "Summary",
+                              f"See [the interim note]({first['id']}) and [the interim table]({interim}).")
+        acknowledged = board.publish(ctx["agents"]["dana"], "Summary, with the correction",
+                                     f"See [the interim note]({first['id']}), corrected in [the correction]"
+                                     f"({second['id']}), and [the contrast table]({ctx['artifacts']['contrast']}).")
+    with Archive(root) as view:
+        flag = writeup.render_writeup(view, stale["id"], with_map=False)["regeneration_required"]
+        assert flag["claims"] == []
+        assert [(p["post"], p["superseded_by"]) for p in flag["posts"]] == [(first["id"], second["id"])]
+        assert [(a["artifact"], a["superseded_posts"], a["replacements"]) for a in flag["artifacts"]] == \
+            [(interim, [first["id"]], [second["id"]])]
+        assert first["id"] in flag["commission"]["note"] and interim in flag["commission"]["note"]
+        assert "cites superseded posts" in flag["note"]
+        # Citing a later version clears the post flag; an artifact a current publication still names is not flagged
+        # (the contrast table is named by the demo's current correction).
+        assert writeup.render_writeup(view, acknowledged["id"], with_map=False)["regeneration_required"] is None
+    # Over HTTP the flag travels with the response; this write-up also cites a claimless post, which the checker
+    # (v2 C5) refuses, and a refusal still carries the regeneration flag.
+    response = client(root).get(f"/api/studio/writeups/{stale['id']}")
+    assert response.status_code == 422 and response.json()["error"] == "writeup_refused"
+    assert response.json()["regeneration_required"]["artifacts"][0]["artifact"] == interim

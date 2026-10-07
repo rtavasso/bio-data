@@ -66,9 +66,11 @@ window_seconds = 300
 minutes = 120
 ```
 
-Behind a reverse proxy, pass its address so login limits see client addresses:
-add `--forwarded-allow-ips 172.18.0.1` (the proxy's address) to the `commons`
-command in `compose.yaml`.
+Behind a reverse proxy, pass its address so login limits see client addresses
+and the session cookie is `Secure` when the proxy terminated TLS: add
+`--forwarded-allow-ips 172.18.0.1` (the proxy's address) to the `commons`
+command in `compose.yaml`. Without it no `X-Forwarded-*` header is trusted.
+Failed-login counters are kept on the board and survive restarts.
 
 ## 2. Add people and tokens
 

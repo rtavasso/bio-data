@@ -13,6 +13,9 @@ from daw.commons.participants import add_participant
 from daw.community import Community
 from daw.util import DawError, read_json
 
+WRITE = {"X-Colloquy-Request": "1"}
+CONFIRM = "/api/frontier/clusters/confirm"
+
 
 def workspace(board, ctx, name):
     return Workspace(board.trial(board.agent(ctx["agents"][name])) / "workspace")
@@ -154,28 +157,70 @@ def test_pointer_validation_rejects_invented_records(demo):
             ws.close()
 
 
-def test_frontier_rebuild_is_idempotent_and_respects_agent_status_over_promotion(demo):
+def recorded_tick(board, start):
+    """Run due watchers against the recorded (synthetic) Europe PMC response: one new accession."""
+    from daw.commons.discovery_demo import recorded_transport
+    from daw.commons.watchers import open_workspace, tick
+    scratch = open_workspace(board.root)
+    (scratch.root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0\n")
+    scratch.close()
+    return tick(board, now=start, transport=recorded_transport())
+
+
+def projection(board):
+    return board.rows("SELECT * FROM frontier_item ORDER BY id")
+
+
+def test_frontier_rebuild_is_idempotent_and_derives_board_state_from_events(demo):
+    """v2 C3: promotion, watcher and candidate-evidence state come from board events, never from the row alone."""
+    import time
+
+    from daw.commons import participation
+    from daw.commons.watchers import add_watcher, disable_watcher
     root, ctx = demo
     items = ctx["frontier"]["items"]
     with Community(root) as board:
         events = board.one("SELECT count(*) AS n FROM event")["n"]
         first = frontier.rebuild_frontier(board)
-        assert first["inserted"] == first["updated"] == 0 and first["items"] == 6
+        assert first["inserted"] == first["updated"] == first["deleted"] == 0 and first["items"] == 6
         assert board.one("SELECT count(*) AS n FROM event")["n"] == events  # nothing changed: no event
         rows = {r["id"]: r for r in board.rows("SELECT * FROM frontier_item")}
         assert rows[items["bob-spikein"]]["status"] == "closed"
         gap = frontier.item_id(ctx["agents"]["dana"], ctx["gap_event"])
         assert rows[gap]["kind"] == "gap" and rows[gap]["text"] == "Per-sample counts after marker knockdown"
-        # A promotion (participation area) and a watcher hit (discovery area) are board-owned.
-        qpcr, donors = items["alice-qpcr"], items["alice-donors"]
+        # Board-owned state is written only through events: a person's promotion and a watcher's hit.
+        qpcr, donors, untestable = items["alice-qpcr"], items["alice-donors"], items["dana-untestable"]
+        rhea = add_participant(board, "rhea", "human")["id"]
+        promoted = participation.promote(board, rhea, "frontier_item", qpcr, "research", ctx["agents"]["alice"],
+                                         {"minutes": 30})
+        row = board.one("SELECT * FROM frontier_item WHERE id=?", (qpcr,))
+        assert row["status"] == "promoted" and row["promoted_to"] == promoted["id"]
+        assert json.loads(row["source"])["promotion"]["request"] == promoted["id"]
+        watcher = add_watcher(board, rhea, untestable, {"query": "demo marker knockdown"}, "europepmc")
+        masked = json.loads(board.one("SELECT watcher_query FROM frontier_item WHERE id=?", (untestable,))["watcher_query"])
+        assert masked["watcher"] == watcher["id"]
+        ran = recorded_tick(board, time.time() + 1)
+        assert any(r.get("watcher") == watcher["id"] and r["new"] for r in ran["ran"])
+        row = board.one("SELECT * FROM frontier_item WHERE id=?", (untestable,))
+        assert row["status"] == "candidate_evidence"
+        candidate = json.loads(row["source"])
+        assert candidate["candidate_source"] == "watcher" and candidate["candidate"]["watcher"] == watcher["id"]
+        assert candidate["candidate"]["accessions"] == ["DEMO0001"]
+        # Disabling the board watcher unmasks the author's own query (none here); the candidate status stays.
+        disable_watcher(board, rhea, watcher["id"])
+        row = board.one("SELECT * FROM frontier_item WHERE id=?", (untestable,))
+        assert row["watcher_query"] is None and row["status"] == "candidate_evidence"
+        # A row edited outside the event path is put back; a row no record supports is deleted.
         with board.writer(), board.db:
-            board.db.execute("UPDATE frontier_item SET status='promoted',promoted_to=?,updated=? WHERE id=?",
-                             (ctx["requests"]["brief"], "2999-01-01T00:00:00+00:00", qpcr))
-            board.db.execute("UPDATE frontier_item SET status='candidate_evidence',updated=? WHERE id=?",
-                             ("2999-01-01T00:00:00+00:00", items["dana-untestable"]))
-        assert frontier.rebuild_frontier(board)["updated"] == 0
-        status = {r["id"]: r["status"] for r in board.rows("SELECT id,status FROM frontier_item")}
-        assert status[qpcr] == "promoted" and status[items["dana-untestable"]] == "candidate_evidence"
+            board.db.execute("UPDATE frontier_item SET status='open',promoted_to=NULL WHERE id=?", (qpcr,))
+            board.db.execute("INSERT INTO frontier_item(id,question,author,workspace,kind,text,status,blocked_by,"
+                             "watcher_query,pointers,source,created,updated,promoted_to) VALUES('frontier_orphan',"
+                             "'q_0000000000000000',?,NULL,'gap','x','open',NULL,NULL,'[]','{}','t','t',NULL)",
+                             (ctx["agents"]["dana"],))
+        repaired = frontier.rebuild_frontier(board)
+        assert repaired["updated"] == 1 and repaired["deleted"] == 1 and repaired["orphaned"] == ["frontier_orphan"]
+        row = board.one("SELECT * FROM frontier_item WHERE id=?", (qpcr,))
+        assert row["status"] == "promoted" and row["promoted_to"] == promoted["id"]
         # The agent's closed/withdrawn status wins over promotion; promoted_to stays as the board's record.
         ws = workspace(board, ctx, "alice")
         try:
@@ -192,8 +237,9 @@ def test_frontier_rebuild_is_idempotent_and_respects_agent_status_over_promotion
         result = frontier.rebuild_frontier(board)
         assert result["updated"] == 2
         row = board.one("SELECT * FROM frontier_item WHERE id=?", (qpcr,))
-        assert row["status"] == "withdrawn" and row["promoted_to"] == ctx["requests"]["brief"]
-        assert board.one("SELECT status FROM frontier_item WHERE id=?", (donors,))["status"] == "candidate_evidence"
+        assert row["status"] == "withdrawn" and row["promoted_to"] == promoted["id"]
+        row = board.one("SELECT * FROM frontier_item WHERE id=?", (donors,))
+        assert row["status"] == "candidate_evidence" and json.loads(row["source"])["candidate_source"] == "author"
         assert frontier.rebuild_frontier(board)["updated"] == 0
         # Gap withdrawal makes the gap item withdrawn.
         ws = workspace(board, ctx, "dana")
@@ -206,6 +252,26 @@ def test_frontier_rebuild_is_idempotent_and_respects_agent_status_over_promotion
             ws.close()
         frontier.rebuild_frontier(board)
         assert board.one("SELECT status FROM frontier_item WHERE id=?", (gap,))["status"] == "withdrawn"
+        # Dropping the projection and rebuilding from events and workspaces reproduces it byte for byte.
+        before = projection(board)
+        with board.writer(), board.db:
+            board.db.execute("DELETE FROM frontier_item")
+        rebuilt = frontier.rebuild_frontier(board)
+        assert rebuilt["inserted"] == len(before) and projection(board) == before
+
+
+def test_frontier_projection_rebuilds_byte_equal_on_the_cohort(cohort_copy):
+    """v2 C3 on real data: drop the cohort board's frontier_item table, rebuild, compare every row."""
+    with Community(cohort_copy) as board:
+        frontier.rebuild_frontier(board)
+        before = projection(board)
+        assert len(before) >= 59
+        assert {r["kind"] for r in before} >= {"gap"}
+        with board.writer(), board.db:
+            board.db.execute("DELETE FROM frontier_item")
+        rebuilt = frontier.rebuild_frontier(board)
+        assert rebuilt["inserted"] == len(before) and rebuilt["deleted"] == 0
+        assert projection(board) == before
 
 
 def test_fork_inherits_items_without_duplicating_them(demo):
@@ -229,15 +295,17 @@ def test_clusters_are_exact_term_suggestions_confirmed_only_by_people(demo):
     assert cluster["items"] == sorted([items["alice-qpcr"], items["bob-qpcr"]])
     assert {"qpcr", "donor", "matched", "marker"} <= set(cluster["shared_terms"])
     assert cluster["pairs"][0]["jaccard"] >= frontier.CLUSTER_THRESHOLD and cluster["confirmations"] == []
-    confirmed = client.post("/api/frontier/clusters/confirm", json={"items": cluster["items"], "note": "same qPCR design"})
+    # The confirmation is an HTTP write like any other: Actor discipline, CSRF header required (v2 C3).
+    assert client.post(CONFIRM, json={"items": cluster["items"]}).status_code == 403
+    confirmed = client.post(CONFIRM, headers=WRITE, json={"items": cluster["items"], "note": "same qPCR design"})
     assert confirmed.status_code == 200 and confirmed.json()["participant"].startswith("human_")
     cluster = client.get("/api/frontier/clusters").json()["items"][0]
     assert cluster["confirmations"][0]["note"] == "same qPCR design"
     # Items are not merged: both remain separate frontier items.
     assert {items["alice-qpcr"], items["bob-qpcr"]} <= {i["id"] for i in client.get("/api/frontier").json()["items"]}
-    bad = client.post("/api/frontier/clusters/confirm", json={"items": [items["alice-qpcr"], items["alice-donors"]]})
+    bad = client.post(CONFIRM, headers=WRITE, json={"items": [items["alice-qpcr"], items["alice-donors"]]})
     assert bad.status_code == 400 and bad.json()["error"] == "invalid_cluster"
-    assert client.post("/api/frontier/clusters/confirm", json={"items": [items["alice-qpcr"], "frontier_x"]}).status_code == 404
+    assert client.post(CONFIRM, headers=WRITE, json={"items": [items["alice-qpcr"], "frontier_x"]}).status_code == 404
     with Community(root) as board, pytest.raises(DawError, match="permission_denied"):
         frontier.confirm_cluster(board, ctx["agents"]["bob"], cluster["items"])
     # Unrelated wording does not cluster.
@@ -248,7 +316,7 @@ def test_clusters_are_exact_term_suggestions_confirmed_only_by_people(demo):
     ]) == []
 
 
-def test_frontier_browser_groups_filters_and_refreshes_automatically(demo):
+def test_frontier_browser_groups_filters_and_refreshes_on_the_write_path(demo):
     root, ctx = demo
     items = ctx["frontier"]["items"]
     client = TestClient(create_app(root, static_dir=root / "missing"))
@@ -266,7 +334,9 @@ def test_frontier_browser_groups_filters_and_refreshes_automatically(demo):
     assert client.get("/api/frontier", params={"author": "dana", "kind": "untestable"}).json()["total"] == 1
     assert client.get("/api/frontier", params={"blocked_by": "DONOR identity"}).json()["total"] == 1
     assert client.get("/api/frontier", params={"kind": "wish"}).status_code == 400
-    # A new workspace event appears on the next read without a manual reindex.
+    # A new workspace event is not indexed by a read (reads never write, v2 C3): the GET says the projection is
+    # behind; the next publication from that question (the write path) indexes it.
+    assert view["projection_current"] is True
     with Community(root) as board:
         ws = workspace(board, ctx, "dana")
         try:
@@ -280,7 +350,17 @@ def test_frontier_browser_groups_filters_and_refreshes_automatically(demo):
         finally:
             ws.close()
     new = frontier.item_id(ctx["agents"]["dana"], event["id"])
-    assert new in {i["id"] for i in client.get("/api/frontier").json()["items"]}
+    sequence = client.get("/api/health").json().get("sequence")
+    stale = client.get("/api/frontier").json()
+    assert new not in {i["id"] for i in stale["items"]} and stale["projection_current"] is False
+    assert client.get(f"/api/frontier/{new}").status_code == 404
+    assert client.get("/api/health").json().get("sequence") == sequence  # the reads appended nothing
+    with Community(root) as board:
+        board.publish(ctx["agents"]["dana"], "Next step", "Searching ArrayExpress next.",
+                      workspace=board.trial(board.agent(ctx["agents"]["dana"])) / "workspace",
+                      question=ctx["questions"]["dana"])
+    fresh = client.get("/api/frontier").json()
+    assert new in {i["id"] for i in fresh["items"]} and fresh["projection_current"] is True
     single = client.get(f"/api/frontier/{new}").json()
     assert single["kind"] == "next_step" and single["source"]["event"] == event["id"]
     hits = Archive(root)
@@ -349,8 +429,15 @@ def test_claim_search_filters_and_agent_cli(demo, tmp_path):
     assert post["claims"][0]["status"] == "descriptive" and len(post["content"]["evidence"]["frontier"]) == 1
     listed = json.loads(runner.invoke(bio, ["community", "claims", "--post", post["id"]], env=env).output)
     assert listed["total"] == 1
-    reindex = runner.invoke(bio, ["commons", "--root", str(root), "frontier", "reindex"])
-    assert reindex.exit_code == 0 and json.loads(reindex.output)["inserted"] >= 2
+    # The publication indexed the new items on the write path; the operator rebuild (and its alias) find nothing new.
+    with Archive(root) as view:
+        indexed = {r["source"] for r in view.rows("SELECT source FROM frontier_item WHERE author=?",
+                                                  (ctx["agents"]["dana"],))}
+    assert any(event in source for source in indexed)
+    for command in ("rebuild", "reindex"):
+        rebuilt = runner.invoke(bio, ["commons", "--root", str(root), "frontier", command])
+        assert rebuilt.exit_code == 0, rebuilt.output
+        assert json.loads(rebuilt.output)["inserted"] == json.loads(rebuilt.output)["updated"] == 0
     assert json.loads(runner.invoke(bio, ["commons", "--root", str(root), "claims", "reindex"]).output)["changed"] is False
 
 

@@ -5,9 +5,20 @@ events: `frontier_item` (open question, untestable branch, gap, proposed
 experiment, next computable step) and append-only `frontier_item_status`.
 Retrieval gaps (`retrieval_gap`, minus withdrawals) are items of kind gap. The
 platform only indexes them: `rebuild_frontier` scans every participant workspace
-read-only and upserts the board's `frontier_item` projection. The board owns only
-`promoted_to` and the statuses set by promotions ("promoted") and watchers
-("candidate_evidence"); an agent's closed/withdrawn status always wins.
+read-only and writes the board's `frontier_item` projection. Board-owned state is
+derived from immutable board events, never stored only in the projection:
+`promotion_created` (status "promoted", `promoted_to`), `watcher_added` and
+`watcher_disabled` (the board watcher's query masks the author's while it is
+enabled) and `watcher_ran` (status "candidate_evidence", `candidate_source`
+"watcher"). An agent's own candidate_evidence status is attributed to the author;
+an agent's closed/withdrawn status always wins. Dropping the table and rebuilding
+reproduces it byte for byte; rows no record supports are deleted.
+
+The projection is refreshed on the write path only (publication with frontier
+items or a notebook, promotion, watcher events) and by the operator command
+`bio commons frontier rebuild`. Reads never refresh it: an item recorded with
+`bio work frontier` and not yet published appears after the next publication or
+rebuild.
 
 Clustering of "the same experiment proposed by several questions" is exact-term
 overlap (normalized token sets, Jaccard), shown as a suggestion with its shared
@@ -246,6 +257,24 @@ def refresh_key(owner):
     return f"{sequence}:{digest(counts)[:32]}"
 
 
+SOURCE_EVENTS = ("frontier_item", "frontier_item_status", "retrieval_gap", "retrieval_gap_withdrawal")
+
+
+def frontier_key(owner):
+    """What the projection is a function of: the last board event of a kind that owns frontier state, the
+    participants with checkouts, and each workspace's frontier-relevant work events (count and latest time).
+    Stored in projection_state by every rebuild; a read compares it to say whether the projection is behind."""
+    marks = ",".join("?" for _ in BOARD_EVENTS)
+    sequence = owner.one(f"SELECT coalesce(max(seq),0) AS n FROM event WHERE kind IN ({marks})", BOARD_EVENTS)["n"]
+    kinds = ",".join("?" for _ in SOURCE_EVENTS)
+    counts = []
+    for agent, ws in workspaces(owner):
+        row = ws.one(f"SELECT count(*) AS n,coalesce(max(created),'') AS m FROM work_event WHERE kind IN ({kinds})",
+                     SOURCE_EVENTS)
+        counts.append([agent["id"], row["n"], row["m"]])
+    return f"{sequence}:{digest(counts)[:32]}"
+
+
 def stored_key(owner, name="frontier"):
     try:
         row = owner.one("SELECT key FROM projection_state WHERE name=?", (name,))
@@ -254,101 +283,226 @@ def stored_key(owner, name="frontier"):
     return row["key"] if row else None
 
 
-def _status(agent_item, existing):
-    """Agent closed/withdrawn wins; then board-owned promoted; then a board candidate_evidence newer than the
-    agent's latest status; otherwise the agent's status. Returns (status, updated)."""
-    status, when = agent_item["status"], agent_item["status_time"]
-    if status in ("closed", "withdrawn") or not existing:
-        return status, when
-    if existing["status"] == "promoted" or existing["promoted_to"]:
-        return "promoted", existing["updated"]
-    if existing["status"] == "candidate_evidence" and when <= existing["updated"]:
-        return "candidate_evidence", existing["updated"]
-    return status, when
-
-
+# Board events that own frontier state. The projection is a pure function of these events and the
+# participants' workspace records, so dropping the table and rebuilding reproduces it byte for byte.
+BOARD_EVENTS = ("promotion_created", "watcher_added", "watcher_disabled", "watcher_ran")
 COLUMNS = ("question", "author", "workspace", "kind", "text", "status", "blocked_by", "watcher_query",
-           "pointers", "source", "created", "updated")
+           "pointers", "source", "created", "updated", "promoted_to")
 
 
-def _board_watcher(value):
-    try:
-        return isinstance(json.loads(value), dict) and "watcher" in json.loads(value)
-    except (TypeError, ValueError):
-        return False
+def _empty_state():
+    return {"promotions": [], "watchers": {}, "candidates": []}
 
 
-def rebuild_frontier(board):
-    """Upsert the frontier projection from every participant workspace (read-only). Idempotent.
-    A fork's inherited items (same question and event as an older participant) stay attributed to the
-    original author; the fork's status events on inherited items are not applied."""
+def _count(value):
+    if isinstance(value, list):
+        return len(value)
+    return value if isinstance(value, int) and not isinstance(value, bool) else 0
+
+
+def board_state(owner):
+    """Board-owned state per frontier item, derived from immutable board events in sequence order:
+    promotions (`promotion_created` with a frontier_item source), attached and disabled watchers
+    (`watcher_added`, `watcher_disabled`) and watcher runs that moved an item to candidate evidence
+    (`watcher_ran`). Works on a Community or a read-only Archive."""
+    state = {}
+    marks = ",".join("?" for _ in BOARD_EVENTS)
+    for row in owner.rows(f"SELECT seq,kind,body,created FROM event WHERE kind IN ({marks}) ORDER BY seq", BOARD_EVENTS):
+        try:
+            body = json.loads(row["body"])
+        except ValueError:
+            continue
+        if not isinstance(body, dict):
+            continue
+        kind = row["kind"]
+        if kind == "promotion_created":
+            source = body.get("source") if isinstance(body.get("source"), dict) else {}
+            if source.get("kind") == "frontier_item" and isinstance(source.get("id"), str):
+                state.setdefault(source["id"], _empty_state())["promotions"].append(
+                    {"request": body.get("request"), "actor": body.get("actor"), "event_seq": row["seq"],
+                     "created": row["created"]})
+            continue
+        if not isinstance(body.get("item"), str) or not isinstance(body.get("watcher"), str):
+            continue
+        entry = state.setdefault(body["item"], _empty_state())
+        if kind == "watcher_added":
+            query = body.get("query") if isinstance(body.get("query"), dict) else {"query": body.get("query")}
+            entry["watchers"][body["watcher"]] = {"watcher": body["watcher"], "provider": body.get("provider"),
+                                                  "query": query, "enabled": True, "event_seq": row["seq"]}
+        elif kind == "watcher_disabled":
+            if body["watcher"] in entry["watchers"]:
+                entry["watchers"][body["watcher"]]["enabled"] = False
+            # The query shown after disabling, as recorded at the time ("watcher <id>", "author" or none).
+            if "watcher_query" in body:
+                entry["shown_after_disable"] = {"query": body["watcher_query"], "event_seq": row["seq"],
+                                                "source": body.get("watcher_query_source")}
+        else:  # watcher_ran
+            new = _count(body.get("new"))
+            # `status_set` ("candidate_evidence", by `status_source` "watcher") records that this run moved an open
+            # item to candidate evidence; older events say `status_changed`; a run recorded with neither counts
+            # when it found new accessions.
+            if "status_set" in body:
+                changed = body["status_set"] == "candidate_evidence"
+            elif isinstance(body.get("status_changed"), bool):
+                changed = body["status_changed"]
+            else:
+                changed = new > 0
+            if changed:
+                accessions = body.get("new_accessions")
+                entry["candidates"].append({"source": "watcher", "watcher": body["watcher"], "run": body.get("run"),
+                                            "new": new, "accessions": accessions if isinstance(accessions, list) else None,
+                                            "event_seq": row["seq"], "created": row["created"]})
+    return state
+
+
+def _status(agent_item, owned):
+    """(status, updated, candidate). An agent's closed/withdrawn status always wins; then a person's promotion;
+    then a watcher's candidate evidence recorded at or after the agent's latest status; otherwise the agent's
+    own status (an agent may record candidate_evidence itself, attributed to the author)."""
+    status, when = agent_item["status"], agent_item["status_time"]
+    if status in ("closed", "withdrawn"):
+        return status, when, None
+    if owned["promotions"]:
+        return "promoted", owned["promotions"][0]["created"], None
+    latest = owned["candidates"][-1] if owned["candidates"] else None
+    if latest and when <= latest["created"]:
+        return "candidate_evidence", latest["created"], {k: v for k, v in latest.items() if k != "created"}
+    if status == "candidate_evidence":
+        return status, when, {"source": "author", "status_event": agent_item.get("status_event")}
+    return status, when, None
+
+
+def _watcher_query(item, owned):
+    """The latest enabled board watcher's query masks the author's. After the last one is disabled, the query the
+    `watcher_disabled` event recorded as shown (the author's own, unmasked) is used; boards recorded before that
+    field fall back to the author's query from the workspace event."""
+    enabled = [w for w in owned["watchers"].values() if w["enabled"]]
+    if enabled:
+        latest = max(enabled, key=lambda w: w["event_seq"])
+        return canonical({"watcher": latest["watcher"], "provider": latest["provider"], **latest["query"]}).decode()
+    shown = owned.get("shown_after_disable")
+    if shown and shown["source"] != "watcher" and not str(shown["source"] or "").startswith("watcher "):
+        query = shown["query"]
+        return None if query is None else query if isinstance(query, str) else canonical(query).decode()
+    query = item["watcher_query"]
+    return None if query is None else query if isinstance(query, str) else canonical(query).decode()
+
+
+def _drop_documents(library, identities):
+    """Remove the search documents of deleted rows (a disposable projection in the library catalog)."""
+    keys = ["frontier:" + i for i in identities]
+    if not keys:
+        return
+    marks = ",".join("?" for _ in keys)
+    with library.db:
+        library.db.execute(f"DELETE FROM search_embedding WHERE document_id IN ({marks})", keys)
+        library.db.execute(f"DELETE FROM search_fts WHERE id IN ({marks})", keys)
+        library.db.execute(f"DELETE FROM search_document WHERE id IN ({marks})", keys)
+
+
+def project(board):
+    """The projection rows {id: values} computed from workspaces and board events, plus scan counts."""
+    owners, computed, inherited = {}, [], 0
+    for agent, ws in workspaces(board):
+        for item in workspace_items(ws):
+            if owners.setdefault((item["question"], item["event"]), agent["id"]) != agent["id"]:
+                inherited += 1
+                continue
+            computed.append((agent, item))
+    state = board_state(board)
+    rows = {}
+    for agent, item in computed:
+        identity = item_id(agent["id"], item["event"])
+        owned = state.get(identity) or _empty_state()
+        status, when, candidate = _status(item, owned)
+        promotion = owned["promotions"][-1] if owned["promotions"] else None
+        source = {"event": item["event"], "event_kind": item["event_kind"], "body_blob": item["body_blob"],
+                  "missing_measurement": item["missing_measurement"], "key": item["key"], "post": item["post"],
+                  "status_event": item.get("status_event"), "status_reason": item["status_reason"],
+                  "agent_status": item["status"], "detail": item["detail"],
+                  "candidate_source": candidate["source"] if candidate else None, "candidate": candidate,
+                  "promotion": {k: promotion[k] for k in ("request", "actor", "event_seq")} if promotion else None,
+                  "watchers": sorted(owned["watchers"])}
+        rows[identity] = {"question": item["question"], "author": agent["id"],
+                          "workspace": str(Path(agent["trial"]) / "workspace"), "kind": item["kind"],
+                          "text": item["text"], "status": status, "blocked_by": item["blocked_by"],
+                          "watcher_query": _watcher_query(item, owned), "pointers": canonical(item["pointers"]).decode(),
+                          "source": canonical(source).decode(), "created": item["created"], "updated": when,
+                          "promoted_to": promotion["request"] if promotion else None}
+    return rows, {"items": len(computed), "inherited_skipped": inherited}
+
+
+def reindex(board, *, reason=None):
+    """Bring the frontier projection up to date. The caller holds `board.writer()` and `board.library.writer()`
+    (the write paths: publication with frontier items or a notebook, promotion, watcher events)."""
+    rows, counts = project(board)
+    existing = {r["id"]: r for r in board.rows("SELECT * FROM frontier_item")}
+    inserted, updated, changed = 0, 0, []
+    orphaned = sorted(set(existing) - set(rows))
+    with board.db:
+        for identity, values in rows.items():
+            old = existing.get(identity)
+            if old and all(old[c] == values[c] for c in COLUMNS):
+                continue
+            if old:
+                board.db.execute("UPDATE frontier_item SET " + ",".join(f"{c}=?" for c in COLUMNS) + " WHERE id=?",
+                                 [values[c] for c in COLUMNS] + [identity])
+                updated += 1
+            else:
+                board.db.execute("INSERT INTO frontier_item(id," + ",".join(COLUMNS) + ") VALUES(?,"
+                                 + ",".join("?" for _ in COLUMNS) + ")", [identity] + [values[c] for c in COLUMNS])
+                inserted += 1
+            changed.append({"id": identity, **values})
+        if orphaned:
+            # Rows no workspace record supports (a removed checkout, or a row written outside this function).
+            board.db.execute(f"DELETE FROM frontier_item WHERE id IN ({','.join('?' for _ in orphaned)})", orphaned)
+    for row in changed:
+        blob = board.library.put_json({"format": "daw.frontier_item/1", **row})
+        index_document(board.library, key="frontier:" + row["id"], family="frontier", subject=row["id"],
+                       record_id=row["id"], title=row["text"][:200], summary=row["text"][:2000], body_blob=blob,
+                       detail={"kind": row["kind"], "status": row["status"], "blocked_by": row["blocked_by"],
+                               "question": row["question"], "author": row["author"],
+                               "missing_measurement": json.loads(row["source"]).get("missing_measurement")},
+                       provider="community", level=3)
+    _drop_documents(board.library, orphaned)
+    summary = {**counts, "inserted": inserted, "updated": updated, "deleted": len(orphaned), "orphaned": orphaned}
+    with board.db:
+        if inserted or updated or orphaned:
+            board.event("frontier_reindexed", {**{k: v for k, v in summary.items() if k != "orphaned"},
+                                               **({"reason": reason} if reason else {})})
+        key = frontier_key(board)
+        board.db.execute("INSERT INTO projection_state(name,key,updated) VALUES('frontier',?,?) "
+                         "ON CONFLICT(name) DO UPDATE SET key=excluded.key,updated=excluded.updated", (key, now()))
+    return {**summary, "key": key}
+
+
+def rebuild_frontier(board, *, reason=None):
+    """Rebuild the frontier projection from every participant workspace (read-only scan) and the board's own
+    events (promotions, watchers). Idempotent; deletes rows no record supports. A fork's inherited items (same
+    question and event as an older participant) stay attributed to the original author; the fork's status
+    events on inherited items are not applied. Operators run it as `bio commons frontier rebuild`."""
     with board.writer(), board.library.writer():
-        owners, computed, inherited = {}, [], 0
-        for agent, ws in workspaces(board):
-            for item in workspace_items(ws):
-                if owners.setdefault((item["question"], item["event"]), agent["id"]) != agent["id"]:
-                    inherited += 1
-                    continue
-                computed.append((agent, item))
-        existing = {r["id"]: r for r in board.rows("SELECT * FROM frontier_item")}
-        inserted, updated, changed = 0, 0, []
-        with board.db:
-            for agent, item in computed:
-                identity = item_id(agent["id"], item["event"])
-                old = existing.get(identity)
-                status, when = _status(item, old)
-                # A watcher attached on the board (daw.commons.watchers) owns watcher_query, like promoted_to;
-                # the agent-authored query is used only while no watcher is attached.
-                query = old["watcher_query"] if old and old["watcher_query"] and _board_watcher(old["watcher_query"]) \
-                    else item["watcher_query"]
-                source = {"event": item["event"], "event_kind": item["event_kind"], "body_blob": item["body_blob"],
-                          "missing_measurement": item["missing_measurement"], "key": item["key"], "post": item["post"],
-                          "status_event": item.get("status_event"), "status_reason": item["status_reason"],
-                          "agent_status": item["status"], "detail": item["detail"]}
-                values = {"question": item["question"], "author": agent["id"],
-                          "workspace": str(Path(agent["trial"]) / "workspace"), "kind": item["kind"], "text": item["text"],
-                          "status": status, "blocked_by": item["blocked_by"],
-                          "watcher_query": None if query is None else query if isinstance(query, str) else canonical(query).decode(),
-                          "pointers": canonical(item["pointers"]).decode(), "source": canonical(source).decode(),
-                          "created": item["created"], "updated": when}
-                if old and all(old[c] == values[c] for c in COLUMNS):
-                    continue
-                if old:
-                    board.db.execute("UPDATE frontier_item SET " + ",".join(f"{c}=?" for c in COLUMNS) + " WHERE id=?",
-                                     [values[c] for c in COLUMNS] + [identity])
-                    updated += 1
-                else:
-                    board.db.execute("INSERT INTO frontier_item(id," + ",".join(COLUMNS) + ",promoted_to) VALUES(?,"
-                                     + ",".join("?" for _ in COLUMNS) + ",NULL)", [identity] + [values[c] for c in COLUMNS])
-                    inserted += 1
-                changed.append({"id": identity, **values})
-        for row in changed:
-            blob = board.library.put_json({"format": "daw.frontier_item/1", **row})
-            index_document(board.library, key="frontier:" + row["id"], family="frontier", subject=row["id"],
-                           record_id=row["id"], title=row["text"][:200], summary=row["text"][:2000], body_blob=blob,
-                           detail={"kind": row["kind"], "status": row["status"], "blocked_by": row["blocked_by"],
-                                   "question": row["question"], "author": row["author"],
-                                   "missing_measurement": json.loads(row["source"]).get("missing_measurement")},
-                           provider="community", level=3)
-        current = {item_id(agent["id"], item["event"]) for agent, item in computed}
-        summary = {"items": len(computed), "inserted": inserted, "updated": updated, "inherited_skipped": inherited,
-                   "orphaned": sorted(set(existing) - current)}
-        with board.db:
-            if inserted or updated:
-                board.event("frontier_reindexed", {k: v for k, v in summary.items() if k != "orphaned"})
-            key = refresh_key(board)
-            board.db.execute("INSERT INTO projection_state(name,key,updated) VALUES('frontier',?,?) "
-                             "ON CONFLICT(name) DO UPDATE SET key=excluded.key,updated=excluded.updated", (key, now()))
-        return {**summary, "key": key}
+        return reindex(board, reason=reason)
 
 
-def ensure_current(root, view):
-    """Refresh the projection before an API read when the board or any workspace changed."""
-    if stored_key(view) == refresh_key(view):
+def reindex_after_publish(board, post):
+    """Write-path refresh after a publication that carried frontier items or a notebook sync. The post is
+    already immutable, so a failed refresh is recorded as an event rather than raised; the operator can run
+    `bio commons frontier rebuild`."""
+    try:
+        return rebuild_frontier(board, reason=f"published {post}")
+    except (DawError, sqlite3.Error, OSError, ValueError) as error:
+        with board.writer(), board.db:
+            board.event("frontier_reindex_failed", {"post": post, "error": getattr(error, "reason", type(error).__name__)})
         return None
-    from daw.community import Community
-    with Community(root) as board:
-        return rebuild_frontier(board)
+
+
+def is_current(view):
+    """True when the stored projection equals what a rebuild would write now (computed read-only; a read never
+    refreshes it). False means a workspace recorded items that no publication or rebuild has indexed yet."""
+    rows, _ = project(view)
+    existing = {r["id"]: r for r in view.rows("SELECT * FROM frontier_item")}
+    return set(rows) == set(existing) and all(existing[i][c] == v[c] for i, v in rows.items() for c in COLUMNS)
 
 
 def tokens(text):
@@ -429,7 +583,8 @@ def describe_item(row):
         pass
     return {**row, "pointers": json.loads(row["pointers"]), "source": source, "watcher_query": query,
             "missing_measurement": source.get("missing_measurement"), "status_reason": source.get("status_reason"),
-            "detail": source.get("detail") or {}, "content_is_untrusted_data": True}
+            "candidate_source": source.get("candidate_source"), "detail": source.get("detail") or {},
+            "content_is_untrusted_data": True}
 
 
 def watcher_status(owner, ids):

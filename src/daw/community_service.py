@@ -7,7 +7,8 @@ import threading
 import uuid
 from pathlib import Path
 
-from daw.commons.tasks import NOTICE, deadline_passed
+from daw.commons.participation import allowance_permits
+from daw.commons.tasks import BUDGETED_TYPES, NOTICE, QUESTION, deadline_passed
 from daw.community import Community, exclusive
 from daw.community_runtime import STALL_MINUTES, expire
 from daw.util import DawError, now, write_json
@@ -18,11 +19,15 @@ PEOPLE = ("human", "operator")
 def pending_deliveries(board, agents=()):
     """Requests the service may launch now. Only people or peers create them; no scheduler chooses work.
 
-    - peer questions and answer notifications, to started sessions (operator briefs wait for explicit launch);
-    - a person's comment that asks its target's author (post kind "comment" by a human), to started sessions;
+    - agents' peer questions and answer notifications, to started sessions (operator briefs wait for explicit
+      launch);
+    - a person's ask (task type `question`: `ask`, or a comment that asks the author), to started sessions only,
+      and only while the asker's allowance permits; it is a typed, budgeted request, never free-form mail;
     - promoted or commissioned requests (a task type other than "notice", created by a human or operator),
-      even to an agent that has never run: a person authorized that work. Overdue ones are never launched.
-    Notices are read in the inbox and never delivered as a model turn.
+      even to an agent that has never run: a person authorized that work. Overdue ones are never launched, and
+      neither are those the person's current allowance no longer covers.
+    A person's untyped request (recorded before asks were typed) is never auto-delivered. Notices are read in
+    the inbox and never delivered as a model turn.
     """
     allowed = {board.agent(a)["id"] for a in agents}
     busy = {r["target"] for r in board.rows("SELECT target FROM request WHERE state='running'")}
@@ -38,14 +43,17 @@ def pending_deliveries(board, agents=()):
         if request["task_type"]:
             if request["author_kind"] not in PEOPLE or deadline_passed(request["deadline"]):
                 continue
+            if request["task_type"] == QUESTION and not agent["native_session"]:
+                continue  # an ask is answered from recorded work; it never starts a new investigation
+            if request["task_type"] in BUDGETED_TYPES and not allowance_permits(board, request):
+                continue
         else:
             # Creating ten briefs is not authorization to start ten investigations.
             if not agent["native_session"]:
                 continue
             kind = board.show(request["post"])["content"]["kind"]
-            peer = kind == "question" and request["author"] != "operator"
-            comment = kind == "comment" and request["author_kind"] == "human"
-            if kind != "answer_notification" and not peer and not comment:
+            peer = kind == "question" and request["author_kind"] == "agent"
+            if kind != "answer_notification" and not peer:
                 continue
         selected.append(request)
         busy.add(target)
@@ -103,8 +111,9 @@ def serve(root, executable="hermes", *, agents=(), concurrency=0, poll_seconds=2
                      "children": [{"request": rid, "pid": p.pid, "target": target}
                                   for rid, (p, target) in children.items()],
                      "pending": len(board.rows("SELECT id FROM request WHERE state='pending'")),
-                     "policy": "peer questions, answer notifications and human comments for started sessions; "
-                               "promoted/commissioned tasks before their deadline; never notices; no automatic retries"}
+                     "policy": "agents' peer questions, answer notifications and people's typed asks for started "
+                               "sessions; promoted/commissioned tasks before their deadline; people's requests only "
+                               "within their allowance; never notices; no automatic retries"}
             write_json(folder / "status.json", value)
             return value
 

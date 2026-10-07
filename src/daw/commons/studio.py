@@ -228,8 +228,6 @@ def submit_review(board, actor, target_kind, target_id, verdicts, summary=""):
     """A person's review: a reply post carrying structured verdicts, then the same marks an agent's review records."""
     from daw.commons.participation import _mark_target, _resolve
     person = require(board, board.agent(actor), "review")
-    check_rate(board, person, "posts_per_hour")
-    check_rate(board, person, "marks_per_hour")
     clean = _clean_verdicts(board, verdicts)
     with Archive(board.root) as view:
         _mark_target(board, view, target_kind, target_id)
@@ -244,6 +242,8 @@ def submit_review(board, actor, target_kind, target_id, verdicts, summary=""):
         + "\n".join(f"- {v['criterion']}: {v['verdict']}" + (f" — {v['note']}" if v["note"] else "") for v in clean) \
         + "\n\n```review\n" + json.dumps(fence, indent=1, ensure_ascii=False) + "\n```\n"
     with board.writer(), board.library.writer():
+        check_rate(board, person, "posts_per_hour")  # inside the writer lock (v2 C14)
+        check_rate(board, person, "marks_per_hour")
         identity = board._post(person["id"], f"Review: {target_kind} {target_id}", body, parent=parent, kind="review",
                                evidence={"review": {"target_kind": target_kind, "target_id": target_id,
                                                     "verdicts": clean}, "target": {"kind": target_kind, "id": target_id}})

@@ -358,7 +358,8 @@ def test_typed_research_prompt_budget_and_outcome(demo):
         assert exceeded == {"request": request["id"], "run": folder.name, "agent": ctx["agents"]["bob"], "limit": 1000,
                             "used": 1650, "counted": ["input_tokens", "output_tokens"]}
         assert "Token budget exceeded: bob" in operator_notices(board)
-        [outcome] = events(board, "task_outcome")
+        # The demo board also holds the participation demo's answered ask (a typed `question` request since v2 C4).
+        [outcome] = [e for e in events(board, "task_outcome") if e["request"] == request["id"]]
         assert outcome["task_type"] == "research" and outcome["request"] == request["id"]
         assert outcome["criteria"]["pointers"]["unresolved"] == [f"post_{'0' * 32}"]
         assert ctx["artifacts"]["normalized"] not in outcome["criteria"]["pointers"]["unresolved"]

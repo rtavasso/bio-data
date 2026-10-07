@@ -44,6 +44,18 @@ function RegenerationBand({ flag }: { flag: Regeneration }) {
             )}
           </li>
         ))}
+        {(flag.posts ?? []).map((p) => (
+          <li key={p.post}>
+            Cites superseded post <Link to={`/post/${p.post}`} className="mono">{p.post}</Link>; current version{" "}
+            <Link to={`/post/${p.superseded_by}`} className="mono">{p.superseded_by}</Link>.
+          </li>
+        ))}
+        {(flag.artifacts ?? []).map((a) => (
+          <li key={a.artifact}>
+            Cites <Link to={`/artifact/${a.artifact}`} className="mono">{a.artifact}</Link>, named only by superseded{" "}
+            {a.superseded_posts.map((p, i) => <span key={p}>{i > 0 && ", "}<Link to={`/post/${p}`} className="mono">{p}</Link></span>)}.
+          </li>
+        ))}
       </ul>
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>Commission a regeneration</button>
       {open && (

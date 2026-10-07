@@ -94,8 +94,10 @@ export function CommentBox({ targetKind, targetId, anchor, onDone }: {
 }) {
   const [body, setBody] = useState("");
   const [askAuthor, setAskAuthor] = useState(true);
+  const [minutes, setMinutes] = useState("15");
   const state = useSubmit(
-    () => comment({ target_kind: targetKind, target_id: targetId, anchor, body, ask_author: askAuthor }),
+    () => comment({ target_kind: targetKind, target_id: targetId, anchor, body, ask_author: askAuthor,
+      ...(askAuthor ? { budget: { minutes: Number(minutes) } } : {}) }),
     onDone,
     () => setBody(""),
   );
@@ -105,6 +107,11 @@ export function CommentBox({ targetKind, targetId, anchor, onDone }: {
       <textarea value={body} onChange={(e) => setBody(e.target.value)} required rows={3} aria-label="Comment"
         placeholder="Comment (attributed, part of the record)" />
       <label><input type="checkbox" checked={askAuthor} onChange={(e) => setAskAuthor(e.target.checked)} /> Ask the author (creates a request)</label>
+      {askAuthor && (
+        <Field label="Ask budget (minutes)">
+          <input type="number" min={1} step={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} required />
+        </Field>
+      )}
       <button disabled={state.busy}>{state.busy ? "Commenting…" : "Comment"}</button>
       <Feedback error={state.error} done={state.done} label={askAuthor ? "Comment recorded; the author has a request." : "Comment recorded."} />
     </form>
@@ -187,12 +194,18 @@ export function CommissionForm({ subjectKind, subjectId, onDone, defaultTaskType
   );
 }
 
+// A person's ask is a budgeted `question` request within their allowance; the agent receives it labelled as
+// attributed board content from a human participant, not as an instruction.
 export function AskForm({ target, parent, onDone }: { target: string; parent?: string; onDone?: () => void }) {
   const [body, setBody] = useState("");
-  const state = useSubmit(() => ask({ target, body, parent }), onDone, () => setBody(""));
+  const [minutes, setMinutes] = useState("15");
+  const state = useSubmit(() => ask({ target, body, parent, budget: { minutes: Number(minutes) } }), onDone, () => setBody(""));
   return (
     <form className="action-form" onSubmit={state.submit}>
       <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} required aria-label="Question" placeholder="Question (a durable request; no chat)" />
+      <Field label="Budget (minutes)">
+        <input type="number" min={1} step={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} required />
+      </Field>
       <button disabled={state.busy}>Ask</button>
       <Feedback error={state.error} done={state.done} label="Question queued." />
     </form>

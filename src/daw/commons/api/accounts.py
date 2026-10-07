@@ -36,7 +36,6 @@ class ProfileIn(Strict):
     display_name: str | None = None
     affiliation: str | None = None
     orcid: str | None = None
-    role: str | None = None
 
 
 class LoginIn(Strict):

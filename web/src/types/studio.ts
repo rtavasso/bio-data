@@ -119,6 +119,9 @@ export interface WithdrawnClaim {
 
 export interface Regeneration {
   claims: WithdrawnClaim[];
+  // Flow B: cited posts superseded without a cited later version, and artifacts only superseded publications name.
+  posts?: { post: string; title: string | null; superseded_by: string; replacements: string[] }[];
+  artifacts?: { artifact: string; superseded_posts: string[]; replacements: string[] }[];
   note: string;
   commission: { task_type: "writing"; subject_kind: string; subject_id: string; note: string };
 }
