@@ -1,15 +1,17 @@
-"""Demo extension for discovery: a frontier item for the recorded gap, a weekly watcher, one receipted run
+"""Demo extension for discovery: the indexed frontier item of the recorded gap, a weekly watcher, one receipted run
 from a recorded (synthetic) Europe PMC response, and pinned-model embeddings for every catalog.
 
 No network is used: the watcher's transport is an httpx.MockTransport that serves a fixture, labelled
 synthetic in its own payload, for the Europe PMC search URL only.
 """
+import json
 import time
 
 import httpx
 
 from daw.commons.demo import SYNTHETIC, _no_reserve
 from daw.commons.embeddings import embed_commons
+from daw.commons.frontier import item_id, rebuild_frontier
 from daw.commons.watchers import add_watcher, list_watchers, open_workspace, tick
 from daw.util import DawError
 
@@ -31,14 +33,14 @@ def recorded_transport(payload=RECORDED_SEARCH):
 
 
 def ensure_gap_item(board, ctx):
-    """The frontier item indexed from the demo's recorded retrieval gap (dana's own workspace event). The
-    platform never inserts frontier items: the projection is rebuilt from workspace records and board events."""
-    from daw.commons.frontier import item_id, rebuild_frontier
+    """The frontier item for Dana's recorded retrieval gap. The gap is an agent work event in Dana's own
+    workspace (`bio work gap`); the frontier projection indexes it. The platform never authors an item."""
     identity = item_id(ctx["agents"]["dana"], ctx["gap_event"])
     if not board.one("SELECT id FROM frontier_item WHERE id=?", (identity,)):
-        rebuild_frontier(board, reason="discovery demo")
-    if not board.one("SELECT id FROM frontier_item WHERE id=?", (identity,)):
-        raise DawError("unknown_frontier_item", identity)
+        rebuild_frontier(board)
+    row = board.one("SELECT id,source FROM frontier_item WHERE id=?", (identity,))
+    if not row or json.loads(row["source"]).get("event") != ctx["gap_event"]:
+        raise DawError("frontier_item_not_indexed", ctx["gap_event"])
     return identity
 
 

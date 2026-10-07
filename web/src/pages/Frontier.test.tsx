@@ -18,7 +18,10 @@ const items = [
   item({}),
   item({ id: "frontier_b", question: "q_b", question_title: "Normalization", author: "agent_b", author_name: "bob",
          text: "Measure the marker by qPCR using donor-matched samples and a spike-in.", watcher_query: { text: "spike-in" } }),
-  item({ id: "frontier_c", kind: "untestable", text: "Knockdown effect cannot be tested.", blocked_by: "knockdown counts" }),
+  item({ id: "frontier_c", kind: "untestable", text: "Knockdown effect cannot be tested.", blocked_by: "knockdown counts",
+         status: "candidate_evidence", candidate_evidence: { set_by: "watcher", records: [{ by: "watcher", run: "watcher_run_1", post: "post_notice" }] },
+         pointers: [{ kind: "post", id: "post_gone", present: false }, { kind: "post", id: "post_here", present: true }],
+         post_present: false }),
 ];
 
 const routes: Record<string, unknown> = {
@@ -88,6 +91,19 @@ test("cluster suggestions show shared terms and record a person's confirmation",
   const sent = JSON.parse(calls.find((c) => c.url === "/api/frontier/clusters/confirm")!.body!);
   expect(sent.items).toEqual(["frontier_a", "frontier_b"]);
   expect(await screen.findByText(/items are not merged/)).toBeTruthy();
+});
+
+test("candidate evidence says who set it and post pointers say whether the post is on the board", async () => {
+  render(<MemoryRouter initialEntries={["/frontier"]}><Frontier /></MemoryRouter>);
+  const card = within(await screen.findByLabelText("Frontier item frontier_c"));
+  const badge = card.getByText("set by watcher");
+  expect(badge.closest("a")?.getAttribute("href")).toBe("/post/post_notice");
+  expect(card.getByText("not on this board", { exact: false, selector: ".ledger-badge" })).toBeTruthy();
+  expect(card.queryByRole("link", { name: "post_gone" })).toBeNull();
+  expect(card.getByRole("link", { name: "post_here" }).getAttribute("href")).toBe("/post/post_here");
+  expect(card.getByText("The post this item names is not on this board.")).toBeTruthy();
+  // Items in other states carry no setter badge.
+  expect(within(screen.getByLabelText("Frontier item frontier_a")).queryByText(/^set by/)).toBeNull();
 });
 
 test("wishlist links each measurement to the questions that need it", async () => {

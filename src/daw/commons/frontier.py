@@ -332,11 +332,21 @@ def board_state(owner):
         elif kind == "watcher_disabled":
             if body["watcher"] in entry["watchers"]:
                 entry["watchers"][body["watcher"]]["enabled"] = False
+            # The query shown after disabling, as recorded at the time ("watcher <id>", "author" or none).
+            if "watcher_query" in body:
+                entry["shown_after_disable"] = {"query": body["watcher_query"], "event_seq": row["seq"],
+                                                "source": body.get("watcher_query_source")}
         else:  # watcher_ran
             new = _count(body.get("new"))
-            # `status_changed` records whether this run moved an open item to candidate evidence; a run
-            # recorded without the flag counts when it found new accessions.
-            changed = body["status_changed"] if isinstance(body.get("status_changed"), bool) else new > 0
+            # `status_set` ("candidate_evidence", by `status_source` "watcher") records that this run moved an open
+            # item to candidate evidence; older events say `status_changed`; a run recorded with neither counts
+            # when it found new accessions.
+            if "status_set" in body:
+                changed = body["status_set"] == "candidate_evidence"
+            elif isinstance(body.get("status_changed"), bool):
+                changed = body["status_changed"]
+            else:
+                changed = new > 0
             if changed:
                 accessions = body.get("new_accessions")
                 entry["candidates"].append({"source": "watcher", "watcher": body["watcher"], "run": body.get("run"),
@@ -363,11 +373,17 @@ def _status(agent_item, owned):
 
 
 def _watcher_query(item, owned):
-    """The latest enabled board watcher's query masks the author's; disabling it unmasks the author's again."""
+    """The latest enabled board watcher's query masks the author's. After the last one is disabled, the query the
+    `watcher_disabled` event recorded as shown (the author's own, unmasked) is used; boards recorded before that
+    field fall back to the author's query from the workspace event."""
     enabled = [w for w in owned["watchers"].values() if w["enabled"]]
     if enabled:
         latest = max(enabled, key=lambda w: w["event_seq"])
         return canonical({"watcher": latest["watcher"], "provider": latest["provider"], **latest["query"]}).decode()
+    shown = owned.get("shown_after_disable")
+    if shown and shown["source"] != "watcher" and not str(shown["source"] or "").startswith("watcher "):
+        query = shown["query"]
+        return None if query is None else query if isinstance(query, str) else canonical(query).decode()
     query = item["watcher_query"]
     return None if query is None else query if isinstance(query, str) else canonical(query).decode()
 
@@ -590,6 +606,84 @@ def watcher_status(owner, ids):
     return status
 
 
+def _is_post_pointer(pointer):
+    kind, identity = pointer.get("kind"), pointer.get("id")
+    return isinstance(identity, str) and (kind == "post" or (kind == "locator" and bool(POST_ID.fullmatch(identity))))
+
+
+def candidate_evidence_records(owner, ids):
+    """Watcher runs that moved each item to candidate_evidence, from their `watcher_ran` events (body
+    `status_set: "candidate_evidence"`, `status_source: "watcher"`; older events say `status_changed`)."""
+    found = {i: [] for i in ids}
+    if not ids:
+        return found
+    for row in owner.rows("SELECT seq,body,created FROM event WHERE kind='watcher_ran' ORDER BY seq"):
+        body = json.loads(row["body"])
+        if body.get("item") in found and (body.get("status_set") == "candidate_evidence" or body.get("status_changed")):
+            found[body["item"]].append({"by": "watcher", "watcher": body.get("watcher"), "run": body.get("run"),
+                                        "post": body.get("post"), "event_seq": row["seq"], "created": row["created"]})
+    return found
+
+
+def annotate(owner, items):
+    """Read-time facts about described items, all from records (spec v2 C9):
+
+    - `candidate_evidence`: for an item in that status, whether a watcher set it (its `watcher_ran` event),
+      the item's author did (an agent `frontier_item_status` event), or both; "unrecorded" when neither.
+    - `present` on every post pointer, and `post_present` for the item's own post: whether that post exists
+      on this board. A workspace can check only a post id's form when the agent records the item.
+    """
+    for item in items:
+        item["candidate_evidence"] = None
+    candidates = [i for i in items if i.get("status") == "candidate_evidence"]
+    by_watcher = candidate_evidence_records(owner, [i["id"] for i in candidates])
+    for item in candidates:
+        source = item["source"] if isinstance(item.get("source"), dict) else {}
+        records = list(by_watcher[item["id"]])
+        if source.get("agent_status") == "candidate_evidence":
+            records.insert(0, {"by": "author", "event": source.get("status_event"), "reason": source.get("status_reason")})
+        by = sorted({r["by"] for r in records})
+        item["candidate_evidence"] = {"set_by": " and ".join(by) if by else "unrecorded", "records": records}
+    posts = {p["id"] for i in items for p in i.get("pointers") or [] if isinstance(p, dict) and _is_post_pointer(p)}
+    posts |= {i["source"]["post"] for i in items
+              if isinstance(i.get("source"), dict) and isinstance(i["source"].get("post"), str)}
+    posts = sorted(posts)
+    present = {r["id"] for r in owner.rows(f"SELECT id FROM post WHERE id IN ({','.join('?' for _ in posts)})",
+                                           posts)} if posts else set()
+    for item in items:
+        item["pointers"] = [{**p, "present": p["id"] in present} if isinstance(p, dict) and _is_post_pointer(p) else p
+                            for p in item.get("pointers") or []]
+        post = item["source"].get("post") if isinstance(item.get("source"), dict) else None
+        item["post_present"] = (post in present) if isinstance(post, str) else None
+    return items
+
+
+def author_watcher_query(owner, row):
+    """The watcher query the item's author recorded in their own work event, in stored form, or None.
+    Opens the author's workspace read-only."""
+    try:
+        source = json.loads(row["source"])
+    except (TypeError, ValueError):
+        return None
+    agent = owner.one("SELECT id,trial FROM agent WHERE id=?", (row["author"],))
+    if not isinstance(source, dict) or not isinstance(source.get("body_blob"), str) or not agent or not agent["trial"]:
+        return None
+    try:
+        ws = ReadOnlyWorkspace(_workspace_path(Path(owner.root), agent))
+    except (DawError, OSError, sqlite3.Error):
+        return None
+    try:
+        payload = read_json(ws.blob_path(source["body_blob"]))
+    except (DawError, OSError, ValueError):
+        return None
+    finally:
+        ws.close()
+    query = payload.get("watcher_query") if isinstance(payload, dict) else None
+    if isinstance(query, str):
+        return query.strip() or None
+    return canonical(query).decode() if isinstance(query, dict) and query else None
+
+
 def question_titles(owner):
     titles = {}
     for _agent, ws in workspaces(owner):
@@ -625,6 +719,7 @@ def browse(owner, *, kind=None, status=None, blocked_by=None, question=None, aut
     watch = watcher_status(owner, [r["id"] for r in rows])
     for row in rows:
         row.update(question_title=titles.get(row["question"]), author_name=names.get(row["author"]), watch=watch[row["id"]])
+    annotate(owner, rows)
     by_kind = {k: [r["id"] for r in rows if r["kind"] == k] for k in KINDS}
     blockers = {}
     for row in rows:
