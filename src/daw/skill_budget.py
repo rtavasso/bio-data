@@ -19,6 +19,9 @@ SKILLS_DIR = Path(__file__).resolve().parents[2] / ".agents" / "skills"
 # command crib, the peek/short-output rules, the records helper and the turn-start rule. Expected to lower
 # `help_calls` (238 in the first cohort), `labbook_reads` (138), `inspection_scripts_written` (169) and
 # `verify_scripts_written` (69) per cohort, and to raise `resume_calls` from 0; the audit report sums each.
+# 2026-10-07 round-three fixes: bio-research +1024 bytes for the R/DESeq2 container usage block. Round three's
+# rbp-discovery built a Docker R image mid-turn for a standard DESeq2 refit; expected to lower plumbing scripts and
+# minutes before the first successful analysis on count-based questions (turn economics).
 BUDGET_BYTES = {
     "bio-artifact-reuse": 4096,
     "bio-community": 13824,
@@ -26,7 +29,7 @@ BUDGET_BYTES = {
     "bio-evaluation-review": 8704,
     "bio-hypothesis-discovery": 27648,
     "bio-mechanism-exploration": 17408,
-    "bio-research": 15360,
+    "bio-research": 16384,
     "bio-research-consolidation": 5120,
 }
 

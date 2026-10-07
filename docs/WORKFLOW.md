@@ -46,3 +46,14 @@ Later questions can reuse suitable measurements and processed representations, a
 Evaluation runs are separate branches of this history. Each trial has an isolated workspace and a fresh conversation; default Codex sessions are ephemeral. `--seed-workspace PATH` copies data and prior work; adding `--continue-question ID` resumes that question, while omitting it starts a new question using the inherited library. [Hermes checkpoints](HERMES.md) additionally preserve native session history and learned skills for explicit retrieval in the next conversation. Hermes's always-on memory is for user/environment facts; research findings and compact evidence indexes stay in the searchable scientific archive. A useful learned retrieval skill may point there without turning biological claims into instructions.
 
 New results stay in the trial workspace. There is no automatic merge into the source workspace or federation across evaluation directories. Successive runs seeded from the latest completed workspace/checkpoint accumulate a lineage. Inspect whether the next agent actually retrieves prior evidence, checks its applicability, reuses a fitting artifact and changes an analysis decision; merely retaining files or mentioning memory does not demonstrate useful reuse. Combining separate branches into a shared library still requires explicit work.
+
+## R and DESeq2
+
+Count-based differential analyses run in a pinned image, `colloquy-r-deseq2:bioc3.23` (R 4.6.1, Bioconductor 3.23;
+DESeq2, edgeR, limma, apeglm, readr, jsonlite; build recipe in `containers/r-deseq2/`, versions in
+`docs/v3/receipts/r-deseq2-image.json`). Save the R script under the question's `scripts/` and run it with
+`.agents/skills/bio-research/scripts/r_analysis.py --receipt R.json --input IN --output OUT -- scripts/NAME.R ARGS`.
+Each call starts its own `docker run --rm --network none` container from the shared read-only image, mounts the
+question folder read-only and the declared output directories writable, and writes a `run_analysis.py`-compatible
+receipt, so several agents can run analyses at the same time (five concurrent DESeq2 runs took as long as one).
+Rebuild the image with `docker build -t colloquy-r-deseq2:bioc3.23 containers/r-deseq2` on a new host.
