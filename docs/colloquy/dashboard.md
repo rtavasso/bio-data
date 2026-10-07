@@ -244,9 +244,13 @@ assignments as alice. The tests check:
 
 The frontend tests are in `web/src/pages/Dashboard.test.tsx`. Number coverage is
 tested in `tests/test_commons_checker.py`: per cohort on the demo, and on the
-committed PMP22 cohort fixture, where the summary reports 54 finals, 936
+committed PMP22 cohort fixture, where the summary reports 54 finals, 949
 numbers and a 0% share pointed at the number (equal to the audit receipt
-`docs/v3/receipts/cohort-number-audit.json`). The fixture records no cohort
+`docs/v3/receipts/cohort-number-audit.json`, rules `writeup-pointers/3`). The
+table keeps the author's pointers (cell / claim / line / text; author-verified
+counts cell, claim and line only, spec v3 B6), people's curated pointers (G2,
+never the author's) and unpointed numbers (of which marked unlocatable) apart;
+tested in `test_a_curated_pointer_is_scope_curated_attributed_and_never_author_verified`. The fixture records no cohort
 rows, so its per-cohort panel is empty there; the summary is the cohort.
 
 ## Limitations

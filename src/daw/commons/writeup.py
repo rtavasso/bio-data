@@ -31,16 +31,19 @@ refuses the other number. Post pointers give context only; they never cover a nu
 
 Each pointed number is then checked against its record (value-in-record): a claim pointer verifies when the
 number occurs in the claim's text or scope; an artifact pointer when the number is at the cited cell, key or
-line (or, without a locator, anywhere in a text output of at most 64 KB), at the declared or implied rounding.
-Otherwise the number is `unverified` (with the reason), which is shown, not refused; it is distinct from
-`unpointed` and from `verified`.
+line, at the declared or implied rounding. An artifact pointer without a locator has scope `text` (spec v3 B6):
+it verifies only when exactly one numeric token of a text output of at most 64 KB matches, and a `text` match
+is shown apart and never counted in `verified_share`. Otherwise the number is `unverified` (with the reason),
+which is shown, not refused; it is distinct from `unpointed` and from `verified`.
 
 **Numeric tokens:** optionally signed integers and decimals (thousands separators allowed), scientific
 notation (`1e-5`, `3.2×10^-4`, `3.2×10⁻⁴`), percentages, ratios (`3:1`, `1/3`), unicode vulgar fractions
 (`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty (`twenty-one` to `twenty-nine` as one number) and
-`a dozen` / `half a dozen`. Heading numbers count like any other number. **Not numbers:** record identifiers,
-hashes and URLs; integers glued to letters, directly or through one hyphen (identifier characters: `PMP22`,
-`log2`, `GSE1234`, `H3K27me3`, `IL-6`, `measured-zero`), except a fold multiplier `x2`; strand ends `3′`/`5′`
+`a dozen` / `half a dozen`. Heading numbers count like any other number. An integer glued to one lone
+lowercase letter is a number with a label, like every other glued form (`n12`, `k5`, the fold multiplier `x2`;
+spec v3 B6). **Not numbers:** record identifiers, hashes and URLs; integers glued to an uppercase letter, to two
+or more letters, or through one hyphen (identifier characters: `PMP22`, `P1`, `log2`, `GSE1234`, `H3K27me3`,
+`IL-6`, `measured-zero`); strand ends `3′`/`5′`
 followed by a prime; digits after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
 dates and times in a byline (a paragraph among the first two blocks starting with By / Written by / Prepared
 by / Author(s): / Date: / Updated:); spelled `one` after no/the/this/that/each/any/every/which or before
@@ -68,7 +71,7 @@ from collections import OrderedDict
 from daw.commons import evidence_map, federation, locators, views
 from daw.util import DawError
 
-RULES_VERSION = "writeup-pointers/2"
+RULES_VERSION = "writeup-pointers/3"
 CITABLE = {"claim": re.compile(r"claim_[0-9a-f]{32}"), "artifact": re.compile(r"artifact_[0-9a-f]{64}"),
            "post": re.compile(r"post_[0-9a-f]{32}")}
 COVERING = ("claim", "artifact")
@@ -442,6 +445,15 @@ def _multiplier(masked, start):
     return start >= 1 and masked[start - 1] in "xX" and (start < 2 or not masked[start - 2].isalnum())
 
 
+def _labelled(masked, start):
+    """`n12`, `k5`: one lone lowercase letter glued to an integer labels a number (B6); a letter that follows
+    another letter, a digit, `_` or `-` is part of an identifier (`log2`, `IL-6`), and uppercase prefixes
+    (`P1`, `H3`) name things."""
+    if start < 1 or not ("a" <= masked[start - 1] <= "z"):
+        return False
+    return start < 2 or not (masked[start - 2].isalnum() or masked[start - 2] in "_-−")
+
+
 def numbers_in(text, offset, *, byline=False, spelled=True):
     """Numeric tokens of a prose string as [{text, offset, length[, spelled]}] (offsets are source code points)."""
     masked = _masked(text, (DATE,) if byline else ())
@@ -460,7 +472,7 @@ def numbers_in(text, offset, *, byline=False, spelled=True):
         separator = re.match(r"\d+[:/]", token) if glued else None
         if separator:  # chr10:49316968, P1/2: the glued integer is an identifier, the rest a number
             start, token, glued = start + separator.end(), token[separator.end():], False
-        if glued and token.isdigit() and not _multiplier(masked, start):
+        if glued and token.isdigit() and not _multiplier(masked, start) and not _labelled(masked, start):
             continue  # integer identifier characters: PMP22, log2, GSE1234, H3K27me3
         if token in ("3", "5") and text[end:end + 1] in ("′", "'", "’"):
             continue  # strand ends: 3′ UTR, 5'-end
@@ -497,19 +509,23 @@ def _reference(token):
 
 
 def _scope(pointers):
-    """cell (an artifact pointer with a cell or JSON-key locator) > claim > line (any other artifact pointer at
-    the number, including `line=N`) > none."""
+    """cell (an artifact pointer with a cell or JSON-key locator) > claim > line (an artifact pointer at the number
+    with `line=N`, or an invalid locator) > text (an artifact pointer without a locator: a value found anywhere in
+    the output, spec v3 B6) > none."""
     artifacts = [p for p in pointers if p["kind"] == "artifact"]
+    kinds = set()
     for pointer in artifacts:
         try:
-            if locators.target_kind(locators.parse_locator(pointer["locator"]) if pointer["locator"] else {}) \
-                    in ("cell", "key"):
-                return "cell"
+            kinds.add(locators.target_kind(locators.parse_locator(pointer["locator"]) if pointer["locator"] else {}))
         except locators.LocatorError:
-            continue
+            kinds.add("line")  # an invalid locator is refused by the checker; it names a place, not the whole output
+    if kinds & {"cell", "key"}:
+        return "cell"
     if any(p["kind"] == "claim" for p in pointers):
         return "claim"
-    return "line" if artifacts else "none"
+    if "line" in kinds:
+        return "line"
+    return "text" if artifacts else "none"
 
 
 def cover(tokens, **flags):
@@ -857,7 +873,7 @@ def statistics(records, blocks, pointers):
     return {"numbers": len(records), "pointed": sum(1 for r in records if r["scope"] != "none"),
             "verified": counted.count("verified"), "unverified": counted.count("unverified"),
             "unpointed": counted.count("unpointed"), "units": sum(1 for _ in units(blocks)), "pointers": len(pointers),
-            "scopes": {s: sum(1 for r in records if r["scope"] == s) for s in ("cell", "claim", "line", "none")}}
+            "scopes": {s: sum(1 for r in records if r["scope"] == s) for s in ("cell", "claim", "line", "text", "none")}}
 
 
 def overlay(blocks, records):

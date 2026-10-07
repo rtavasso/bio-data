@@ -40,6 +40,32 @@ export interface TourStep {
   attribution?: string;
 }
 
+// Spec v3 G2: how each number of a tour's final reaches bytes. `curated` pointers are a person's, never the author's.
+export interface TourNumber {
+  offset: number;
+  text: string;
+  scope: string;
+  status: string;
+  resolution: "author" | "curated" | "unlocatable" | "unresolved";
+  route?: string | null;
+  curated?: { artifact?: string; locator?: string; route?: string; curator_name?: string; note?: string; result?: string };
+  unlocatable?: { curator_name: string; note: string };
+}
+
+export interface TourFinal {
+  post: string;
+  available: boolean;
+  title?: string | null;
+  route?: string;
+  numbers?: TourNumber[];
+  author_verified?: number;
+  curated?: number;
+  unlocatable?: number;
+  unresolved?: number;
+  curators?: string[];
+  resolved?: boolean;
+}
+
 export interface Tour {
   name: string;
   title: string;
@@ -48,7 +74,8 @@ export interface Tour {
   board?: { fixture?: string; sequence?: number } | null;
   applies: boolean;
   steps: TourStep[];
-  summary: { steps: number; ok: number; broken: number; finals_reaching_bytes_in_two_clicks: number };
+  finals?: TourFinal[];
+  summary: { steps: number; ok: number; broken: number; finals_reaching_bytes_in_two_clicks: number; finals_resolved?: number };
   sequence: number;
 }
 

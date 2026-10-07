@@ -24,8 +24,11 @@ exponent (`3.2e-4` matches within 0.05e-4). A percentage matches v or 100 x v (`
 Spelled-out integers and unicode fractions are exact values (tolerance 1e-9). A leading `±` compares
 magnitudes.
 
-**Where a number may be found.** A cell, a JSON key or a line, when the locator names one; otherwise any
-numeric token of a text artifact of at most 64 KB (`TEXT_SEARCH_LIMIT`). A larger artifact without a
+**Where a number may be found.** A cell, a JSON key or a line, when the locator names one; otherwise a
+numeric token of a text artifact of at most 64 KB (`TEXT_SEARCH_LIMIT`), and only when exactly one token of
+the file matches (spec v3 B6): a value that occurs twice could be either, so it is *unverified* with the
+lines where it occurs. A match found this way is reported `at: "text"`; the checker gives such a number the
+scope `text`, which is shown apart and never counted in `verified_share`. A larger artifact without a
 locator, a binary artifact, absent bytes, a non-numeric cell or no matching value leaves the number
 *unverified*, with the reason. Bytes are read from the archive and checked against their sha256 first.
 """
@@ -324,6 +327,25 @@ def _tokens(text):
             yield n, match.group(0)
 
 
+def text_matches(text, number, decimals=None):
+    """[(line, token)] of every numeric token of a text that equals the number at the rounding."""
+    return [(line, token) for line, token in _tokens(text) if matches(number, parse_cell(token), decimals)]
+
+
+def occurrences(view, aid, number, cache):
+    """(matching tokens, reason) of a number anywhere in a text output of at most 64 KB (audit and curation
+    aids; never a verification by itself)."""
+    if aid not in cache:
+        cache[aid] = artifact_output(view, aid)
+    data, _, reason = cache[aid]
+    if data is None:
+        return [], reason
+    text = _text(data)
+    if text is None or len(data) > TEXT_SEARCH_LIMIT:
+        return [], "the output is not text of at most 64 KB"
+    return text_matches(text, number), None
+
+
 def verify_artifact(view, aid, locator_text, number, cache):
     """{result: verified|unverified, at, reason?, found?} for one number pointed at one artifact."""
     try:
@@ -371,9 +393,15 @@ def verify_artifact(view, aid, locator_text, number, cache):
         if len(data) > TEXT_SEARCH_LIMIT:
             return {"result": "unverified", "at": None,
                     "reason": "no locator and the output is larger than 64 KB; cite a cell (row=;col=), key or line"}
-        for line, token in _tokens(text):
-            if matches(number, parse_cell(token), decimals):
-                return {"result": "verified", "at": "text", "found": {"line": line, "value": token}}
+        hits = text_matches(text, number, decimals)
+        if len(hits) == 1:
+            line, token = hits[0]
+            return {"result": "verified", "at": "text", "found": {"line": line, "value": token, "occurrences": 1}}
+        if hits:
+            return {"result": "unverified", "at": "text",
+                    "found": {"lines": [line for line, _ in hits[:20]], "occurrences": len(hits)},
+                    "reason": f"the value occurs {len(hits)} times in the output; a match without a locator verifies "
+                              "only when it is unique: cite a cell (row=;col=), key or line"}
         return {"result": "unverified", "at": None, "reason": "the value does not occur in the output bytes"}
     except LocatorError as error:
         return {"result": "unverified", "at": kind, "reason": str(error)}

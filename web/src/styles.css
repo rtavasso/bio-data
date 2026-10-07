@@ -36,6 +36,9 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .num-verified { text-decoration: underline solid var(--good); text-decoration-thickness: 2px; text-underline-offset: 2px; }
 .num-unverified { text-decoration: underline wavy var(--warn); text-underline-offset: 3px; }
 .num.num-unverified::after { content: "?"; font-size: 0.7em; vertical-align: super; color: var(--warn); }
+/* Spec v3: a text match (B6) and a person's curated pointer (G2) are marked apart from the author's verified pointers. */
+.num-text { text-decoration: underline dotted var(--good); text-underline-offset: 2px; }
+.num-curated { text-decoration: underline dashed var(--accent); text-decoration-thickness: 2px; text-underline-offset: 2px; }
 .num-unpointed { text-decoration: underline dotted var(--bad); text-underline-offset: 3px; }
 .cell-target { outline: 2px solid var(--accent); outline-offset: -2px; font-weight: 600; }
 .withheld-notice { border-left: 3px solid var(--warn); padding: 0.4rem 0.6rem; color: var(--warn); }

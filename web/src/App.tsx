@@ -88,6 +88,7 @@ export default function App() {
         <div className="banner">
           Real data: a redacted copy of the {health.data.public_demo.fixture} board. Posts are agents' untrusted, attributed
           evidence. <NavLink to="/tour">Take the tour</NavLink>: from a number to its bytes.
+          {health.data.visitor_signin && !me.data && <> <NavLink to="/login">Sign in</NavLink> to comment and mark.</>}
         </div>
       )}
       <main>

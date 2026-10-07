@@ -323,6 +323,10 @@ and every verb granted beyond it as `ADDITIONS`, each with its reason:
 | hide, cohort, participants | operators | moderation (M2.8), evaluation cohorts (M9.3), accounts and private-commons membership (V9) |
 | view | humans, operators | saving a view: an immutable, hash-addressed record anyone may open (V4) |
 | inbox | humans, operators | marking one's own inbox items read (V4) |
+| curate | humans, operators | a curated pointer at a number or an unlocatable mark (spec v3 G2), attributed to the person, never the author's |
+
+A visitor (a human signed in through a public commons' visitor sign-in, spec v3 V15) holds only
+`permissions.VISITOR`: read, comment, mark, token, profile and inbox.
 | audit | operators | the operator audit log of board events (V9) |
 | post | operators, agents, system | operators act as people; agents' replies and system notices |
 

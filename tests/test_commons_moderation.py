@@ -299,7 +299,8 @@ def _check_post_routes(root, target):
         else:
             assert response.status_code in (200, 422) and _contains_stub(body, stub), (route.path, body)
         checked.append(route.path)
-    assert {"/api/posts/{identity}", "/api/curation/locate", "/api/writeup-checks/{post}"} <= set(checked)
+    assert {"/api/posts/{identity}", "/api/curation/locate", "/api/curation/pointers",
+            "/api/writeup-checks/{post}"} <= set(checked)
     return checked
 
 

@@ -16,10 +16,13 @@ One checker (`daw.commons.writeup.check`) serves every rendering of a write-up:
   withdrawals flag a write-up without rewriting its verdict.
 
 Every other post gets a number report (`post_numbers`) from the same parser and value-in-record check:
-a number covered by a pointer at the number is `verified` or `unverified` with scope `cell`, `claim` or
-`line`; a number without one is `post_scoped` when the post names evidence (its evidence list, artifact
-identifiers elsewhere in the text, its ledger claims), shown as "this post's evidence" rather than as a
-link from the number (C11), and `unpointed` otherwise. Nothing here writes except `record`.
+a number covered by a pointer at the number is `verified` or `unverified` with scope `cell`, `claim`,
+`line` or `text` (an artifact pointer without a locator, verified only by a unique match and never counted
+in `verified_share`, spec v3 B6); a number without one is `post_scoped` when the post names evidence (its
+evidence list, artifact identifiers elsewhere in the text, its ledger claims), shown as "this post's
+evidence" rather than as a link from the number (C11), and `unpointed` otherwise. A person's curated pointer
+(`daw.commons.curation`, spec v3 G2) gives an author-unpointed number the scope `curated`, attributed to the
+curator and never counted as the author's. Nothing here writes except `record`.
 """
 import json
 from collections import OrderedDict
@@ -32,7 +35,10 @@ from daw.util import DawError
 WRITEUP_TYPES = ("writing", "digest")
 EVENT = "writeup_check"
 PLACEHOLDER_TITLE = "Write-up withheld: refused by the number checker"
-NUMBER_LEVEL = ("cell", "claim", "line")
+NUMBER_LEVEL = ("cell", "claim", "line", "text")  # the author's pointer sits at the number
+AUTHOR_VERIFIED = ("cell", "claim", "line")  # verified_share: a text match (B6) and a curated pointer (G2) never count
+SCOPES = ("cell", "claim", "line", "text", "curated", "post", "none")
+STATUSES = ("verified", "unverified", "post_scoped", "unpointed")
 _CACHE: "OrderedDict[tuple, object]" = OrderedDict()
 
 
@@ -197,9 +203,13 @@ def _decorate(view, pointer, located):
     return pointer
 
 
-def post_numbers(view, pid, text, evidence):
-    """Every number of a post with scope (cell | claim | line | post | none), status (verified | unverified |
-    post_scoped | unpointed) and pointers. Write-ups report their verdict's numbers (recorded or computed)."""
+def post_numbers(view, pid, text, evidence, *, curated=True):
+    """Every number of a post with scope (cell | claim | line | text | curated | post | none), status (verified |
+    unverified | post_scoped | unpointed) and pointers. Write-ups report their verdict's numbers (recorded or
+    computed). With `curated` (default) people's curated pointers and unlocatable marks are applied."""
+    from daw.commons.evidence_map import fingerprint
+    key = (str(view.root), view.sequence(), fingerprint(view), pid)
+
     def compute():
         located = {}
         stored = recorded(view).get(pid)
@@ -223,20 +233,31 @@ def post_numbers(view, pid, text, evidence):
                 pointers = named
             out.append({**r, "pointers": pointers})
         return out
-    from daw.commons.evidence_map import fingerprint
-    return _cached(("numbers", str(view.root), view.sequence(), fingerprint(view), pid), compute, size=512)
+    numbers = _cached(("numbers", *key), compute, size=512)
+    if not curated:
+        return numbers
+    from daw.commons import curation
+    return _cached(("curated", *key), lambda: curation.overlay(view, pid, numbers, {}), size=512)
 
 
 def summarize(numbers):
-    """Counts by scope and status, and the number-level share (cell, claim or line pointers) of all numbers."""
+    """Counts by scope and status, the number-level share (the author's pointers at the number) and the share the
+    author's pointers verify (`verified_share`: cell, claim or line; a text match and a curated pointer are counted
+    apart). `pointers` separates author pointers, curated pointers and unpointed numbers (spec v3 G2)."""
     total = len(numbers)
-    scopes = {s: sum(1 for n in numbers if n["scope"] == s) for s in ("cell", "claim", "line", "post", "none")}
-    statuses = {s: sum(1 for n in numbers if n["status"] == s)
-                for s in ("verified", "unverified", "post_scoped", "unpointed")}
+    scopes = {s: sum(1 for n in numbers if n["scope"] == s) for s in SCOPES}
+    statuses = {s: sum(1 for n in numbers if n["status"] == s) for s in STATUSES}
     level = sum(scopes[s] for s in NUMBER_LEVEL)
+    author_verified = sum(1 for n in numbers if n["status"] == "verified" and n["scope"] in AUTHOR_VERIFIED)
+    unpointed = [n for n in numbers if n["scope"] in ("post", "none")]
     return {"numbers": total, "scopes": scopes, "statuses": statuses, "number_level": level,
             "number_level_share": round(level / total, 4) if total else None,
-            "verified_share": round(statuses["verified"] / total, 4) if total else None,
+            "verified_share": round(author_verified / total, 4) if total else None,
+            "author_verified": author_verified,
+            "text_verified": sum(1 for n in numbers if n["status"] == "verified" and n["scope"] == "text"),
+            "curated_verified": sum(1 for n in numbers if n["status"] == "verified" and n["scope"] == "curated"),
+            "pointers": {"author": level, "curated": scopes["curated"], "unpointed": len(unpointed),
+                         "unlocatable": sum(1 for n in unpointed if n.get("unlocatable"))},
             "cell_verified": sum(1 for n in numbers if n["status"] == "verified" and n["scope"] == "cell")}
 
 
@@ -286,17 +307,19 @@ def verified_claim_pointers(view):
 # ---------------------------------------------------------------------------- audit (V2 Milestone B)
 
 def _named_value(view, number, artifacts, outputs):
-    """Audit only: does a post-scoped number's value occur in one of the artifacts the post names?
-    (Never displayed as a pointer; it measures how many numbers an author could have pointed.)"""
+    """Audit only: does a post-scoped number's value occur in one of the artifacts the post names, and does it
+    occur exactly once across them (B6: what a text match could verify)? (Never displayed as a pointer; it
+    measures how many numbers an author or curator could point.)"""
     from daw.commons import locators
     value = locators.parse_number(number["text"])
-    absent = 0
+    absent, hits = 0, 0
     for aid in artifacts:
-        result = locators.verify_artifact(view, aid, None, value, outputs)
-        if result["result"] == "verified":
-            return "found", absent
-        if "absent" in (result.get("reason") or ""):
+        found, reason = locators.occurrences(view, aid, value, outputs)
+        hits += len(found)
+        if "absent" in (reason or ""):
             absent += 1
+    if hits:
+        return ("found_unique" if hits == 1 else "found"), absent
     return ("bytes_absent" if absent and absent == len(artifacts) else "not_found"), absent
 
 
@@ -315,28 +338,32 @@ def audit(view, *, posts=None):
         summary = summarize(numbers)
         artifacts = [p["id"] for p in post_evidence(view, pid, content.get("body"), content.get("evidence"))
                      if p["kind"] == "artifact"]
-        named = {"found": 0, "not_found": 0, "bytes_absent": 0}
+        named = {"found": 0, "found_unique": 0, "not_found": 0, "bytes_absent": 0}
         for number in numbers:
             if number["status"] == "post_scoped":
                 outcome, _ = _named_value(view, number, artifacts, outputs)
-                named[outcome] += 1
+                named["found" if outcome == "found_unique" else outcome] += 1
+                named["found_unique"] += outcome == "found_unique"
         rows.append({"post": pid, "request": info.get("request"), "requester_kind": info.get("requester_kind"),
                      **summary, "post_scoped_value_in_named_artifact": named})
 
     def total(group):
         numbers = sum(r["numbers"] for r in group)
-        keys = ("cell", "claim", "line", "post", "none")
-        scopes = {k: sum(r["scopes"][k] for r in group) for k in keys}
-        statuses = {k: sum(r["statuses"][k] for r in group) for k in ("verified", "unverified", "post_scoped", "unpointed")}
+        scopes = {k: sum(r["scopes"][k] for r in group) for k in SCOPES}
+        statuses = {k: sum(r["statuses"][k] for r in group) for k in STATUSES}
         named = {k: sum(r["post_scoped_value_in_named_artifact"][k] for r in group)
-                 for k in ("found", "not_found", "bytes_absent")}
+                 for k in ("found", "found_unique", "not_found", "bytes_absent")}
+        pointers = {k: sum(r["pointers"][k] for r in group) for k in ("author", "curated", "unpointed", "unlocatable")}
         def share(count):
             return round(count / numbers, 4) if numbers else None
         return {"finals": len(group), "finals_with_numbers": sum(1 for r in group if r["numbers"]),
-                "numbers": numbers, "scopes": scopes, "statuses": statuses,
+                "numbers": numbers, "scopes": scopes, "statuses": statuses, "pointers": pointers,
                 "shares": {"resolvable_to_cell": share(sum(r["cell_verified"] for r in group)),
                            "number_level_pointer": share(sum(r["number_level"] for r in group)),
-                           "verified": share(statuses["verified"]), "unverified": share(statuses["unverified"]),
+                           "verified": share(sum(r["author_verified"] for r in group)),
+                           "text_verified": share(sum(r["text_verified"] for r in group)),
+                           "curated_verified": share(sum(r["curated_verified"] for r in group)),
+                           "unverified": share(statuses["unverified"]),
                            "post_scoped": share(statuses["post_scoped"]), "unpointed": share(statuses["unpointed"])},
                 "finals_with_a_cell_resolvable_number": sum(1 for r in group if r["cell_verified"]),
                 "post_scoped_value_in_named_artifact": named}
@@ -350,8 +377,14 @@ def audit(view, *, posts=None):
                          "an answer notification or notice); assignment = requested by an operator or person, "
                          "peer = requested by an agent",
                 "resolvable_to_cell": "verified through an artifact pointer with a table-cell (row=;col=) or JSON-key (key=) locator",
-                "number_level_pointer": "a claim or artifact pointer at the number (scope cell, claim or line)",
+                "number_level_pointer": "the author's claim or artifact pointer at the number (scope cell, claim, line "
+                                        "or text)",
+                "verified": "verified through the author's pointer with a cell, key, line or claim (a text match and a "
+                            "curated pointer are counted apart: text_verified, curated_verified)",
+                "pointers": "author pointers at the number, people's curated pointers, and unpointed numbers (post or "
+                            "none scope; unlocatable: of those, marked unlocatable by a person)",
                 "post_scoped": "no pointer at the number, but the post names evidence (shown as this post's evidence)",
                 "post_scoped_value_in_named_artifact": "audit only, never displayed as a pointer: the value occurs in "
-                                                       "a text artifact (<= 64 KB) the post names; bytes_absent when "
-                                                       "every named artifact's bytes are outside this archive"}}
+                                                       "a text artifact (<= 64 KB) the post names (found_unique: "
+                                                       "exactly once across them); bytes_absent when every named "
+                                                       "artifact's bytes are outside this archive"}}

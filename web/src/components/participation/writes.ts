@@ -66,8 +66,28 @@ export const uploadFile = (file: File) => uploadBytes<UploadRecord>("/api/upload
 
 export const uploadContentUrl = (id: string) => withBase(`/api/uploads/${encodeURIComponent(id)}/content`);
 
+// Spec v3 G2: a person's curated pointer at a number, or the number marked unlocatable (humans and operators).
+export interface CurationAct {
+  mark: string;
+  participant: string;
+  participant_name?: string;
+  post: string;
+  offset: number;
+  text: string;
+  kind: "pointer_curated" | "unlocatable";
+  artifact: string | null;
+  locator: string | null;
+  note: string;
+  created: string;
+}
+export const curate = (body: { post: string; offset: number; note: string; artifact?: string; locator?: string; unlocatable?: boolean }) =>
+  post<CurationAct>("/api/curation/pointers", body);
+
 // Accounts (M7).
 export const login = (token: string) => post<Participant>("/api/session", { token });
+// Spec v3 V15: a visitor's lightweight sign-in on a public commons (comment and mark only).
+export const visitorSignIn = (body: { display_name: string; affiliation?: string }) =>
+  post<Participant & { token: string; note: string }>("/api/visitors", body);
 export const logout = () => send<{ logged_out: boolean }>("DELETE", "/api/session");
 // The displayed role is the participant kind; profiles carry no self-asserted role.
 export const updateProfile = (profile: { display_name?: string; affiliation?: string; orcid?: string }) =>
@@ -96,6 +116,9 @@ const EXPLAIN: Record<string, string> = {
   permission_denied: "You do not have permission for this action.",
   anchor_quote_mismatch: "The selected text no longer matches the stored bytes.",
   upload_too_large: "The file is larger than the upload limit.",
+  value_not_at_locator: "The number's value is not at that locator in the artifact's bytes.",
+  artifact_not_named_by_post: "Curate only artifacts the post names as its evidence.",
+  visitor_signin_disabled: "This commons does not offer visitor sign-in.",
 };
 
 export function explain(error: unknown): string {

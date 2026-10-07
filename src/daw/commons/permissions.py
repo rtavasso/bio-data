@@ -21,6 +21,11 @@ module that needs it, so the widening is explicit and documented (docs/colloquy/
 - inbox (humans, operators): marking one's own inbox items read; the read state is the person's own (V4).
 - audit (operators): the operator audit log of board events (V9). Membership of a private commons is account
   management and uses `participants` (V9).
+- curate (humans, operators): a person's curated pointer at a number, or a number marked unlocatable (spec v3
+  G2); attributed to the person, never counted as the author's pointer (`daw.commons.curation`).
+
+A visitor (a human who signed in through the public commons' visitor sign-in, `daw.commons.visitors`, spec v3
+V15) holds only `VISITOR`: read, comment, mark and their own profile, token and inbox.
 
 A suspended participant can only read.
 """
@@ -34,17 +39,29 @@ CORE = {
     "system": set(),
 }
 ADDITIONS = {
-    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "view", "inbox"},
+    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "view", "inbox", "curate"},
     "operator": {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
-                 "hide", "cohort", "participants", "watch", "export", "review", "view", "inbox", "audit"},
+                 "hide", "cohort", "participants", "watch", "export", "review", "view", "inbox", "audit", "curate"},
     "agent": {"post", "reply", "review"},
     "system": {"post", "reply"},
 }
 ACTIONS = {kind: READ | CORE[kind] | ADDITIONS[kind] for kind in CORE}
+VISITOR = READ | {"comment", "mark", "token", "profile", "inbox"}
+
+
+def is_visitor(participant):
+    config = participant.get("config") if isinstance(participant, dict) else None
+    return participant.get("kind") == "human" and isinstance(config, dict) and config.get("visitor") is True
+
+
+def actions(participant):
+    """The verbs this participant holds: its kind's, narrowed to `VISITOR` for a signed-in visitor."""
+    granted = ACTIONS.get(participant.get("kind", "agent"), READ)
+    return granted & VISITOR if is_visitor(participant) else granted
 
 
 def allowed(participant, action):
-    return action in ACTIONS.get(participant.get("kind", "agent"), READ)
+    return action in actions(participant)
 
 
 def suspended(db_owner, participant_id):

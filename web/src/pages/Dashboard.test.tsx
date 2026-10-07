@@ -174,6 +174,22 @@ test("number coverage per cohort: share of numbers with a pointer at the number 
   expect(screen.getByText("Numbers pointed at the number").parentElement?.textContent).toContain("(0/936)");
 });
 
+test("number coverage keeps author pointers, curated pointers and unpointed numbers apart (v3 B6, G2)", async () => {
+  const numbers = { finals: 5, numbers: 50, scopes: { cell: 4, claim: 0, line: 0, text: 3, curated: 20, post: 20, none: 3 },
+    statuses: { verified: 27, unverified: 0, post_scoped: 20, unpointed: 3 }, number_level: 7, number_level_share: 0.14,
+    claim_share: 0, cell_share: 0.08, verified_share: 0.08, author_verified: 4, text_verified: 3, curated_verified: 20,
+    pointers: { author: 7, curated: 20, unpointed: 23, unlocatable: 6 } };
+  Object.assign(dashboard, { summary: { ...dashboard.summary, board: { ...dashboard.summary.board, numbers } } });
+  show();
+  const table = await screen.findByRole("table", { name: "Number coverage" });
+  const [summary] = within(table).getAllByRole("row").slice(1);
+  expect(summary.textContent).toContain("4 / 0 / 0 / 3");
+  expect(summary.textContent).toContain("8%");                     // verified_share: the author's cell/claim/line only
+  expect(summary.textContent).toContain("3 text matches apart");
+  expect(summary.textContent).toContain("20 verified; a person's, not the author's");
+  expect(summary.textContent).toContain("6 marked unlocatable");
+});
+
 test("claims authoring per cohort: claims per post, evidence posts with claims and pointer scopes (V1)", async () => {
   const authoring = { posts: 10, posts_with_claims: 4, claims: 12, claims_per_post: 1.2, evidence_posts: 5,
     evidence_posts_with_claims: 4, evidence_posts_with_claims_share: 0.8, claims_refused: 1, pointers: 20,
