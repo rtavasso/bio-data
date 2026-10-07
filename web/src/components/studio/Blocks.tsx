@@ -208,10 +208,18 @@ export function PointerDetail({ id, entry, onClose }: { id: string; entry?: Poin
       {entry?.kind === "claim" && entry.present && (
         <>
           <p>{entry.text}</p>
-          <p className="muted">
-            {entry.status}{entry.stated_status && entry.stated_status !== entry.status ? ` (stated ${entry.stated_status})` : ""} · by {entry.author_name ?? entry.author} · in{" "}
-            {entry.post && <Link to={`/post/${entry.post}`}>{entry.post_title ?? entry.post}</Link>}
-          </p>
+          {entry.foreign ? (
+            <p className="muted">
+              {entry.status} · a claim of snapshot{" "}
+              <Link to={entry.route ?? `/directory/${entry.snapshot}`} className="mono">{entry.snapshot?.slice(0, 12)}…</Link>{" "}
+              (imported read-only; foreign, untrusted)
+            </p>
+          ) : (
+            <p className="muted">
+              {entry.status}{entry.stated_status && entry.stated_status !== entry.status ? ` (stated ${entry.stated_status})` : ""} · by {entry.author_name ?? entry.author} · in{" "}
+              {entry.post && <Link to={`/post/${entry.post}`}>{entry.post_title ?? entry.post}</Link>}
+            </p>
+          )}
           {entry.withdrawn_by && <p className="st-flag-inline">Withdrawn by <Link to={`/post/${entry.withdrawn_by}`}>{entry.withdrawn_by}</Link></p>}
           <h4>Pointers</h4>
           <ul className="st-detail-pointers">
@@ -232,9 +240,15 @@ export function PointerDetail({ id, entry, onClose }: { id: string; entry?: Poin
           <dl className="st-dl">
             <dt>Role</dt><dd>{entry.output_role}</dd>
             <dt>Output</dt><dd className="mono">{entry.name} · sha256 {entry.sha256}</dd>
-            <dt>Held in</dt><dd>{entry.location?.store === "library" ? "shared library" : `workspace of ${entry.location?.participant}`}</dd>
+            <dt>Held in</dt><dd>{entry.foreign ? `snapshot ${entry.snapshot?.slice(0, 12)}… (imported read-only; foreign)`
+              : entry.location?.store === "library" ? "shared library" : `workspace of ${entry.location?.participant}`}</dd>
           </dl>
-          <p><Link to={`/artifact/${id}`}>Artifact page (derivation and provenance)</Link> · {entry.bytes_url && <a href={withBase(entry.bytes_url)}>Verified bytes</a>}</p>
+          <p>
+            {entry.foreign
+              ? <Link to={entry.route ?? `/directory/${entry.snapshot}`}>Snapshot page (its records)</Link>
+              : <Link to={`/artifact/${id}`}>Artifact page (derivation and provenance)</Link>}
+            {" "}· {entry.bytes_url && <a href={withBase(entry.bytes_url)}>Verified bytes</a>}
+          </p>
         </>
       )}
       {entry?.kind === "post" && entry.present && (

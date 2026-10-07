@@ -1,3 +1,5 @@
+import type { Hygiene } from "./publishing";
+
 // Evaluation dashboard read model (GET /api/dashboard, /api/cohorts, /api/cohorts/compare).
 // `null` always means unavailable (not reported or not recorded); it is never a zero.
 
@@ -97,6 +99,8 @@ export interface Group {
   compaction_fallbacks: Num;
   ceremony_tail_minutes: { runs: number; median: Num; mean: Num; max: Num };
   provider_citation_finals: Num;
+  // Spec v2 V8: compaction hygiene per group (daw.commons.hygiene); null fields are unavailable.
+  compaction_hygiene?: Hygiene;
   board: BoardCriteria;
   cost: Cost;
   trend: TrendPoint[];

@@ -399,6 +399,11 @@ never chooses an analysis, a dataset or a question.
 
 ## Publishing outward (M6.5) and federation (M8.4)
 
+Spec v2 V7 extends this section: every export also writes `records.json`, bytes absent from the archive are
+exported as `present: false`, `federation import` indexes the snapshot so `snapshot:<id>/claim_…` and
+`snapshot:<id>/artifact_…#locator` pointers resolve to bytes in the checker and renderer, and preprints and the
+commons directory build on it. See [publishing.md](publishing.md).
+
 `export.export_snapshot(board, actor, scope, id, output)` (permission `export`:
 operators and humans) writes a static site:
 

@@ -25,7 +25,7 @@ import json
 from collections import OrderedDict
 from urllib.parse import quote
 
-from daw.commons import views, writeup
+from daw.commons import federation, views, writeup
 from daw.commons.archive import Archive
 from daw.util import DawError
 
@@ -169,7 +169,8 @@ def snippet(info):
 def post_evidence(view, pid, text, evidence):
     """What a post names as its evidence: evidence artifacts, artifact identifiers in its text, its claims."""
     evidence = evidence if isinstance(evidence, dict) else {}
-    artifacts = list(dict.fromkeys(views.ARTIFACT_ID.findall(text or "")
+    local_text = federation.FOREIGN.sub("", text or "")  # snapshot:<id>/artifact_… names a foreign record (V7)
+    artifacts = list(dict.fromkeys(views.ARTIFACT_ID.findall(local_text)
                                    + [a for a in evidence.get("artifacts") or [] if isinstance(a, str)]))
     claims = [r["id"] for r in view.rows("SELECT id FROM claim WHERE post=? ORDER BY ordinal", (pid,))]
     return [{"kind": "artifact", "id": a, "artifact": a, "location": views.locate_artifact(view, a, quiet=True),
@@ -178,6 +179,11 @@ def post_evidence(view, pid, text, evidence):
 
 
 def _decorate(view, pointer, located):
+    if pointer.get("kind") == "artifact" and federation.split(pointer.get("id")):
+        snapshot, record = federation.split(pointer["id"])  # V7: a record of an imported snapshot
+        return {**pointer, "artifact": pointer["id"], "foreign": True, "snapshot": snapshot,
+                "location": {"store": "federation", "snapshot": snapshot},
+                "route": f"/directory/{snapshot}#{record}"}
     if pointer.get("kind") == "artifact":
         aid = pointer["id"]
         if aid not in located:

@@ -86,5 +86,6 @@ export interface Health {
   sequence: number;
   mode: string;
   demo: boolean;
+  public_demo?: { fixture: string; board_sequence: number; real_data: boolean; tour?: { name: string } | null } | null;
   content_policy: string;
 }

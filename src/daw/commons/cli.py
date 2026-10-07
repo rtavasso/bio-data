@@ -6,6 +6,7 @@ from typing import Annotated
 import typer
 
 from daw.commons.discovery_cli import embed, watch_app
+from daw.commons.publishing_cli import register as _register_publishing
 from daw.commons.studio_cli import (demo_command, digest_app, export_command, federation_app, replication_app,
                                     review_app, writeup_app)
 from daw.util import DawError, canonical
@@ -36,6 +37,7 @@ app.command("demo-studio")(demo_command)
 for _name, _sub in (("federation", federation_app), ("replication", replication_app), ("review", review_app),
                     ("digest", digest_app), ("writeup", writeup_app)):
     app.add_typer(_sub, name=_name)
+_register_publishing(app, federation_app)  # V3, V7, V8: preprint, directory, tour, public-demo, harness-check, invite
 
 
 def emit(value):
@@ -417,8 +419,9 @@ def metrics_dashboard(ctx: typer.Context, cohort: str | None = None, participant
 
 @app.command("cohort-run")
 def cohort_run_command(ctx: typer.Context, name: str,
-                       assignment: Annotated[list[Path], typer.Option("--assignment", help="Markdown file; first line is the title (repeatable)")],
                        agent: Annotated[list[str], typer.Option("--agent", help="Agent id or name (repeatable)")],
+                       assignment: Annotated[list[Path] | None, typer.Option("--assignment", help="Markdown file; first line is the title (repeatable)")] = None,
+                       preset: Annotated[str | None, typer.Option(help="Named question set, e.g. round-two (docs/colloquy/presets/)")] = None,
                        task_type: str = "research", minutes: int | None = None, tokens: int | None = None,
                        download_bytes: int | None = None, deadline: str | None = None,
                        dispatch: Annotated[bool, typer.Option("--dispatch", help="Deliver now, one at a time (DAW_LIVE=1)")] = False,
@@ -432,13 +435,20 @@ def cohort_run_command(ctx: typer.Context, name: str,
     if os.environ.get("BIO_AGENT"):
         raise DawError("operator_dispatch_required")
     executables = dict(item.split("=", 1) for item in harness_executable or [] if "=" in item)
-    items = []
-    for path in assignment:
+    items, warning = [], None
+    if preset:  # spec v2 V3: a named question set (pilotkit.load_preset); --assignment files add to it
+        from daw.commons.pilotkit import load_preset
+        loaded, items = load_preset(preset)
+        minutes = minutes or (loaded.get("budget") or {}).get("minutes")
+    for path in assignment or []:
         text = path.read_text()
         title = text.partition("\n")[0]
         items.append((title.lstrip("# ").strip() or path.stem, text))
     budget = {k: v for k, v in {"minutes": minutes, "tokens": tokens, "download_bytes": download_bytes}.items() if v}
     with Community(ctx.obj) as board:
+        if preset:
+            from daw.commons.pilotkit import check_harnesses
+            _, warning = check_harnesses(board, agent, loaded)
         queued = cohort_run(board, actor, name, items, agent, task_type=task_type, budget=budget, deadline=deadline)
         results = {}
         if dispatch:
@@ -449,7 +459,7 @@ def cohort_run_command(ctx: typer.Context, name: str,
                         results[request] = deliver(board, request, executables.get(harness))["state"]
                     except DawError as e:
                         results[request] = e.reason
-        value = {"queued": queued, "delivered": results}
+        value = {"queued": queued, "delivered": results, **({"warning": warning} if warning else {})}
         if dispatch:
             value["cohorts"] = collect_cohorts(board, actor, name)
         else:

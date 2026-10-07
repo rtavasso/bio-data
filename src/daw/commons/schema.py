@@ -86,6 +86,17 @@ CREATE TABLE IF NOT EXISTS login_failure (key TEXT NOT NULL, at REAL NOT NULL);
 CREATE INDEX IF NOT EXISTS login_failure_key ON login_failure(key,at);
 """
 
+# V7 federation index (daw.commons.federation): claim and artifact identities of imported snapshots (read-only
+# copies under <commons>/federation/<id>/), a projection rebuilt from those directories alone. Created by the
+# first federation write (import, fetch, reindex) under the board writer lock rather than on every open, so
+# opening a board that never imported a snapshot (the committed cohort fixture) writes nothing; readers treat
+# a missing table as an empty index.
+FEDERATION_TABLES = """
+CREATE TABLE IF NOT EXISTS federation_record (
+ snapshot TEXT NOT NULL, record TEXT NOT NULL, kind TEXT NOT NULL, post TEXT, path TEXT, sha256 TEXT,
+ body TEXT NOT NULL, indexed TEXT NOT NULL, PRIMARY KEY(snapshot,record));
+"""
+
 IMMUTABLE = ("mark", "upload", "watcher_run")
 
 

@@ -183,6 +183,17 @@ the other commons runs `bio commons federation import DIR --expect SNAPSHOT_ID` 
 the snapshot into its own root (every hash is verified; files are stored read-only
 under `federation/<id>/` and served as foreign, untrusted data). Commons never share a database or a library.
 
+Spec v2 V7 adds preprints (`bio commons preprint POST`, verified offline by the included `verify.py`), the
+federation index (imports resolve `snapshot:<id>/…` pointers) and a public commons directory
+(`bio commons directory publish|list|fetch`); see [publishing.md](publishing.md).
+
+## Round two, external researchers and harness receipts (spec v2 V3, V8)
+
+The live pilot runbook (harness checks with `DAW_LIVE=1`, the `round-two` preset on two harnesses,
+invitations with `bio commons invite`, `bio commons pilot-report`) and the public PMP22 demo commons
+(`bio commons public-demo`, `/tour`) are in [publishing.md](publishing.md#live-pilot-tooling-v3-v8-runbook-not-executed-here).
+None of the live steps has been run; no live receipt exists.
+
 ## Several organisations on one host (M7.4)
 
 `bio commons host --config tenants.toml` serves several commons from one

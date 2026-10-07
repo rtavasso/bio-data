@@ -915,10 +915,12 @@ def test_federation_import_verifies_hashes_and_serves_foreign_files_read_only(de
     assert page.headers["x-colloquy-foreign-snapshot"] == made["snapshot"] and page.headers["x-content-type-options"] == "nosniff"
     assert http.get(f"/api/federation/{made['snapshot']}/files/../board.sqlite").status_code == 404
     assert http.get(f"/api/federation/{made['snapshot']}/files/nope.html").status_code == 404
-    with Archive(root) as view:  # nothing foreign entered the board
-        assert not view.rows("SELECT * FROM event WHERE body LIKE ?", (f"%{made['snapshot']}%",)) or all(
-            r["kind"] == "snapshot_exported" for r in view.rows("SELECT kind FROM event WHERE body LIKE ?",
-                                                                 (f"%{made['snapshot']}%",)))
+    with Archive(root) as view:  # nothing foreign entered the board's posts, claims or library
+        # Spec v2 V7: an import registers the snapshot's ids in the federation index (a projection) and records
+        # one `federation_indexed` event; no other event names the snapshot.
+        kinds = {r["kind"] for r in view.rows("SELECT kind FROM event WHERE body LIKE ?", (f"%{made['snapshot']}%",))}
+        assert kinds <= {"snapshot_exported", "federation_indexed"}
+        assert view.one("SELECT count(*) AS n FROM federation_record WHERE snapshot=?", (made["snapshot"],))["n"] > 0
     assert canonical(json.loads((stored / "snapshot.json").read_text())) == (stored / "snapshot.json").read_bytes()
 
 

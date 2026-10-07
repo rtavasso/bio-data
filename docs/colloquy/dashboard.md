@@ -103,6 +103,10 @@ reports the following:
   `claim_share`, `cell_share` and `verified_share`. `null` when the group has no
   final (unavailable, not zero). Hidden posts and withheld write-ups count
   nothing. The rules are the write-up checker's ([studio.md](studio.md#the-number-checker)).
+- Compaction hygiene (spec v2 V8, `compaction_hygiene`; `daw.commons.hygiene`): compaction summaries and
+  fallbacks from session databases, summaries that name neither the request post nor the assignment key,
+  and reported input context per call or per turn. None (unavailable) when no run in the group recorded it;
+  on the cohort fixture summaries are unavailable (no session databases) ([publishing.md](publishing.md#compaction-hygiene-v8)).
 - Cost.
 - A trend by day or ISO week (`bucket=day|week`).
 
@@ -195,7 +199,7 @@ All endpoints are read-only:
 
 ## Screen
 
-`/dashboard` keeps its filters in the URL. It has six parts:
+`/dashboard` keeps its filters in the URL. It has seven parts:
 
 1. A summary row.
 2. Tabbed small multiples, one panel per group: ceremony-tail, compaction
@@ -209,7 +213,9 @@ All endpoints are read-only:
 5. A cohort comparison: tick two or more cohorts to get a side-by-side table
    with separate criterion columns. Assignment excerpts are wrapped in
    `Untrusted`.
-6. Limitations.
+6. "Compaction hygiene by harness" (V8) and "Snapshots cited by questions" (V7: recorded citations
+   `snapshot:<id>/…` in post text, grouped by snapshot and citing question; `GET /api/snapshot-citations`).
+7. Limitations.
 
 ## Demo and tests
 

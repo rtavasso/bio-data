@@ -26,14 +26,17 @@ from pathlib import Path
 from daw import hermes
 from daw.artifacts import reuse_links
 from daw.commons.permissions import require
+from daw.commons.hygiene import aggregate as hygiene_totals
+from daw.commons.hygiene import run_hygiene
 from daw.commons.runmetrics import compactions_reported, run_metrics
 from daw.community import PROVIDER_CITATION
 from daw.util import DawError, canonical, digest, now, read_json
 
 # 2: unavailable clocks, streams and compactions are None, never 0 (spec v2 C10).
-METRICS_VERSION = 2
+# 3: compaction hygiene per run (spec v2 V8, daw.commons.hygiene).
+METRICS_VERSION = 3
 # Files a run's metrics are computed from; size and mtime changes mark the projection stale.
-RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db")
+RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db", "prompt.txt")
 
 
 class _HarnessParsers(dict):
@@ -68,6 +71,8 @@ LIMITATIONS = [
     "Participant and harness panels count posts by author; cohort and task-type panels count posts made during their runs.",
     "Human marks are marks by human or operator participants; a mark is attribution, never a status change.",
     "Token totals and costs are given only when every run in the group reported them; partial sums are labelled.",
+    "Compaction hygiene reads session databases (Hermes) and prompt.txt: a summary 'missing the assignment' names "
+    "neither the request post nor the assignment key; context per call is what the stream reports (per call or per turn).",
     "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
     "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
 ]
@@ -115,7 +120,8 @@ def compute_run(folder, harness="hermes", config=None):
                                             ).items() if k != "limitations"}
     tokens, note = token_usage(parsed)
     metrics.update(turns_completed=parsed["turns_completed"], malformed_lines=len(parsed["malformed_lines"]),
-                   usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note)
+                   usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note,
+                   hygiene=run_hygiene(folder, harness))
     return metrics
 
 
@@ -512,7 +518,8 @@ def run_criteria(runs):
                                       "mean": round(statistics.fmean(tails), 1) if tails else None,
                                       "max": max(tails) if tails else None},
             "provider_citation_finals": sum(1 for x in m if x.get("provider_citation_in_final"))
-            if any(x.get("provider_citation_in_final") is not None for x in m) else None}
+            if any(x.get("provider_citation_in_final") is not None for x in m) else None,
+            "compaction_hygiene": hygiene_totals(x.get("hygiene") for x in m)}
 
 
 def bucket_of(created, bucket):
