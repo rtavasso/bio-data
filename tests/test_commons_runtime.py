@@ -2,7 +2,6 @@
 import asyncio
 import hashlib
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -21,57 +20,6 @@ from daw.util import DawError, read_json
 
 def events(board, kind):
     return [json.loads(r["body"]) for r in board.rows("SELECT body FROM event WHERE kind=? ORDER BY seq", (kind,))]
-
-
-FAKE_ENGINE = r'''
-import json, os, sys
-from pathlib import Path
-argv = sys.argv[1:]
-with open(LOG, "a") as log:
-    log.write(json.dumps(argv) + "\n")
-if argv[:1] != ["run"]:
-    sys.exit(0)
-VALUED = {"--name", "--label", "--network", "--cap-drop", "--security-opt", "--pids-limit", "--user", "--workdir",
-          "--tmpfs", "--memory", "--cpus", "--mount", "--env"}
-env, workdir, i = {"PATH": os.environ.get("PATH", "")}, None, 1
-while argv[i].startswith("-"):
-    flag = argv[i]
-    if flag in VALUED:
-        value = argv[i + 1]
-        if flag == "--env":
-            key, sep, given = value.partition("=")
-            if sep:
-                env[key] = given
-            elif key in os.environ:
-                env[key] = os.environ[key]
-        elif flag == "--workdir":
-            workdir = value
-        i += 2
-    else:
-        i += 1
-image, command = argv[i], argv[i + 1:]
-if any(part.endswith("hermes_session_bridge.py") for part in command):
-    # Stand-in for Hermes's SessionDB inside the image (the demo's bridge substitute on the scripted state.db).
-    from daw.commons.demo import _fake_native_session
-    at = command.index("--session")
-    print(json.dumps(_fake_native_session(None, Path(env["HERMES_HOME"]), command[at + 1], env["HERMES_CWD"],
-                                          fork="--fork" in command)))
-    sys.exit(0)
-os.chdir(workdir)
-os.execvpe(command[0], command, env)
-'''
-
-
-def fake_engine(folder, monkeypatch):
-    """A `docker` stand-in on PATH that logs its argv and runs the containerized command on the host
-    (no isolation: it checks the dispatch path and receipts, never the container boundary)."""
-    folder.mkdir(parents=True, exist_ok=True)
-    log = folder / "engine.jsonl"
-    engine = folder / "docker"
-    engine.write_text(f"#!{sys.executable}\nLOG = {str(log)!r}\n" + FAKE_ENGINE)
-    engine.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{folder}:{os.environ.get('PATH', '')}")
-    return lambda: [json.loads(line) for line in log.read_text().splitlines()] if log.is_file() else []
 
 
 def operator_notices(board):
@@ -442,7 +390,9 @@ def test_replication_outcome_is_gated_on_an_execution_receipt(demo, executed):
         outcome = events(board, "task_outcome")[-1]
         [result] = outcome["criteria"]["replication"]
         if executed:
-            assert result["outcome"] == "byte_identical" and result["identical"] == [original]
+            # Unsandboxed (local mode): the receipted comparison is a rehearsal, never a confirmation (v3 B3).
+            assert result["outcome"] == "local_rehearsal" and result["rehearsal"] == "byte_identical"
+            assert result["identical"] == [original] and not result["correction_required"]
             assert result["receipts"][original]["exit_code"] == 0 and f"artifact:{original}" in outcome["deliverables_found"]
         else:
             assert result["outcome"] == "no_execution_receipt" and not result["identical"]
@@ -568,9 +518,9 @@ def test_container_argv_mounts_platform_read_only_and_passes_secrets_by_name(tmp
         sandbox.load(root)
 
 
-def test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override(demo, tmp_path, monkeypatch):
+def test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override(demo, tmp_path, fake_engine, monkeypatch):
     root, ctx = demo
-    engine_calls = fake_engine(tmp_path / "engine", monkeypatch)
+    engine_calls = fake_engine  # tmp_path / "engine" / "docker"
     sandbox.record_tenancy(root, "accounts")
     sandbox.record_tenancy(root, "local")
     assert sandbox.tenancy(root) == "accounts"  # sticky

@@ -81,11 +81,15 @@ function Item({ item }: { item: StudioItem }) {
               return (
                 <li key={i}>
                   {r.original && <Link to={`/artifact/${r.original}`}>{shortId(r.original)}</Link>}{" "}
-                  <span className={`obs-chip ${outcome === "byte_identical" ? "good" : outcome === "bytes_differ" ? "bad" : outcome === "no_execution_receipt" ? "warn" : ""}`}>
+                  <span className={`obs-chip ${outcome === "byte_identical" ? "good" : outcome === "bytes_differ" ? "bad" : ["no_execution_receipt", "inputs_differ", "local_rehearsal"].includes(outcome) ? "warn" : ""}`}>
                     {outcome.replace(/_/g, " ")}
                   </span>
-                  {outcome === "no_execution_receipt" && <span className="muted"> · registered without a run_analysis receipt of the derivation's code; nothing confirmed</span>}
-                  {receipts.length > 0 && outcome !== "no_execution_receipt" && (
+                  {outcome === "no_execution_receipt" && <span className="muted"> · no captured run_analysis receipt of the derivation's code; nothing confirmed</span>}
+                  {outcome === "inputs_differ" && <span className="muted"> · the derivation's code ran on other inputs; nothing confirmed or corrected</span>}
+                  {outcome === "local_rehearsal" && (
+                    <span className="muted"> · unsandboxed: a rehearsal{(follow?.rehearsal ?? r.rehearsal) ? ` (${(follow?.rehearsal ?? r.rehearsal)!.replace(/_/g, " ")})` : ""}, never a confirmation</span>
+                  )}
+                  {receipts.length > 0 && !["no_execution_receipt", "inputs_differ"].includes(outcome) && (
                     <span className="muted"> · executed under receipt <span className="mono">{receipts[0].receipt_blob.slice(0, 12)}</span></span>
                   )}
                   {follow?.post && <> <Link to={`/post/${follow.post}`}>{outcome === "bytes_differ" ? "correction post" : "confirmation"}</Link></>}

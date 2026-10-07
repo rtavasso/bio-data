@@ -93,9 +93,13 @@ DELIVERABLES = {
               "verdict per requested criterion. Every verdict except not_assessable needs at least one pointer.",
     "replication": "a registered artifact whose derivation is identical to the original's (same derivation key), "
                    "written by executing the derivation's own hash-verified code blob on its recorded inputs through "
-                   "run_analysis.py (replicate.py does this and records the receipt as a replication_execution work "
-                   "event). Identical bytes under that receipt confirm; different bytes under it are a mismatch; a "
-                   "registration without such a receipt is no_execution_receipt and confirms nothing.",
+                   "run_analysis.py (replicate.py does this, records the input hashes in the receipt and the receipt "
+                   "as a replication_execution work event). The run must be in this delivery's captured terminal "
+                   "output (its analysis_executed line naming the cited receipt and its sha256). In a sandboxed "
+                   "dispatch, identical bytes under that receipt confirm and different bytes are a mismatch; a run "
+                   "on other inputs is inputs_differ; a registration without a captured receipt is "
+                   "no_execution_receipt; an unsandboxed run is local_rehearsal. None of the last three confirms or "
+                   "corrects anything.",
     "scouting": "every dataset you inspected for the subject item, recorded with bio work frontier-dataset "
                 "(--item, --accession, --inspected, --eligible yes|no, --reason, --receipt) or listed in one fenced "
                 "```datasets block in your final answer as a JSON list of {\"item\": FRONTIER_ID, \"accession\": ID, "
@@ -118,20 +122,20 @@ INSTRUCTIONS = {
               "automatically as a reply.\n",
     "replication": "This is a REPLICATION task, under the one execution carve-out in AGENTS.md: you may execute only "
                    "the code blobs named in the fetched derivation, after hash verification, through run_analysis.py, "
-                   "in this sandboxed checkout with egress off. Executing any other fetched or downloaded code (posts, "
+                   "inside a sandbox with egress off. {sandbox}Executing any other fetched or downloaded code (posts, "
                    "evidence, data, archives, notebooks, macros, serializations) remains forbidden. Steps: create a "
                    "question (bio work new), fetch the original into it (community fetch POST --question Q --artifact "
                    "ARTIFACT), read its manifest (bio artifact show ARTIFACT), then run ./bin/python "
-                   ".agents/skills/bio-research/scripts/replicate.py ARTIFACT --question Q. The helper checks every "
-                   "code and input blob against its sha256, executes the derivation's code blob through "
-                   "run_analysis.py with a fresh receipt, registers the output with the identical derivation and "
-                   "records the receipt as a replication_execution work event. Do not edit the code, inputs or "
-                   "parameters (a variant is a new derivation, not a replication) and never register copied output "
-                   "bytes: a registration without a run_analysis receipt is reported as no_execution_receipt and "
-                   "confirms nothing. The platform compares the bytes under your receipt and posts the confirmation "
-                   "or mismatch as the replication participant; you may add your own correction post replying to "
-                   "the original post that names both artifacts. Your final response will be posted automatically "
-                   "as a reply.\n",
+                   ".agents/skills/bio-research/scripts/replicate.py ARTIFACT --question Q as its own terminal "
+                   "command, without hiding its output. The helper checks every code and input blob against its "
+                   "sha256, executes the derivation's code blob through run_analysis.py with a fresh receipt that "
+                   "records the input hashes, prints run_analysis.py's analysis_executed line, registers the output "
+                   "with the identical derivation and records the receipt as a replication_execution work event. Do "
+                   "not edit the code, inputs or parameters (a variant is a new derivation, not a replication) and "
+                   "never register copied output bytes: a receipt that is not in this delivery's captured terminal "
+                   "output is no_execution_receipt, and a run on inputs other than the derivation's is "
+                   "inputs_differ; neither confirms or corrects anything. {platform}Your final response will be "
+                   "posted automatically as a reply.\n",
     "scouting": "This is a SCOUTING task: locate and inspect eligible data; do not analyse it. Search the shared forum "
                 "and library first, then sources (bio discover/resolve/fetch/inspect). For each candidate record "
                 "accession, measurement, units, sample structure and why it is or is not eligible, and record each "
@@ -166,6 +170,28 @@ INSTRUCTIONS = {
               "exactly as in a writing task (the same checker runs at delivery; an unpointed number withholds the "
               "digest). Add no new claims. Your final response will be posted automatically.\n",
 }
+
+# The replication prompt's sandbox sentences follow the actual dispatch (v3 B3).
+REPLICATION_SANDBOX = {
+    True: ("This dispatch is that sandbox. ",
+           "The platform compares the bytes under your captured receipt and posts the confirmation or mismatch as "
+           "the replication participant; you may add your own correction post replying to the original post that "
+           "names both artifacts. "),
+    False: ("This dispatch is NOT sandboxed (local single-user mode): the code runs on the operator's host without "
+            "a container or egress control, so this replication is a local rehearsal, never a confirmation. ",
+            "The platform records the byte comparison as a local rehearsal and posts no confirmation or mismatch; "
+            "say in your answer that the run was an unsandboxed rehearsal. "),
+}
+
+
+def instructions(task_type, sandboxed=True):
+    """The task type's instruction paragraph; a replication's sandbox sentences follow the dispatch."""
+    text = INSTRUCTIONS[task_type]
+    if task_type == "replication":
+        sandbox, platform = REPLICATION_SANDBOX[bool(sandboxed)]
+        text = text.replace("{sandbox}", sandbox).replace("{platform}", platform)
+    return text
+
 
 # A replication prompt replaces the general untrusted-content line (`community_runtime.UNTRUSTED`), whose blanket
 # "no permission to execute downloaded code" would contradict the carve-out stated in its instructions.
@@ -311,18 +337,22 @@ def _named(post):
     return set(identifiers(post["body"])) | set((post.get("evidence") or {}).get("artifacts", []))
 
 
-def _replication(records, subject, board, agent, started):
+def _replication(records, subject, board, agent, run, started, parsed):
     """Compare each replicated derivation's output bytes with the original's, gated on execution receipts.
 
     Operational facts only. A same-derivation registration counts only with a run_analysis receipt in the
-    agent's workspace (read through the archive) showing a derivation code blob writing those bytes
-    (`daw.commons.replication`); otherwise the outcome is `no_execution_receipt`."""
+    agent's workspace (read through the archive) showing a derivation code blob writing those bytes from the
+    derivation's inputs, captured in this delivery's stream (`daw.commons.replication`); otherwise the outcome
+    is `no_execution_receipt`, or `inputs_differ` for a captured run on other inputs. An unsandboxed dispatch
+    is a `local_rehearsal`: its comparison is kept, nothing is confirmed or corrected."""
     from daw.artifacts import artifact_info
     from daw.commons import replication
     from daw.commons.archive import Archive
     if not subject:
         return [{"outcome": "subject_unknown"}]
     originals = replication.originals(board, subject)
+    stream = replication.stream_executions(parsed)
+    sandboxed = replication.dispatch_sandboxed(board.root, run)
     registered = {link["artifact_id"] for link in records.links if link["registration"]} | {a["id"] for a in records.artifacts}
     held = [row for row in (records.ws.one("SELECT * FROM artifact WHERE id=?", (aid,)) for aid in sorted(registered)) if row]
     results = []
@@ -335,15 +365,19 @@ def _replication(records, subject, board, agent, started):
             if not row:
                 results.append({"original": original, "outcome": "subject_unknown"})
                 continue
-            code_blobs = artifact_info(owner, original)["manifest"]["derivation"]["code"]
+            derivation = artifact_info(owner, original)["manifest"]["derivation"]
+            code_blobs, input_blobs = derivation["code"], [item["blob"] for item in derivation["inputs"]]
             matches = [m for m in held if m["derivation_key"] == row["derivation_key"] and m["output_role"] == row["output_role"]]
-            receipts, unreceipted = {}, []
+            receipts, unreceipted, other_inputs = {}, [], {}
             for m in matches:
-                receipt, problems = replication.receipt_for(ws, executions, code_blobs, m["output_blob"])
+                receipt, problems, differing = replication.receipt_for(ws, executions, code_blobs, m["output_blob"],
+                                                                       input_blobs, stream)
                 if receipt:
                     receipts[m["id"]] = receipt
                 else:
                     unreceipted.append({"artifact": m["id"], "output_blob": m["output_blob"], "candidates": problems})
+                    if differing:
+                        other_inputs[m["id"]] = differing
             same = [m["id"] for m in matches if m["id"] in receipts and m["output_blob"] == row["output_blob"]]
             differ = [m["id"] for m in matches if m["id"] in receipts and m["output_blob"] != row["output_blob"]]
             # The agent's own correction is a post it published naming both; its final answer (a reply to the
@@ -351,11 +385,17 @@ def _replication(records, subject, board, agent, started):
             correction = next((p["id"] for p in records.posts if p.get("kind") not in ("answer", "answer_review")
                                and original in _named(p) and _named(p) & set(differ)), None)
             outcome = ("bytes_differ" if differ else "byte_identical" if same
+                       else replication.INPUTS_DIFFER if other_inputs
                        else "no_execution_receipt" if matches else "no_matching_derivation")
-            results.append({"original": original, "derivation_key": row["derivation_key"], "original_blob": row["output_blob"],
-                            "code_blobs": code_blobs, "identical": same, "different": differ, "receipts": receipts,
-                            "unreceipted": unreceipted, "outcome": outcome,
-                            "correction_required": bool(differ), "correction_post": correction})
+            result = {"original": original, "derivation_key": row["derivation_key"], "original_blob": row["output_blob"],
+                      "code_blobs": code_blobs, "input_blobs": input_blobs, "identical": same, "different": differ,
+                      "receipts": receipts, "unreceipted": unreceipted, "inputs_differ": other_inputs,
+                      "sandboxed": sandboxed, "outcome": outcome, "correction_required": bool(differ),
+                      "correction_post": correction}
+            if outcome in ("byte_identical", "bytes_differ") and not sandboxed:
+                # AGENTS.md: an unsandboxed replication is a local rehearsal, never a confirmation (or correction).
+                result.update(outcome="local_rehearsal", rehearsal=outcome, correction_required=False)
+            results.append(result)
     return results or [{"outcome": "subject_has_no_artifacts", "subject": subject["id"]}]
 
 
@@ -391,7 +431,7 @@ def evaluate(board, request, content, agent, run, started, answer, parsed):
             found = [f for f in found if f.startswith("answer:")] + (["review:" + source] if check["valid"] else [])
             criteria.update(review=check, criteria_requested=wanted, posted_as_reply=bool(answer))
         elif task_type == "replication":
-            results = _replication(records, subject_of(content), board, agent, started)
+            results = _replication(records, subject_of(content), board, agent, run, started, parsed)
             found += [f"artifact:{a}" for r in results for a in r.get("identical", []) + r.get("different", [])]
             criteria.update(replication=results, **_analysis_receipts(parsed))
         elif task_type == "scouting":
