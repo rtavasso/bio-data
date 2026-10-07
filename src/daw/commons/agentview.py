@@ -310,16 +310,31 @@ def compact_item(item, requests=None, *, limit=None):
             "created": item.get("created"), "updated": item.get("updated")}
 
 
-def frontier_list(owner, *, kind=None, status=None, question=None, author=None, limit=None):
-    """`community frontier`: items across questions from the frontier projection the board reads."""
+PAGE = 50
+PAGE_MAX = 500
+OVERVIEW_ITEMS = 20
+
+
+def frontier_list(owner, *, kind=None, status=None, question=None, author=None, limit=None, page=PAGE, offset=0):
+    """`community frontier`: items across questions from the frontier projection the board reads, one page at a
+    time (`page` items from `offset`; counts cover the whole filtered set). The cohort's unpaged list was 49 KB
+    at the start of every turn (v3.1)."""
     from daw.commons.planning import _requests
+    page = PAGE if page is None else int(page)
+    offset = max(0, int(offset or 0))
+    if not 1 <= page <= PAGE_MAX or offset > 1_000_000:
+        raise DawError("invalid_frontier_page", f"page is 1 to {PAGE_MAX}, offset at least 0")
     view = frontier.browse(owner, kind=kind, status=status, question=question, author=author)
     requests = _requests(owner, [i.get("promoted_to") for i in view["items"]])
-    items = [compact_item(i, requests, limit=limit) for i in view["items"]]
+    compact = [compact_item(i, requests, limit=limit) for i in view["items"]]
     columns = {}
-    for item in items:
+    for item in compact:
         columns[item["column"]] = columns.get(item["column"], 0) + 1
-    return {"items": items, "total": len(items), "by_kind": {k: len(v) for k, v in view["by_kind"].items()},
+    items = compact[offset:offset + page]
+    total = len(compact)
+    return {"items": items, "returned": len(items), "offset": offset, "page": page, "total": total,
+            "next_offset": offset + page if offset + page < total else None,
+            "by_kind": {k: len(v) for k, v in view["by_kind"].items()},
             "by_column": columns, "filters": {"kind": kind, "status": status, "question": question, "author": author},
             "projection_current": frontier.is_current(owner),
             "policy": view["policy"], "content_is_untrusted_data": True}
@@ -504,13 +519,19 @@ def overview(owner, agent, *, after=None, caller=None, now=None, limit=SHORT):
     for act in found["acts"]:
         records.append({"record": "act", **act, **({"note": _short(act["note"], limit)} if act.get("note") else {})})
     records += found["open_threads"]
-    items = frontier.browse(owner, status="all", author=agent["id"])["items"] if work.items else []
+    # The agent's own items: withdrawn ones are not pending work, and the list is capped (community frontier
+    # --mine pages through the rest); the overview stays one bounded read (v3.1).
+    items = frontier.browse(owner, author=agent["id"])["items"] if work.items else []
     from daw.commons.planning import _requests
-    requests = _requests(owner, [i.get("promoted_to") for i in items])
-    for item in items:
+    shown = items[:OVERVIEW_ITEMS]
+    requests = _requests(owner, [i.get("promoted_to") for i in shown])
+    for item in shown:
         record = compact_item(item, requests, limit=limit)
         records.append({"record": "frontier_item", **{k: v for k, v in record.items()
                                                       if k not in ("author", "author_name", "question_title")}})
+    if len(items) > OVERVIEW_ITEMS:
+        records.append({"record": "frontier_items_elided", "shown": OVERVIEW_ITEMS, "total": len(items),
+                        "read": "community frontier --mine --offset N"})
     records += _promotions(owner, vis, people, work)
     records += _corrections(owner, vis, agent["id"])
     records += _watcher_hits(owner, vis, work)

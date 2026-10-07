@@ -31,6 +31,8 @@ config=json.loads((home/'config.yaml').read_text())
 assert config['agent']['reasoning_effort']=='xhigh'
 assert config['agent']['max_turns']==0
 assert not config['auxiliary']['background_review']['enabled']
+assert config['memory']['memory_enabled'] is False and not config['curator']['enabled']  # spec v3 V18
+assert 'memory' not in sys.argv[sys.argv.index('--toolsets')+1].split(',')
 assert sys.argv[sys.argv.index('--query-file')+1]=='-'
 assert sys.stdin.read()
 (home/'memories/MEMORY.md').write_text('Use source artifact with context limits.')

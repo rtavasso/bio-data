@@ -82,6 +82,32 @@ def uses_cohort(path, name):
     return cohort_like(functions[name])
 
 
+@cache
+def receipt_text(receipt):
+    return (ROOT / receipt).read_text(errors="replace")
+
+
+def stale_implementation(receipt):
+    """Files a JSON receipt's `implementation_sha256` block names whose bytes differ from HEAD now."""
+    import hashlib
+    import json
+    if not receipt.endswith(".json"):
+        return []
+    try:
+        value = json.loads(receipt_text(receipt))
+    except ValueError:
+        return []
+    block = value.get("implementation_sha256") if isinstance(value, dict) else None
+    if not isinstance(block, dict):
+        return []
+    stale = []
+    for path, digest in block.items():
+        file = ROOT / path
+        if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != digest:
+            stale.append(path)
+    return stale
+
+
 def test_status_table_cells_are_backed_by_tests_and_receipts():
     rows = status_rows()
     assert len(rows) >= 75  # 45 module rows and 32 v3 items
@@ -114,6 +140,13 @@ def test_status_table_cells_are_backed_by_tests_and_receipts():
             assert receipts, f"{key}: the live cell claims a run but names no receipt"
             for receipt in receipts:
                 assert (ROOT / receipt).is_file(), f"{key}: {receipt} does not exist"
+                # v3.1: a receipt that vouches for code which has since changed must say so in the cell, and a v3
+                # item's live receipt must record the item it was run for.
+                stale = stale_implementation(receipt)
+                if stale:
+                    assert re.search(r"predates|not re-run", live), f"{key}: {receipt} vouches for changed files {stale}"
+                if v3:
+                    assert key.split(" ", 1)[0] in receipt_text(receipt), f"{key}: {receipt} does not name the item"
         if row["Demo"].startswith(("yes", "partly")):
             assert TEST_REF.findall(row["Demo"]) or "e2e" in row["Demo"], f"{key}: the demo cell names no test"
         # Notes do not smuggle a cohort or live claim past the cells.
@@ -144,3 +177,6 @@ def test_the_parser_rejects_unbacked_claims(tmp_path):
         uses_cohort("tests/test_commons_moderation.py", "test_no_such_test")
     with pytest.raises(AssertionError, match="cells"):
         status_rows(table + "| B1 x | met | yes |\n")
+    # v3.1: a receipt whose implementation hashes no longer match HEAD is stale unless the cell says so.
+    assert "src/daw/community_runtime.py" in stale_implementation("docs/v3/receipts/community-auto-delivery.json")
+    assert stale_implementation("docs/v3/receipts/pytest-offline.xml") == []

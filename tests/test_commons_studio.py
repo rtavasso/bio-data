@@ -784,7 +784,7 @@ def test_replication_request_from_any_person_is_a_commission_with_a_default_budg
         with pytest.raises(DawError, match="invalid_commission_subject"):
             participation.request_replication(board, rhea, ctx["posts"]["finding"], ctx["agents"]["bob"])
     toml = root / "commons.toml"  # keeps the demo's [allowance] (B13)
-    toml.write_text(toml.read_text() + "[replication]\ndefault_budget = {minutes = 20}\n")
+    toml.write_text(toml.read_text() + "default_budget = {minutes = 20}\n")  # the demo's [replication] table is last
     http = client(root, local_user="rhea")
     assert http.post("/api/replications", json={"artifact": contrast, "target": "bob"}).status_code == 403
     over = http.post("/api/replications", headers=WRITE, json={"artifact": contrast, "target": "bob"})
@@ -954,7 +954,8 @@ def test_replication_prompt_states_the_carve_out_without_contradiction(demo):
     assert "posts no confirmation or mismatch" in prompts[False]
     agents_md = (Path(__file__).resolve().parents[1] / "AGENTS.md").read_text()
     assert "only the code blobs named in the fetched derivation" in agents_md
-    assert "an unsandboxed replication is a local rehearsal, never a confirmation" in agents_md
+    assert "Without a sandbox it is refused unless" in agents_md and "allow_rehearsal = true" in agents_md  # v3.1
+    assert "a rehearsal confirms nothing" in agents_md
 
 
 def test_replication_dispatch_needs_a_sandbox_with_egress_off_on_a_multi_tenant_commons(demo):

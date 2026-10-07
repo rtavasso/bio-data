@@ -98,7 +98,9 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
     last_ok = [e for e in parsed["events"] if e["event"].get("type") == "tool_result"
                and any(a.get("result_line") == e["line"] and a.get("exit_code") == 0 for a in analyses)]
     tail = None
-    if last_ok and stamps:
+    suspended = suspension_seconds(wall, mono)
+    if last_ok and stamps and not suspended:
+        # Stream timestamps are wall clock; a host suspension inside the span would inflate the tail (v3.1).
         tail = round((max(stamps) - last_ok[-1]["event"].get("timestamp", max(stamps))) / 60000, 1)
     final = folder / "final.md"
     summaries, fallbacks = compaction_summaries(folder, execution)
@@ -127,5 +129,6 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
             "minutes_after_last_successful_analysis": tail,
             "provider_citation_in_final": bool(PROVIDER_CITATION.search(final.read_text())) if final.exists() else None,
             "limitations": ["events.jsonl truncates tool outputs at 5000 chars; model-facing bodies are in agent-state/state.db",
+                            "minutes_after_last_successful_analysis is None when a host suspension lies in the stream's span",
                             "no assistant reasoning is streamed between tool calls; gaps are generation or suspension",
                             "None means unavailable (not recorded or not emitted by this harness), never zero"]}

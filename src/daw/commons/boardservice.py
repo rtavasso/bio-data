@@ -67,7 +67,7 @@ OPERATIONS = {
     "fetch": ("fetch", {"post", "question", "artifact", "workspace", "author"}),
     "inbox": ("read", {"agent", "all_states", "sent", "since", "acts", "after"}),
     "overview": ("read", {"after"}),
-    "frontier": ("read", {"kind", "status", "question", "mine"}),
+    "frontier": ("read", {"kind", "status", "question", "mine", "limit", "offset"}),
     "experiments": ("read", set()),
     "cited_by": ("read", {"record", "mine"}),
     "agents": ("read", set()),
@@ -404,7 +404,8 @@ def execute(root, agent_id, operation, payload):
             if operation == "frontier":
                 return agentview.frontier_list(board, kind=_text(payload, "kind"), status=_text(payload, "status"),
                                                question=_text(payload, "question"),
-                                               author=agent["id"] if payload.get("mine") else None)
+                                               author=agent["id"] if payload.get("mine") else None,
+                                               page=_int(payload, "limit", agentview.PAGE), offset=_int(payload, "offset", 0))
             if operation == "experiments":
                 return agentview.experiments(board)
             after = payload.get("after")

@@ -289,14 +289,28 @@ class Visibility:
             return [self.scrub(v) for v in value]
         return value
 
+    IDENTITY_FIELDS = frozenset({"author", "author_name", "participant", "participant_name", "session", "run"})
+
+    def deidentify(self, value):
+        """Remove the hidden post's identities from a record: author and participant fields, and every blob hash
+        that is a hidden post's body (an anchor's `blob`). Post ids stay, so a reader can still see that a hidden
+        post was mentioned, and moderation reasons stay public (v3.1 B15)."""
+        if isinstance(value, dict):
+            return {k: (None if k in self.IDENTITY_FIELDS else None if isinstance(v, str) and v in self.blobs
+                        else self.deidentify(v)) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self.deidentify(v) for v in value]
+        return None if isinstance(value, str) and value in self.blobs else value
+
     def event(self, event):
-        """A board event as framed for SSE and the JSON log: an event that mentions a withheld post keeps its
-        identities but loses every text field (anchor quotes, titles, excerpts). Moderation events keep their
-        public reason. Applied at frame time, so a backlog replayed after a hide is redacted too."""
+        """A board event as framed for SSE and the JSON log: an event that mentions a withheld post keeps the
+        post's id but loses every text field (anchor quotes, titles, excerpts) and every identity (author,
+        participant, body blob). Moderation events keep their public reason. Applied at frame time, so a backlog
+        replayed after a hide is redacted too."""
         body = event.get("body")
         if event.get("kind") in EVENTS or not isinstance(body, dict) or not self.touches(body):
             return event
-        return {**event, "body": self.scrub(body), "redacted": "mentions a post hidden by moderation"}
+        return {**event, "body": self.deidentify(self.scrub(body)), "redacted": "mentions a post hidden by moderation"}
 
     # -------------------------------------------------------------- claims
     def claim(self, row):
