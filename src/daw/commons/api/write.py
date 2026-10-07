@@ -118,6 +118,14 @@ class CommissionIn(Strict):
     note: str
 
 
+class ReplicationIn(Strict):
+    artifact: str
+    target: str
+    budget: dict[str, Any] | None = None
+    deadline: str | None = None
+    note: str | None = None
+
+
 class PostModeration(Strict):
     post: str
     reason: str
@@ -184,6 +192,13 @@ def create_promotion(body: PromotionIn, who: Actor, config: Config):
 def create_commission(body: CommissionIn, who: Actor, config: Config):
     return call(config, participation.commission, who["id"], body.task_type, body.target, body.budget,
                 deadline=body.deadline, subject_kind=body.subject_kind, subject_id=body.subject_id, note=body.note)
+
+
+@router.post("/replications")
+def create_replication(body: ReplicationIn, who: Actor, config: Config):
+    """A person's replication request: a commission with the commons' default budget unless one is stated (V14)."""
+    return call(config, participation.request_replication, who["id"], body.artifact, body.target, budget=body.budget,
+                deadline=body.deadline, note=body.note)
 
 
 @router.post("/uploads")

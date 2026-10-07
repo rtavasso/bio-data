@@ -78,14 +78,18 @@ def contradiction_queue(view: View, scope: Scoped):
 @router.get("/claims/{identity}")
 def claim(identity: str, view: View, caller: Reader, full: bool = False):
     from daw.commons.moderation import Visibility
+    from daw.commons.dialogue import on_claim
     row = view.one("SELECT * FROM claim WHERE id=?", (identity,))
     if not row:
         raise DawError("unknown_claim", identity)
-    described = claims.describe_claim(view, row, vis=Visibility.of(view, caller, full))
-    if "scope" not in described:
-        return described  # a claim of a hidden post is its stub here too: no citations shown
+    vis = Visibility.of(view, caller, full)
+    described = claims.describe_claim(view, row, vis=vis)
+    if vis.withheld(row["post"]):
+        return described  # a claim of a hidden post is its stub here too: no citations, no threads
     # V16: posts of other commons citing this claim, learned by importing their snapshots (foreign, untrusted).
-    return {**described, "cited_from": federation.cited_by(view, identity)}
+    # V12: threads at anchors on the claim (a disputed mark opens one), shown next to it.
+    return {**described, "cited_from": federation.cited_by(view, identity),
+            "threads": on_claim(view, identity, caller=caller, full=full)}
 
 
 @router.get("/corrections/{post}")

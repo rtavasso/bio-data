@@ -363,7 +363,13 @@ def list_claims(owner, text="", *, status=None, scope=None, author=None, post=No
     rows = owner.rows("SELECT * FROM claim" + where + " ORDER BY created DESC,post,ordinal LIMIT ? OFFSET ?",
                       params + [limit, offset])
     cache = {}
-    return {"items": [describe_claim(owner, r, cache, vis) for r in rows], "total": total, "query": text,
+    from daw.commons.dialogue import by_claim
+    threads = by_claim(owner, [r["id"] for r in rows], caller=caller, full=full)
+    items = [describe_claim(owner, r, cache, vis) for r in rows]
+    for item in items:
+        if not (item.get("hidden") and "scope" not in item):
+            item["threads"] = threads.get(item["id"], [])  # V12: the exchange shown next to the claim
+    return {"items": items, "total": total, "query": text,
             "filters": {"status": status, "scope": scope, "author": author, "post": post},
             **({"post_record": vis.stub(post)} if post and vis.withheld(post) else {}),
             "method": "SQLite FTS5 over claim text and scope (family claim), then exact filters",

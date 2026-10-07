@@ -125,8 +125,9 @@ export default function Claims() {
   );
 }
 
-// A claim's own page (spec v3 V16): the claim as the ledger shows it and the posts of other commons citing it,
-// learned by importing their snapshots. A claim of a hidden post is its stub here too, with no citations.
+// A claim's own page: the claim as the ledger shows it with, next to it, the threads at anchors on it (spec v3
+// V12) and the posts of other commons citing it, learned by importing their snapshots (V16). A claim of a hidden
+// post is its stub here too, with no citations or threads.
 export function ClaimPage() {
   const { id = "" } = useParams();
   const state = useApi<Claim>(`/api/claims/${encodeURIComponent(id)}`);

@@ -3,7 +3,8 @@ import type { Participant } from "../../api";
 import type { Pointer, UploadRecord } from "../../types/participation";
 import { useApi } from "../../useApi";
 import {
-  ask, commission, comment, createPost, explain, mark, promote, uploadFile, COMMISSION_TYPES, MARK_KINDS, TASK_TYPES,
+  ask, commission, comment, createPost, explain, mark, promote, requestReplication, uploadFile, COMMISSION_TYPES,
+  MARK_KINDS, TASK_TYPES,
   type Anchor, type Budget, type MarkKind, type TargetKind, type TaskType,
 } from "./writes";
 import "./participation.css";
@@ -191,6 +192,25 @@ export function CommissionForm({ subjectKind, subjectId, onDone, defaultTaskType
       <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Scope of the commission" aria-label="Scope" required className="pp-wide" />
       <button disabled={state.busy}>Commission</button>
       <Feedback error={state.error} done={state.done} label="Commissioned." />
+    </form>
+  );
+}
+
+// Spec v3 V14: anyone may request a replication of an artifact; the budget defaults to the commons' own.
+export function ReplicationRequestForm({ artifact, onDone }: { artifact: string; onDone?: () => void }) {
+  const [target, setTarget] = useState("");
+  const [minutes, setMinutes] = useState("");
+  const state = useSubmit(() => requestReplication({
+    artifact, target, ...(minutes ? { budget: { minutes: Number(minutes) } } : {}),
+  }), onDone, () => setMinutes(""));
+  return (
+    <form className="action-form" onSubmit={state.submit}>
+      <ParticipantSelect value={target} onChange={setTarget} />
+      <Field label="Minutes (default: the commons')">
+        <input type="number" min={1} step={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+      </Field>
+      <button disabled={state.busy}>Request replication</button>
+      <Feedback error={state.error} done={state.done} label="Replication commissioned." />
     </form>
   );
 }

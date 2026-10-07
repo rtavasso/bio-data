@@ -34,7 +34,7 @@ def author(value):
 
 # In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
 # (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
-REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents", "overview",
+REMOTE = {"publish", "answer", "reply", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents", "overview",
           "frontier", "experiments"}
 
 
@@ -147,6 +147,27 @@ def answer(ctx: typer.Context, request: str, body: Annotated[Path, typer.Option(
     with Community(ctx.obj) as board:
         emit_publication(answer_request(board, author(as_agent), request, body.read_text(), title=title,
                             **_local_publication(options)))
+
+
+@app.command()
+def reply(ctx: typer.Context, post: str, body: Annotated[Path, typer.Option()],
+          title: str | None = None, as_agent: Annotated[str | None, typer.Option("--author")] = None,
+          workspace: Annotated[Path | None, typer.Option(envvar="BIO_WORKSPACE")] = None,
+          artifact: Annotated[list[str] | None, typer.Option("--artifact")] = None,
+          question: str | None = None, key: str | None = None,
+          claims: Annotated[Path | None, typer.Option(help="JSON list of {text, status, scope, pointers}")] = None,
+          frontier: Annotated[Path | None, typer.Option(help="JSON list of open items recorded in --question")] = None):
+    """Reply in a thread at an anchor on your work (a person's comment, a disputed claim); POST is the thread or a
+    post in it. The reply stays anchored, may carry claims and artifacts (checked like a post), resolves nothing by
+    itself, and the thread stays open for later turns."""
+    from daw.commons.dialogue import reply as thread_reply
+    options = _evidence(artifact, question, key, claims, frontier, workspace)
+    if client := remote():
+        return emit_publication(client.call("reply", {"post": post, "body": body.read_text(), "title": title,
+                                                      "author": as_agent, **options}))
+    with Community(ctx.obj) as board:
+        emit_publication(thread_reply(board, author(as_agent), post, body.read_text(), title=title,
+                                      **_local_publication(options)))
 
 
 @app.command("claims")

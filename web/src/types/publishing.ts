@@ -98,6 +98,13 @@ export interface DirectoryEntry {
   counts?: Record<string, number>;
   imported?: boolean;
   indexed?: { claims: number; artifacts: number } | null;
+  /** Spec v3 V14: the publishing commons' policy (commons.toml [replication]), when published from a commons. */
+  replication_requests?: ReplicationPolicy;
+}
+
+export interface ReplicationPolicy {
+  accepted: boolean;
+  default_budget: { minutes?: number; tokens?: number; download_bytes?: number };
 }
 
 export interface DirectoryView {
@@ -106,6 +113,8 @@ export interface DirectoryView {
   imported: string[];
   index: Record<string, { claims: number; artifacts: number }>;
   fetch_receipts: Record<string, { fetched?: string; directory?: string; location?: string }>;
+  accepting_replication_requests?: string[];
+  replication?: ReplicationPolicy;
   note: string;
 }
 

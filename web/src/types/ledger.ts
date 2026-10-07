@@ -44,11 +44,49 @@ export interface Claim {
   replacement?: string | null;
   post_title?: string | null;
   marks: MarkSummary[];
+  /** Spec v3 V12: threads at anchors on the claim (a disputed mark opens one), shown next to it. */
+  threads?: DialogueThread[];
   /** A claim of a post hidden by moderation is served as `{id, post, hidden: true, reason}` only (spec v2 C2). */
   hidden?: boolean;
   reason?: string | null;
   /** Only on GET /api/claims/{id} (spec v3 V16): posts of imported snapshots citing this claim. */
   cited_from?: IncomingCitation[];
+}
+
+export interface DialoguePost {
+  post: string;
+  seq: number;
+  created?: string;
+  participant?: string;
+  participant_name?: string | null;
+  participant_kind?: string | null;
+  kind?: string | null;
+  in_reply_to?: string | null;
+  text?: string;
+  claims?: { id: string; status: string; text: string; withdrawn_by?: string | null }[];
+  artifacts?: string[];
+  mark?: string | null;
+  hidden?: boolean;
+  reason?: string | null;
+}
+
+export interface DialogueThread {
+  thread: string;
+  target_kind: string;
+  target_id: string;
+  post?: string | null;
+  created: string;
+  hidden?: boolean;
+  reason?: string | null;
+  target_author?: string | null;
+  target_author_name?: string | null;
+  opened_by?: { participant?: string; participant_name?: string | null; participant_kind?: string | null } | null;
+  mark?: string | null;
+  opened_by_dispute?: boolean;
+  posts?: DialoguePost[];
+  replies?: number;
+  author_replies?: number;
+  awaiting_author?: boolean;
 }
 
 export interface ClaimList {

@@ -681,6 +681,25 @@ def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches
             assert receipt["receipt_blob"] in reply["content"]["body"] and code[0] in reply["content"]["body"]
             assert inputs[0] in reply["content"]["body"]
             assert reply["content"]["evidence"]["replication"]["receipts"][0]["receipt_blob"] == receipt["receipt_blob"]
+            # v3 V14: the artifact's badge, each criterion re-read from records and a link (API, agent read).
+            badge = client(root).get(f"/api/artifacts/{original}").json()["replication"]
+            assert badge["replicated"] is True
+            [confirmed] = badge["confirmations"]
+            criteria = confirmed["criteria"]
+            assert all(c["ok"] for c in criteria.values()) and set(criteria) == {
+                "different_participant", "captured_execution", "matching_inputs", "identical_bytes"}
+            assert criteria["different_participant"]["participant"] == ctx["agents"]["bob"]
+            assert ctx["agents"]["alice"] in criteria["different_participant"]["producers"]
+            assert criteria["captured_execution"]["route"] == f"/run/{run}" and criteria["captured_execution"]["sandboxed"]
+            assert criteria["captured_execution"]["receipts"][0]["line"] == receipt["stream"]["line"]
+            assert criteria["matching_inputs"]["inputs"] == inputs and criteria["matching_inputs"]["route"] == \
+                f"/artifact/{original}"
+            assert criteria["identical_bytes"]["sha256"] == blob and criteria["identical_bytes"]["route"] == \
+                f"/post/{entry['post']}"
+            assert criteria["different_participant"]["route"] == f"/agent/{ctx['agents']['bob']}"
+            shown = board.read(ctx["posts"]["finding"], ctx["agents"]["alice"])
+            seen = next(a for a in shown["evidence_artifacts"] if a["id"] == original)
+            assert seen["replication"]["replicated"] and seen["replication"]["confirmations"] == [entry["post"]]
         else:
             assert result["outcome"] == "bytes_differ" and result["different"] == [replica] and written != [blob]
             replica_blob = written[0]
@@ -692,6 +711,9 @@ def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches
             assert blob in body and replica_blob in body and receipt["receipt_blob"] in body
             assert replica in correction["content"]["evidence"]["artifacts"]  # published: bytes verifiable
             assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+            badge = client(root).get(f"/api/artifacts/{original}").json()["replication"]
+            assert not badge["replicated"] and not badge["confirmations"]
+            assert [a["outcome"] for a in badge["attempts"]] == ["bytes_differ"]
             notice = events(board, "notice_queued")[-1]  # the runtime notice uses the same receipt gate
             assert notice["target"] == ctx["agents"]["alice"]
             assert receipt["receipt_blob"] in board.show(notice["post"])["content"]["body"]
@@ -737,6 +759,40 @@ def test_unsandboxed_replication_is_a_local_rehearsal_never_a_confirmation(demo)
         assert entry["outcome"] == "local_rehearsal" and "post" not in entry and "mark" not in entry
         assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
         assert not board.rows("SELECT id FROM post WHERE request_key LIKE 'replication-%'")
+    # v3 V14: no badge from a rehearsal; the attempt is listed with its outcome.
+    badge = client(root).get(f"/api/artifacts/{original}").json()["replication"]
+    assert badge["replicated"] is False and badge["confirmations"] == []
+    assert [(a["request"], a["outcome"]) for a in badge["attempts"]] == [(request["id"], "local_rehearsal")]
+
+
+def test_replication_request_from_any_person_is_a_commission_with_a_default_budget(demo):
+    """v3 V14: a person's replication request needs only the artifact and a replicator; the budget defaults to the
+    commons' `[replication] default_budget`, and the commission's rules (producer refusal) apply."""
+    from daw.commons import participation
+    from daw.commons.participants import add_participant
+    root, ctx = demo
+    contrast = ctx["artifacts"]["contrast"]
+    with Community(root) as board:
+        rhea = add_participant(board, "rhea", "human")["id"]
+        made = participation.request_replication(board, rhea, contrast, ctx["agents"]["bob"])
+        assert made["task_type"] == "replication" and made["budget"] == {"minutes": 60}
+        post = board.show(made["post"])
+        assert post["author"] == rhea and post["content"]["kind"] == "commission"
+        assert post["content"]["evidence"]["subject"] == {"kind": "artifact", "id": contrast}
+        with pytest.raises(DawError, match="replication_target_produced_original"):
+            participation.request_replication(board, rhea, contrast, ctx["agents"]["alice"])
+        with pytest.raises(DawError, match="invalid_commission_subject"):
+            participation.request_replication(board, rhea, ctx["posts"]["finding"], ctx["agents"]["bob"])
+    toml = root / "commons.toml"  # keeps the demo's [allowance] (B13)
+    toml.write_text(toml.read_text() + "[replication]\ndefault_budget = {minutes = 20}\n")
+    http = client(root, local_user="rhea")
+    assert http.post("/api/replications", json={"artifact": contrast, "target": "bob"}).status_code == 403
+    over = http.post("/api/replications", headers=WRITE, json={"artifact": contrast, "target": "bob"})
+    assert over.status_code == 200, over.text
+    assert over.json()["budget"] == {"minutes": 20} and over.json()["task_type"] == "replication"
+    stated = http.post("/api/replications", headers=WRITE,
+                       json={"artifact": contrast, "target": "bob", "budget": {"minutes": 5}, "note": "Please."})
+    assert stated.json()["budget"] == {"minutes": 5}
 
 
 # The right code on the wrong inputs: the hook copies the derivation's own (hash-checked) code blob into a saved

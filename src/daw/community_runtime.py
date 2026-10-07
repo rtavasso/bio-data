@@ -288,12 +288,21 @@ def _acts_section(board, agent):
         found = agentview.acts(board, agent, after=agentview.last_turn(board, agent["id"]), caller=agent)
     except (DawError, sqlite3.Error, ValueError):
         return ""
-    if not found["acts"]:
+    if not found["acts"] and not found["open_threads"]:
         return ""
-    fields = ("act", "kind", "participant_name", "participant_kind", "target_kind", "target_id", "id", "seq", "hidden")
+    fields = ("act", "kind", "participant_name", "participant_kind", "target_kind", "target_id", "id", "seq", "hidden",
+              "thread")
     records = [{k: a[k] for k in fields if a.get(k) is not None} for a in found["acts"][-20:]]
-    return (f"Records since your last turn, {agentview.LABEL} ({len(found['acts'])}; read their notes with "
+    text = (f"Records since your last turn, {agentview.LABEL} ({len(found['acts'])}; read their notes with "
             f"community inbox --acts --after {found['after']}): {json.dumps(records, sort_keys=True)}\n")
+    if found["open_threads"]:
+        # Spec v3 V12: threads at anchors on your work where someone else spoke last (attributed records).
+        threads = [{k: t[k] for k in ("thread", "target_kind", "target_id", "last_participant_kind", "replies")}
+                   for t in found["open_threads"][-20:]]
+        text += (f"Open threads on your work ({len(found['open_threads'])}; read one with community show THREAD, "
+                 "continue it with community reply THREAD --body FILE, optionally with --claims or --artifact; a reply "
+                 f"resolves nothing by itself): {json.dumps(threads, sort_keys=True)}\n")
+    return text
 
 
 def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None):
