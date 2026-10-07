@@ -227,6 +227,85 @@ def test_cohort_comparison_keeps_criteria_separate_across_harnesses(demo):
     assert dashboard["summary"]["cost"]["tokens"]["input_tokens"] == 1200 * dashboard["summary"]["runs"]
 
 
+def test_harness_comparison_keeps_six_criteria_apart_and_is_live_only_with_a_receipt(demo, tmp_path):
+    """Spec v3 V17, G4: one column per harness with yield, calibration, corrections, compaction hygiene, turn
+    economics and cost as separate cells and no composite; a harness is live only with a passing live
+    harness-check receipt, so synthetic runs on two harnesses are not a live comparison and cannot be filed as one."""
+    from daw.bio_cli import app
+    from daw.commons import harnesscheck
+    root, _ = demo
+    alice, claude = _two_harness_commons(root)
+    receipts = tmp_path / "receipts"
+    receipts.mkdir()
+    http = TestClient(create_app(root, static_dir=root / "missing"))  # local mode adds its local participant once
+    before = events(root)
+    with Archive(root) as view:
+        value = metrics.harness_comparison(view, [alice["id"], claude["name"]], receipts=receipts, harnesses=["codex"])
+    criteria = ["yield", "calibration", "corrections", "compaction_hygiene", "turn_economics", "cost"]
+    assert value["criteria"] == criteria and value["format"] == metrics.COMPARISON_FORMAT
+    columns = {c["harness"]: c for c in value["harnesses"]}
+    assert list(columns) == ["claude", "codex", "hermes"]
+    assert columns["claude"]["cells"]["runs"] == 2 and columns["hermes"]["cells"]["runs"] == len(alice["body"]["runs"])
+    assert columns["claude"]["cells"]["models"] == ["claude-test"] and columns["claude"]["cells"]["assignments"] == 2
+    for name in ("claude", "hermes"):
+        cells = columns[name]["cells"]
+        assert set(criteria) <= set(cells)
+        assert cells["calibration"] is None  # no ledger claims: unavailable, never zero
+        assert cells["cost"]["tokens"]["input_tokens"] == 1200 * cells["runs"] and cells["cost"]["amount"] is None
+        assert cells["turn_economics"]["runs"] == cells["runs"]
+        assert cells["compaction_hygiene"]["runs"] == cells["runs"]
+    assert columns["codex"]["cells"] is None  # named, no runs in scope: not attempted, distinct from zero
+    assert "score" not in json.dumps(value).replace("No composite score", "")
+    # No receipt: no harness is live, and the comparison is not a live one.
+    assert all(not c["live"]["live"] and c["live"]["reason"].startswith("no harness-check receipt") for c in columns.values())
+    assert value["live_harnesses"] == [] and value["live_comparison"] is False
+
+    def receipt(name, **fields):
+        body = {"format": harnesscheck.FORMAT, "harness": name, "live": True, "scripted_stand_in": False,
+                "verdict": "pass", "failures": [], "version": f"{name} 1.0", **fields}
+        (receipts / f"harness-check-{name}.json").write_text(json.dumps(body))
+
+    def live():
+        with Archive(root) as view:
+            return metrics.harness_comparison(view, [alice["id"], claude["id"]], receipts=receipts)
+    receipt("claude", live=False, scripted_stand_in=True)  # the stand-in's receipt is never live
+    assert {c["harness"]: c["live"]["reason"] for c in live()["harnesses"]}["claude"] == \
+        "the receipt is from the scripted stand-in"
+    receipt("claude", verdict="fail", failures=["turn 2 did not continue the session saved by turn 1"])
+    assert "did not pass" in {c["harness"]: c["live"] for c in live()["harnesses"]}["claude"]["reason"]
+    receipt("claude", harness="codex")  # another harness's receipt under this name
+    assert not {c["harness"]: c["live"] for c in live()["harnesses"]}["claude"]["live"]
+    receipt("claude")
+    one = live()
+    marked = {c["harness"]: c["live"] for c in one["harnesses"]}
+    assert marked["claude"]["live"] and len(marked["claude"]["receipt_sha256"]) == 64 and not marked["hermes"]["live"]
+    assert one["live_harnesses"] == ["claude"] and one["live_comparison"] is False
+    receipt("hermes")
+    assert live()["live_comparison"] is True
+    # The API reads the committed receipts folder (no harness-check receipt is committed: nothing is live there).
+    api = http.get(
+        "/api/harnesses/compare", params={"cohorts": f"{alice['id']},{claude['id']}"}).json()
+    assert [c["harness"] for c in api["harnesses"]] == ["claude", "hermes"]
+    for column in api["harnesses"]:
+        assert column["live"]["live"] == metrics.harness_live(column["harness"])["live"]
+        assert set(criteria) <= set(column["cells"])
+    # The snapshot command writes anywhere, but files into docs/v3/receipts only a live comparison.
+    runner = CliRunner()
+    base = ["commons", "--root", str(root), "harness-compare", "--cohort", alice["id"], "--cohort", claude["id"],
+            "--receipts", str(tmp_path / "none")]
+    snapshot = tmp_path / "out" / "harness-comparison.json"
+    written = runner.invoke(app, [*base, "--output", str(snapshot)])
+    assert written.exit_code == 0, written.output
+    stored = json.loads(snapshot.read_text())
+    assert stored["live_comparison"] is False and stored["commons"] == root.name and len(stored["harnesses"]) == 2
+    filed = harnesscheck.RECEIPTS / "harness-comparison.json"
+    assert not filed.exists()
+    refused = runner.invoke(app, [*base, "--output", str(filed)])
+    assert isinstance(refused.exception, DawError) and refused.exception.reason == "comparison_not_live"
+    assert not filed.exists()
+    assert events(root) == before  # reads only
+
+
 def test_pricing_and_token_rules():
     assert metrics.token_usage({"usage": None, "turns_completed": 1})[0] is None
     zero = {"usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0}, "turns_completed": 1}

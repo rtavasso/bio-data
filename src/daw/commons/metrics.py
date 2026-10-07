@@ -890,6 +890,126 @@ def compare(view, identities):
             "limitations": LIMITATIONS}
 
 
+# ---------------------------------------------------------------- harness comparison (spec v3 V17, G4)
+
+HARNESS_CRITERIA = ("yield", "calibration", "corrections", "compaction_hygiene", "turn_economics", "cost")
+COMPARISON_FORMAT = "colloquy.harness-comparison/1"
+
+
+def harness_live(harness, receipts=None):
+    """Whether a harness counts as live: a passing live harness-check receipt (`daw.commons.harnesscheck`) at
+    `<receipts>/harness-check-<harness>.json`. Anything else (no file, a scripted or failed check, another
+    harness's receipt, an unreadable file) is reported as not live, with the reason."""
+    import hashlib
+
+    from daw.commons import harnesscheck
+    folder = Path(receipts) if receipts is not None else harnesscheck.RECEIPTS
+    path = folder / f"harness-check-{harness}.json"
+    out = {"live": False, "receipt": path.name, "receipt_sha256": None, "verdict": None, "version": None}
+    if not path.is_file():
+        return {**out, "receipt": None, "reason": f"no harness-check receipt ({path.name})"}
+    data = path.read_bytes()
+    out["receipt_sha256"] = hashlib.sha256(data).hexdigest()
+    try:
+        receipt = json.loads(data)
+    except ValueError:
+        return {**out, "reason": "the receipt is not JSON"}
+    if not isinstance(receipt, dict) or receipt.get("format") != harnesscheck.FORMAT or receipt.get("harness") != harness:
+        return {**out, "reason": f"not a {harnesscheck.FORMAT} receipt for {harness}"}
+    out.update(verdict=receipt.get("verdict"), version=receipt.get("version"), checked=receipt.get("finished"))
+    if receipt.get("live") is not True or receipt.get("scripted_stand_in") is not False:
+        return {**out, "reason": "the receipt is from the scripted stand-in"}
+    if receipt.get("verdict") != "pass":
+        return {**out, "reason": "the live check did not pass: " + "; ".join(receipt.get("failures") or [])}
+    return {**out, "live": True, "reason": "a passing live harness-check receipt"}
+
+
+def harness_comparison(view, cohorts=(), *, receipts=None, harnesses=()):
+    """V17: one column per harness over the chosen cohorts' runs (all runs when none), with yield, calibration,
+    corrections, compaction hygiene, turn economics and cost as separate cells; no composite score, rank or winner.
+    A harness is marked live only when a passing live harness-check receipt for it exists (`harness_live`); runs
+    of a harness without one may come from the scripted stand-in. `harnesses` adds columns with no runs."""
+    pricing = load_pricing(view.root)
+    everything = load_runs(view, pricing)
+    chosen = [cohort(view, c) for c in cohorts]
+    if chosen:
+        members = {e["run"] for c in chosen for e in c["body"]["runs"]}
+        runs = [r for r in everything if r["run"] in members]
+    else:
+        runs = everything
+    index = board_index(view, runs)
+    by_harness = {}
+    for r in runs:
+        by_harness.setdefault(r["harness"], []).append(r)
+    for name in harnesses:
+        by_harness.setdefault(name, [])
+
+    def cell(members):
+        if not members:
+            return None  # no runs of this harness in scope: not attempted, distinct from zero yield
+        behaviour = run_criteria(members)
+        board = board_criteria(index, members)
+        claims = board["claims"]
+        return {"runs": len(members), "participants": sorted({r["participant_name"] for r in members}),
+                "models": sorted({r["model"] or "unknown" for r in members}),
+                "assignments": len({_assignment(chosen, r["run"]) for r in members} - {None}),
+                "yield": {"posts": board["posts"], "registered_artifacts": board["registered_artifacts"],
+                          "analysis_receipts": behaviour["analysis_receipts"],
+                          "analysis_failures": behaviour["analysis_failures"], "completed_runs": behaviour["completed"],
+                          "failed_runs": behaviour["failed"]},
+                "calibration": None if claims is None else
+                {"supported": claims["supported"], "untestable": claims["untestable"],
+                 "descriptive": claims["descriptive"], "withdrawn": claims["withdrawn"], "total": claims["total"]},
+                "corrections": {"corrections": board["corrections"], "posts_superseded": board["posts_superseded"],
+                                "human_marks": board["human_marks"]},
+                # Stream-marked compactions (None where the harness's stream marks none) beside the session
+                # database's summaries and fallbacks and the context per call (hygiene.aggregate).
+                "compaction_hygiene": {"stream_compactions": behaviour["compactions"],
+                                       "stream_unavailable_runs": behaviour["compaction_unavailable_runs"],
+                                       **behaviour["compaction_hygiene"]},
+                "turn_economics": economics.criteria(members, useful_data(index, members, board)),
+                "cost": cost_summary(members, pricing)}
+
+    columns = []
+    for name in sorted(by_harness):
+        columns.append({"harness": name, "live": harness_live(name, receipts), "cells": cell(by_harness[name])})
+    live = [c["harness"] for c in columns if c["live"]["live"] and c["cells"]]
+    return {"format": COMPARISON_FORMAT, "sequence": view.sequence(), "criteria": list(HARNESS_CRITERIA),
+            "cohorts": [{"id": c["id"], "name": c["name"], "runs": len(c["body"]["runs"])} for c in chosen],
+            "harnesses": columns, "live_harnesses": live,
+            "live_comparison": len(live) >= 2,
+            "claims_recorded": index["claims_recorded"], "pricing": {k: v for k, v in pricing.items() if k != "models"},
+            "note": "No composite score: each criterion is its own cell per harness. A harness is live only with a "
+                    "passing live harness-check receipt; its runs here are whatever the chosen cohorts hold. A missing "
+                    "cell means no run of that harness in scope; unavailable values are never zero.",
+            "limitations": LIMITATIONS}
+
+
+def _assignment(chosen, run):
+    for c in chosen:
+        for entry in c["body"]["runs"]:
+            if entry["run"] == run:
+                return entry["assignment"]
+    return None
+
+
+def write_comparison(value, output, receipts=None):
+    """Write a comparison snapshot (`bio commons harness-compare --output`). docs/v3/receipts holds live receipts
+    only: a snapshot is filed there only when at least two harnesses with runs in scope are live by the receipts
+    committed there (not another `receipts` folder)."""
+    from daw.commons import harnesscheck
+    path = Path(output).expanduser()
+    if path.resolve().parent == harnesscheck.RECEIPTS.resolve():
+        if receipts is not None and Path(receipts).expanduser().resolve() != harnesscheck.RECEIPTS.resolve():
+            raise DawError("comparison_not_live", "a snapshot filed in docs/v3/receipts is judged by its receipts")
+        if not value["live_comparison"]:
+            raise DawError("comparison_not_live", "docs/v3/receipts holds live receipts only; live harnesses with "
+                                                  f"runs here: {', '.join(value['live_harnesses']) or 'none'} (two needed)")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(canonical(value) + b"\n")
+    return str(path)
+
+
 # ---------------------------------------------------------------- demo extension
 
 def demo_cohort(board, ctx):

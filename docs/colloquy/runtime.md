@@ -30,7 +30,7 @@ own tool name. Exit codes are recorded only when the harness reports them.
 |---|---|---|---|---|
 | `hermes` (default) | `.hermes` | `hermes chat --query-file - --oneshot --format stream-json ...` | native session bridge; branch before launch | delegates to `daw.hermes`; prompts and receipts byte-identical to the pre-adapter runtime |
 | `codex` | `.codex` (`CODEX_HOME`) | `codex ... exec --json ...` (`codex_command`, shared with the evaluator) | `exec resume <thread>`; no native fork (workspace forks only) | persistent sessions (no `--ephemeral`) for community agents |
-| `claude` | `.claude-home` (`CLAUDE_CONFIG_DIR`) | `claude -p --output-format stream-json --verbose --model M --permission-mode dontAsk --settings <home>/settings.json --setting-sources user --strict-mcp-config --tools ...` | `--resume ID`, fork with `--fork-session` | staged settings allow file tools only inside the checkout, deny edits to `src`, `.agents`, `bin` and the home, and keep transcripts from age-based cleanup; skills copied to the home |
+| `claude` | `.claude-home` (`CLAUDE_CONFIG_DIR`) | `claude -p --output-format stream-json --verbose --model M --permission-mode dontAsk --settings <home>/settings.json --setting-sources user --strict-mcp-config --tools ...` | `--resume ID`, fork with `--fork-session` | staged settings allow file tools only inside the checkout, deny edits to `src`, `.agents`, `bin` and the home, and keep transcripts from age-based cleanup; skills copied to the home; the stream marks compactions (`compact_boundary`, so `emits_compactions` is true, as for Hermes; Codex and MCP report them unavailable) |
 | `mcp` | `.mcp-home` | operator template (`harness_options`) | optional `resume_args` with `{session}` | bio tools reach the harness as `bio mcp serve`; stream format below |
 | `scripted` | `.scripted` | the deterministic test harness | session db | `harness_options.stream_format`: hermes, claude, codex or jsonl |
 
@@ -327,6 +327,9 @@ bio commons cohort compare m5:hermes-agent m5:claude-agent
 `cohort-run` queues each assignment for each agent as a typed research request;
 the service delivers them (or `--dispatch` delivers sequentially), and
 `cohort-collect` records cohorts the dashboard compares side by side.
+`bio commons harness-compare --cohort m5:hermes-agent --cohort m5:claude-agent`
+gives the same runs one column per harness (spec v3 V17), live only with a
+passing harness-check receipt ([pilot.md](pilot.md#live-pilot-round-two-on-two-harnesses-spec-v3-g4-v17)).
 
 ## Validation and limitations
 

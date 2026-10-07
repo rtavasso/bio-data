@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import type { Comparison, CompareCell, Cost, Dashboard as DashboardData, Group } from "../types/dashboard";
+import type { Comparison, CompareCell, Cost, Dashboard as DashboardData, Group, HarnessCells, HarnessComparison,
+  TurnEconomics } from "../types/dashboard";
 import Dashboard from "./Dashboard";
 
 const noCost: Cost = {
@@ -75,6 +76,41 @@ const comparison: Comparison = {
   note: "No composite score: each criterion is reported separately.", limitations: [],
 };
 
+const turns: TurnEconomics = {
+  runs: 2, recorded_runs: 1, unrecorded_runs: 1, reindexed_runs: 0,
+  context: { unit: "turn", records: 1, mean_input_tokens: 1500, max_input_tokens: 1500, model_calls: null },
+  composition: { bytes_measured: { system_prompt: null, delivery_prompt: null, skills: null, tool_outputs: null,
+    summaries: null, conversation: null }, complete_runs: 0, shares: null },
+  compactions: { stream_markers: null, summaries: null, fallbacks: null, fallback_detection: "marker_match" },
+  time: { runs: 1, generation_minutes: 3, tool_wait_minutes: 1, tool_wait_share: 0.25 },
+  orientation: { runs: 1, help_calls_per_turn: 0, reorientation_calls_per_turn: 2, by_kind: {} },
+  ceremony_tail_minutes: { runs: 0, median: null }, skill_reads: { runs: 0, total: null, per_turn: {} },
+  tokens: null, tokens_reported_runs: 0,
+  useful_data: { registered_artifacts: 0, verified_claims: 0, promoted_frontier_items: 0 },
+  tokens_per: { registered_artifact: null, verified_claim: null, promoted_frontier_item: null },
+};
+const harnessCells = (extra: Partial<HarnessCells> = {}): HarnessCells => ({
+  runs: 2, participants: ["alice"], models: ["gpt"], assignments: 2,
+  yield: { posts: 2, registered_artifacts: 1, analysis_receipts: 3, analysis_failures: 1, completed_runs: 2, failed_runs: 0 },
+  calibration: null, corrections: { corrections: 0, posts_superseded: 0, human_marks: 1 },
+  compaction_hygiene: { runs: 2, runs_with_session_database: 0, compaction_summaries: null, compaction_fallbacks: null,
+    summaries_missing_assignment: null, context_runs: 1, context_unit: "turn", context_mean_input_tokens: 1500,
+    context_max_input_tokens: 1500, stream_compactions: null, stream_unavailable_runs: 2 },
+  turn_economics: turns, cost: noCost, ...extra,
+});
+const harnesses: HarnessComparison = {
+  format: "colloquy.harness-comparison/1", sequence: 9,
+  criteria: ["yield", "calibration", "corrections", "compaction_hygiene", "turn_economics", "cost"], cohorts: [],
+  harnesses: [
+    { harness: "codex", cells: harnessCells({ models: ["gpt-codex"] }), live: { live: true, receipt: "harness-check-codex.json",
+      receipt_sha256: "a".repeat(64), verdict: "pass", version: "codex 1", reason: "a passing live harness-check receipt" } },
+    { harness: "hermes", cells: harnessCells({ cost: priced }), live: { live: false, receipt: null, receipt_sha256: null,
+      verdict: null, version: null, reason: "no harness-check receipt (harness-check-hermes.json)" } },
+  ],
+  live_harnesses: ["codex"], live_comparison: false, claims_recorded: false,
+  note: "No composite score: each criterion is its own cell per harness.",
+};
+
 let calls: string[] = [];
 beforeEach(() => {
   calls = [];
@@ -82,6 +118,7 @@ beforeEach(() => {
     const url = String(input);
     calls.push(url);
     const body = url.startsWith("/api/dashboard") ? dashboard
+      : url.startsWith("/api/harnesses/compare") ? harnesses
       : url.startsWith("/api/cohorts/compare") ? comparison
       : url.startsWith("/api/cohorts") ? { items: [
         { id: "cohort_a", name: "hermes-cohort", created: "t", runs: 3, assignments: 2, note: "" },
@@ -141,10 +178,11 @@ test("tabs switch the small multiples and filters live in the request URL", asyn
 test("cohort comparison keeps criteria in separate columns with no composite score", async () => {
   show();
   await screen.findByText("Compare cohorts");
-  await screen.findByText("claude-cohort");
-  fireEvent.click(screen.getByLabelText(/hermes-cohort/));
+  const picks = within(await screen.findByRole("group", { name: "Cohorts" }));  // the harness comparison has its own picks
+  await picks.findByText("claude-cohort");
+  fireEvent.click(picks.getByLabelText(/hermes-cohort/));
   expect(calls.some((c) => c.startsWith("/api/cohorts/compare"))).toBe(false);
-  fireEvent.click(screen.getByLabelText(/claude-cohort/));
+  fireEvent.click(picks.getByLabelText(/claude-cohort/));
   await waitFor(() => expect(calls).toContain("/api/cohorts/compare?ids=cohort_a%2Ccohort_b"));
   await waitFor(() => expect(document.querySelector("table.compare")).not.toBeNull());
   const compare = document.querySelector("table.compare") as HTMLTableElement;
@@ -267,4 +305,19 @@ test("turn economics per harness and per skill version, skills against budget an
   const [, hermesDatum] = within(datum).getAllByRole("row").slice(1);
   expect(hermesDatum.textContent).toContain("1000");
   expect(within(hermesDatum).getAllByText("unavailable").length).toBe(2);
+});
+
+test("harness comparison: one column per harness, six criteria as separate cells, live only with a receipt (V17)", async () => {
+  show();
+  const table = await screen.findByRole("table", { name: "Harness comparison" });
+  const headers = Array.from(table.querySelectorAll("thead th")).map((th) => th.textContent ?? "");
+  expect(headers).toHaveLength(3);
+  expect(headers[1]).toMatch(/^codexlive/);
+  expect(headers[2]).toContain("not live: no harness-check receipt");
+  const rows = within(table).getAllByRole("row").slice(1).map((r) => r.querySelector("th")?.textContent);
+  expect(rows).toEqual(["Yield", "Calibration", "Corrections", "Compaction hygiene", "Turn economics", "Cost"]);
+  expect(table.textContent).not.toMatch(/score|rank|winner/i);
+  expect(within(table).getAllByText(/unavailable \(no ledger claims\)/)).toHaveLength(2);
+  expect(screen.getByText(/Not a live comparison/)).toBeTruthy();
+  expect(calls).toContain("/api/harnesses/compare");
 });

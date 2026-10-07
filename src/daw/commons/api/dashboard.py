@@ -41,6 +41,12 @@ def compare(view: View, ids: str):
     return metrics.compare(view, [i for i in ids.split(",") if i.strip()])
 
 
+@router.get("/harnesses/compare")
+def harness_compare(view: View, cohorts: str = ""):
+    """V17: one column per harness, criteria as separate cells, live only with a passing harness-check receipt."""
+    return metrics.harness_comparison(view, [i for i in cohorts.split(",") if i.strip()])
+
+
 @router.get("/cohorts/{identity}")
 def cohort(identity: str, view: View, bucket: str = "week"):
     return metrics.cohort_view(view, identity, bucket)

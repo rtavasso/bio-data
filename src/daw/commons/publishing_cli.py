@@ -1,5 +1,6 @@
-"""`bio commons preprint|directory|tour|curate|public-demo|federation-demo|harness-check|invite|pilot-report` and
-`bio commons federation reindex|records|citations|cited-by` (spec v2 V3, V7, V8; v3 G2, V15, V16, B9).
+"""`bio commons preprint|directory|tour|curate|public-demo|federation-demo|harness-check|harness-compare|invite|
+pilot-report` and `bio commons federation reindex|records|citations|cited-by` (spec v2 V3, V7, V8; v3 G2, V15,
+V16, V17, B9).
 
 Each command calls the same function as the HTTP API. Commands that write take an explicit acting participant
 (`--as`); agents act through `bio community` in their own checkout instead.
@@ -10,7 +11,7 @@ from typing import Annotated
 
 import typer
 
-from daw.util import DawError, canonical
+from daw.util import DawError, canonical, now
 
 directory_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                             help="Public commons directory: publish, list and fetch content-addressed snapshots.")
@@ -247,6 +248,26 @@ def harness_check_command(harness: Annotated[str, typer.Option(help="codex, clau
         raise typer.Exit(1)
 
 
+def harness_compare_command(ctx: typer.Context,
+                            cohort: Annotated[list[str] | None, typer.Option("--cohort", help="Cohort id or name (repeatable; default: every run)")] = None,
+                            harness: Annotated[list[str] | None, typer.Option("--harness", help="Also show this harness without runs (repeatable)")] = None,
+                            output: Annotated[Path | None, typer.Option(help="Write the snapshot here (docs/v3/receipts only when two harnesses with runs are live)")] = None,
+                            receipts: Annotated[Path | None, typer.Option(help="Harness-check receipts folder (default docs/v3/receipts)")] = None):
+    """Per-harness comparison (V17): yield, calibration, corrections, compaction hygiene, turn economics and cost as
+    separate cells; a harness is live only with a passing live harness-check receipt. Reads only the commons."""
+    from daw.commons import metrics
+    from daw.commons.archive import Archive
+    root = Path(ctx.obj).expanduser().resolve()
+    with Archive(root) as view:
+        value = metrics.harness_comparison(view, cohort or [], receipts=receipts, harnesses=harness or [])
+    value = {**value, "commons": root.name, "generated": now(),
+             "command": "bio commons --root <commons> harness-compare " + " ".join(f"--cohort {c}" for c in cohort or [])
+             + " --output ..."}
+    if output:
+        value["written"] = metrics.write_comparison(value, output, receipts)
+    emit(value)
+
+
 def invite_command(ctx: typer.Context, name: str, as_: As = "operator", display_name: str | None = None,
                    affiliation: str | None = None, orcid: str | None = None,
                    minutes: Annotated[int | None, typer.Option(help="Promotion/commission allowance (agent-minutes)")] = None,
@@ -261,12 +282,17 @@ def invite_command(ctx: typer.Context, name: str, as_: As = "operator", display_
 
 
 def pilot_report_command(ctx: typer.Context,
-                         participant: Annotated[list[str] | None, typer.Option("--participant", help="Name or id (repeatable; default: invited people)")] = None):
+                         participant: Annotated[list[str] | None, typer.Option("--participant", help="Name or id (repeatable; default: invited people)")] = None,
+                         output: Annotated[Path | None, typer.Option(help="Also write the report here (compact JSON)")] = None):
     """Comments, marks, promotions and commissions per person, and whether each request changed an agent's work."""
     from daw.commons.archive import Archive
     from daw.commons.pilotkit import report
     with Archive(ctx.obj) as view:
-        emit(report(view, participant))
+        value = report(view, participant)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_bytes(canonical({**value, "generated": now()}) + b"\n")
+    emit(value)
 
 
 def register(app, federation_app):
@@ -275,6 +301,7 @@ def register(app, federation_app):
     app.command("public-demo")(public_demo_command)
     app.command("federation-demo")(federation_demo_command)
     app.command("harness-check")(harness_check_command)
+    app.command("harness-compare")(harness_compare_command)
     app.command("invite")(invite_command)
     app.command("pilot-report")(pilot_report_command)
     app.add_typer(directory_app, name="directory")

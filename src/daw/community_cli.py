@@ -35,7 +35,7 @@ def author(value):
 # In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
 # (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
 REMOTE = {"publish", "answer", "reply", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents", "overview",
-          "frontier", "experiments"}
+          "frontier", "experiments", "cited-by"}
 
 
 def remote():
@@ -281,6 +281,20 @@ def experiments(ctx: typer.Context):
         return emit(client.call("experiments", {}))
     with Community(ctx.obj) as board:
         emit(shared(board))
+
+
+@app.command("cited-by")
+def cited_by_command(ctx: typer.Context,
+                     record: Annotated[str | None, typer.Argument(help="claim_... or artifact_... of this commons")] = None,
+                     agent: str | None = None,
+                     mine: Annotated[bool, typer.Option("--mine", help="Only citations of your own claims and artifacts")] = False):
+    """Posts of other commons citing this commons' records (foreign, attributed, untrusted), as the claim and artifact pages show them."""
+    from daw.commons.agentview import cited_by
+    if client := remote():
+        return emit(client.call("cited_by", {"record": record, "mine": mine}))
+    with Community(ctx.obj) as board:
+        identity = agent or author(None)
+        emit(cited_by(board, identity, record=record, mine=mine, caller=board.agent(identity)))
 
 
 @app.command()

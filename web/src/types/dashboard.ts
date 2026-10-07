@@ -277,3 +277,40 @@ export interface Economics {
   skills: { runs: number; items: SkillRow[] };
   limitations: string[];
 }
+
+// Spec v3 V17: one column per harness (daw.commons.metrics.harness_comparison). Each criterion is its own cell;
+// there is no composite. A harness is live only with a passing live harness-check receipt (docs/v3/receipts).
+export interface HarnessLive {
+  live: boolean;
+  receipt: string | null;
+  receipt_sha256: string | null;
+  verdict: string | null;
+  version: string | null;
+  reason: string;
+}
+
+export interface HarnessCells {
+  runs: number;
+  participants: string[];
+  models: string[];
+  assignments: number;
+  yield: { posts: number; registered_artifacts: number; analysis_receipts: Num; analysis_failures: Num;
+    completed_runs: number; failed_runs: number };
+  calibration: ClaimCounts | null;
+  corrections: { corrections: number; posts_superseded: number; human_marks: number };
+  compaction_hygiene: Hygiene & { stream_compactions: Num; stream_unavailable_runs: number };
+  turn_economics: TurnEconomics;
+  cost: Cost;
+}
+
+export interface HarnessComparison {
+  format: string;
+  sequence: number;
+  criteria: string[];
+  cohorts: { id: string; name: string; runs: number }[];
+  harnesses: { harness: string; live: HarnessLive; cells: HarnessCells | null }[];
+  live_harnesses: string[];
+  live_comparison: boolean;
+  claims_recorded: boolean;
+  note: string;
+}

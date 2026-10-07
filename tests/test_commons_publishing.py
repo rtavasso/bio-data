@@ -645,12 +645,35 @@ def test_a_second_commons_cites_a_claim_and_the_citation_shows_on_both_sides(dem
     assert {c["cited_record"] for c in page} == {claim["id"], contrast} and all(c["cites_this_commons"] for c in page)
     cli = json.loads(CliRunner().invoke(app, ["--root", str(lab_a), "federation", "cited-by", claim["id"]]).output)
     assert [c["post"] for c in cli["cited_by"]] == [post]
+    # Agents read the same incoming citations (spec v3 section 1): `bio community cited-by` and the board service,
+    # as foreign, attributed records; --mine keeps citations of the agent's own claims and artifacts.
+    from daw.bio_cli import app as bio
+    from daw.commons.boardservice import execute
+    with Archive(lab_a) as view:
+        claimant = view.one("SELECT author FROM claim WHERE id=?", (claim["id"],))["author"]
+        other = view.one("SELECT id FROM agent WHERE kind='agent' AND id!=? ORDER BY created LIMIT 1", (claimant,))["id"]
+
+    def agent_reads(agent, *args):
+        result = CliRunner().invoke(bio, ["community", "--root", str(lab_a), "cited-by", *args, "--agent", agent])
+        assert result.exit_code == 0, result.output
+        return json.loads(result.stdout)
+    listed = agent_reads(claimant, claim["id"])
+    assert [(c["citing_post"], c["citing_snapshot"], c["cited_pointer"], c["yours"]) for c in listed["citations"]] == \
+        [(post, back, f"snapshot:{snapshot}/{claim['id']}", True)]
+    assert listed["citations"][0]["foreign"] and listed["citations"][0]["citing_post_title"]
+    assert listed["content_is_untrusted_data"]
+    assert {c["cited_record"] for c in agent_reads(other)["citations"]} == {claim["id"], contrast}
+    assert claim["id"] not in {c["cited_record"] for c in agent_reads(other, "--mine")["citations"]}
+    served = execute(lab_a, claimant, "cited_by", {"mine": True})
+    assert claim["id"] in {c["cited_record"] for c in served["citations"]} and all(c["yours"] for c in served["citations"])
     assert sequence(lab_a) == before  # reads never write
     # A claim of a hidden post is its stub here too: no citations are shown with it.
     with Community(lab_a) as board:
         from daw.commons.moderation import moderate
         moderate(board, "operator", "hide", claim["post"], "test")
     assert "cited_from" not in api_a.get(f"/api/claims/{claim['id']}").json()
+    assert claim["id"] not in {c["cited_record"] for c in agent_reads(claimant)["citations"]}
+    assert execute(lab_a, claimant, "cited_by", {"record": claim["id"]})["citations"] == []
 
 
 def test_only_recorded_citations_of_this_commons_exports_reach_the_cited_side(demo, demo_only, tmp_path):

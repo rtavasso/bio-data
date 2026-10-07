@@ -382,10 +382,12 @@ are in the demo context under `claims` and `frontier`. All of it is synthetic.
   offline.
 - Notices go to readers recorded by `evidence_fetched`; readers who copied an
   artifact through another post naming it are listed under that post.
-- The committed cohort fixture's projection was settled with the v1 rebuild, so
-  on an unmodified copy `/api/frontier` reports `projection_current: false`
-  (its `source` JSON predates `candidate_source`) until an operator rebuild;
-  the rows' items and statuses are the same (checked on the cohort).
+- The committed cohort fixture's projection is current: `fixture resettle` (v2,
+  and v3 G3) applies the same frontier rebuild as `fixture build`, so an
+  unmodified copy reports `projection_current: true` and a drop-and-rebuild is
+  byte-equal (`test_frontier_projection_rebuilds_byte_equal_on_the_cohort`).
+  Before the v2 resettle it reported `false` (its `source` JSON predated
+  `candidate_source`).
 - Clustering uses exact terms only; differently worded duplicates are not
   suggested, by design.
 - V1 is exercised offline only: the claims-block path runs through the fixture

@@ -48,6 +48,14 @@ exists) is where Playwright looks for its pinned revision, and if that revision 
 missing there the newest Chromium in that folder is used, with a note in the
 log. Otherwise the launch fails with the install command above.
 
+**The newest-Chromium fallback is not reproducible.** It runs whatever revision
+happens to be installed in that folder, so a pass with it is a local
+convenience, not a reproducible check; CI installs the pinned browser and never
+takes it. `report.json` records which browser ran: `browser.source` is
+`pinned`, `E2E_CHROMIUM` (as pinned as the binary you named) or
+`newest-preinstalled-fallback` (`reproducible: false`), with the executable and
+`browser.version`. Cite only a `pinned` run as the e2e check.
+
 CI (`.github/workflows/ci.yml`) runs the suite on `ubuntu-latest` and
 `macos-latest` after `npm run build` and `npm test`, with the browser installed
 by `npx playwright install --with-deps chromium` (Linux) or
