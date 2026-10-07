@@ -54,18 +54,33 @@ def test_registry_and_legacy_hermes_prompt_is_byte_identical():
     # sentence deliberately: the final-answer structure is now "claims first (a fenced ```claims block), prose
     # second". The digests were re-frozen for that change only; swapping the old final-answer sentence back in
     # must reproduce the pre-V1 digests, so any other drift in the legacy Hermes prompt still fails here.
-    new = hashlib.sha256(assignment_prompt("agent_abc", trial, post).encode()).hexdigest()
-    assert new == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
-    assert hashlib.sha256(assignment_prompt("agent_abc", trial, post, notification=True).encode()).hexdigest() == \
-        "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
+    # Spec v3 changed three sentences: read the overview then the LABBOOK at the start of a turn (V11), read the
+    # frontier before collecting (G5), and name the next computable step as a recorded frontier item (G1).
+    # Swapping them back must reproduce the v2 digests.
+    def digest_of(text):
+        return hashlib.sha256(text.encode()).hexdigest()
+    question, notification = (assignment_prompt("agent_abc", trial, post),
+                              assignment_prompt("agent_abc", trial, post, notification=True))
+    assert digest_of(question) == "07e9c73d9f75ad88cc45cf727ec853bb1f6037e0a6ae1ec49e0d1b789ab44db6"
+    assert digest_of(notification) == "32fb80c0204cb6e12d7b68be67fc4b013b2612d42ebda3456d22c6ef90cb1c76"
     from daw import community_runtime
+    v3_step = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Then name the next computable step"):]
+    v2_step = ("Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
+               "computable step. Receipt and lint details stay in the LABBOOK.\n")
+
+    def v2(text):
+        return (text.replace("At the start of a turn read community overview, then your LABBOOK. ", "")
+                .replace("new data, read community frontier and search the shared forum", "new data, search the shared forum")
+                .replace(v3_step, v2_step))
+    assert digest_of(v2(question)) == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
+    assert digest_of(v2(notification)) == "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
     v1_sentence = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Structure it claims first"):]
     pre_v1 = ("Structure it as: the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the "
               "next computable step. Receipt and lint details stay in the LABBOOK.\n")
-    old = assignment_prompt("agent_abc", trial, post).replace(v1_sentence, pre_v1)
-    assert hashlib.sha256(old.encode()).hexdigest() == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
-    old = assignment_prompt("agent_abc", trial, post, notification=True).replace(v1_sentence, pre_v1)
-    assert hashlib.sha256(old.encode()).hexdigest() == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
+    old = v2(question).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
+    assert digest_of(old) == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
+    old = v2(notification).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
+    assert digest_of(old) == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
 
 
 def test_codex_command_is_the_evaluator_launch_line_and_resumes_persistently(tmp_path):

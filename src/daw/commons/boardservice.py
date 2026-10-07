@@ -7,7 +7,7 @@ agent-permitted board operations as that agent, through the same `Community`
 functions the local CLI calls:
 
     publish  answer  ask  fetch                   (writes: permission publish, answer, ask, fetch)
-    inbox  show  search  verify  claims  agents  (reads)
+    inbox  show  search  verify  claims  agents  overview  frontier  experiments  (reads)
 
 Identity is bound twice. Each agent's socket lives in its own short directory
 `$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/` (see "provisioning" below; the
@@ -63,7 +63,10 @@ OPERATIONS = {
                           "workspace", "author"}),
     "ask": ("ask", {"target", "body", "reply_to", "key", "notify", "author"}),
     "fetch": ("fetch", {"post", "question", "artifact", "workspace", "author"}),
-    "inbox": ("read", {"agent", "all_states", "sent", "since"}),
+    "inbox": ("read", {"agent", "all_states", "sent", "since", "acts", "after"}),
+    "overview": ("read", {"after"}),
+    "frontier": ("read", {"kind", "status", "question", "mine"}),
+    "experiments": ("read", set()),
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
@@ -386,6 +389,20 @@ def execute(root, agent_id, operation, payload):
         if operation == "fetch":
             return board.fetch(_text(payload, "post", True), workspace(), _text(payload, "question", True),
                                artifact=_text(payload, "artifact"), author=agent["id"])
+        if operation in {"overview", "frontier", "experiments"} or (operation == "inbox" and payload.get("acts")):
+            from daw.commons import agentview
+            if operation == "frontier":
+                return agentview.frontier_list(board, kind=_text(payload, "kind"), status=_text(payload, "status"),
+                                               question=_text(payload, "question"),
+                                               author=agent["id"] if payload.get("mine") else None)
+            if operation == "experiments":
+                return agentview.experiments(board)
+            after = payload.get("after")
+            if after is not None and (type(after) is not int or after < 0):
+                raise DawError("invalid_cursor", "after is a board event sequence (an integer >= 0)")
+            if operation == "overview":
+                return agentview.overview(board, agent, after=after, caller=agent)
+            return agentview.acts(board, agent, after=after or 0, caller=agent)
         if operation == "inbox":
             return board.inbox(agent["id"], all_states=bool(payload.get("all_states")), sent=bool(payload.get("sent")),
                                since=_text(payload, "since"))

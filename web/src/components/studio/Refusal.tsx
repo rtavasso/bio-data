@@ -11,6 +11,7 @@ const LABELS: Record<Problem["kind"], string> = {
   figure_not_artifact: "Figure does not reference an artifact",
   post_hidden: "Hidden by moderation",
   claimless_post_cited: "Cites a post without ledger claims",
+  frontierless_question_cited: "Cites a completed question with no frontier item beyond gaps",
   invalid_locator: "Locator does not parse",
 };
 

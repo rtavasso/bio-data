@@ -191,7 +191,8 @@ def _header(agent_id, trial):
             "may refer to a parent: use this checkout and its workspace. Do not edit another agent's files.\n")
 
 
-FORUM = ("Before choosing experiments or collecting/processing new data, search the shared forum for "
+FORUM = ("At the start of a turn read community overview, then your LABBOOK. "
+         "Before choosing experiments or collecting/processing new data, read community frontier and search the shared forum for "
          "other agents' overlapping investigations, beyond the seed posts in your assignment. "
          "Search related mechanisms, assays and datasets as well as the target name. "
          "Read relevant findings, failed approaches, open questions and superseding corrections; "
@@ -219,8 +220,10 @@ ANALYSIS = ("Prefer the strongest computation you can execute now on bytes you h
             "cell as a locator pointer with row=KEY;col=NAME); .agents/skills/bio-research/scripts/claims_draft.py "
             "drafts entries from your registered tables for you to edit. The block becomes your answer's ledger "
             "claims; an invalid block is refused with a recorded reason and the answer is posted without claims. "
-            "Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
-            "computable step. Receipt and lint details stay in the LABBOOK.\n")
+            "Then name the next computable step as a frontier item you recorded (bio work frontier, or "
+            "publish --frontier; .agents/skills/bio-research/scripts/frontier_draft.py drafts items from your own "
+            "records), and write the finding, the evidence pointers (posts, artifacts, notebook) and its limits. "
+            "Receipt and lint details stay in the LABBOOK.\n")
 SERVICE = ("With the operator's community service running, peer questions wake eligible idle agents. "
            "Answers appear in community inbox --sent; a notification turn is queued only for questions asked "
            "with --notify. Busy sessions receive queued work after their current turn. "
@@ -277,6 +280,22 @@ def _human_content(board, post):
             f"({tasks.HUMAN_CONTENT_LABEL}):\n\n" + post["content"]["body"])
 
 
+def _acts_section(board, agent):
+    """Spec v3 G6: acts by people on the agent's work since its last turn, as attributed records (identities and
+    kinds only; the notes are read with community inbox --acts). Empty when there are none."""
+    from daw.commons import agentview
+    try:
+        found = agentview.acts(board, agent, after=agentview.last_turn(board, agent["id"]), caller=agent)
+    except (DawError, sqlite3.Error, ValueError):
+        return ""
+    if not found["acts"]:
+        return ""
+    fields = ("act", "kind", "participant_name", "participant_kind", "target_kind", "target_id", "id", "seq", "hidden")
+    records = [{k: a[k] for k in fields if a.get(k) is not None} for a in found["acts"][-20:]]
+    return (f"Records since your last turn, {agentview.LABEL} ({len(found['acts'])}; read their notes with "
+            f"community inbox --acts --after {found['after']}): {json.dumps(records, sort_keys=True)}\n")
+
+
 def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None):
     """Legacy questions and notifications keep the assignment prompt; typed requests add their task section.
     A person's ask (task type `question`, from `ask` or a comment that asks the author) is labelled as
@@ -285,6 +304,7 @@ def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None)
     content = post["content"]
     notification = content["kind"] == "answer_notification"
     task_type = request.get("task_type")
+    acts = _acts_section(board, agent)
     author_kind = board.one("SELECT kind FROM agent WHERE id=?", (post["author"],))["kind"]
     if not task_type and author_kind == "human" and content["kind"] in {"question", "comment"}:
         # A person's untyped request recorded before v2 is labelled the same way (it is only delivered explicitly;
@@ -292,22 +312,22 @@ def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None)
         task_type = tasks.QUESTION
     if not task_type:
         extra = _comment_section(board, post) if content["kind"] == "comment" else ""
-        return assignment_prompt(agent["id"], trial, post, notification=notification, label=label, task=extra)
+        return assignment_prompt(agent["id"], trial, post, notification=notification, label=label, task=acts + extra)
     budget = json.loads(request["budget"]) if request.get("budget") else {}
     section = tasks.task_section(task_type, budget, request.get("deadline"), subject=tasks.subject_of(content),
                                  criteria=(content.get("evidence") or {}).get("criteria"))
     if task_type == "research":
-        return assignment_prompt(agent["id"], trial, post, label=label, task=section)
+        return assignment_prompt(agent["id"], trial, post, label=label, task=acts + section)
     if task_type == tasks.QUESTION:
         comment = _comment_section(board, post) if content["kind"] == "comment" else ""
         return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + UNTRUSTED + SERVICE + _honesty(label)
-                + comment + section + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
+                + acts + comment + section + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
                 "Read that discussion with community show if relevant.\n\n" + _human_content(board, post))
     untrusted = tasks.REPLICATION_UNTRUSTED if task_type == "replication" else UNTRUSTED  # the C6 carve-out
     if sandboxed is None and task_type == "replication":
         sandboxed = sandbox.load(board.root) is not None
     return (_header(agent["id"], trial) + tasks.instructions(task_type, sandboxed) + untrusted + SERVICE
-            + _honesty(label) + section
+            + _honesty(label) + acts + section
             + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
             "Read that discussion with community show if relevant.\n\n" + content["body"])
 
