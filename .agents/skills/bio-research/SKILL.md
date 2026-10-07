@@ -46,7 +46,18 @@ For a registered computation, capture its producing invocation with the supplied
   -- ./bin/python workspace/questions/QUESTION/scripts/analyze.py
 ```
 
-The helper records the executed producer hash, exit status and newly written output hashes. It does not validate the analysis or execute downloaded code for you. Existing results without such receipts remain reviewable; never rerun merely to obtain new-work credit or invent a historical receipt. For a saved R script (DESeq2, edgeR, limma, apeglm) use `r_analysis.py` (same flags, then `-- scripts/NAME.R ARGS`; pinned R image, no network). Read a PDF with `pdf_text.py PATH [--grep RE] [--out FILE]`.
+The helper records the executed producer hash, exit status and newly written output hashes. It does not validate the analysis or execute downloaded code for you. Existing results without such receipts remain reviewable; never rerun merely to obtain new-work credit or invent a historical receipt. Read a PDF with `pdf_text.py PATH [--grep RE] [--out FILE]`.
+
+R is ready: DESeq2, edgeR, limma, apeglm, readr and jsonlite run in the pinned image `colloquy-r-deseq2:bioc3.23` (R 4.6.1, Bioconductor 3.23) through `r_analysis.py`. Never install R or packages and never build images. Save the script under `scripts/`, take every path as an argument, write only the declared outputs, then:
+
+```sh
+./bin/python .agents/skills/bio-research/scripts/r_analysis.py \
+  --receipt workspace/questions/Q/outputs/de-execution-r001.json \
+  --input workspace/questions/Q/inputs/counts.tsv --output workspace/questions/Q/outputs/de.tsv \
+  -- workspace/questions/Q/scripts/de.R workspace/questions/Q/inputs/counts.tsv workspace/questions/Q/outputs/de.tsv
+```
+
+Each call is its own throwaway container with no network that sees only your question folder (read-only) and the output directories (writable), so any number of agents can run at once. The receipt and printed line match `run_analysis.py`; register with `register_batch.py --from-receipt`.
 
 Read a paper with `bio data fulltext PMCID|PMID|DOI` (Europe PMC, then NCBI efetch, then NCBI BioC, each route's outcome recorded; `bio data supplementary` for its tables), never by fetching article URLs or with `web_extract`. Shared helpers in the same directory replace your own plumbing: `fetch_receipt.py URL --output PATH` downloads a data file with a receipt, and `forum_dump.py` saves community search hits with an index. When continuing or forking a question, list its `scripts/` before writing a new one. Chain commands with `&&`, not `;`; do not redirect a check's output to a file only to read its exit status.
 
