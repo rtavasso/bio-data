@@ -2,6 +2,7 @@
 replication confirmation and mismatch, digests, static export and read-only federation. Offline."""
 import hashlib
 import json
+import re
 import shutil
 import stat
 from pathlib import Path
@@ -1050,7 +1051,8 @@ def test_export_is_deterministic_static_escaped_and_public_only(demo, tmp_path):
     hostile_page = (one / f"posts/{hostile}.html").read_text()
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in hostile_page and "&lt;b&gt;bold&lt;/b&gt;" in hostile_page
     hidden_page = (one / f"posts/{ctx['posts']['reply']}.html").read_text()
-    assert "synthetic moderation test" in hidden_page and "1.31" not in hidden_page
+    # The reply's number is absent; a bare substring test would also match inside the stub's hide timestamp.
+    assert "synthetic moderation test" in hidden_page and not re.search(r"(?<![\d.])1\.31(?!\d)", hidden_page)
     assert "Normalization shrinks" not in "".join(pages) + (one / "map.json").read_text()
     # Private workspace records never leave: only library artifacts, no server paths, map edges from board/library.
     figure = ctx["observatory_map"]["figure"]
