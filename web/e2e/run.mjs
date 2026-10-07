@@ -730,8 +730,12 @@ await step("V4 a reply under the anchor stays at the anchor", async () => {
   await summary.click();
   const form = page.getByLabel("Reply under this anchor").first();
   await form.getByLabel("Reply").fill("Thanks: noted for the human-cell follow-up.");
+  // React mirrors a controlled textarea's value into its text, so the reply's text is on the page before it is
+  // recorded: wait for the write itself, then for the reply rendered under the anchor (outside the form).
+  const posted = page.waitForResponse((r) => r.request().method() === "POST" && /\/api\/comments\/[^/]+\/replies$/.test(r.url()));
   await form.getByRole("button", { name: "Reply" }).click();
-  await page.getByText("Thanks: noted for the human-cell follow-up.").first().waitFor();
+  check((await posted).ok(), "reply write failed");
+  await page.locator(".comment-groups p", { hasText: "Thanks: noted for the human-cell follow-up." }).first().waitFor();
   const detail = await api(`/api/posts/${postD}`);
   const card = detail.comments.flatMap((g) => g.comments).find((c) => c.id === commentD.id);
   const reply = card.answers.find((a) => a.kind === "comment");
