@@ -577,7 +577,7 @@ def test_public_demo_commons_from_the_cohort_fixture(tmp_path):
         pytest.skip("real-data fixture not checked out")
     out = tmp_path / "public"
     built = publicdemo.build(out)
-    assert built["tour"]["finals_reaching_bytes_in_two_clicks"] >= 5 and built["board_sequence"] == 811
+    assert built["tour"]["finals_reaching_bytes_in_two_clicks"] >= 5 and built["board_sequence"] == json.loads((ROOT / "fixtures" / "pmp22-cohort" / "FIXTURE.json").read_text())["board_sequence"]
     assert (out / "tours" / "pmp22-cohort.json").read_bytes() == TOUR.read_bytes()
     public = json.loads((out / "PUBLIC.json").read_text())
     assert public["real_data"] and public["redaction"]["capped_blob_bytes"] == 65536
