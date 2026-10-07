@@ -46,7 +46,7 @@ def claim_search(view: View, caller: Reader, saved: Scoped, q: str = "", status:
         return claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=limit,
                                   offset=offset, caller=caller, full=full)
     if not 1 <= limit <= 200 or offset < 0:
-        raise DawError("invalid_search_bounds")
+        raise DawError("invalid_search_bounds", f"limit must be 1..200 and offset >= 0 (got limit={limit}, offset={offset})")
     first = claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=200, offset=0,
                                caller=caller, full=full)
     items = collect(lambda size, start: claims.list_claims(view, q, status=status, scope=scope, author=author,

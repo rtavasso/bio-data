@@ -15,6 +15,13 @@ PLUMBING = re.compile(r"(retriev|acquire|fetch|download|get_source|register|publ
 VERIFY = re.compile(r"(verify|readback|validate_publication|check_publication)", re.IGNORECASE)
 INSPECT = re.compile(r"(inspect|peek|probe|extract_|dump_|locate_|inventory|survey_)", re.IGNORECASE)
 SUSPENSION_FLOOR_SECONDS = 60
+# run_analysis.py prints one `analysis_executed` JSON line; `complete` and `outputs_written` precede the stdout
+# tail, so they survive a truncated capture. Backslashes allow the line inside a JSON-encoded tool output.
+EXECUTED = re.compile(r'\\*"event\\*":\s*\\*"analysis_executed\\*"(.*)')
+COMPLETE = re.compile(r'\\*"complete\\*":\s*(true|false)')
+WRITTEN = re.compile(r'\\*"outputs_written\\*":\s*(\d+)')
+# An interpreter running run_analysis.py, not a lint, `cat` or edit of the file that merely names it.
+INVOKED = re.compile(r"(?:^|[\s;&|(/])(?:python[\d.]*|Rscript)\s+(?:-\S+\s+)*\S*run_analysis\.py\b")
 
 
 def compaction_summaries(folder, execution):
@@ -81,6 +88,26 @@ def suspension_seconds(wall, mono):
     return round(wall - mono, 1) if wall - mono > SUSPENSION_FLOOR_SECONDS else 0
 
 
+def analysis_succeeded(item, output):
+    """Did this terminal call produce outputs through run_analysis.py? Only a call that runs it with an
+    interpreter counts (a lint, `cat` or edit naming the file does not). When its captured result carries the
+    `analysis_executed` line, only complete:true with outputs_written >= 1 counts, so an incomplete smoke rerun
+    does not end the tail; when the line is unavailable (no capture, or a crash before it), the exit code does."""
+    if not INVOKED.search(str(item.get("command") or "")):
+        return False
+    text = item.get("aggregated_output")
+    text = text if isinstance(text, str) and "analysis_executed" in text else output
+    lines = list(EXECUTED.finditer(text)) if isinstance(text, str) else []
+    if not lines:
+        return item.get("exit_code") == 0
+    for match in lines:
+        rest = match.group(1)
+        complete, written = COMPLETE.search(rest), WRITTEN.search(rest)
+        if complete and written and complete.group(1) == "true" and int(written.group(1)) >= 1:
+            return True
+    return False
+
+
 def run_metrics(folder, parsed, *, compactions_reported=True):
     """Behavioural counts from one delivery. Wall time includes host sleep; monotonic does not.
 
@@ -98,7 +125,8 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
     scripts = [p for p in writes if p.endswith(".py")]
     stamps = [e["event"].get("timestamp") for e in parsed["events"] if _number(e["event"].get("timestamp"))]
     last_ok = [e for e in parsed["events"] if e["event"].get("type") == "tool_result"
-               and any(a.get("result_line") == e["line"] and a.get("exit_code") == 0 for a in analyses)]
+               and any(a.get("result_line") == e["line"] and analysis_succeeded(a, str(e["event"].get("output") or ""))
+                       for a in analyses)]
     tail = None
     suspended = suspension_seconds(wall, mono)
     if last_ok and stamps and not suspended:
@@ -144,5 +172,7 @@ def run_metrics(folder, parsed, *, compactions_reported=True):
             "provider_citation_in_final": bool(PROVIDER_CITATION.search(final.read_text())) if final.exists() else None,
             "limitations": ["events.jsonl truncates tool outputs at 5000 chars; model-facing bodies are in agent-state/state.db",
                             "minutes_after_last_successful_analysis is None when a host suspension lies in the stream's span",
+                            "a successful analysis runs run_analysis.py with an interpreter and its analysis_executed "
+                            "line reports complete:true and outputs_written >= 1; exit 0 only when that line is unavailable",
                             "no assistant reasoning is streamed between tool calls; gaps are generation or suspension",
                             "None means unavailable (not recorded or not emitted by this harness), never zero"]}

@@ -33,7 +33,8 @@ def validate_withdrawal(ws, payload, question):
 
 def report_gaps(ws, *, question=None, since=None, source=None, limit=20, max_events=10000):
     if not 1 <= limit <= 100 or not 1 <= max_events <= 100000:
-        raise DawError("invalid_gap_report_bounds")
+        raise DawError("invalid_gap_report_bounds", f"limit must be 1..100 and max_events 1..100000 "
+                       f"(got limit={limit}, max_events={max_events})")
     conditions, params = ["kind='retrieval_gap'"], []
     if question:
         if not ws.one("SELECT id FROM question WHERE id=?", (question,)):

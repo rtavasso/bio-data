@@ -436,7 +436,7 @@ def execute(root, agent_id, operation, payload):
         limit = _int(payload, "limit", 20 if operation == "search" else 50)
         offset = _int(payload, "offset", 0)
         if not 1 <= limit <= 200 or offset < 0:
-            raise DawError("invalid_search_bounds")
+            raise DawError("invalid_search_bounds", f"limit must be 1..200 and offset >= 0 (got limit={limit}, offset={offset})")
         if operation == "search":
             return board.find(_text(payload, "text") or "", limit=limit, offset=offset,
                               family=_text(payload, "family") or "forum", full=bool(payload.get("full")),

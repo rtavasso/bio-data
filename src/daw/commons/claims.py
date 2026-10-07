@@ -90,7 +90,15 @@ def parse_claims(value):
         claims = CLAIMS.validate_python(value)
     except ValidationError as e:
         first = e.errors(include_url=False, include_input=False)[0]
-        raise DawError("invalid_claims", f"{'/'.join(map(str, first['loc']))}: {first['msg']}") from e
+        where, message = '/'.join(map(str, first['loc'])), first['msg']
+        if first["type"] == "extra_forbidden" and "scope" in first["loc"]:
+            message += (f"; scope allows only {', '.join(Scope.model_fields)} (free text). Put dataset, assay or "
+                        "sample names in context, and point at the record with an accession or artifact pointer")
+        elif first["type"] == "extra_forbidden" and "pointers" in first["loc"]:
+            message += f"; a pointer allows only {', '.join(Pointer.model_fields)}"
+        elif first["type"] == "extra_forbidden":
+            message += f"; a claim allows only {', '.join(Claim.model_fields)}"
+        raise DawError("invalid_claims", f"{where}: {message}") from e
     if not claims or len(claims) > MAX_CLAIMS:
         raise DawError("invalid_claims", f"supply 1 to {MAX_CLAIMS} claims")
     for n, claim in enumerate(claims):
@@ -339,7 +347,7 @@ def list_claims(owner, text="", *, status=None, scope=None, author=None, post=No
     from daw.commons.moderation import Visibility
     vis = Visibility.of(owner, caller, full)
     if not 1 <= limit <= 200 or offset < 0:
-        raise DawError("invalid_search_bounds")
+        raise DawError("invalid_search_bounds", f"limit must be 1..200 and offset >= 0 (got limit={limit}, offset={offset})")
     if status and status not in STATUSES:
         raise DawError("invalid_claim_status", ", ".join(STATUSES))
     conditions, params = [], []

@@ -43,7 +43,7 @@ def search_endpoint(view: View, saved: Scoped, q: str = "", family: str | None =
                                 limit=limit, offset=offset, paragraphs=paragraphs)
     else:
         if not 1 <= limit <= 100 or offset < 0:
-            raise DawError("invalid_search_bounds")
+            raise DawError("invalid_search_bounds", f"limit must be 1..100 and offset >= 0 (got limit={limit}, offset={offset})")
         result, hits = None, []
         for start in range(0, SCOPED_HITS, 100):
             result = search_commons(view, q, family=family or None, vector=vector, scope=scope, model=model,
