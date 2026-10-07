@@ -28,6 +28,13 @@ def evidence_graph(view: View, caller: Reader, scope: Scoped, question: str | No
                                      family=family, limit=limit, caller=caller, full=full, scope=scope)
 
 
+@router.get("/map/store")
+def map_store(view: View):
+    """The graph store (spec v2 V6) as this request sees it: segments current, behind or stale. Read-only."""
+    from daw.commons import graphstore
+    return graphstore.describe(view)
+
+
 @router.get("/map/node/{identity}")
 def map_node(identity: str, view: View, caller: Reader, full: bool = False):
     return evidence_map.node_record(view, identity, caller=caller, full=full)

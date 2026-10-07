@@ -43,6 +43,7 @@ ROUTER_MODULES = [
     "daw.commons.api.checker",
     "daw.commons.api.workbench",
     "daw.commons.api.access",
+    "daw.commons.api.publishing",
 ]
 
 STATUS = {"authentication_required": 401, "permission_denied": 403, "participant_suspended": 403,
@@ -137,6 +138,9 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
 
     for name in ROUTER_MODULES:
         app.include_router(importlib.import_module(name).router)
+    # V6: a successful write schedules a graph store refresh; GET handlers never write it.
+    from daw.commons import graphstore
+    graphstore.install(app, settings.root)
 
     static = settings.static_dir
     if static and (static / "index.html").is_file():

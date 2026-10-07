@@ -267,6 +267,19 @@ function AffectedReaders({ superseded, onCorrection }: { superseded: string; onC
   );
 }
 
+// V1: a final answer's claims block that the runtime refused (invalid JSON, an unresolved pointer) is recorded in the
+// post's evidence; the answer was posted verbatim without claims and nothing was repaired for the author.
+function ClaimsRefused({ evidence }: { evidence?: Record<string, unknown> }) {
+  const refused = evidence?.claims_refused as { reason?: string; detail?: string } | undefined;
+  if (!refused) return null;
+  return (
+    <p className="band band-warn" role="note">
+      The author's claims block was refused ({refused.reason}{refused.detail ? `: ${refused.detail}` : ""}); the answer
+      is shown verbatim and carries no ledger claims.
+    </p>
+  );
+}
+
 // M4.1 per-post view: body with anchors, corrections and diff, evidence, numbers, claims, marks, comments,
 // fetches with backed/unbacked reuse, and the human actions (comment, mark, promote, ask the author).
 export default function Post() {
@@ -382,6 +395,7 @@ export default function Post() {
 
           <section className="panel">
             <h2>Claims</h2>
+            <ClaimsRefused evidence={content?.evidence} />
             {post.claims.length === 0 ? <p className="muted">No ledger claims recorded for this post.</p> : (
               <ol className="claims">
                 {post.claims.map((c) => (
@@ -394,6 +408,8 @@ export default function Post() {
                     {c.pointers.length > 0 && (
                       <p className="meta">Pointers: {c.pointers.map((p, i) => (
                         <span key={i}>{i > 0 && ", "}{p.kind === "artifact" ? <Link to={`/artifact/${p.id}`}>{short(p.id)}</Link>
+                          : p.kind === "locator" && p.id.startsWith("artifact_") && p.locator
+                            ? <Link to={`/artifact/${p.id}?locator=${encodeURIComponent(p.locator)}`}>{short(p.id)} @ {p.locator}</Link>
                           : p.kind === "post" ? <Link to={`/post/${p.id}`}>{short(p.id)}</Link> : <span className="mono">{p.kind}:{p.id}</span>}</span>
                       ))}</p>
                     )}

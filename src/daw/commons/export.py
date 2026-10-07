@@ -49,6 +49,8 @@ SIDECARS = {"snapshot.id"}
 SCOPES = ("board", "thread", "question")
 PUBLIC_STORES = {"board", "library"}
 SNAPSHOT_ID = re.compile(r"^[0-9a-f]{64}$")
+RECORDS = "records.json"
+RECORDS_FORMAT = "colloquy.snapshot-records/1"
 TEXT_SUFFIXES = views.TEXT_SUFFIXES | {".html", ".css", ".svg"}
 SHAPES = {"posts": "circle", "artifacts": "square", "questions": "hexagon", "sources": "diamond",
           "participants": "triangle"}
@@ -219,8 +221,10 @@ def _tokens_html(tokens, link, numbers=None):
         elif kind == "pointer":
             href = link(token["id"])
             label = _marked(token["text"], token["text_offset"], numbers) if token["form"] == "link" else esc(token["text"])
-            out.append(f"<a href=\"{esc(href)}\">{label}</a>" if href
-                       else f"<span class=\"missing\" title=\"not in this export\">{label}</span>")
+            foreign = str(token["id"]).startswith("snapshot:")
+            out.append(f"<a href=\"{esc(href)}\">{label}</a>" if href else
+                       f"<span class=\"foreign\" title=\"a record of another snapshot: {esc(token['id'])}\">{label}</span>"
+                       if foreign else f"<span class=\"missing\" title=\"not in this export\">{label}</span>")
         elif kind == "figure":
             href = link(token["id"])
             out.append(f"<a href=\"{esc(href)}\">[figure: {esc(token['caption'])}]</a>" if href
@@ -232,9 +236,10 @@ def _sentences_html(sentences, link, numbers=None):
     return " ".join(_tokens_html(s["tokens"], link, numbers) for s in sentences)
 
 
-def markdown_html(source, link, image=None, numbers=None):
+def markdown_html(source, link, image=None, numbers=None, figure_link=None):
     """Untrusted Markdown as escaped HTML through the write-up parser. `link(id)` gives a relative URL or None;
-    `numbers` ({source offset: (status, length)}) marks each checked number with its status."""
+    `numbers` ({source offset: (status, length)}) marks each checked number with its status; `figure_link(id)`
+    (default `link`) is where a figure points, e.g. its artifact's bytes (V7 preprints)."""
     parts = []
     for block in writeup.parse(source or ""):
         kind = block["type"]
@@ -259,7 +264,7 @@ def markdown_html(source, link, image=None, numbers=None):
         elif kind == "code":
             parts.append(f"<pre><code>{_marked(block['text'], block['text_offset'], numbers)}</code></pre>")
         elif kind == "figure":
-            href, src = link(block["id"]), image(block["id"]) if image else None
+            href, src = (figure_link or link)(block["id"]), image(block["id"]) if image else None
             caption = esc(block["caption"])
             if src:
                 parts.append(f"<figure><a href=\"{esc(href)}\"><img src=\"{esc(src)}\" alt=\"{caption}\"></a>"
@@ -429,20 +434,26 @@ def build_site(view, kind, identity=None):
     reader = views.visibility(view)  # refused write-ups: placeholders, never their content (C5)
     refused = {p for p in members if p not in withheld and reader.refused(p)}
 
-    # Artifacts: page, stripped manifest and verified output bytes.
-    images = {}
+    # Artifacts: page, stripped manifest and verified output bytes. Bytes absent from this archive (a redacted
+    # fixture drops large derived outputs) are exported as their hash with `present: false`, never invented.
+    images, artifact_records = {}, []
     for aid in artifacts:
         row = view.library.one("SELECT * FROM artifact WHERE id=?", (aid,))
-        manifest = view.library.json_blob(row["manifest_blob"], verify=True)
-        from daw.profiles import verify_object
-        data = verify_object(view.library, row["output_blob"]).read_bytes()
+        manifest = _library_json(view, row["manifest_blob"])
+        data = _library_bytes(view, row["output_blob"])
         output = manifest.get("output") or {}
         name = safe_component(Path(str(output.get("name") or row["output_blob"])).name)
-        site.add(f"artifacts/{aid}/{name}", data)
+        if data is not None:
+            site.add(f"artifacts/{aid}/{name}", data)
         site.add(f"artifacts/{aid}/manifest.json", canonical({"artifact": aid, "manifest_blob": row["manifest_blob"],
                                                               "output_blob": row["output_blob"],
                                                               "manifest": _strip_paths(manifest)}))
-        if name.lower().endswith((".png", ".jpg", ".jpeg")):
+        artifact_records.append({"id": aid, "title": manifest.get("title"), "output_role": row["output_role"],
+                                 "derivation_key": row["derivation_key"], "manifest_path": f"artifacts/{aid}/manifest.json",
+                                 "output": ({"path": f"artifacts/{aid}/{name}", "sha256": row["output_blob"],
+                                             "bytes": len(data), "name": name} if data is not None else
+                                            {"sha256": row["output_blob"], "name": name, "present": False})})
+        if data is not None and name.lower().endswith((".png", ".jpg", ".jpeg")):
             images[aid] = f"artifacts/{aid}/{name}"
         page = paths[aid]
         link = linker(page)
@@ -457,8 +468,11 @@ def build_site(view, kind, identity=None):
                   and aid in ((index["posts"][p]["content"].get("evidence") or {}).get("artifacts") or [])]
         body = (f"<p class=\"mono\">{esc(aid)}</p><dl><dt>Output role</dt><dd>{esc(row['output_role'])}</dd>"
                 f"<dt>Derivation key</dt><dd class=\"mono\">{esc(row['derivation_key'])}</dd>"
-                f"<dt>Output bytes</dt><dd><a href=\"{esc(aid)}/{esc(name)}\">{esc(name)}</a> · sha256 "
-                f"<span class=\"mono\">{esc(row['output_blob'])}</span> · {len(data)} bytes</dd>"
+                + (f"<dt>Output bytes</dt><dd><a href=\"{esc(aid)}/{esc(name)}\">{esc(name)}</a> · sha256 "
+                   f"<span class=\"mono\">{esc(row['output_blob'])}</span> · {len(data)} bytes</dd>" if data is not None else
+                   f"<dt>Output bytes</dt><dd class=\"missing\">{esc(name)} · sha256 <span class=\"mono\">"
+                   f"{esc(row['output_blob'])}</span> · not in this archive (present: false); the hash names the bytes</dd>")
+                + 
                 f"<dt>Manifest</dt><dd><a href=\"{esc(aid)}/manifest.json\">manifest.json</a> (blob "
                 f"<span class=\"mono\">{esc(row['manifest_blob'])}</span>)</dd></dl>"
                 + untrusted("the registering researcher", f"<p>{esc(manifest.get('summary'))}</p>"
@@ -476,13 +490,16 @@ def build_site(view, kind, identity=None):
     for key, blob in sorted(notebooks.items()):
         author, question, snapshot = key
         page = notebook_paths[key]
-        record = view.library.json_blob(blob, verify=True)
+        record = _library_json(view, blob)
         folder = page[:-len(".html")]
         listed = []
         rendered = ""
-        from daw.profiles import verify_object
         for name, sha in sorted((record.get("files") or {}).items()):
-            data = verify_object(view.library, sha).read_bytes()
+            data = _library_bytes(view, sha)
+            if data is None:
+                listed.append(f"<li class=\"missing\">{esc(name)} <span class=\"muted mono\">sha256 {esc(sha)}</span> "
+                              "(not in this archive; present: false)</li>")
+                continue
             target = f"{folder}/{safe_relpath(name)}"
             site.add(target, data)
             listed.append(f"<li><a href=\"{esc(_rel(page, target))}\">{esc(name)}</a> "
@@ -622,6 +639,19 @@ def build_site(view, kind, identity=None):
                   f"<li><a href=\"{esc(notebook_paths[k])}\">{esc(k[1])} · {esc(k[2])}</a> by {esc(who(k[0]))}</li>"
                   for k in sorted(notebooks)) + "</ul><p><a href=\"map.html\">Evidence map</a></p>", untrusted=False)
     site.add("style.css", STYLE)
+    # V7: machine-readable records, so a commons importing this snapshot can index its claims and artifacts.
+    site.add(RECORDS, canonical({
+        "format": RECORDS_FORMAT,
+        "posts": [{"id": pid, "withheld": True} if pid in withheld or pid in refused else
+                  {"id": pid, "title": index["posts"][pid]["content"].get("title"), "author": index["posts"][pid]["author"],
+                   "kind": index["posts"][pid]["content"].get("kind"), "created": index["posts"][pid]["created"]}
+                  for pid in members],
+        "claims": [{"id": c["id"], "post": c["post"], "ordinal": c["ordinal"], "text": c["text"], "status": c["status"],
+                    "scope": json.loads(c["scope"]), "pointers": json.loads(c["pointers"]), "withdrawn_by": c["withdrawn_by"]}
+                   for pid in members if pid not in refused for c in claims[pid]],
+        "artifacts": artifact_records,
+        "note": "Records of this export for federation indexes (daw.commons.federation): claims of exported "
+                "posts and library artifacts with the path of their output bytes. Untrusted data."}))
     manifest = {"format": FORMAT, "scope": scope,
                 "counts": {"posts": len(members), "artifacts": len(artifacts), "notebooks": len(notebooks),
                            "claims": len(claim_ids), "marks": sum(len(m) for m in marks.values()),
@@ -635,6 +665,22 @@ def build_site(view, kind, identity=None):
                 "note": "Content-addressed static export: the snapshot ID is the sha256 of this file's bytes "
                         "(canonical JSON). Board content is attributed, untrusted data."}
     return site, manifest
+
+
+def _library_bytes(view, sha):
+    """Verified library bytes, or None when the blob is absent from this archive (present: false)."""
+    from daw.profiles import verify_object
+    try:
+        return verify_object(view.library, sha).read_bytes()
+    except (DawError, OSError):
+        return None
+
+
+def _library_json(view, sha):
+    try:
+        return view.library.json_blob(sha, verify=True)
+    except (DawError, OSError, ValueError):
+        return {"note": "manifest bytes not in this archive (present: false)"}
 
 
 def _check_record(view, pid, row, exported, *, withheld=False):

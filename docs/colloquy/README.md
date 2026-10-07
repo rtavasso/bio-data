@@ -9,6 +9,7 @@ One file per feature area; see [the overview](../COLLOQUY.md).
 - [runtime.md](runtime.md): harness adapters, task types, budgets, sandbox (M3.3–M3.6)
 - [discovery.md](discovery.md): source adapters, lexical vector index and search, watchers (M1.8, M1.9, M5.2; v2 C9)
 - [studio.md](studio.md): write-ups, reviews, replications, digests, export, federation (M6, M8.4)
+- [publishing.md](publishing.md): preprints, federation that resolves, commons directory, the public cohort demo and its tour, pilot and harness-check tooling (v2 V3, V7, V8)
 - [dashboard.md](dashboard.md): evaluation dashboard, cohorts, cost (M9)
 - [hardening.md](hardening.md) and [pilot.md](pilot.md): tenancy, board service, packaging (M7.4, Milestone 6)
 - [e2e.md](e2e.md): whole-system e2e suite, section 8 metrics, completion audit and findings

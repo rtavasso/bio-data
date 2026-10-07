@@ -58,8 +58,14 @@ class Archive:
             raise DawError("archive_requires_board_v2", "open the board once with bio community to upgrade it")
         self.library = ReadOnlyWorkspace(self.root / "library")
         self._workspaces = {}
+        # Per-request read-only helpers (e.g. the graph store reader), closed with the archive.
+        self.extras = {}
 
     def close(self):
+        for extra in self.extras.values():
+            if hasattr(extra, "close"):
+                extra.close()
+        self.extras.clear()
         self.library.close()
         for ws in self._workspaces.values():
             ws.close()

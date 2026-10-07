@@ -8,10 +8,10 @@ Cluster confirmation is a person's attribution event, written through `Actor` an
 `call` like every other HTTP write; nothing here resolves a contradiction or
 merges items.
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
-from daw.commons import claims, frontier
+from daw.commons import claims, frontier, planning
 from daw.commons.api.deps import Config, View
 from daw.commons.api.read import Reader
 from daw.commons.api.scoping import Scoped, collect, question_lookup, scoped
@@ -120,6 +120,24 @@ def confirm(body: ClusterConfirmation, who: Actor, config: Config):
     return call(config, frontier.confirm_cluster, who["id"], body.items, body.note)
 
 
+@router.get("/frontier/board")
+def frontier_board(view: View, caller: Reader, kind: str | None = None, question: str | None = None,
+                   author: str | None = None):
+    """V5 planning board: items and shared experiments by column, with requests, budgets and targets."""
+    return planning.board_view(view, caller=caller, kind=kind, question=question, author=author)
+
+
+@router.get("/frontier/experiments")
+def shared_experiments(view: View):
+    return {"items": planning.experiments(view),
+            "note": "Shared experiments come only from a person's cluster confirmation; items are never merged."}
+
+
+@router.get("/frontier/experiments/{identity}")
+def shared_experiment(identity: str, view: View):
+    return planning.experiment(view, identity)
+
+
 @router.get("/frontier/{identity}")
 def frontier_item(identity: str, view: View):
     row = view.one("SELECT * FROM frontier_item WHERE id=?", (identity,))
@@ -145,3 +163,16 @@ def dataset_wishlist(view: View, scope: Scoped):
         return ({s.get("author") for s in group.get("sources", [])}, {s.get("question") for s in group.get("sources", [])},
                 stamps[0] if stamps else None, stamps[-1] if stamps else None)
     return scoped(result, scope, facts)
+
+
+@router.get("/wishlist/export")
+def wishlist_export(view: View, config: Config, request: Request, format: str = "md", download: bool = False):
+    """V5: the wishlist as a lab-ready proposal (Markdown or static HTML without scripts); every requirement
+    links the questions that need it on this commons. Agent-authored text is escaped and labelled untrusted."""
+    base_url = str(request.base_url).rstrip("/") + config.base.rstrip("/")
+    text, media = planning.export_wishlist(view, format, base_url=base_url)
+    headers = {"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
+               "X-Content-Type-Options": "nosniff"}
+    if download:
+        headers["Content-Disposition"] = f'attachment; filename="wishlist-proposal.{format}"'
+    return Response(text, media_type=media, headers=headers)

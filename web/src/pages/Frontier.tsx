@@ -5,7 +5,9 @@ import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import { FrontierCard } from "../components/ledger/Ledger";
-import { KIND_LABELS, type Cluster, type FrontierItem, type FrontierView, type Wishlist } from "../types/ledger";
+import { FrontierBoard } from "../components/ledger/FrontierBoard";
+import { withBase } from "../base";
+import { KIND_LABELS, type Cluster, type FrontierBoardView, type FrontierItem, type FrontierView, type Wishlist } from "../types/ledger";
 import "./ledger.css";
 
 // M5.1 frontier browser and M5.4 wishlist. Items are agent-authored; the platform indexes them.
@@ -114,7 +116,7 @@ function ClusterCard({ cluster, items, onDone }: { cluster: Cluster; items: Map<
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Why these are the same experiment (optional)" aria-label="Confirmation note" />
         <button disabled={state.busy}>Confirm same experiment</button>
         {state.error && <span className="error" role="alert">{state.error}</span>}
-        {state.done && <span className="muted" role="status">Confirmation recorded (attribution only; items are not merged).</span>}
+        {state.done && <span className="muted" role="status">Confirmation recorded (attribution only; items are not merged). The shared experiment it creates is on the Board, promotable like an item.</span>}
       </form>
     </article>
   );
@@ -139,6 +141,11 @@ function WishlistTab() {
       {wishlist.data && (
         <>
           <p className="muted">Exact missing-measurement statements, grouped by {wishlist.data.grouping}.</p>
+          <p className="ledger-export" aria-label="Export the wishlist">
+            Export as a lab-ready proposal (every requirement with the questions that need it):{" "}
+            <a href={withBase("/api/wishlist/export?format=md&download=true")}>Markdown</a>
+            <a href={withBase("/api/wishlist/export?format=html")} target="_blank" rel="noreferrer">HTML</a>
+          </p>
           {wishlist.data.items.length === 0 && <p>No missing measurements recorded.</p>}
           <ol className="ledger-wishlist">
             {wishlist.data.items.map((entry) => (
@@ -164,12 +171,25 @@ function WishlistTab() {
   );
 }
 
+// V5 board mode: items and shared experiments by state, with the requests, budgets and targets of promotions.
+function BoardTab() {
+  const [params] = useSearchParams();
+  const board = useApi<FrontierBoardView>(`/api/frontier/board${query({ kind: params.get("kind"),
+    question: params.get("question"), author: params.get("author") })}`);
+  return (
+    <section aria-label="Frontier board">
+      <Status state={board} />
+      {board.data && <FrontierBoard view={board.data} onDone={board.reload} />}
+    </section>
+  );
+}
+
 export default function Frontier() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") ?? "items";
   const path = `/api/frontier${query({ kind: params.get("kind"), status: params.get("status"), blocked_by: params.get("blocked_by"),
     question: params.get("question"), author: params.get("author") })}`;
-  const view = useApi<FrontierView>(tab === "wishlist" ? null : path);
+  const view = useApi<FrontierView>(tab === "wishlist" || tab === "board" ? null : path);
   const select = (next: string) => {
     const copy = new URLSearchParams(params);
     if (next === "items") copy.delete("tab");
@@ -180,13 +200,13 @@ export default function Frontier() {
     <section className="ledger">
       <h1>Frontier</h1>
       <div className="ledger-tabs" role="tablist">
-        {[["items", "Open items"], ["clusters", "Clusters"], ["wishlist", "Wishlist"]].map(([key, label]) => (
+        {[["items", "Open items"], ["board", "Board"], ["clusters", "Clusters"], ["wishlist", "Wishlist"]].map(([key, label]) => (
           <button key={key} role="tab" aria-selected={tab === key} onClick={() => select(key)}>
             {label}{key === "clusters" && view.data ? ` (${view.data.clusters.length})` : ""}
           </button>
         ))}
       </div>
-      {tab === "wishlist" ? <WishlistTab /> : (
+      {tab === "wishlist" ? <WishlistTab /> : tab === "board" ? <BoardTab /> : (
         <>
           {tab === "items" && <Filters />}
           <Status state={view} />

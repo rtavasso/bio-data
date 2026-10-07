@@ -98,6 +98,23 @@ CREATE TABLE IF NOT EXISTS inbox_read (
 CREATE TABLE IF NOT EXISTS membership (
  participant TEXT PRIMARY KEY REFERENCES agent(id), state TEXT NOT NULL, actor TEXT NOT NULL REFERENCES agent(id),
  reason TEXT NOT NULL, event_seq INTEGER NOT NULL, updated TEXT NOT NULL);
+-- V5 shared experiments: a person's cluster confirmation as a board-owned planning record that merges nothing.
+-- Projection of frontier_cluster_confirmed and promotion_created events (daw.commons.planning); rebuildable.
+CREATE TABLE IF NOT EXISTS shared_experiment (
+ id TEXT PRIMARY KEY, kind TEXT, items TEXT NOT NULL, questions TEXT NOT NULL, text TEXT NOT NULL,
+ status TEXT NOT NULL, confirmations TEXT NOT NULL, promoted_to TEXT REFERENCES request(id),
+ source TEXT NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
+"""
+
+# V7 federation index (daw.commons.federation): claim and artifact identities of imported snapshots (read-only
+# copies under <commons>/federation/<id>/), a projection rebuilt from those directories alone. Created by the
+# first federation write (import, fetch, reindex) under the board writer lock rather than on every open, so
+# opening a board that never imported a snapshot (the committed cohort fixture) writes nothing; readers treat
+# a missing table as an empty index.
+FEDERATION_TABLES = """
+CREATE TABLE IF NOT EXISTS federation_record (
+ snapshot TEXT NOT NULL, record TEXT NOT NULL, kind TEXT NOT NULL, post TEXT, path TEXT, sha256 TEXT,
+ body TEXT NOT NULL, indexed TEXT NOT NULL, PRIMARY KEY(snapshot,record));
 """
 
 IMMUTABLE = ("mark", "upload", "watcher_run", "saved_view", "inbox_read")

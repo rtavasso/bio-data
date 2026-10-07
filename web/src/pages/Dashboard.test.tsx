@@ -173,3 +173,25 @@ test("number coverage per cohort: share of numbers with a pointer at the number 
   expect(cohort.textContent).toContain("unavailable");  // no final in the group: unavailable, never zero
   expect(screen.getByText("Numbers pointed at the number").parentElement?.textContent).toContain("(0/936)");
 });
+
+test("claims authoring per cohort: claims per post, evidence posts with claims and pointer scopes (V1)", async () => {
+  const authoring = { posts: 10, posts_with_claims: 4, claims: 12, claims_per_post: 1.2, evidence_posts: 5,
+    evidence_posts_with_claims: 4, evidence_posts_with_claims_share: 0.8, claims_refused: 1, pointers: 20,
+    pointer_kinds: { artifact: 2, locator: 15, post: 1, receipt: 0, accession: 2 },
+    pointer_scopes: { cell: 14, key: 1, line: 0, record: 5, invalid: 0 }, cell_pointer_share: 0.7 };
+  const numbers = { finals: 3, numbers: 40, scopes: { cell: 10, claim: 12, line: 0, post: 10, none: 8 },
+    statuses: { verified: 20, unverified: 2, post_scoped: 10, unpointed: 8 }, number_level: 22,
+    number_level_share: 0.55, claim_share: 0.3, cell_share: 0.25, verified_share: 0.5 };
+  Object.assign(dashboard, {
+    summary: { ...dashboard.summary, board: { ...dashboard.summary.board, authoring, numbers } },
+  });
+  show();
+  const table = await screen.findByRole("table", { name: "Claims authoring" });
+  const [summary] = within(table).getAllByRole("row").slice(1);
+  expect(summary.textContent).toContain("(12/10)");
+  expect(summary.textContent).toContain("80%");
+  expect(summary.textContent).toContain("(4/5)");
+  expect(summary.textContent).toContain("14 / 1 / 0 / 5");
+  expect(summary.textContent).toContain("30%");
+  expect(summary.textContent).toContain("25%");
+});

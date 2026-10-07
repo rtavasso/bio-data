@@ -26,14 +26,17 @@ from pathlib import Path
 from daw import hermes
 from daw.artifacts import reuse_links
 from daw.commons.permissions import require
+from daw.commons.hygiene import aggregate as hygiene_totals
+from daw.commons.hygiene import run_hygiene
 from daw.commons.runmetrics import compactions_reported, run_metrics
 from daw.community import PROVIDER_CITATION
 from daw.util import DawError, canonical, digest, now, read_json
 
 # 2: unavailable clocks, streams and compactions are None, never 0 (spec v2 C10).
-METRICS_VERSION = 2
+# 3: compaction hygiene per run (spec v2 V8, daw.commons.hygiene).
+METRICS_VERSION = 3
 # Files a run's metrics are computed from; size and mtime changes mark the projection stale.
-RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db")
+RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db", "prompt.txt")
 
 
 class _HarnessParsers(dict):
@@ -68,8 +71,13 @@ LIMITATIONS = [
     "Participant and harness panels count posts by author; cohort and task-type panels count posts made during their runs.",
     "Human marks are marks by human or operator participants; a mark is attribution, never a status change.",
     "Token totals and costs are given only when every run in the group reported them; partial sums are labelled.",
+    "Compaction hygiene reads session databases (Hermes) and prompt.txt: a summary 'missing the assignment' names "
+    "neither the request post nor the assignment key; context per call is what the stream reports (per call or per turn).",
     "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
     "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
+    "Claims authoring (V1) counts ledger claims per post, evidence-carrying posts (artifacts or a notebook) with "
+    "claims, refused final-answer claims blocks and the claims' pointer kinds and scopes (cell, key, line from the "
+    "locator grammar; record without a locator; invalid for free-text locators).",
 ]
 _RUN_CACHE, _POST_CACHE = {}, {}
 
@@ -115,7 +123,8 @@ def compute_run(folder, harness="hermes", config=None):
                                             ).items() if k != "limitations"}
     tokens, note = token_usage(parsed)
     metrics.update(turns_completed=parsed["turns_completed"], malformed_lines=len(parsed["malformed_lines"]),
-                   usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note)
+                   usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note,
+                   hygiene=run_hygiene(folder, harness))
     return metrics
 
 
@@ -351,16 +360,22 @@ def board_index(view, runs):
     posts = []
     for row in view.rows("SELECT id,author,parent,supersedes,created FROM post ORDER BY seq"):
         content = _post_content(view, row["id"])
+        evidence = content.get("evidence") if isinstance(content.get("evidence"), dict) else {}
         posts.append({**row, "run": content.get("run"), "kind": content.get("kind"),
-                      "provider_citation": bool(PROVIDER_CITATION.search(content.get("body", "")))})
+                      "provider_citation": bool(PROVIDER_CITATION.search(content.get("body", ""))),
+                      # V1: a post that publishes evidence (artifacts or a notebook) is an analysis that should
+                      # carry claims; a refused final-answer claims block is recorded in its evidence.
+                      "has_evidence": bool(evidence.get("artifacts") or evidence.get("notebook")),
+                      "claims_refused": bool(evidence.get("claims_refused"))})
     human = {a for a, row in agents.items() if row["kind"] in ("human", "operator")}
     marks = {}
     for m in view.rows("SELECT participant,target_id FROM mark WHERE target_kind='post'"):
         if m["participant"] in human:
             marks[m["target_id"]] = marks.get(m["target_id"], 0) + 1
-    claims = {}
-    for c in view.rows("SELECT post,status FROM claim"):
+    claims, claim_pointers = {}, {}
+    for c in view.rows("SELECT post,status,pointers FROM claim"):
         claims.setdefault(c["post"], []).append(c["status"])
+        claim_pointers.setdefault(c["post"], []).extend(json.loads(c["pointers"] or "[]"))
     superseded = {p["supersedes"] for p in posts if p["supersedes"]}
     links = []
     for identity, agent in agents.items():
@@ -380,6 +395,7 @@ def board_index(view, runs):
                 continue  # inherited by a fork: not this participant's reuse
             links.append({**entry, "participant": identity, "created": created})
     return {"posts": posts, "marks": marks, "claims": claims, "claims_recorded": bool(claims),
+            "claim_pointers": claim_pointers,
             "superseded": superseded, "links": links, "agents": agents, "numbers": _final_numbers(view)}
 
 
@@ -406,6 +422,49 @@ def number_coverage(index, posts):
             "number_level": level, "number_level_share": _ratio(level, total, 4),
             "claim_share": _ratio(scopes["claim"], total, 4), "cell_share": _ratio(scopes["cell"], total, 4),
             "verified_share": _ratio(statuses["verified"], total, 4)}
+
+
+POINTER_KINDS = ("artifact", "locator", "post", "receipt", "accession")
+POINTER_SCOPES = ("cell", "key", "line", "record", "invalid")
+
+
+def pointer_scope(pointer):
+    """Where a claim pointer points: a table cell, a JSON key or a line (from its locator, V2 grammar), the whole
+    record (no locator), or `invalid` (a locator the grammar does not parse, e.g. free text from before V2)."""
+    from daw.commons import locators
+    text = pointer.get("locator") if isinstance(pointer, dict) else None
+    if not text:
+        return "record"
+    try:
+        return locators.target_kind(locators.parse_locator(text)) or "record"
+    except locators.LocatorError:
+        return "invalid"
+
+
+def claims_authoring(index, posts):
+    """V1: claims per post, the share of evidence-carrying posts (artifacts or a notebook) that state claims,
+    refused final-answer claims blocks, and the kind and scope distribution of the claims' pointers. Counts
+    are over the group's posts; None where the denominator is zero (unavailable, never zero)."""
+    with_claims = [p for p in posts if index["claims"].get(p["id"])]
+    evidence = [p for p in posts if p.get("has_evidence")]
+    claims = sum(len(index["claims"].get(p["id"], [])) for p in posts)
+    pointers = [x for p in posts for x in index.get("claim_pointers", {}).get(p["id"], [])]
+    kinds = dict.fromkeys(POINTER_KINDS, 0)
+    scopes = dict.fromkeys(POINTER_SCOPES, 0)
+    for pointer in pointers:
+        kind = pointer.get("kind") if isinstance(pointer, dict) else None
+        if kind in kinds:
+            kinds[kind] += 1
+        scopes[pointer_scope(pointer)] += 1
+    return {"posts": len(posts), "posts_with_claims": len(with_claims), "claims": claims,
+            "claims_per_post": _ratio(claims, len(posts)),
+            "evidence_posts": len(evidence),
+            "evidence_posts_with_claims": sum(1 for p in evidence if index["claims"].get(p["id"])),
+            "evidence_posts_with_claims_share": _ratio(sum(1 for p in evidence if index["claims"].get(p["id"])),
+                                                       len(evidence), 4),
+            "claims_refused": sum(1 for p in posts if p.get("claims_refused")),
+            "pointers": len(pointers), "pointer_kinds": kinds, "pointer_scopes": scopes,
+            "cell_pointer_share": _ratio(scopes["cell"], len(pointers), 4)}
 
 
 def _total(values):
@@ -457,7 +516,7 @@ def board_criteria(index, runs, *, authors=None):
             "reuse": {"backed": backed, "unbacked": len(reused) - backed, "backed_ratio": _ratio(backed, len(reused))},
             "claims": ({s: statuses.count(s) for s in CLAIM_STATUSES} | {"total": len(statuses)})
             if index["claims_recorded"] else None,
-            "numbers": number_coverage(index, posts)}
+            "numbers": number_coverage(index, posts), "authoring": claims_authoring(index, posts)}
 
 
 def cost_summary(runs, pricing):
@@ -512,7 +571,8 @@ def run_criteria(runs):
                                       "mean": round(statistics.fmean(tails), 1) if tails else None,
                                       "max": max(tails) if tails else None},
             "provider_citation_finals": sum(1 for x in m if x.get("provider_citation_in_final"))
-            if any(x.get("provider_citation_in_final") is not None for x in m) else None}
+            if any(x.get("provider_citation_in_final") is not None for x in m) else None,
+            "compaction_hygiene": hygiene_totals(x.get("hygiene") for x in m)}
 
 
 def bucket_of(created, bucket):

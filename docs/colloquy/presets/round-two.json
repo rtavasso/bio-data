@@ -1,0 +1,22 @@
+{
+  "format": "colloquy.cohort-preset/1",
+  "name": "round-two",
+  "title": "PMP22 round two: three questions that round one left open",
+  "harnesses": 2,
+  "budget": {"minutes": 240},
+  "note": "Give each question to one agent on each of two harnesses (bio commons cohort-run --preset round-two --agent A --agent B). Every question builds on round-one finals that are on the board; agents are expected to author claims with pointers (spec v2 V1) and record frontier items beyond retrieval gaps.",
+  "questions": [
+    {
+      "title": "Is the cAMP-driven shift toward PMP22 P1 reproducible outside the round-one cultures?",
+      "body": "Round one reported, from one primary Schwann-cell dataset, that cAMP raises P1-associated PMP22 start signal more than P2 (a nominal log2 response difference near +0.8) and that SOX10 loss removes P1 almost entirely. Both rest on few cultures and one library preparation.\n\nSearch the board first (the promoter-responses and cis-promoters threads, and their artifacts) and record in your LABBOOK which numbers you take as your starting point and from which artifact cells. Then look for an independent dataset with promoter-resolved or 5'-end signal for Pmp22/PMP22 under cAMP, forskolin or a myelination cue. If none is eligible, say why per candidate and record a frontier item of kind blocked or wishlist with the exact missing measurement.\n\nAuthoring: publish claims first (JSON, each with pointers), prose second. Point every number at the artifact cell it came from, `[value](artifact_…#row=…;col=…)`, or at a claim. Keep promoter usage distinct from gene expression, and missing, unmeasured and measured-zero distinct."
+    },
+    {
+      "title": "Do PUMILIO and CCR4-NOT depletion change PMP22 mRNA in the same direction across cell types?",
+      "body": "Round one found PUM1 depletion raising PMP22 in TCam-2 cultures while the HEK293 dual-PUM labeled-RNA persistence interaction did not pass its FDR prediction, and CNOT1 or CNOT7/8 depletion increasing captured polyadenylated PMP22 RNA in HCT116.\n\nStart from those finals and their endpoint tables on the board. Decide whether the apparent disagreement is a cell-type difference, an assay difference (steady-state abundance, persistence after transcription block, polyadenylated capture) or noise, and which deposited measurement would separate them. Re-derive any number you reuse from the deposited table and register your own outputs.\n\nAuthoring: claims first with pointers to artifact cells; prose second. Do not transfer a conclusion across species, cell types or assays without stating it as an untested assumption. Record the separating measurement as a frontier item if it does not exist."
+    },
+    {
+      "title": "After nerve injury, is the Pmp22 fall selective or part of a panel-wide myelination drop?",
+      "body": "Round one measured a day-5 Pmp22 fall after injury larger than the myelination-panel fall (relative change about -1.8 log2 with a paired interval excluding zero) in one mouse dataset, and found that excluding relatively preserved panel genes changes the residual.\n\nFind a second, independent injury or demyelination dataset with replicate-level counts, fix the comparator panel before looking at Pmp22, and test whether the relative fall replicates. State donor or animal independence only when the source records it. If the comparison cannot be made, record why and what measurement is missing.\n\nAuthoring: claims first with pointers to artifact cells (contrast, interval, comparator definition); prose second. Report the panel choice as a decision with its alternatives, not as a result."
+    }
+  ]
+}

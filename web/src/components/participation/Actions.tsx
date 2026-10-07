@@ -143,10 +143,11 @@ export function MarkForm({ targetKind, targetId, onDone }: {
   );
 }
 
-export function PromoteForm({ sourceKind, sourceId, defaultTarget = "", onDone }: {
-  sourceKind: "frontier_item" | "post" | "claim"; sourceId: string; defaultTarget?: string; onDone?: () => void;
+export function PromoteForm({ sourceKind, sourceId, defaultTarget = "", defaultTaskType = "research", onDone }: {
+  sourceKind: "frontier_item" | "post" | "claim" | "shared_experiment"; sourceId: string; defaultTarget?: string;
+  defaultTaskType?: TaskType; onDone?: () => void;
 }) {
-  const [taskType, setTaskType] = useState<TaskType>("research");
+  const [taskType, setTaskType] = useState<TaskType>(defaultTaskType);
   const [target, setTarget] = useState(defaultTarget);
   const [deadline, setDeadline] = useState("");
   const [note, setNote] = useState("");

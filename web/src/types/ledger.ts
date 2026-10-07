@@ -111,11 +111,98 @@ export interface FrontierItem {
   candidate_evidence?: CandidateEvidence | null;
   // Whether the item's own post exists on this board (null when it names none).
   post_present?: boolean | null;
+  // V5 scouting deliverables: datasets inspected for this item, eligible or rejected with the scout's reason.
+  datasets?: InspectedDataset[];
+  datasets_summary?: DatasetsSummary;
+}
+
+export interface InspectedDataset {
+  accession?: string;
+  eligible?: boolean;
+  reason?: string;
+  receipt?: Pointer;
+  recorded_by?: string;
+  source?: "work_event" | "answer_block";
+  event?: string;
+  post?: string;
+  question?: string;
+  created?: string;
+  // A dataset listed in a scouting answer hidden by moderation (spec v2 C2): id and reason only.
+  hidden?: boolean;
+}
+
+export interface DatasetsSummary {
+  inspected: number;
+  eligible: number;
+  rejected: number;
+  withheld: number;
 }
 
 export interface CandidateEvidence {
-  set_by: "watcher" | "author" | "author and watcher" | "unrecorded";
-  records: { by: "watcher" | "author"; watcher?: string; run?: string; post?: string | null; event?: string | null; reason?: string | null }[];
+  set_by: string;
+  records: { by: "watcher" | "author" | "scouting"; watcher?: string; run?: string; post?: string | null; event?: string | null; reason?: string | null }[];
+}
+
+// V5 planning board (GET /api/frontier/board).
+export type BoardColumnKey = "open" | "blocked" | "candidate_evidence" | "promoted" | "closed";
+
+export interface RequestInfo {
+  id: string;
+  post: string;
+  target: string;
+  target_name: string;
+  state: string;
+  task_type?: string | null;
+  budget?: Record<string, number> | null;
+  deadline?: string | null;
+  answer?: string | null;
+  created: string;
+}
+
+export interface BoardCard extends FrontierItem {
+  column: BoardColumnKey;
+  request?: RequestInfo | null;
+}
+
+export interface SharedExperiment {
+  id: string;
+  kind?: FrontierKind | null;
+  text: string;
+  status: "open" | "promoted";
+  column: BoardColumnKey;
+  items: { id: string; present: boolean; question?: string; question_title?: string | null; author?: string;
+           author_name?: string | null; kind?: FrontierKind; text?: string; status?: FrontierStatus }[];
+  questions: string[];
+  confirmations: { seq: number; participant: string; note: string; created: string }[];
+  shared_terms: string[];
+  promoted_to?: string | null;
+  request?: RequestInfo | null;
+  created: string;
+  updated: string;
+  note: string;
+}
+
+export interface BoardColumn {
+  key: BoardColumnKey;
+  label: string;
+  items: BoardCard[];
+  experiments: SharedExperiment[];
+  count: number;
+  budget: Record<string, number>;
+  requests: number;
+  targets: { target: string; name: string; requests: number }[];
+  withdrawn?: number;
+}
+
+export interface FrontierBoardView {
+  columns: BoardColumn[];
+  total: number;
+  experiments: number;
+  by_kind: Record<FrontierKind, number>;
+  by_column: Record<BoardColumnKey, number>;
+  allowance: { allowance: Record<string, number> | null; spent: Record<string, number>;
+               remaining: Record<string, number> | null; unlimited: boolean } | null;
+  policy: string;
 }
 
 export interface Confirmation {

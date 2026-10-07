@@ -49,7 +49,7 @@ COMMENT_TARGETS = ("post", "question", "artifact", "node", "claim", "run")
 ANCHOR_KINDS = ("paragraph", "line", "row", "node")
 MARK_TARGETS = ("post", "claim", "artifact")
 MARK_KINDS = ("checked_source", "reproduced", "disputed")
-PROMOTION_SOURCES = ("frontier_item", "post", "claim")
+PROMOTION_SOURCES = ("frontier_item", "post", "claim", "shared_experiment")
 POINTER_KINDS = ("post", "artifact", "receipt", "locator", "accession", "upload", "claim", "run", "question")
 SUBJECT_KINDS = ("post", "claim", "artifact", "question", "run", "frontier_item")
 OPEN_FRONTIER = ("open", "candidate_evidence")
@@ -644,6 +644,10 @@ def _source(board, kind, identity):
         text = (f"Claim {claim['id']} ({claim['status']}) in post {claim['post']} by {claim['author']}:\n\n> "
                 + claim["text"].replace("\n", "\n> ") + "\n\nPointers:\n" + _pointer_lines(json.loads(claim["pointers"])))
         return text, claim["post"]
+    if kind == "shared_experiment":
+        # V5: a person's confirmed cluster, promotable like an item; its member items are quoted, attributed.
+        from daw.commons.planning import promotion_source
+        return promotion_source(board, identity), None
     raise DawError("invalid_promotion_source", f"use one of {', '.join(PROMOTION_SOURCES)}")
 
 
@@ -662,7 +666,7 @@ def _subject(board, kind, identity):
 
 
 def _task_request(board, person, *, kind, event, task_type, target, budget, deadline, title, body, parent, evidence,
-                  frontier_item=None):
+                  frontier_item=None, shared_experiment=None):
     """Create the request post and request row in one transaction under both writer locks. A promoted frontier
     item's state is then re-derived from the `promotion_created` event (daw.commons.frontier.reindex)."""
     from daw.commons.frontier import reindex
@@ -672,6 +676,9 @@ def _task_request(board, person, *, kind, event, task_type, target, budget, dead
         if frontier_item and board.one("SELECT status FROM frontier_item WHERE id=?", (frontier_item,))["status"] \
                 not in OPEN_FRONTIER:
             raise DawError("frontier_item_not_open", frontier_item)
+        if shared_experiment:
+            from daw.commons.planning import promotion_source
+            promotion_source(board, shared_experiment)  # re-checked under the lock: no second active promotion
         identity = board._post(person["id"], title, body, parent=parent, kind=kind,
                                evidence={**evidence, "target": target["id"], "task_type": task_type,
                                          "budget": budget, "deadline": deadline})
@@ -682,6 +689,9 @@ def _task_request(board, person, *, kind, event, task_type, target, budget, dead
                                 **{k: v for k, v in evidence.items() if k in {"source", "subject"}}})
         if frontier_item:
             reindex(board, reason=f"{event} {request}")
+        if shared_experiment:
+            from daw.commons.planning import rebuild_experiments
+            rebuild_experiments(board, reason=f"{event} {request}")
     return request_row(board.one("SELECT * FROM request WHERE id=?", (request,)))
 
 
@@ -722,7 +732,8 @@ def promote(board, actor, source_kind, source_id, task_type, target, budget, dea
     return _task_request(board, person, kind="promotion", event="promotion_created", task_type=task_type, target=target,
                          budget=budget, deadline=deadline, title=f"Promotion: {task_type} for {target['name']}",
                          body=body, parent=parent, evidence={"source": {"kind": source_kind, "id": source_id}, "note": note},
-                         frontier_item=source_id if source_kind == "frontier_item" else None)
+                         frontier_item=source_id if source_kind == "frontier_item" else None,
+                         shared_experiment=source_id if source_kind == "shared_experiment" else None)
 
 
 def commission(board, actor, task_type, target, budget, deadline=None, subject_kind=None, subject_id=None, note=None):

@@ -87,7 +87,10 @@ export interface PointerEntry {
   size?: number;
   bytes_url?: string;
   image_url?: string | null;
-  location?: { store: string; participant?: string };
+  location?: { store: string; participant?: string; snapshot?: string };
+  // V7: a record of an imported snapshot (`snapshot:<id>/claim_…`, `…/artifact_…`), resolved through the index
+  foreign?: boolean;
+  snapshot?: string;
   // posts
   post_kind?: string;
   author?: string;

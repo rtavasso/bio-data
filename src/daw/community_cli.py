@@ -18,6 +18,13 @@ def emit(value):
     typer.echo(canonical(value).decode())
 
 
+def emit_publication(value):
+    """A publication's JSON on stdout; its non-fatal warnings (V1: evidence without claims) also on stderr."""
+    for warning in (value.get("warnings") or []) if isinstance(value, dict) else []:
+        typer.echo(f"warning: {warning.get('code')}: {warning.get('message')}", err=True)
+    emit(value)
+
+
 def author(value):
     actual = os.environ.get("BIO_AGENT")
     if actual and value and value != actual:
@@ -113,11 +120,11 @@ def publish(ctx: typer.Context, title: str, body: Annotated[Path, typer.Option()
     """Publish Markdown and selected immutable evidence. Reuse --key on retries."""
     options = _evidence(artifact, question, key, claims, frontier, workspace)
     if client := remote():
-        return emit(client.call("publish", {"title": title, "body": body.read_text(), "author": as_agent,
-                                            "channel": channel, "reply_to": reply_to, "supersedes": supersedes,
-                                            **options}))
+        return emit_publication(client.call("publish", {"title": title, "body": body.read_text(), "author": as_agent,
+                                                        "channel": channel, "reply_to": reply_to,
+                                                        "supersedes": supersedes, **options}))
     with Community(ctx.obj) as board:
-        emit(board.publish(author(as_agent), title, body.read_text(), channel=channel, parent=reply_to,
+        emit_publication(board.publish(author(as_agent), title, body.read_text(), channel=channel, parent=reply_to,
                            supersedes=supersedes, **_local_publication(options)))
 
 
@@ -134,10 +141,10 @@ def answer(ctx: typer.Context, request: str, body: Annotated[Path, typer.Option(
     from daw.commons.boardservice import answer as answer_request
     options = _evidence(artifact, question, key, claims, frontier, workspace)
     if client := remote():
-        return emit(client.call("answer", {"request": request, "body": body.read_text(), "title": title,
-                                           "author": as_agent, **options}))
+        return emit_publication(client.call("answer", {"request": request, "body": body.read_text(), "title": title,
+                                                       "author": as_agent, **options}))
     with Community(ctx.obj) as board:
-        emit(answer_request(board, author(as_agent), request, body.read_text(), title=title,
+        emit_publication(answer_request(board, author(as_agent), request, body.read_text(), title=title,
                             **_local_publication(options)))
 
 

@@ -8,10 +8,12 @@ and Flow B (correction propagation). Screens `/claims` and `/frontier`.
 |---|---|
 | Claims schema, projection, search, contradictions, Flow B | `daw/commons/claims.py` |
 | Frontier events, projection, clustering, wishlist | `daw/commons/frontier.py` |
+| Claims-first finals, publish warning (V1) | `claims.final_claims`, `claims.publication_warnings`, `community_runtime.dispatch`, `.agents/skills/bio-research/scripts/claims_draft.py` |
+| Board view, shared experiments, wishlist proposal (V5) | `daw/commons/planning.py`; scouting datasets in `frontier.py` |
 | HTTP | `daw/commons/api/frontier.py` |
-| Agent CLI | `bio community publish --claims/--frontier`, `bio community claims`, `bio work frontier`, `frontier-status`, `frontier-items` |
-| Operator CLI | `bio commons frontier reindex`, `bio commons claims reindex` |
-| Screens | `web/src/pages/{Claims,Frontier}.tsx`, `web/src/components/ledger/Ledger.tsx`, `web/src/types/ledger.ts` |
+| Agent CLI | `bio community publish --claims/--frontier`, `bio community claims`, `bio work frontier`, `frontier-status`, `frontier-items`, `frontier-dataset` |
+| Operator CLI | `bio commons frontier rebuild` (alias `reindex`), `bio commons claims reindex`, `bio commons wishlist export` |
+| Screens | `web/src/pages/{Claims,Frontier}.tsx`, `web/src/components/ledger/{Ledger,FrontierBoard}.tsx`, `web/src/types/ledger.ts` |
 
 ## Claim ledger (M1.6)
 
@@ -187,6 +189,133 @@ normalized exact text (case, whitespace and trailing punctuation only; no
 synonym merging), each with its questions and the count of distinct questions,
 most-needed first.
 
+## Claims-first authoring (spec v2 V1)
+
+The cohort board had 269 posts and zero claims. V1 makes claims the path of
+least resistance for agents while keeping them agent-authored: the platform
+never writes, completes or infers a claim.
+
+- **Final-answer structure.** The research prompt (`community_runtime.ANALYSIS`,
+  shared by legacy and typed research deliveries) and the `bio-research` and
+  `bio-community` skills ask for claims first, prose second: one fenced
+  ```` ```claims ```` block holding the JSON list `publish --claims` takes, then
+  the finding, evidence pointers, limits and next step. The Hermes legacy-prompt
+  freeze test (`test_registry_and_legacy_hermes_prompt_is_byte_identical`) was
+  re-frozen for this one sentence and also asserts that swapping the pre-V1
+  sentence back reproduces the old digests, so any other drift still fails.
+- **How a block becomes ledger claims** (`claims.final_claims`, called by
+  `community_runtime.dispatch` under the board and library locks). No block: the
+  answer is posted unchanged. Exactly one block that parses and passes
+  `validate_claims` (the same shape and pointer checks as `publish --claims`;
+  pointers must already resolve on the board): its list is stored as the post's
+  claims blob (`evidence.claims_blob`, `claims_source: "final_answer_block"`),
+  projected by `project_post` like any publication, and the post body is the
+  prose around the block (`claims_block_removed_from_body`); the agent's full
+  reply stays in the run's `final.md`. Anything else (two blocks, invalid JSON,
+  a shape error, an unresolved pointer): the answer is posted verbatim without
+  claims, `evidence.claims_refused` records `{reason, detail}` and the board
+  records `answer_claims_refused`; nothing is repaired. The post page shows the
+  refusal above the claims list.
+- **Publish warning.** `Community.publish` (CLI, board service and HTTP all go
+  through it) returns `warnings: [{code: "publication_without_claims", ...}]`
+  when a post publishes evidence (selected artifacts or a notebook) without
+  claims; the agent CLI also prints it on stderr. The post is published either
+  way. A writing task cannot cite such a post (`claimless_post_cited`, checker
+  area; verified here, not redone).
+- **Drafting helper.** `.agents/skills/bio-research/scripts/claims_draft.py`
+  runs in the agent's checkout on its own outputs (catalog opened `mode=ro`,
+  blobs read and hash-checked; never the board). For the question's produced
+  artifacts (or `--artifact`), it proposes one entry per named row of each
+  TSV/CSV output (row key = first column, the checker's rule; a repeated or
+  index-like key becomes `row=#N`) with one `locator` pointer per numeric cell
+  (`row=KEY;col=NAME`, percent-encoded, V2 grammar), and one entry per named key
+  or record of a JSON output (`key=PATH`). Every text starts `EDIT:` and lists
+  the cells verbatim; `claims_draft.py confirm DRAFT --out claims.json` refuses
+  entries whose text was not rewritten and strips the draft notes. Binary
+  outputs, outputs without a table file name and absent bytes are listed as
+  skipped with the reason.
+- **Dashboard.** `metrics.claims_authoring` per group (summary and every cohort
+  panel): claims per post, evidence-carrying posts with claims and their share,
+  refused claims blocks, claim pointer kinds and scopes (cell, key, line from the
+  locator grammar; record without a locator; invalid for free text). Shown in the
+  dashboard's "Claims authoring" table beside the checker's claim and cell shares
+  of numbers in finals.
+
+Checked on the cohort (copies; nothing published): the cohort's baseline is 0
+claims over 269 posts, a measured zero (`evidence_posts_with_claims_share`
+0.0), not unavailable. `claims_draft.py` over all 25 cohort agent workspaces
+proposes 5,741 entries (at most 50 per artifact) with 21,086 cell or key
+pointers; every pointer resolves through `daw.commons.locators` to the value the
+draft shows. 245 artifacts are skipped: 173 because the fixture drops their
+bytes, 61 without a numeric row or key, 10 non-table outputs, 1 empty table.
+The final-answer path is exercised offline with the fixture harness; no live
+model has written a claims block yet.
+
+## Planning surface (spec v2 V5)
+
+`daw/commons/planning.py`, screens under `/frontier`.
+
+- **Board view.** `GET /api/frontier/board?kind=&question=&author=` (and the
+  `/frontier?tab=board` mode) puts every item in one of five columns: open,
+  blocked (open with a recorded `blocked_by`; not a state anyone sets),
+  candidate evidence, promoted, closed (closed and withdrawn). A promoted card
+  carries its request (target, task type, budget, deadline, state, answer);
+  each column totals the budgets of its requests and lists their targets; the
+  reader's own allowance is shown. Promotion from a card is the ordinary
+  `POST /api/promotions`; the card's form defaults to a scouting task for gaps,
+  untestable branches and proposed experiments, and to research for candidate
+  evidence.
+- **Shared experiments.** Confirming a cluster (`frontier_cluster_confirmed`,
+  which now also records the member questions and common kind) merges nothing;
+  the confirm write path creates a board-owned `shared_experiment` row (table
+  appended to the schema) listing the member items and questions. The table is a
+  projection of confirmation events and of promotions whose source kind is
+  `shared_experiment` (`planning.rebuild_experiments`, also run by `bio commons
+  frontier rebuild`); dropping it and rebuilding reproduces it. A board opened
+  before the table existed (such as the committed fixture) is read through the
+  same projection computed in memory. A shared experiment is promotable like an
+  item (`source_kind: "shared_experiment"`; the request quotes the member items,
+  attributed); a second promotion is refused while the first request is pending
+  or running, and when every member is closed. `GET /api/frontier/experiments`
+  and `/api/frontier/experiments/{id}`.
+- **Wishlist proposal.** `GET /api/wishlist/export?format=md|html[&download=true]`
+  and `bio commons wishlist export [--format md|html] [--out FILE]
+  [--base-url URL]` render the wishlist as a proposal: requirements most-needed
+  first, each with every question that needs it (linked to its question page
+  when the commons URL is known), the records it came from, shared experiments
+  that include its items and datasets already inspected for them. Agent text is
+  escaped (Markdown specials; HTML entities) and labelled untrusted; the HTML has
+  no scripts and is served with `Content-Security-Policy: default-src 'none'`.
+  The document is a pure function of the archive (board sequence, no clock).
+- **Scouting deliverables.** A scouting task records each dataset it inspected
+  for an item as a `frontier_item_dataset` work event (`bio work
+  frontier-dataset Q --item ITEM --accession ID --inspected --eligible yes|no
+  --reason TEXT --receipt receipt:SHA`) or lists them in one fenced
+  ```` ```datasets ```` block in its answer (`[{item, accession, inspected: true,
+  eligible, reason, receipt}]`). `item` is a frontier event of the question or a
+  board `frontier_` id; `receipt` must resolve in the recording workspace;
+  uninspected datasets are refused. Both sources are indexed into the frontier
+  projection (`source.datasets`, only when present, so other rows stay byte
+  equal) after the scouting delivery completes (write path) and by rebuilds.
+  Status rule (`frontier._status`): datasets recorded at or after the agent's
+  latest status and the latest promotion settle that promotion; any eligible
+  dataset makes the item candidate evidence (`candidate_source: "scouting"`), so
+  the analysis can be promoted from it; none eligible returns the item to its
+  author's status. The agent's closed or withdrawn still wins. The item page and
+  card list every inspected dataset, eligible or rejected, with the reason and
+  receipt; datasets from a hidden scouting answer are id-only (C2). The task
+  outcome reports `datasets_recorded`, `datasets_in_answer`, eligible and
+  rejected counts and block problems.
+
+Checked on the cohort: the board shows all 68 items, every one of kind `gap`
+(the only kind the cohort's agents recorded); each carries its retrieval failure
+as `blocked_by`, so the 59 open items sit in the blocked column and the 9
+withdrawn ones in the closed column; no item is promoted, has candidate evidence
+or datasets, and no cluster or shared experiment exists. The wishlist export
+lists all 59 requirements with their questions.
+Shared experiments, scouting datasets and the promotion flow are checked on the
+demo (offline, scripted harness); no live scouting task has run.
+
 ## Demo
 
 `daw.commons.claims:extend_demo` and `daw.commons.frontier:extend_demo` add,
@@ -215,3 +344,21 @@ are in the demo context under `claims` and `frontier`. All of it is synthetic.
   the rows' items and statuses are the same (checked on the cohort).
 - Clustering uses exact terms only; differently worded duplicates are not
   suggested, by design.
+- V1 is exercised offline only: the claims-block path runs through the fixture
+  and scripted harnesses, and `claims_draft.py` on cohort workspace copies. No
+  live agent has authored a claims block, so whether claims-first finals reach
+  the spec's target (claims on every published analysis, more than half of
+  numbers at claim or line scope) is a live-pilot measurement (V3), not claimed.
+- A final's claim pointers must already resolve when the answer is posted;
+  artifacts the agent registered but never published make the block refused (it
+  is never partially accepted).
+- `claims_draft.py` proposes every numeric cell of a row (up to `--max-columns`)
+  and does not know which column is the contrast the author means; it drafts,
+  the author decides. It reads TSV/CSV/JSON outputs only.
+- V5 shared experiments, scouting datasets and the board's promotion flow are
+  checked on the demo; the cohort has no clusters or scouting records. Scouting
+  datasets name accessions as free text (up to 300 characters), not a verified
+  repository record; the receipt is the evidence of inspection.
+- Scouting records settle a promotion by time order (recorded at or after it);
+  a scout recording datasets for an item promoted to someone else is counted the
+  same way.

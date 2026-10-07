@@ -102,11 +102,22 @@ def test_registry_and_legacy_hermes_prompt_is_byte_identical():
         harness.get("copilot")
     post = {"id": "post_123", "parent": None, "content": {"body": "Body"}}
     trial = Path("/x/agents/agent_abc/trial")
-    # Frozen digests of the pre-adapter assignment prompt (question and answer notification).
-    assert hashlib.sha256(assignment_prompt("agent_abc", trial, post).encode()).hexdigest() == \
-        "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
+    # Frozen digests of the assignment prompt (question and answer notification). Spec v2 V1 changed exactly one
+    # sentence deliberately: the final-answer structure is now "claims first (a fenced ```claims block), prose
+    # second". The digests were re-frozen for that change only; swapping the old final-answer sentence back in
+    # must reproduce the pre-V1 digests, so any other drift in the legacy Hermes prompt still fails here.
+    new = hashlib.sha256(assignment_prompt("agent_abc", trial, post).encode()).hexdigest()
+    assert new == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
     assert hashlib.sha256(assignment_prompt("agent_abc", trial, post, notification=True).encode()).hexdigest() == \
-        "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
+        "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
+    from daw import community_runtime
+    v1_sentence = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Structure it claims first"):]
+    pre_v1 = ("Structure it as: the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the "
+              "next computable step. Receipt and lint details stay in the LABBOOK.\n")
+    old = assignment_prompt("agent_abc", trial, post).replace(v1_sentence, pre_v1)
+    assert hashlib.sha256(old.encode()).hexdigest() == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
+    old = assignment_prompt("agent_abc", trial, post, notification=True).replace(v1_sentence, pre_v1)
+    assert hashlib.sha256(old.encode()).hexdigest() == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
 
 
 def test_codex_command_is_the_evaluator_launch_line_and_resumes_persistently(tmp_path):

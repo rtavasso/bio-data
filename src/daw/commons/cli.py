@@ -6,6 +6,7 @@ from typing import Annotated
 import typer
 
 from daw.commons.discovery_cli import embed, watch_app
+from daw.commons.publishing_cli import register as _register_publishing
 from daw.commons.studio_cli import (demo_command, digest_app, export_command, federation_app, replication_app,
                                     review_app, writeup_app)
 from daw.util import DawError, canonical
@@ -36,6 +37,7 @@ app.command("demo-studio")(demo_command)
 for _name, _sub in (("federation", federation_app), ("replication", replication_app), ("review", review_app),
                     ("digest", digest_app), ("writeup", writeup_app)):
     app.add_typer(_sub, name=_name)
+_register_publishing(app, federation_app)  # V3, V7, V8: preprint, directory, tour, public-demo, harness-check, invite
 
 
 def emit(value):
@@ -52,7 +54,8 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
           mode: Annotated[str, typer.Option(help="local (single user, no login) or accounts")] = "local",
           user: Annotated[str, typer.Option(help="Human participant used in local mode")] = "local",
           static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None,
-          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None):
+          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None,
+          graph_refresh: Annotated[int, typer.Option(help="Refresh the graph store at start and every N seconds (0: only after writes)")] = 60):
     """Serve the read API, write API, event stream and built web app for one commons."""
     uvicorn = _uvicorn()
     from daw.commons.app import create_app
@@ -62,6 +65,8 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
+    from daw.commons.graphstore import start_interval
+    start_interval(ctx.obj, graph_refresh)  # V6: the derived graph store follows agents' writes too
     uvicorn.run(app, host=host, port=port, **_forwarded(forwarded_allow_ips))
 
 
@@ -324,6 +329,27 @@ def frontier_rebuild(ctx: typer.Context):
 
 frontier_app.command("reindex", help="Alias of `frontier rebuild`.")(frontier_rebuild)
 
+wishlist_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                           help="Dataset wishlist (M5.4) and its lab-ready proposal export (V5).")
+app.add_typer(wishlist_app, name="wishlist")
+
+
+@wishlist_app.command("export")
+def wishlist_export(ctx: typer.Context,
+                    format: Annotated[str, typer.Option("--format", help="md or html")] = "md",
+                    out: Annotated[Path | None, typer.Option(help="Write here (default: stdout)")] = None,
+                    base_url: Annotated[str | None, typer.Option(help="Absolute URL of this commons, to link each question")] = None):
+    """Export the wishlist as a proposal document: every requirement with the questions that need it. Read-only."""
+    from daw.commons.archive import Archive
+    from daw.commons.planning import export_wishlist
+    with Archive(ctx.obj) as view:
+        text, _ = export_wishlist(view, format, base_url=base_url)
+    if out:
+        out.write_text(text)
+        emit({"exported": str(out), "format": format, "bytes": len(text.encode())})
+    else:
+        typer.echo(text, nl=False)
+
 
 @claims_app.command("reindex")
 def claims_reindex(ctx: typer.Context):
@@ -417,8 +443,9 @@ def metrics_dashboard(ctx: typer.Context, cohort: str | None = None, participant
 
 @app.command("cohort-run")
 def cohort_run_command(ctx: typer.Context, name: str,
-                       assignment: Annotated[list[Path], typer.Option("--assignment", help="Markdown file; first line is the title (repeatable)")],
                        agent: Annotated[list[str], typer.Option("--agent", help="Agent id or name (repeatable)")],
+                       assignment: Annotated[list[Path] | None, typer.Option("--assignment", help="Markdown file; first line is the title (repeatable)")] = None,
+                       preset: Annotated[str | None, typer.Option(help="Named question set, e.g. round-two (docs/colloquy/presets/)")] = None,
                        task_type: str = "research", minutes: int | None = None, tokens: int | None = None,
                        download_bytes: int | None = None, deadline: str | None = None,
                        dispatch: Annotated[bool, typer.Option("--dispatch", help="Deliver now, one at a time (DAW_LIVE=1)")] = False,
@@ -432,13 +459,20 @@ def cohort_run_command(ctx: typer.Context, name: str,
     if os.environ.get("BIO_AGENT"):
         raise DawError("operator_dispatch_required")
     executables = dict(item.split("=", 1) for item in harness_executable or [] if "=" in item)
-    items = []
-    for path in assignment:
+    items, warning = [], None
+    if preset:  # spec v2 V3: a named question set (pilotkit.load_preset); --assignment files add to it
+        from daw.commons.pilotkit import load_preset
+        loaded, items = load_preset(preset)
+        minutes = minutes or (loaded.get("budget") or {}).get("minutes")
+    for path in assignment or []:
         text = path.read_text()
         title = text.partition("\n")[0]
         items.append((title.lstrip("# ").strip() or path.stem, text))
     budget = {k: v for k, v in {"minutes": minutes, "tokens": tokens, "download_bytes": download_bytes}.items() if v}
     with Community(ctx.obj) as board:
+        if preset:
+            from daw.commons.pilotkit import check_harnesses
+            _, warning = check_harnesses(board, agent, loaded)
         queued = cohort_run(board, actor, name, items, agent, task_type=task_type, budget=budget, deadline=deadline)
         results = {}
         if dispatch:
@@ -449,7 +483,7 @@ def cohort_run_command(ctx: typer.Context, name: str,
                         results[request] = deliver(board, request, executables.get(harness))["state"]
                     except DawError as e:
                         results[request] = e.reason
-        value = {"queued": queued, "delivered": results}
+        value = {"queued": queued, "delivered": results, **({"warning": warning} if warning else {})}
         if dispatch:
             value["cohorts"] = collect_cohorts(board, actor, name)
         else:
@@ -586,3 +620,44 @@ def sandbox_uids(ctx: typer.Context):
                          "prepare_as_root": commands})
     emit({"policy": config.agent_uid, "disk_quota_bytes": config.disk_quota_bytes,
           "disk_quota_method": config.disk_quota_method, "agents": rows})
+# ---- spec v2 V6: recorded delivery records and the graph store ----------------------------------------------
+
+graph_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                        help="Graph store: the evidence map's derived projection under cache/graph (V6).")
+runs_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                       help="Delivery records: clock, compactions and analysis receipts (V6).")
+app.add_typer(graph_app, name="graph")
+app.add_typer(runs_app, name="runs")
+
+
+@graph_app.command("refresh")
+def graph_refresh(ctx: typer.Context,
+                  full: Annotated[bool, typer.Option("--full", help="Rebuild from scratch instead of updating")] = False):
+    """Bring the graph store up to the archive (changed segments only) or rebuild it; never authoritative."""
+    from daw.commons import graphstore
+    emit(graphstore.refresh(ctx.obj, full=full))
+
+
+@graph_app.command("status")
+def graph_status(ctx: typer.Context):
+    """Which graph store segments are current, behind by sequence, or stale (read-only)."""
+    from daw.commons import graphstore
+    emit(graphstore.status(ctx.obj))
+
+
+@runs_app.command("reindex")
+def runs_reindex(ctx: typer.Context, runs: Annotated[list[str] | None, typer.Argument(help="Run ids")] = None,
+                 all_runs: Annotated[bool, typer.Option("--all", help="Every finished run without records")] = False,
+                 as_: As = "operator"):
+    """Build clock, compaction and receipt records for runs captured before they existed, from what the run folder
+    and the checkout still hold; existing records are kept and nothing is fabricated."""
+    from daw.commons.records import reindex_run
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        selected = list(runs or [])
+        if all_runs:
+            selected += [r["id"] for r in board.rows("SELECT id FROM attempt WHERE state!='running' ORDER BY created,id")
+                         if r["id"] not in selected]
+        if not selected:
+            raise DawError("no_runs_selected", "name runs or pass --all")
+        emit([reindex_run(board, acting(as_), run) for run in selected])

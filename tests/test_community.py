@@ -566,3 +566,89 @@ def test_audit_report_metrics_separate_sleep_and_ceremony(board, source, tmp_pat
     assert {"tool_calls", "help_calls", "inbox_calls", "analysis_receipts", "plumbing_scripts", "compactions"} <= metrics.keys()
     assert value["summary"]["suspended_hours"] == 1.0 and "reused_links_backed" in value["summary"]
     assert "| monotonic min |" in (tmp_path / "audit/report.md").read_text()
+
+
+# ---- spec v2 V1: claims-first authoring ------------------------------------------------------------------
+
+def test_publishing_with_evidence_and_no_claims_warns(board, source, tmp_path, monkeypatch):
+    """V1 acceptance: a post with evidence and no claims is published with a non-fatal warning (output JSON and
+    stderr); with claims, or without evidence, there is no warning."""
+    ws, question, artifact, _ = source
+    post = board.publish("operator", "PMP22 RNA", "A result without claims.", workspace=ws.root,
+                         artifacts=[artifact["artifact"]], question=question["question"], request_key="no-claims")
+    assert [w["code"] for w in post["warnings"]] == ["publication_without_claims"]
+    assert post["warnings"][0]["evidence"] == {"artifacts": 1, "notebook": True}
+    assert board.show(post["id"])["claims"] == []  # published all the same; nothing was written for the author
+    claims = [{"text": "PMP22 value 2 in the fixture slice.", "status": "descriptive",
+               "pointers": [{"kind": "locator", "id": artifact["artifact"], "locator": "row=PMP22;col=value"}]}]
+    stated = board.publish("operator", "PMP22 RNA with claims", "A result with claims.", workspace=ws.root,
+                           artifacts=[artifact["artifact"]], question=question["question"], claims=claims,
+                           request_key="claims")
+    assert "warnings" not in stated and len(stated["claims"]) == 1
+    assert "warnings" not in board.publish("operator", "Discussion", "No evidence, no claims.")
+    # The agent CLI prints the same warning on stderr and keeps it in the JSON.
+    monkeypatch.delenv("BIO_AGENT", raising=False)
+    body = tmp_path / "post.md"
+    body.write_text("Another result without claims.")
+    result = CliRunner().invoke(app, ["community", "--root", str(board.root), "publish", "Again", "--body", str(body),
+                                      "--workspace", str(ws.root), "--artifact", artifact["artifact"]])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["warnings"][0]["code"] == "publication_without_claims"
+    assert "warning: publication_without_claims" in result.stderr
+
+
+def answering_hermes(path):
+    """The fixture harness answering with the text in the trial's answer.md (an agent-written final)."""
+    source = Path(fake_hermes(path))
+    text = source.read_text().replace("'text':f'Fixture answer with {n} stored turns.'",
+                                      "'text':(trial/'answer.md').read_text()")
+    source.write_text(text)
+    return str(source)
+
+
+def test_final_answer_claims_block_becomes_ledger_claims_or_is_refused(board, source, tmp_path, monkeypatch):
+    """V1: the runtime records the agent's own fenced claims block as the answer's claims (as publish --claims);
+    an invalid block is refused with a recorded reason and the answer is posted verbatim without claims."""
+    monkeypatch.setenv("DAW_LIVE", "1")
+    monkeypatch.setattr("daw.community_runtime.native_session", fake_session)
+    ws, question, artifact, _ = source
+    published = board.publish("operator", "Slice", "The slice.", workspace=ws.root, artifacts=[artifact["artifact"]],
+                              question=question["question"], request_key="slice")
+    agent = add_agent(board, "a", seed_workspace=ws.root)
+    trial = board.trial(agent)
+    executable = answering_hermes(tmp_path / "hermes")
+    block = [{"text": "PMP22 value is 2 in the slice.", "status": "supported", "scope": {"species": "synthetic"},
+              "pointers": [{"kind": "locator", "id": artifact["artifact"], "locator": "row=PMP22;col=value"},
+                           {"kind": "post", "id": published["id"]}]},
+             {"text": "Donor structure cannot be tested here.", "status": "untestable"}]
+    final = "```claims\n" + json.dumps(block, indent=1) + "\n```\n\nThe finding: PMP22 is 2 in the slice.\n"
+    (trial / "answer.md").write_text(final)
+    request = board.ask("a", "operator", "What is the PMP22 value?")
+    done = dispatch(board, request["id"], executable)
+    shown = board.show(done["answer"])
+    assert shown["content"]["body"] == "The finding: PMP22 is 2 in the slice."
+    evidence = shown["content"]["evidence"]
+    assert evidence["claims_source"] == "final_answer_block" and evidence["claims_block_removed_from_body"]
+    assert [(c["text"], c["status"]) for c in shown["claims"]] == [(b["text"], b["status"]) for b in block]
+    run = board.one("SELECT path FROM attempt WHERE request=?", (request["id"],))["path"]
+    assert (board.root / run / "final.md").read_text() == final  # the agent's full reply stays in the run
+    # An unresolved pointer refuses the block, never repairs it: posted verbatim, reason recorded.
+    bad = [{"text": "Invented.", "status": "supported", "pointers": [{"kind": "artifact", "id": "artifact_" + "0" * 64}]}]
+    final = "```claims\n" + json.dumps(bad) + "\n```\n\nA reply whose claim points nowhere.\n"
+    (trial / "answer.md").write_text(final)
+    request = board.ask("a", "operator", "And another?")
+    done = dispatch(board, request["id"], executable)
+    shown = board.show(done["answer"])
+    run = board.one("SELECT path FROM attempt WHERE request=?", (request["id"],))["path"]
+    assert shown["content"]["body"] == (board.root / run / "final.md").read_text()
+    assert "```claims" in shown["content"]["body"]
+    assert shown["claims"] == [] and shown["content"]["evidence"]["claims_refused"]["reason"] == "claim_pointer_unresolved"
+    refused = [json.loads(r["body"]) for r in board.rows("SELECT body FROM event WHERE kind='answer_claims_refused'")]
+    assert [(r["answer"], r["reason"]) for r in refused] == [(done["answer"], "claim_pointer_unresolved")]
+    # Malformed JSON and two blocks are refused the same way; a reply without a block is untouched.
+    from daw.commons.claims import final_claims
+    with board.writer(), board.library.writer():
+        assert final_claims(board, "```claims\n[not json\n```\nprose")[2]["reason"] == "invalid_claims_json"
+        two = "```claims\n[]\n```\n\n```claims\n[]\n```\nprose"
+        assert final_claims(board, two)[2]["reason"] == "multiple_claims_blocks"
+        assert final_claims(board, "plain prose") == ("plain prose", {}, None)
