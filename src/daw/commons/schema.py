@@ -84,6 +84,12 @@ CREATE TABLE IF NOT EXISTS digest_schedule (
 -- Keys are sha256 digests (never raw addresses or tokens); rows older than the window are pruned on write.
 CREATE TABLE IF NOT EXISTS login_failure (key TEXT NOT NULL, at REAL NOT NULL);
 CREATE INDEX IF NOT EXISTS login_failure_key ON login_failure(key,at);
+-- V5 shared experiments: a person's cluster confirmation as a board-owned planning record that merges nothing.
+-- Projection of frontier_cluster_confirmed and promotion_created events (daw.commons.planning); rebuildable.
+CREATE TABLE IF NOT EXISTS shared_experiment (
+ id TEXT PRIMARY KEY, kind TEXT, items TEXT NOT NULL, questions TEXT NOT NULL, text TEXT NOT NULL,
+ status TEXT NOT NULL, confirmations TEXT NOT NULL, promoted_to TEXT REFERENCES request(id),
+ source TEXT NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
 """
 
 IMMUTABLE = ("mark", "upload", "watcher_run")

@@ -349,3 +349,38 @@ def test_claude_runs_report_compactions_unavailable_on_dashboard_and_timeline(de
     assert timeline["compactions"] is None and timeline["metrics"]["compactions"] is None
     dashboard = client.get("/api/dashboard", params={"harness": "claude"}).json()
     assert dashboard["summary"]["compactions"] is None and dashboard["summary"]["compaction_unavailable_runs"] == 1
+
+
+# ---- spec v2 V1: claims authoring per cohort -----------------------------------------------------------------
+
+def test_dashboard_reports_claims_per_post_and_pointer_scopes(demo_only):
+    """V1: claims per post, evidence-carrying posts with claims, and the kind and scope split of claim pointers
+    (cell/key/line from the locator grammar, record without a locator), beside the number coverage shares."""
+    root, ctx = demo_only("daw.commons.claims:extend_demo", "daw.commons.metrics:demo_cohort")
+    with Archive(root) as view:
+        claims = view.rows("SELECT post,pointers FROM claim")
+        board = metrics.dashboard(view)
+    authoring = board["summary"]["board"]["authoring"]
+    pointers = [p for c in claims for p in json.loads(c["pointers"])]
+    assert authoring["claims"] == len(claims) > 0 and authoring["posts_with_claims"] == len({c["post"] for c in claims})
+    assert authoring["claims_per_post"] == round(len(claims) / authoring["posts"], 3)
+    assert authoring["pointers"] == len(pointers) == sum(authoring["pointer_scopes"].values())
+    assert sum(authoring["pointer_kinds"].values()) == len(pointers)
+    assert authoring["pointer_scopes"]["record"] == sum(1 for p in pointers if not p.get("locator"))
+    assert 0 <= authoring["evidence_posts_with_claims"] <= authoring["evidence_posts"]
+    assert {"claim_share", "cell_share"} <= set(board["summary"]["board"]["numbers"])
+    # Per cohort, through the same group function (the demo cohort's runs).
+    assert all("authoring" in g["board"] for g in board["panels"]["cohort"])
+    assert metrics.pointer_scope({"kind": "locator", "id": "artifact_x", "locator": "row=B;col=v"}) == "cell"
+    assert metrics.pointer_scope({"kind": "locator", "id": "artifact_x", "locator": "key=a.b"}) == "key"
+    assert metrics.pointer_scope({"kind": "locator", "id": "post_x", "locator": "the third paragraph"}) == "invalid"
+
+
+def test_cohort_claims_authoring_baseline_is_zero_claims_not_unavailable(cohort):
+    """On the real cohort (before V1) agents wrote no claims: zero claims is a measured zero over its posts, and
+    the share of evidence-carrying posts with claims is 0.0 (a denominator exists), never None."""
+    with Archive(cohort) as view:
+        authoring = metrics.dashboard(view)["summary"]["board"]["authoring"]
+    assert authoring["claims"] == 0 and authoring["posts"] == 269 and authoring["evidence_posts"] > 0
+    assert authoring["evidence_posts_with_claims_share"] == 0.0 and authoring["claims_per_post"] == 0.0
+    assert authoring["pointers"] == 0 and authoring["cell_pointer_share"] is None

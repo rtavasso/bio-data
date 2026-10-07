@@ -324,6 +324,27 @@ def frontier_rebuild(ctx: typer.Context):
 
 frontier_app.command("reindex", help="Alias of `frontier rebuild`.")(frontier_rebuild)
 
+wishlist_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                           help="Dataset wishlist (M5.4) and its lab-ready proposal export (V5).")
+app.add_typer(wishlist_app, name="wishlist")
+
+
+@wishlist_app.command("export")
+def wishlist_export(ctx: typer.Context,
+                    format: Annotated[str, typer.Option("--format", help="md or html")] = "md",
+                    out: Annotated[Path | None, typer.Option(help="Write here (default: stdout)")] = None,
+                    base_url: Annotated[str | None, typer.Option(help="Absolute URL of this commons, to link each question")] = None):
+    """Export the wishlist as a proposal document: every requirement with the questions that need it. Read-only."""
+    from daw.commons.archive import Archive
+    from daw.commons.planning import export_wishlist
+    with Archive(ctx.obj) as view:
+        text, _ = export_wishlist(view, format, base_url=base_url)
+    if out:
+        out.write_text(text)
+        emit({"exported": str(out), "format": format, "bytes": len(text.encode())})
+    else:
+        typer.echo(text, nl=False)
+
 
 @claims_app.command("reindex")
 def claims_reindex(ctx: typer.Context):

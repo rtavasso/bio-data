@@ -99,7 +99,7 @@ class MarkIn(Strict):
 
 
 class PromotionIn(Strict):
-    source_kind: Literal["frontier_item", "post", "claim"]
+    source_kind: Literal["frontier_item", "post", "claim", "shared_experiment"]
     source_id: str
     task_type: str
     target: str

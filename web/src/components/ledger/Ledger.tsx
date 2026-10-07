@@ -41,7 +41,7 @@ export function StatusBadge({ status }: { status: string }) {
   return <span className={`ledger-badge status-${status}`}>{status.replace("_", " ")}</span>;
 }
 
-function Toggle({ label, children }: { label: string; children: ReactNode }) {
+export function Toggle({ label, children }: { label: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <span className="ledger-toggle">
@@ -133,7 +133,7 @@ export function WatchSummary({ item }: { item: FrontierItem }) {
 // candidate_evidence is set either by a watcher run (a notice to the author) or by the author's own status event.
 const SET_BY: Record<string, string> = {
   watcher: "set by watcher", author: "set by author", "author and watcher": "set by author and watcher",
-  unrecorded: "setter not recorded",
+  unrecorded: "setter not recorded", scouting: "set by scouting",
 };
 
 function CandidateSource({ item }: { item: FrontierItem }) {
@@ -142,6 +142,42 @@ function CandidateSource({ item }: { item: FrontierItem }) {
   const run = evidence.records.find((r) => r.by === "watcher" && r.post);
   const label = <span className={`ledger-badge set-by set-by-${evidence.set_by.replaceAll(" ", "-")}`}>{SET_BY[evidence.set_by] ?? evidence.set_by}</span>;
   return run?.post ? <Link to={`/post/${run.post}`} title="The watcher's notice">{label}</Link> : label;
+}
+
+// V5 scouting deliverables: every dataset a scouting task inspected for the item, eligible or rejected, with the
+// scout's reason and its inspection receipt. Reasons are untrusted, attributed text.
+export function Datasets({ item, open = false }: { item: FrontierItem; open?: boolean }) {
+  const datasets = item.datasets ?? [];
+  const summary = item.datasets_summary;
+  if (!datasets.length || !summary) return null;
+  return (
+    <details className="ledger-datasets" open={open}>
+      <summary>
+        Datasets inspected: {summary.inspected} ({summary.eligible} eligible, {summary.rejected} rejected
+        {summary.withheld ? `, ${summary.withheld} withheld` : ""})
+      </summary>
+      <ul aria-label="Inspected datasets">
+        {datasets.map((d, n) => d.hidden ? (
+          <li key={`hidden-${n}`} className="muted">A dataset listed in a <Link to={`/post/${d.post}`}>post hidden by moderation</Link>.</li>
+        ) : (
+          <li key={`${d.accession}-${d.event ?? d.post}-${n}`}>
+            <span className={`ledger-badge ${d.eligible ? "status-supported" : "bad"}`}>{d.eligible ? "eligible" : "rejected"}</span>{" "}
+            <span className="mono">{d.accession}</span>:{" "}
+            <Untrusted author={d.recorded_by}>{d.reason}</Untrusted>
+            {d.receipt && <> <PointerLink pointer={d.receipt} /></>}
+            {d.post && <span className="muted"> · from <Link to={`/post/${d.post}`}>the scouting answer</Link></span>}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+// Scouting fills an item with inspected datasets before an analysis is promoted (V5): gaps, untestable branches and
+// proposed experiments without candidate evidence default to a scouting task; candidate evidence to research.
+export function defaultTaskType(item: FrontierItem): "scouting" | "research" {
+  if (item.status === "candidate_evidence") return "research";
+  return ["gap", "untestable", "proposed_experiment"].includes(item.kind) ? "scouting" : "research";
 }
 
 export function FrontierCard({ item }: { item: FrontierItem }) {
@@ -164,11 +200,13 @@ export function FrontierCard({ item }: { item: FrontierItem }) {
       </Untrusted>
       {item.pointers.length > 0 && <Pointers pointers={item.pointers} />}
       {item.post_present === false && <p className="muted">The post this item names is not on this board.</p>}
+      <Datasets item={item} />
       <p className="ledger-watch">Watcher: <WatchSummary item={item} /></p>
       {item.promoted_to && <p className="muted">Promoted to request <span className="mono">{item.promoted_to}</span></p>}
       <footer className="ledger-actions">
         <span className="mono muted">{item.id}</span>
-        <Toggle label="Promote"><PromoteForm sourceKind="frontier_item" sourceId={item.id} defaultTarget={item.author} /></Toggle>
+        <Toggle label="Promote"><PromoteForm sourceKind="frontier_item" sourceId={item.id} defaultTarget={item.author}
+          defaultTaskType={defaultTaskType(item)} /></Toggle>
         <Toggle label="Watchers"><WatcherPanel item={item.id} defaultQuery={queryText(item.watcher_query)} /></Toggle>
       </footer>
     </article>

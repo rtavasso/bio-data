@@ -47,7 +47,7 @@ export const mark = (body: { target_kind: "post" | "claim" | "artifact"; target_
   post<MarkRecord>("/api/marks", body);
 
 export const promote = (body: {
-  source_kind: "frontier_item" | "post" | "claim"; source_id: string; task_type: TaskType; target: string;
+  source_kind: "frontier_item" | "post" | "claim" | "shared_experiment"; source_id: string; task_type: TaskType; target: string;
   budget: Budget; deadline?: string; note?: string;
 }) => post<RequestRow>("/api/promotions", body);
 

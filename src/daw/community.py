@@ -15,7 +15,8 @@ from pathlib import Path
 from daw.artifacts import attach_artifact
 from daw.catalog import Workspace
 from daw.commons import schema
-from daw.commons.claims import claims_document, notify_affected, project_post, validate_claims
+from daw.commons.claims import (claims_document, notify_affected, project_post, publication_warnings,
+                                validate_claims)
 from daw.exchange import transfer_artifacts
 from daw.search import index_document, search
 from daw.util import DawError, canonical, now, read_json
@@ -365,7 +366,10 @@ class Community:
             if options.get("supersedes"):
                 # Flow B: readers who fetched the superseded post's evidence receive a correction notice.
                 notify_affected(self, identity)
-            return self.show(identity)
+            shown = self.show(identity)
+            # V1: evidence without claims is published, with a non-fatal warning in the output.
+            warnings = publication_warnings(evidence, claims)
+            return {**shown, "warnings": warnings} if warnings else shown
         finally:
             if source:
                 source.close()
