@@ -52,13 +52,13 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
           mode: Annotated[str, typer.Option(help="local (single user, no login) or accounts")] = "local",
           user: Annotated[str, typer.Option(help="Human participant used in local mode")] = "local",
           static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None,
-          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For (login rate limits count client addresses)")] = None):
+          forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None):
     """Serve the read API, write API, event stream and built web app for one commons."""
     uvicorn = _uvicorn()
     from daw.commons.app import create_app
     if host not in {"127.0.0.1", "localhost", "::1"} and mode == "local":
         raise DawError("local_mode_is_loopback_only", "use --mode accounts to listen on other interfaces")
-    app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir)
+    app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir, forwarded_allow_ips=forwarded_allow_ips)
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
@@ -74,14 +74,16 @@ def _uvicorn():
 
 
 def _forwarded(value):
-    return {"proxy_headers": True, "forwarded_allow_ips": value} if value else {}
+    """Forwarded headers are handled inside the app (create_app), only from the proxies named; uvicorn's own
+    handling (which trusts 127.0.0.1 by default) is turned off so nothing else is trusted implicitly."""
+    return {"proxy_headers": False}
 
 
 @app.command("host")
 def host_command(config: Annotated[Path, typer.Option("--config", help="tenants.toml")], host: str = "127.0.0.1",
                  port: int = 8765,
                  static_dir: Annotated[Path | None, typer.Option(help="Built web app (overrides [host] static_dir)")] = None,
-                 forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For")] = None):
+                 forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto")] = None):
     """Serve one commons per organisation from one process, each at /c/<tenant>/ in accounts mode (M7.4)."""
     import dataclasses
 
@@ -91,7 +93,7 @@ def host_command(config: Annotated[Path, typer.Option("--config", help="tenants.
     loaded = tenants.load(config)
     if static_dir:
         loaded = dataclasses.replace(loaded, static_dir=static_dir.resolve())
-    app = tenants.create_host_app(loaded)
+    app = tenants.create_host_app(loaded, forwarded_allow_ips=forwarded_allow_ips)
     for tenant in loaded.tenants:
         record_tenancy(tenant.root, "accounts")  # every tenant is multi-tenant: live dispatch needs its sandbox
     typer.echo(canonical({"listen": f"{host}:{port}", "tenants": {t.name: {"base": t.base, "root": str(t.root)}
@@ -191,20 +193,26 @@ def comment_command(ctx: typer.Context, target_kind: str, target_id: str, text: 
                     as_: As = "operator",
                     anchor: Annotated[str | None, typer.Option(help='JSON locator, e.g. {"kind":"paragraph",'
                                                                     '"blob":"<sha>","offset":0,"length":10}')] = None,
-                    ask_author: Annotated[bool, typer.Option("--ask-author", help="Make the comment a request")] = False):
-    """Comment on a post, question, artifact, claim, run or map node, optionally at an anchor."""
+                    ask_author: Annotated[bool, typer.Option("--ask-author", help="Make the comment a request")] = False,
+                    minutes: Annotated[int | None, typer.Option(help="Budget of the ask (default 15)")] = None,
+                    tokens: int | None = None):
+    """Comment on a post, question, artifact, claim, run or map node, optionally at an anchor. With --ask-author
+    the comment is a budgeted `question` request within your allowance."""
     import json
     from daw.commons.participation import comment
     run(ctx, comment, acting(as_), target_kind, target_id, text, anchor=json.loads(anchor) if anchor else None,
-        ask_author=ask_author)
+        ask_author=ask_author, budget=budget_option(minutes, tokens, None))
 
 
 @app.command("ask")
 def ask_command(ctx: typer.Context, target: str, text: Annotated[str, typer.Option("--text")], as_: As = "operator",
-                parent: str | None = None):
-    """Ask a participant (or a post's author) a durable question."""
+                parent: str | None = None,
+                minutes: Annotated[int | None, typer.Option(help="Budget of the ask (default 15)")] = None,
+                tokens: int | None = None):
+    """Ask a participant (or a post's author) a durable question: a budgeted `question` request within your
+    allowance, delivered as attributed board content from a human participant, never as an instruction."""
     from daw.commons.participation import ask
-    run(ctx, ask, acting(as_), target, text, parent=parent)
+    run(ctx, ask, acting(as_), target, text, parent=parent, budget=budget_option(minutes, tokens, None))
 
 
 @app.command("mark")
@@ -304,13 +312,17 @@ app.add_typer(frontier_app, name="frontier")
 app.add_typer(claims_app, name="claims")
 
 
-@frontier_app.command("reindex")
-def frontier_reindex(ctx: typer.Context):
-    """Upsert the frontier projection from every participant workspace (read-only scan); idempotent."""
+@frontier_app.command("rebuild")
+def frontier_rebuild(ctx: typer.Context):
+    """Rebuild the frontier projection from every participant workspace (read-only scan) and the board's
+    promotion and watcher events; deletes rows no record supports. Idempotent. Reads never do this."""
     from daw.commons.frontier import rebuild_frontier
     from daw.community import Community
     with Community(ctx.obj) as board:
-        emit(rebuild_frontier(board))
+        emit(rebuild_frontier(board, reason="operator rebuild"))
+
+
+frontier_app.command("reindex", help="Alias of `frontier rebuild`.")(frontier_rebuild)
 
 
 @claims_app.command("reindex")

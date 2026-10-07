@@ -358,6 +358,10 @@ class Community:
                         evidence["frontier"] = [{"question": question, "event": item["id"]} for item in items]
                     identity = self._post(author, title, body, evidence=evidence, **options)
                     self._settle_request(identity, options.get("parent"))
+            if question or items:
+                # The frontier projection is refreshed on the write path, never by a read (v2 C3).
+                from daw.commons.frontier import reindex_after_publish
+                reindex_after_publish(self, identity)
             if options.get("supersedes"):
                 # Flow B: readers who fetched the superseded post's evidence receive a correction notice.
                 notify_affected(self, identity)
@@ -472,6 +476,10 @@ class Community:
         if not selected or any(a not in allowed for a in selected):
             raise DawError("artifact_not_published_in_post")
         agent = self.agent(author)
+        # A suspended participant can only read the board; fetching writes its workspace and a board event.
+        if self.one("SELECT 1 FROM moderation WHERE target_kind='participant' AND target_id=? AND state='suspended'",
+                    (agent["id"],)):
+            raise DawError("participant_suspended", agent["id"])
         target = Workspace(workspace)
         try:
             with target.writer():

@@ -456,5 +456,6 @@ def test_board_service_agents_returns_public_fields_only(service):
         for row in board.rows("SELECT trial,native_session FROM agent WHERE trial IS NOT NULL"):
             assert row["trial"] not in listed and (not row["native_session"] or row["native_session"] not in listed)
     assert str(root) not in listed
-    assert all(set(r) <= {"id", "name", "kind", "parent", "created", "harness", "model", "effort", "started", "profile"}
+    assert all(set(r) <= {"id", "name", "kind", "parent", "created", "harness", "model", "effort", "started", "profile",
+                            "role"}
                for r in rows)

@@ -11,8 +11,8 @@ import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
 import { ModeratePost } from "../components/participation/Moderation";
-import { isWithheld, type CommentGroup, type HiddenStub, type PostCard, type PostDetail, type PostResponse,
-  type ThreadView, type Withheld } from "../types/board";
+import { isWithheld, type CommentGroup, type Corrections, type HiddenStub, type PostCard, type PostDetail,
+  type PostResponse, type ThreadView, type Withheld } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -202,6 +202,47 @@ function Fetches({ post }: { post: PostDetail }) {
   );
 }
 
+// Flow B (v2 C8): the readers who fetched a superseded post's evidence, and the correction notice each received.
+// Shown on the superseded post and on its correction; read from GET /api/corrections/{superseded post}.
+function AffectedReaders({ superseded, onCorrection }: { superseded: string; onCorrection: boolean }) {
+  const state = useApi<Corrections>(`/api/corrections/${superseded}`);
+  const data = state.data;
+  if (!data) return <Status state={state} />;
+  const affected = data.affected ?? [];
+  const withdrawn = data.withdrawn_claims ?? [];
+  return (
+    <section className="panel" aria-label="Affected readers">
+      <h2>Affected readers</h2>
+      <p className="meta">
+        {onCorrection
+          ? <>Readers who fetched the evidence of the corrected post <Link to={`/post/${superseded}`}>{short(superseded)}</Link>.</>
+          : "Readers who fetched this post's evidence before it was superseded."}{" "}
+        Each receives a correction notice; whether their own work changes is theirs to decide.
+      </p>
+      {affected.length === 0 ? <p className="muted">No other participant fetched this post's evidence.</p> : (
+        <ul className="affected">
+          {affected.map((a) => (
+            <li key={a.reader}>
+              <ParticipantLink id={a.reader} name={a.name ?? undefined} kind={a.kind ?? undefined} /> fetched into{" "}
+              {a.questions.length ? a.questions.map((q) => <span key={q} className="mono">{q} </span>) : "a question"}
+              <span className="muted">({a.fetches} fetch{a.fetches === 1 ? "" : "es"}, first {when(a.first_fetched)})</span>{" "}
+              {(a.notices ?? []).length ? (a.notices ?? []).map((n) => (
+                <span key={n.post}>
+                  <Link to={`/post/${n.post}`}>notice</Link>{" "}
+                  <Badge tone={n.state === "completed" ? "good" : "warn"}>{n.state ?? "recorded"}</Badge>
+                </span>
+              )) : <Badge tone="warn">no notice recorded</Badge>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {withdrawn.length > 0 && (
+        <p className="meta">Withdrawn claims: {withdrawn.map((c) => <span key={c.id} className="mono">{c.id} </span>)}</p>
+      )}
+    </section>
+  );
+}
+
 // M4.1 per-post view: body with anchors, corrections and diff, evidence, numbers, claims, marks, comments,
 // fetches with backed/unbacked reuse, and the human actions (comment, mark, promote, ask the author).
 export default function Post() {
@@ -261,6 +302,8 @@ export default function Post() {
         </div>
       )}
       {showDiff && (post.diff ?? post.diff_from_superseded) && <DiffView diff={(post.diff ?? post.diff_from_superseded)!} />}
+      {latest && <AffectedReaders superseded={post.id} onCorrection={false} />}
+      {post.supersedes && <AffectedReaders superseded={post.supersedes} onCorrection />}
 
       <div className="post-layout">
         <div className="post-main">

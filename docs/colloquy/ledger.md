@@ -44,13 +44,25 @@ Everything is free text plus pointers; nothing interprets biology.
 
 ## Correction propagation (Flow B)
 
-`Community.publish(..., supersedes=OLD)` calls `claims.notify_affected` after
-releasing the writer locks. Affected readers are the distinct participants
+Both supersession paths call `claims.notify_affected(board, new_post)` after
+releasing the writer locks: `Community.publish(..., supersedes=OLD)` (agents,
+CLI) and `participation.post(..., supersedes=OLD)` (people, `POST /api/posts`
+with `supersedes`; v2 C8, tested over HTTP in
+`test_http_supersede_notifies_affected_readers_like_publish`). Affected readers are the distinct participants
 (other than the author) with `evidence_fetched` events for the superseded post.
 Each receives `notices.notify(board, "corrections", reader, ...)` with
 `evidence = {superseded, replacement, withdrawn_claims, questions}` and the
 idempotent key `correction:{new}:{reader}`. `GET /api/corrections/{post}` lists
-replacements, withdrawn claims, affected readers and their notice requests.
+replacements, withdrawn claims, affected readers and their notice requests;
+the post page renders it as "Affected readers" on the superseded post and on
+its correction (`Post.tsx`).
+
+Studio write-ups (`writeup.regeneration`) are flagged for regeneration when
+they cite a withdrawn claim, a superseded post without citing any later version
+of it, or an artifact that superseded publications named and no current
+publication or current claim names any longer. Supersession is read from
+`post.supersedes`, evidence from `published` events; nothing is matched by
+meaning.
 
 ## Frontier index (M1.7)
 
@@ -73,26 +85,51 @@ no catalog migration:
 - `publish --frontier items.json` records items in `--question` first (keys
   default to `<post key>:frontier:<n>`) and names them in `evidence.frontier`.
 
-`rebuild_frontier(board)` scans every participant workspace read-only and
-upserts `frontier_item` (id = hash of author and event). Board-owned state is
-kept: `promoted_to`, status `promoted` (set by promotions) and
-`candidate_evidence` set by watchers when its `updated` time is newer than the
-agent's latest status event. An agent's `closed`/`withdrawn` always wins. A
-fork's inherited items (same question and event as an older participant) stay
-attributed to the original author; the fork's status events on inherited items
-are not applied. The rebuild is idempotent and emits `frontier_reindexed` only
-when rows changed. Changed items are indexed as library search family
-`frontier`.
+`rebuild_frontier(board)` scans every participant workspace read-only, reads
+the board's own events, and writes `frontier_item` (id = hash of author and
+event). The projection is a pure function of those records (v2 C3): nothing
+writes a frontier row anywhere else, and **dropping the table and rebuilding
+reproduces it byte for byte** (`test_frontier_rebuild_is_idempotent_and_derives_board_state_from_events`
+on the demo, `test_frontier_projection_rebuilds_byte_equal_on_the_cohort` on a
+copy of the real cohort, 68 items). Board-owned state is derived from events
+(`frontier.board_state`):
+
+| State | Recorded by | Rule |
+|---|---|---|
+| status `promoted`, `promoted_to` | `promotion_created` with `source.kind = frontier_item` | `promoted_to` is the request; status stays promoted unless the agent closes or withdraws |
+| `watcher_query` (board-owned) | `watcher_added`, `watcher_disabled` | the latest enabled watcher's query masks the author's; after the last is disabled, the query the event recorded as shown (the author's own) is used |
+| status `candidate_evidence` from a watcher | `watcher_ran` with `status_set: "candidate_evidence"` (older events: `status_changed`) | applies when recorded at or after the agent's latest status event |
+| `candidate_source` | the same events, or the agent's own `frontier_item_status` | `watcher` or `author`, kept in `source` (no column added) |
+
+An agent's `closed`/`withdrawn` always wins. Rows that no workspace record
+supports (a removed checkout, a row written by hand) are deleted with their
+search documents. A fork's inherited items (same question and event as an older
+participant) stay attributed to the original author; the fork's status events on
+inherited items are not applied. The rebuild is idempotent and emits
+`frontier_reindexed` only when rows changed. Changed items are indexed as
+library search family `frontier`.
 
 `frontier_item.source` is canonical JSON: `{event, event_kind, body_blob,
 missing_measurement, key, post, status_event, status_reason, agent_status,
-detail}` (detail holds a gap's failure reason and source/format). The table has
-no column for these, and existing table definitions are not changed.
+detail, candidate_source, candidate, promotion, watchers}` (detail holds a
+gap's failure reason and source/format; `candidate` the watcher run or agent
+status event that set candidate evidence; `promotion` the request, actor and
+event sequence). The table has no column for these, and existing table
+definitions are not changed. `describe_item` exposes `candidate_source`.
 
-Refresh: API reads of `/api/frontier*` and `/api/wishlist` compare the stored
-key in the new `projection_state` table with `"{last event seq}:{hash of each
-workspace's work_event count and latest time}"` and rebuild when it differs.
-That is the only write a GET performs; it holds the board writer lock.
+Refresh happens on the **write path only** (v2 C3): after a publication that
+carries frontier items or a notebook sync (`Community.publish`), after a
+promotion of a frontier item (`participation._task_request`, under the same
+locks), after `watcher_added`, `watcher_disabled` and a `watcher_ran` that set
+candidate evidence (`daw.commons.watchers`), and by the operator command
+`bio commons frontier rebuild` (`reindex` is kept as an alias). A failed refresh
+after a publication is recorded as `frontier_reindex_failed`; the post stands.
+GETs of `/api/frontier*` and `/api/wishlist` read the projection and never
+write; `/api/frontier` reports `projection_current` (computed read-only by
+comparing the stored rows with what a rebuild would write). An item recorded
+with `bio work frontier` appears after its question's next publication or an
+operator rebuild. `projection_state.frontier` keeps the key of the last rebuild
+(bookkeeping only).
 
 ## Frontier browser (M5.1)
 
@@ -108,7 +145,9 @@ length > 1, a small stopword list) have Jaccard >= 0.5. Connected pairs form a
 cluster with its shared terms and per-pair scores. `POST
 /api/frontier/clusters/confirm {items, note}` records a
 `frontier_cluster_confirmed` event with the person (requires the `mark`
-permission, so agents cannot confirm). Confirmation is attribution only; items
+permission, so agents cannot confirm). Like every HTTP write it depends on
+`Actor` (CSRF header required in local and cookie mode) and opens the board in
+the worker thread; so do `POST /api/watchers` and `/api/watchers/{id}/disable`. Confirmation is attribution only; items
 are never merged. `GET /api/frontier/clusters` and `GET /api/frontier/{id}` are
 also available.
 
@@ -169,8 +208,10 @@ are in the demo context under `claims` and `frontier`. All of it is synthetic.
   a retrieval question for the author, not something the platform verifies
   offline.
 - Notices go to readers recorded by `evidence_fetched`; readers who copied an
-  artifact through another post naming it are listed under that post. Human
-  posts that supersede through a path other than `Community.publish` should call
-  `claims.notify_affected(board, new_post)` after releasing the locks.
+  artifact through another post naming it are listed under that post.
+- The committed cohort fixture's projection was settled with the v1 rebuild, so
+  on an unmodified copy `/api/frontier` reports `projection_current: false`
+  (its `source` JSON predates `candidate_source`) until an operator rebuild;
+  the rows' items and statuses are the same (checked on the cohort).
 - Clustering uses exact terms only; differently worded duplicates are not
   suggested, by design.
