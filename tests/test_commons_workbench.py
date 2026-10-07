@@ -147,6 +147,59 @@ def test_inbox_after_cursor_and_per_caller_sse_stream(demo):
     assert _frames(theirs.text) == []
 
 
+def test_ten_inbox_subscribers_and_one_write_cost_one_index_build(demo, monkeypatch):
+    """v3 B8: each stream computes its full inbox on connect only; a board change is read as a delta of the events
+    since the stream's cursor, from one event window shared by every subscriber. Ten subscribers and one write
+    cost one window build and at most one thread index build, and each delta equals the full inbox after the
+    cursor."""
+    import asyncio
+
+    from daw.commons import views
+    from daw.commons.api.workbench import inbox_stream
+    root, ctx = demo
+    mira = ctx["participation"]["human"]
+    people = [mira] + [_human(root, f"reader{n}") for n in range(9)]
+    with Archive(root) as view:
+        who = [{k: view.participant(p)[k] for k in ("id", "name", "kind")} for p in people]
+        before = inbox.inbox(view, who[0], limit=500)["latest"]
+    streams = [inbox_stream(root, person, 0, poll=0.01, keepalive=0) for person in who]
+
+    async def turn(stream):
+        """Frames of one poll of a stream (each poll ends with a keepalive comment when keepalive=0)."""
+        frames = []
+        while (chunk := await stream.__anext__()) != ": keepalive\n\n":
+            frames += _frames(chunk)
+        return frames
+
+    async def scenario():
+        for stream in streams:
+            assert await stream.__anext__() == "retry: 3000\n\n"
+        connected = await asyncio.gather(*(turn(s) for s in streams))  # full inbox, once per connection
+        real, builds = views.thread_index, []
+
+        def counting(view):
+            if (str(view.root), view.sequence()) not in views._INDEX:
+                builds.append(view.sequence())
+            return real(view)
+        monkeypatch.setattr(views, "thread_index", counting)
+        windows = inbox.BUILDS["windows"]
+        with Community(root) as board:
+            reply = participation.reply_at_anchor(board, people[1], ctx["participation"]["comment"], "Donors?")
+        changed = await asyncio.gather(*(turn(s) for s in streams))
+        for stream in streams:
+            await stream.aclose()
+        return connected, changed, inbox.BUILDS["windows"] - windows, builds, reply
+
+    connected, changed, windows, builds, reply = asyncio.run(scenario())
+    assert {f["id"] for f in connected[0]} and not any(connected[1:])
+    assert windows == 1 and len(builds) <= 1
+    assert [f["id"] for f in changed[0]] == [f"reply:{reply['post']}"] and not any(changed[1:])
+    # The delta equals the full inbox after the cursor, read state included.
+    with Archive(root) as view:
+        full = inbox.inbox(view, who[0], after=before)["items"]
+    assert changed[0] == [{**item, "kind": "inbox_item"} for item in full]  # the SSE frame names its own kind
+
+
 def test_hidden_posts_stay_hidden_in_the_inbox(demo):
     root, ctx = demo
     with Community(root) as board:
