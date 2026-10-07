@@ -344,10 +344,14 @@ in `test_commons_foundation.py`; `Post.test.tsx` (affected readers).
 - Row anchors split on the first delimiter and do not parse quoted CSV fields.
 - Moderation (C2) is checked offline by `tests/test_commons_moderation.py` on the
   synthetic demo and on a private copy of the real cohort fixture (a delivered
-  cohort request post is hidden). Agent-side reads through the substrate
-  (`bio community show/search/inbox` and the board service for sandboxed agents)
-  do not yet apply `Visibility`; an agent can still read a hidden post by id.
-  The web, export and SSE surfaces are the ones covered.
+  cohort request post is hidden). Agents are readers too: `bio community show` and
+  `search` (and the board service's `show`, `search` and `answer` for sandboxed agents) go
+  through `Community.read` / moderated `find`, so an agent gets the stub; `fetch` from a
+  hidden post is refused with `hidden_by_moderation`; the delivery service skips a hidden
+  request and `dispatch` refuses it before any state change. `Community.show` remains the
+  internal, unmoderated record access used by board functions. An operator reads a hidden
+  post with `bio community show --full`. `inbox` lists request rows (identifiers and
+  states, no post text).
 - `/api/search` `total` is each catalog's own count and may include hits on hidden
   posts that were withheld (`withheld_hidden` counts those on the page).
 - Tenancy (M7.4) is implemented outside this area: `daw/commons/tenants.py`

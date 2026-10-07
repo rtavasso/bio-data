@@ -604,11 +604,12 @@ bytes.
 - Sentence splitting is heuristic (abbreviation list); a clause boundary is a
   punctuation rule (`,` `;` `:` dashes). A number followed by an unpunctuated,
   number-free aside before its citation is still covered by it.
-- Not covered by the placeholder: the run view withholds a refused answer's final text,
-  but its raw stream and model-facing messages still carry the agent's output, and run
-  lists show request titles (the commission, not the write-up); SSE frames and the event
-  log carry `writeup_check` bodies with number texts and offsets (no prose).
-  `Visibility.event` scrubs only hidden posts.
+- The run view withholds a refused answer's final text, and its raw stream and
+  model-facing messages are refused with `writeup_withheld` (403) unless an operator asks
+  for `full`; agents reading it with `bio community show` or the board service get the
+  placeholder. Not covered: run lists show request titles (the commission, not the
+  write-up), and SSE frames and the event log carry `writeup_check` bodies with number
+  texts and offsets (no prose); `Visibility.event` scrubs only hidden posts.
 - Write-up rendering and the embedded map are computed per request (the map is
   cached in-process by event sequence and workspace fingerprint); `/studio`
   renders every commissioned output without its map.

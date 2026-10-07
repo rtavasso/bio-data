@@ -233,6 +233,10 @@ def _guard(view, run, caller, full):
     withheld = _withheld_posts(view, request, vis)
     if withheld:
         raise DawError("hidden_by_moderation", ", ".join(f"{p}: {vis.reason(p)}" for p in withheld))
+    # A write-up the number checker refused is a placeholder on every surface (C5); its raw stream and model
+    # messages carry the refused prose verbatim, so they are withheld the same way.
+    if request.get("answer") and vis.refused(request["answer"]):
+        raise DawError("writeup_withheld", f"{request['answer']} was refused by the number checker")
 
 
 def run_timeline(view, run, *, caller=None, full=False):
