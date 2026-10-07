@@ -356,18 +356,26 @@ def demo(ctx: typer.Context):
         emit(build_demo(ws))
 
 
+def fail(reason, detail, value):
+    """A command error: the JSON on stdout (as every result) and one `error: <reason>: <detail>` line on stderr,
+    so `cmd > out.json` still shows why it exited 1."""
+    emit(value)
+    text = detail if isinstance(detail, str) else canonical(detail).decode() if detail is not None else ""
+    typer.echo(f"error: {reason}: {' '.join(text.split())[:2000]}", err=True)
+    raise SystemExit(1) from None
+
+
 def main():
     try:
         app()
     except DawError as e:
-        emit({"error": e.reason, "detail": e.detail})
-        raise SystemExit(1) from None
+        fail(e.reason, e.detail, {"error": e.reason, "detail": e.detail})
     except ValidationError as e:
-        emit({"error": "invalid_contract", "details": e.errors(include_url=False, include_input=False)})
-        raise SystemExit(1) from None
+        details = e.errors(include_url=False, include_input=False)
+        fail("invalid_contract", "; ".join(f"{'/'.join(map(str, d['loc']))}: {d['msg']}" for d in details),
+             {"error": "invalid_contract", "details": details})
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        emit({"error": type(e).__name__, "detail": str(e)})
-        raise SystemExit(1) from None
+        fail(type(e).__name__, str(e), {"error": type(e).__name__, "detail": str(e)})
 
 
 if __name__ == "__main__":

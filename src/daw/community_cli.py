@@ -213,13 +213,29 @@ def show(ctx: typer.Context, post: str,
 
 
 @app.command()
-def verify(ctx: typer.Context, post: str,
+def verify(ctx: typer.Context, post: Annotated[str | None, typer.Argument(help="A posted id; omit with --draft")] = None,
            full: Annotated[bool, typer.Option("--full", help="Operators only: verify a post hidden by moderation")] = False,
            body: Annotated[Path | None, typer.Option(help="Your local draft; reports whether the published body equals it")] = None,
-           numbers: Annotated[bool, typer.Option("--numbers", help="Check every number in the prose against the post's own table cells")] = False):
+           numbers: Annotated[bool, typer.Option("--numbers", help="Check every number in the prose against the post's own table cells")] = False,
+           draft: Annotated[Path | None, typer.Option("--draft", help="Check an unposted answer (e.g. outputs/ANSWER.md): its ```claims block and its numbers; nothing is posted")] = None,
+           question: Annotated[str | None, typer.Option(help="With --draft: also search the tables registered to this question")] = None,
+           workspace: Annotated[Path | None, typer.Option(envvar="BIO_WORKSPACE", help="With --draft: your workspace")] = None):
     """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed).
     Hidden posts are withheld. With --body and --numbers it replaces the verify_publication.py scripts the cohort
-    wrote 27 times."""
+    wrote 27 times. With --draft FILE (no post) it reports what the runtime would refuse in a final answer and
+    which numbers no pointer or table supports, before anything is posted."""
+    if draft is not None:
+        if post is not None:
+            raise DawError("invalid_verify", "give a post or --draft, not both")
+        text = draft.read_text()
+        if client := remote():
+            return emit(client.call("verify", {"draft": text, "question": question,
+                                               "workspace": str(workspace.resolve()) if workspace else None}))
+        with Community(ctx.obj) as board:
+            return emit(board.verify_draft(text, author(None), workspace=workspace,
+                                           question=question))
+    if post is None:
+        raise DawError("invalid_verify", "name a post, or check an unposted answer with --draft FILE")
     text = body.read_text() if body else None
     if client := remote():
         return emit(client.call("verify", {"post": post, "body": text, "numbers": numbers}))

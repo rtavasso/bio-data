@@ -40,6 +40,8 @@ ACCESSIONS = re.compile("|".join([
     r"E-[A-Z]{4}-\d{1,6}",                                          # ArrayExpress / BioStudies
     r"phs\d{6}(?:\.v\d+\.p\d+)?", r"EGA[SDC]\d{11}",                # dbGaP, EGA
     r"MTBLS\d{1,6}", r"MSV\d{9}",                                   # MetaboLights, MassIVE
+    r"PMC\d{1,9}", r"PMID:?\d{1,9}",                                 # PubMed Central, PubMed
+    r"10\.\d{4,9}/\S+",                                              # DOI
 ]))
 ARTIFACT_ID = re.compile(r"artifact_[0-9a-f]{64}")
 POST_ID = re.compile(r"post_[0-9a-f]{32}")
@@ -171,17 +173,13 @@ def publication_warnings(evidence, claims):
 CLAIMS_FENCE = re.compile(r"^ {0,3}```claims[ \t]*\r?\n(.*?)\r?\n {0,3}```[ \t]*$", re.MULTILINE | re.DOTALL)
 
 
-def final_claims(board, text):
-    """(body, evidence, refusal) for a delivered final answer. Caller holds board and library writer locks.
-
-    No ```claims block: the text unchanged, no evidence. One valid block (`validate_claims`, every pointer
-    resolving on this board): the block becomes the post's claims blob (`evidence.claims_blob`, source
-    `final_answer_block`) and the post body is the prose around it; the full final stays in the run's
-    final.md. Anything else (several blocks, invalid JSON, a shape error, an unresolved pointer): the answer
-    is posted verbatim without claims and `evidence.claims_refused` records the reason."""
+def check_final_claims(board, text):
+    """(prose, claims, refusal) for a final answer, writing nothing: the checks `final_claims` applies. With no
+    block or a refused one the prose is the text verbatim and claims are empty; otherwise the prose is the text
+    around the block (the text itself when the block stands alone)."""
     blocks = list(CLAIMS_FENCE.finditer(text or ""))
     if not blocks:
-        return text, {}, None
+        return text, [], None
     refusal = None
     if len(blocks) > 1:
         refusal = {"reason": "multiple_claims_blocks", "detail": f"{len(blocks)} ```claims blocks; write exactly one"}
@@ -196,12 +194,29 @@ def final_claims(board, text):
             except DawError as error:
                 refusal = {"reason": error.reason, "detail": str(error.detail or "")[:500]}
     if refusal:
-        return text, {"claims_refused": {**refusal, "source": "final_answer_block"}}, refusal
+        return text, [], refusal
     match = blocks[0]
     prose = (text[:match.start()] + text[match.end():]).strip()
+    return prose or text, checked, None
+
+
+def final_claims(board, text):
+    """(body, evidence, refusal) for a delivered final answer. Caller holds board and library writer locks.
+
+    No ```claims block: the text unchanged, no evidence. One valid block (`validate_claims`, every pointer
+    resolving on this board): the block becomes the post's claims blob (`evidence.claims_blob`, source
+    `final_answer_block`) and the post body is the prose around it; the full final stays in the run's
+    final.md. Anything else (several blocks, invalid JSON, a shape error, an unresolved pointer): the answer
+    is posted verbatim without claims and `evidence.claims_refused` records the reason. `community verify
+    --draft` runs the same checks (`check_final_claims`) without writing."""
+    prose, checked, refusal = check_final_claims(board, text)
+    if refusal:
+        return text, {"claims_refused": {**refusal, "source": "final_answer_block"}}, refusal
+    if not checked:
+        return text, {}, None
     blob = board.library.put_json(claims_document(checked))
     evidence = {"claims_blob": blob, "claims_source": "final_answer_block"}
-    if not prose:
+    if prose == text:
         return text, evidence, None  # a block alone stays the body (posts are never empty)
     return prose, {**evidence, "claims_block_removed_from_body": True}, None
 

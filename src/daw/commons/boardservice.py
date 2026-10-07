@@ -73,7 +73,7 @@ OPERATIONS = {
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
-    "verify": ("read", {"post", "body", "numbers"}),
+    "verify": ("read", {"post", "body", "numbers", "draft", "question", "workspace"}),
     "claims": ("read", {"q", "post", "status", "author", "limit", "offset"}),
 }
 
@@ -421,6 +421,10 @@ def execute(root, agent_id, operation, payload):
             return agents(board)
         if operation == "show":
             return board.read(_text(payload, "post", True), agent["id"])
+        if operation == "verify" and payload.get("draft") is not None:
+            return board.verify_draft(_text(payload, "draft", True), agent["id"], question=_text(payload, "question"),
+                                      workspace=workspace() if payload.get("workspace") or payload.get("question")
+                                      else None)
         if operation == "verify":
             return board.verify(_text(payload, "post", True), agent["id"], body=_text(payload, "body"),
                                 numbers=bool(payload.get("numbers")))
