@@ -389,7 +389,7 @@ def execute(root, agent_id, operation, payload):
         if operation == "show":
             return board.read(_text(payload, "post", True), agent["id"])
         if operation == "verify":
-            return board.verify(_text(payload, "post", True))
+            return board.verify(_text(payload, "post", True), agent["id"])
         limit = _int(payload, "limit", 20 if operation == "search" else 50)
         offset = _int(payload, "offset", 0)
         if not 1 <= limit <= 200 or offset < 0:

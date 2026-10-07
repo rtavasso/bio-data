@@ -106,6 +106,17 @@ Per endpoint:
   timelines, question pages, claims and corrections, Studio listings and write-ups, the
   dashboard's assignment excerpts, `/api/search`, `/api/me`, the SSE framing and export.
   A promotion cannot quote a hidden post or a claim of one (`hidden_by_moderation`).
+- Every GET route taking a post id answers a hidden post with its stub (or
+  `hidden_by_moderation`), including `/api/curation/locate` (its numbers, evidence
+  artifacts and locators are its content), `/api/writeup-checks/{post}` (no verdict
+  counts) and `/api/numbers/{post}`; `/api/claims?post=` adds `post_record` (the stub).
+  `test_every_get_route_taking_a_post_id_serves_the_stub_*` enumerates the app's routes,
+  so a new route cannot be forgotten (B1). Agents' `bio community verify` (and the board
+  service) is moderated like `show`: no body hash, artifact ids or notebook state (B15).
+- A hide is post-scoped. A notebook is a workspace record: its question page and
+  manifest stay readable, and hiding a post that cited a notebook does not withdraw it.
+  The hidden post's page withholds its notebook link (`notebook: null`), even revealed
+  to an operator (B15).
 
 ### Numbers and pointers (spec v2 C11, V2)
 
