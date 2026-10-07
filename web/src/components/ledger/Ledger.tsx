@@ -9,10 +9,12 @@ import type { Claim, FrontierItem, Pointer } from "../../types/ledger";
 // <Untrusted>; pointers link to the records they name and say when a named record is absent.
 
 export function PointerLink({ pointer }: { pointer: Pointer }) {
-  const missing = pointer.present === false ? <span className="ledger-badge bad"> missing</span> : null;
+  const isPost = pointer.kind === "post" || (pointer.kind === "locator" && pointer.id.startsWith("post_"));
+  const missing = pointer.present === false
+    ? <span className="ledger-badge bad"> {isPost ? "not on this board" : "missing"}</span> : null;
   const short = pointer.id.length > 24 ? `${pointer.id.slice(0, 20)}…` : pointer.id;
   let target: ReactNode = <span className="mono">{short}</span>;
-  if (pointer.kind === "post" || (pointer.kind === "locator" && pointer.id.startsWith("post_"))) {
+  if (isPost && pointer.present !== false) {
     target = <Link className="mono" to={`/post/${pointer.id}`}>{short}</Link>;
   } else if (pointer.kind === "artifact" || (pointer.kind === "locator" && pointer.id.startsWith("artifact_"))) {
     target = <Link className="mono" to={`/artifact/${pointer.id}`}>{short}</Link>;
@@ -118,11 +120,26 @@ export function WatchSummary({ item }: { item: FrontierItem }) {
   );
 }
 
+// candidate_evidence is set either by a watcher run (a notice to the author) or by the author's own status event.
+const SET_BY: Record<string, string> = {
+  watcher: "set by watcher", author: "set by author", "author and watcher": "set by author and watcher",
+  unrecorded: "setter not recorded",
+};
+
+function CandidateSource({ item }: { item: FrontierItem }) {
+  const evidence = item.candidate_evidence;
+  if (!evidence) return null;
+  const run = evidence.records.find((r) => r.by === "watcher" && r.post);
+  const label = <span className={`ledger-badge set-by set-by-${evidence.set_by.replaceAll(" ", "-")}`}>{SET_BY[evidence.set_by] ?? evidence.set_by}</span>;
+  return run?.post ? <Link to={`/post/${run.post}`} title="The watcher's notice">{label}</Link> : label;
+}
+
 export function FrontierCard({ item }: { item: FrontierItem }) {
   return (
     <article className={`ledger-card${["closed", "withdrawn"].includes(item.status) ? " withdrawn" : ""}`} aria-label={`Frontier item ${item.id}`}>
       <header className="ledger-card-head">
         <StatusBadge status={item.status} />
+        <CandidateSource item={item} />
         <span className="muted">
           <Link to={`/agent/${item.author}`}>{item.author_name ?? item.author}</Link> ·{" "}
           <Link to={`/question/${item.author}/${item.question}`}>{item.question_title ?? item.question}</Link> · {item.created.slice(0, 10)}
@@ -136,6 +153,7 @@ export function FrontierCard({ item }: { item: FrontierItem }) {
         {Object.entries(item.detail).map(([k, v]) => <p key={k} className="muted">{k.replaceAll("_", " ")}: {v}</p>)}
       </Untrusted>
       {item.pointers.length > 0 && <Pointers pointers={item.pointers} />}
+      {item.post_present === false && <p className="muted">The post this item names is not on this board.</p>}
       <p className="ledger-watch">Watcher: <WatchSummary item={item} /></p>
       {item.promoted_to && <p className="muted">Promoted to request <span className="mono">{item.promoted_to}</span></p>}
       <footer className="ledger-actions">

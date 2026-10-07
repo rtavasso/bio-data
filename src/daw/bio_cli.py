@@ -85,12 +85,16 @@ def doctor(ctx: typer.Context):
             "workspace": str(ws.root), "writable": os.access(ws.root, os.W_OK)})
 
 
+PARAGRAPHS_HELP = ("Search article paragraphs only (format jats-paragraph, locators in record_id); "
+                   "they are left out of other searches unless --format names them")
+
+
 def local_search(ctx, text, family=None, feature=None, provider=None, format=None, limit=20, offset=0,
-                 min_level=0, include_historical=False, vector=None, model=None):
+                 min_level=0, include_historical=False, vector=None, model=None, paragraphs=False):
     with session(ctx, False) as ws:
         emit(search(ws, text, family=family, feature=feature, provider=provider, format=format, limit=limit,
                     offset=offset, min_level=min_level, include_historical=include_historical,
-                    vector=read_json(vector) if vector else None, model=model))
+                    vector=read_json(vector) if vector else None, model=model, paragraphs=paragraphs))
 
 
 @app.command("search")
@@ -98,7 +102,8 @@ def search_command(ctx: typer.Context, text: str = "", family: str | None = None
                    provider: str | None = None, format: str | None = None, limit: int = 20, offset: int = 0,
                    min_level: int = 0, include_historical: bool = False, vector: Path | None = None, model: str | None = None,
                    vector_text: Annotated[str | None, typer.Option(help="Embed this text with the pinned local model "
-                                                                    "(default hashing-ngram-v1) and rank by cosine")] = None):
+                                                                    "(default hashing-ngram-v1) and rank by cosine")] = None,
+                   paragraphs: Annotated[bool, typer.Option(help=PARAGRAPHS_HELP)] = False):
     """Search local data and prior work; no internet, model, or scientific planner."""
     if vector_text is not None:
         from daw.embeddings import vector_search
@@ -106,16 +111,22 @@ def search_command(ctx: typer.Context, text: str = "", family: str | None = None
             raise DawError("select_one_search_mode", "use TEXT, --vector or --vector-text")
         with session(ctx, False) as ws:
             emit(vector_search(ws, vector_text, model=model, family=family, provider=provider, format=format,
-                               limit=limit, offset=offset, min_level=min_level, include_historical=include_historical))
+                               limit=limit, offset=offset, min_level=min_level, include_historical=include_historical,
+                               paragraphs=paragraphs))
         return
-    local_search(ctx, text, family, feature, provider, format, limit, offset, min_level, include_historical, vector, model)
+    local_search(ctx, text, family, feature, provider, format, limit, offset, min_level, include_historical, vector, model,
+                 paragraphs)
 
 
 @data_app.command("search")
 def data_search(ctx: typer.Context, text: str = "", feature: str | None = None, provider: str | None = None,
-                format: str | None = None, limit: int = 20, offset: int = 0, min_level: int = 0):
-    """Search source context, apparent affordances, and literal labels inside files."""
-    local_search(ctx, text, "data", feature, provider, format, limit, offset, min_level)
+                format: str | None = None, limit: int = 20, offset: int = 0, min_level: int = 0,
+                paragraphs: Annotated[bool, typer.Option(help=PARAGRAPHS_HELP)] = False):
+    """Search source context, apparent affordances, and literal labels inside files.
+
+    Article paragraphs are a separate search (--paragraphs or --format jats-paragraph), so one
+    long article cannot crowd dataset hits; the article itself is one `jats` document here."""
+    local_search(ctx, text, "data", feature, provider, format, limit, offset, min_level, paragraphs=paragraphs)
 
 
 @artifact_app.command("search")
