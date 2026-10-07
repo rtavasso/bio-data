@@ -71,10 +71,13 @@ def export_command(ctx: typer.Context, output: Annotated[Path | None, typer.Opti
 @federation_app.command("import")
 def federation_import(ctx: typer.Context, directory: Path,
                       expect: Annotated[str | None, typer.Option(help="Snapshot ID the citation names")] = None):
-    """Verify every hash in DIR/snapshot.json and store the snapshot read-only under <commons>/federation/<id>/."""
-    from daw.commons.export import import_snapshot
+    """Verify every hash in DIR/snapshot.json, store the snapshot read-only under <commons>/federation/<id>/ and
+    index its claim and artifact ids (V7: `snapshot:<id>/claim_…` pointers then resolve to bytes)."""
+    from daw.commons.federation import import_and_index
+    from daw.community import Community
     acting("operator")
-    info = import_snapshot(ctx.obj, directory, expect=expect)
+    with Community(ctx.obj) as board:
+        info = import_and_index(board, directory, expect=expect, origin={"directory": str(directory)})
     emit({k: v for k, v in info.items() if k != "files"} | {"file_count": len(info["files"])})
 
 

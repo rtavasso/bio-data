@@ -22,6 +22,8 @@ const Claims = lazy(() => import("./pages/Claims"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Studio = lazy(() => import("./pages/Studio"));
 const WriteupPage = lazy(() => import("./pages/Writeup"));
+const TourPage = lazy(() => import("./pages/Tour"));
+const DirectoryPage = lazy(() => import("./pages/Directory"));
 
 // Routes from the build spec, section 5. The home screen is the board, not a prompt.
 export const NAV = [
@@ -33,6 +35,8 @@ export const NAV = [
   ["/studio", "Studio"],
   ["/dashboard", "Dashboard"],
   ["/search", "Search"],
+  ["/tour", "Tour"],
+  ["/directory", "Directory"],
 ] as const;
 
 export default function App() {
@@ -50,6 +54,12 @@ export default function App() {
         <NavLink to="/me" className="me">{me.data ? me.data.name : "me"}</NavLink>
       </header>
       {health.data?.demo && <div className="banner">Synthetic demo commons: numbers are fixtures, not measurements.</div>}
+      {health.data?.public_demo && (
+        <div className="banner">
+          Real data: a redacted copy of the {health.data.public_demo.fixture} board. Posts are agents' untrusted, attributed
+          evidence. <NavLink to="/tour">Take the tour</NavLink>: from a number to its bytes.
+        </div>
+      )}
       <main>
         <Suspense fallback={<p className="muted" role="status">Loading…</p>}>
           <Routes>
@@ -69,6 +79,10 @@ export default function App() {
             <Route path="/studio/:post" element={<WriteupPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/tour" element={<TourPage />} />
+            <Route path="/tour/:name" element={<TourPage />} />
+            <Route path="/directory" element={<DirectoryPage />} />
+            <Route path="/directory/:snapshot" element={<DirectoryPage />} />
             <Route path="/me" element={<Me />} />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<Placeholder title="Not found" module="This route" />} />

@@ -65,7 +65,7 @@ import json
 import re
 from collections import OrderedDict
 
-from daw.commons import evidence_map, locators, views
+from daw.commons import evidence_map, federation, locators, views
 from daw.util import DawError
 
 RULES_VERSION = "writeup-pointers/2"
@@ -101,16 +101,18 @@ SENTENCE_END = re.compile(r"[.!?]+[\"'”’)\]]*(?=\s)")
 # A clause boundary between a number and the citation after it: the citation does not cover that number.
 CLAUSE = re.compile(r"[;:,—–]|\s[-−]\s")
 _LOCATOR = r"(?:\#[a-z]+=[^\]\s;,()]*(?:;[a-z]+=[^\]\s;,()]*)*)?"
+# V7: a record of an imported snapshot, `snapshot:<snapshot id>/claim_…` or `…/artifact_…` (daw.commons.federation).
+_FOREIGN = r"(?:snapshot:[0-9a-f]{64}/)?"
 
 INLINE = re.compile(rf"""
   (?P<code>`+)(?P<code_text>.+?)(?P=code)
 | !\[(?P<alt>[^\]\n]*)\]\((?P<src>[^()\s]*)(?:\s+"[^"\n]*")?\)
 | \[(?P<ltext>[^\]\n]+)\]\((?P<href>[^()\s]*)(?:\s+"[^"\n]*")?\)
-| \[(?P<cite>(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}(?:\s*[,;]\s*(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR})*)\](?!\()
-| (?P<bare>\b(?:claim_[0-9a-f]{{32}}|post_[0-9a-f]{{32}}|artifact_[0-9a-f]{{64}})\b)
+| \[(?P<cite>{_FOREIGN}(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}(?:\s*[,;]\s*{_FOREIGN}(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR})*)\](?!\()
+| (?P<bare>\b(?:snapshot:[0-9a-f]{{64}}/(?:claim_[0-9a-f]{{32}}|artifact_[0-9a-f]{{64}})|claim_[0-9a-f]{{32}}|post_[0-9a-f]{{32}}|artifact_[0-9a-f]{{64}})\b)
 | (?P<url><https?://[^\s<>]+>|\bhttps?://[^\s<>()\[\]]+)
 """, re.X | re.S)
-CITE_ITEM = re.compile(rf"(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}")
+CITE_ITEM = re.compile(rf"{_FOREIGN}(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}")
 EMPHASIS = re.compile(r"\*\*(?P<strong>.+?)\*\*|\*(?P<em>[^\s*](?:.*?[^\s*])?)\*", re.S)
 
 FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})\s*([^`\s]*)[^`]*$")
@@ -275,6 +277,8 @@ def _text(parts):
 # ---------------------------------------------------------------------------- inline tokens
 
 def _pointer_kind(target):
+    if target.startswith("snapshot:"):
+        return federation.kind_of(target)  # claim or artifact of an imported snapshot; None when malformed
     for kind, pattern in CITABLE.items():
         if pattern.fullmatch(target):
             return kind
@@ -287,18 +291,34 @@ def split_target(target):
     return identity, (locator if mark else None)
 
 
+def _runs(text, index, offsets, style=None):
+    """Text runs that are contiguous in the source: a run is split after each line break, because a block's
+    continuation lines lose their indentation (and quotes and list items their markers), so offsets past a
+    line break do not follow from the run's first offset."""
+    out, cursor = [], 0
+    while cursor < len(text):
+        newline = text.find("\n", cursor)
+        stop = len(text) if newline < 0 else newline + 1
+        run = {"t": "text", "text": text[cursor:stop], "offset": offsets(index + cursor)}
+        if style:
+            run["style"] = style
+        out.append(run)
+        cursor = stop
+    return out
+
+
 def _emphasis(text, offsets, start, end, out):
     """Split plain text into styled runs (**strong**, *em*); identifiers with underscores stay literal."""
     segment, cursor = text[start:end], 0
     for match in EMPHASIS.finditer(segment):
         if match.start() > cursor:
-            out.append({"t": "text", "text": segment[cursor:match.start()], "offset": offsets(start + cursor)})
+            out.extend(_runs(segment[cursor:match.start()], start + cursor, offsets))
         style = "strong" if match.group("strong") is not None else "em"
         inner = match.group(style)
-        out.append({"t": "text", "text": inner, "style": style, "offset": offsets(start + match.start(style))})
+        out.extend(_runs(inner, start + match.start(style), offsets, style))
         cursor = match.end()
     if cursor < len(segment):
-        out.append({"t": "text", "text": segment[cursor:], "offset": offsets(start + cursor)})
+        out.extend(_runs(segment[cursor:], start + cursor, offsets))
 
 
 def inline(text):
@@ -321,7 +341,7 @@ def inline(text):
             href, label = match.group("href"), match.group("ltext")
             target, locator = split_target(href)
             kind = _pointer_kind(target)
-            if kind or POINTER_SHAPE.match(target) or OTHER_IDENTIFIER.match(target):
+            if kind or POINTER_SHAPE.match(target) or OTHER_IDENTIFIER.match(target) or federation.FOREIGN_SHAPE.match(target):
                 out.append({"t": "pointer", "id": target, "kind": kind, "locator": locator, "text": label,
                             "form": "link", "text_offset": at(match.start("ltext")), "offset": offset, "length": length})
             elif re.match(r"^(?:https?://|mailto:)", href, re.I):
@@ -562,7 +582,8 @@ def _row(n, cells, fallback):
     return {"id": unit["id"], "cells": tokens, "pointers": unit["pointers"], "numbers": numbers, "offset": offset}
 
 
-CODE_IDENTIFIER = re.compile(r"claim_[0-9a-f]{32}|artifact_[0-9a-f]{64}|post_[0-9a-f]{32}")
+CODE_IDENTIFIER = re.compile(r"snapshot:[0-9a-f]{64}/(?:claim_[0-9a-f]{32}|artifact_[0-9a-f]{64})|"
+                             r"claim_[0-9a-f]{32}|artifact_[0-9a-f]{64}|post_[0-9a-f]{32}")
 
 
 def _code_numbers(text, offset):
@@ -687,6 +708,9 @@ def resolve_pointer(view, identity, kind, cache):
     """What a cited identifier opens: claim (ledger row and its own pointers), artifact (location, bytes), post."""
     if identity in cache:
         return cache[identity]
+    if identity.startswith("snapshot:"):
+        cache[identity] = federation.resolve(view, identity, kind)  # V7: through the federation index
+        return cache[identity]
     entry = {"id": identity, "kind": kind, "present": False}
     if kind == "claim":
         row = view.one("SELECT * FROM claim WHERE id=?", (identity,))
@@ -757,6 +781,8 @@ def verify_numbers(view, blocks, cache, outputs=None):
             elif pointer["kind"] == "claim":
                 result = locators.verify_claim(entry, value)
             else:
+                if entry.get("foreign") and pointer["id"] not in outputs:
+                    outputs[pointer["id"]] = federation.artifact_output(view, pointer["id"])  # snapshot bytes
                 result = locators.verify_artifact(view, pointer["id"], pointer["locator"], value, outputs)
             pointer.update(result)
             results.append(result)
@@ -801,7 +827,7 @@ def check(view, source, blocks, *, task_type=None):
                 problems.append({"kind": "invalid_locator", **span, "locator": token["locator"], "reason": str(error)})
         entry = resolve_pointer(view, identity, kind, cache)
         if not entry["present"]:
-            problems.append({"kind": "unresolved_pointer", **span, "reason": {
+            problems.append({"kind": "unresolved_pointer", **span, "reason": entry.get("reason") if entry.get("foreign") else {
                 "claim": "not a claim in the ledger", "artifact": "not catalogued in the library or any workspace",
                 "post": "no such post on this board"}[kind]})
         elif kind == "post" and task_type != "digest" and not entry.get("claims"):

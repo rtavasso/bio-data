@@ -5,6 +5,7 @@ import { Status } from "../components/Status";
 import CohortCompare, { CostCell } from "../components/dashboard/CohortCompare";
 import { ReuseBars, Sparkline, Value, ratioText } from "../components/dashboard/Charts";
 import type { CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
+import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Publishing";
 import { useApi } from "../useApi";
 import "./Dashboard.css";
 
@@ -282,6 +283,12 @@ export default function Dashboard() {
             (cell, claim or line scope) can be verified against its record; the post's evidence list alone cannot.
           </p>
           <NumberCoverageTable groups={[data.summary, ...data.panels.cohort]} />
+          <h2>Compaction hygiene by harness</h2>
+          <p className="muted small">
+            Per harness: compaction summaries and fallbacks from session databases, summaries that name neither the
+            request post nor the assignment key, and the input context the stream reports per call (or per turn).
+          </p>
+          <HygieneTable groups={[data.summary, ...data.panels.harness]} />
           <h2>Claims authoring</h2>
           <p className="muted small">
             Ledger claims written by authors (the platform never writes one): per post, on posts that publish evidence,
@@ -298,6 +305,7 @@ export default function Dashboard() {
         </>
       )}
       <CohortCompare cohorts={cohorts.data?.items ?? []} />
+      <SnapshotCitationsPanel />
       {data && (
         <details className="limits">
           <summary>Limitations</summary>
