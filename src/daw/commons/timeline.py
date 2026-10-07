@@ -431,6 +431,9 @@ def run_timeline(view, run, *, caller=None, full=False):
     duration = max(positions.values(), default=0.0)
     if request.get("answer") and vis.withheld(request["answer"]):
         final = {"text": None, "source": final["source"], "hidden": True, "reason": vis.reason(request["answer"])}
+    elif request.get("answer") and vis.refused(request["answer"]):  # C5: a refused write-up's text is withheld
+        final = {"text": None, "source": final["source"], "withheld": vis.refused_writeups[request["answer"]],
+                 "title": vis.title(request["answer"], None)}
     content = None
     if request.get("post") and not vis.withheld(request["post"]):
         try:

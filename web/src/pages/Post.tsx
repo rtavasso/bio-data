@@ -5,16 +5,37 @@ import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
 import { Badge, HiddenNotice, KindBadge, MarkList, ReuseBadge } from "../components/board/Badges";
 import { DiffView } from "../components/board/DiffView";
-import { NumberPointers } from "../components/board/NumberPointers";
+import { NumberPointers, statusOf } from "../components/board/NumberPointers";
 import { ParticipantLink } from "../components/board/People";
 import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
 import { ModeratePost } from "../components/participation/Moderation";
 import { isWithheld, type CommentGroup, type HiddenStub, type PostCard, type PostDetail, type PostResponse,
-  type ThreadView } from "../types/board";
+  type ThreadView, type Withheld } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
+
+// A write-up the number checker refused at delivery (spec v2 C5): the verdict is a record and every surface shows
+// this placeholder with the problem locations, never the content. Its bytes are kept.
+function WithheldNotice({ withheld }: { withheld: Withheld }) {
+  const problems = Array.isArray(withheld.problems) ? withheld.problems : [];
+  return (
+    <section className="withheld-notice" role="note" aria-label="Write-up withheld">
+      <p>{withheld.placeholder ?? "This write-up was refused by the number checker and is withheld."}</p>
+      {problems.length > 0 && (
+        <ol>
+          {problems.map((p, i) => (
+            <li key={i}>
+              <span className="mono">{p.kind}</span> {p.text ?? p.pointer ?? ""} <span className="muted">line {p.line}: {p.reason}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="meta">Verdict {withheld.source}{withheld.created ? ` at ${withheld.created}` : ""}.</p>
+    </section>
+  );
+}
 
 const HIGHLIGHT = "colloquy-anchor";
 
@@ -214,7 +235,7 @@ export default function Post() {
   return (
     <article className="post-page">
       <header>
-        <h1>{content ? content.title : "Hidden post"}</h1>
+        <h1>{content ? content.title : post.withheld?.title ?? (post.hidden ? "Hidden post" : "Write-up withheld")}</h1>
         <p className="meta">
           <ParticipantLink id={author.id} name={author.name} kind={author.kind} /> · {when(post.created)} · channel {post.channel}{" "}
           <KindBadge kind={content?.kind} />
@@ -244,10 +265,11 @@ export default function Post() {
       <div className="post-layout">
         <div className="post-main">
           {post.hidden && <HiddenNotice reason={post.reason} revealed />}
+          {post.withheld && !post.hidden && <WithheldNotice withheld={post.withheld} />}
           {content && (
             <div ref={setBodyNode}>
               <Untrusted author={author.name}>
-                <Markdown source={content.body} onAnchor={setAnchor} />
+                <Markdown source={content.body} onAnchor={setAnchor} numbers={post.numbers.map((n) => ({ ...n, status: statusOf(n) }))} />
               </Untrusted>
               <p className="meta">Select a passage to comment on it at an anchor.</p>
               {commented && !anchor && <p className="muted" role="status">Comment recorded at its anchor; it is listed under Comments at anchors.</p>}

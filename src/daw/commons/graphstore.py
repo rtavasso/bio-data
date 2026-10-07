@@ -46,8 +46,9 @@ BOARD_QUERIES = {
     "board:agents": "SELECT id,name,kind,parent,trial,created FROM agent ORDER BY created,id",
     "board:requests": "SELECT count(*) AS n, max(updated) AS m, count(DISTINCT answer) AS a FROM request "
                       "WHERE answer IS NOT NULL",
-    "board:claims": "SELECT count(*) AS n, max(created) AS m, count(withdrawn_by) AS w, total(length(status)) AS s "
-                    "FROM claim",
+    # Claim nodes carry verified pointer counts from recorded write-up verdicts (`writeup_check` events, V2).
+    "board:claims": "SELECT count(*) AS n, max(created) AS m, count(withdrawn_by) AS w, total(length(status)) AS s, "
+                    "(SELECT coalesce(max(seq),0) FROM event WHERE kind='writeup_check') AS v FROM claim",
     "board:marks": "SELECT count(*) AS n, max(created) AS m FROM mark",
     "board:frontier": "SELECT count(*) AS n, max(created) AS c, max(updated) AS u, total(length(status)) AS s, "
                       "count(promoted_to) AS p, total(length(text)) AS t FROM frontier_item",
@@ -178,6 +179,16 @@ class Fingerprints:
         if name == "board:notebooks":
             return self.notebooks(order), None, None
         return self.board(name), None, None
+
+
+def catalog_fingerprints(view):
+    """[[segment, content fingerprint]] for the library and every workspace catalog, in map order. With a graph
+    store, an unchanged catalog file is not opened (its recorded fingerprint stands)."""
+    from daw.commons.evidence_map import segment_order
+    store = reader(view)
+    prints = store.prints if store is not None else Fingerprints(view)
+    order = store.order if store is not None else segment_order(view)
+    return [[name, prints.catalog(name)[0]] for name in order if name == "library" or name.startswith("workspace:")]
 
 
 # ---------------------------------------------------------------------------- reading (never writes)
@@ -394,7 +405,7 @@ def reader(view):
 def neighbourhood(view, identity, vis):
     """The map node for `identity` and every edge touching it, replayed from the store for this caller (the
     same node and edges the full map draws), or None without a store."""
-    from daw.commons.evidence_map import RELATIONS, Graph, replay
+    from daw.commons.evidence_map import RELATIONS, Graph, _label_withheld, replay
     store = reader(view)
     if store is None:
         return None
@@ -423,6 +434,7 @@ def neighbourhood(view, identity, vis):
             into = sorted(e["source"] for e in replay(ops, vis, Graph()).edges.values())
         if into:
             edge["into_superseded"] = into
+    _label_withheld(vis, graph)  # C5: a refused write-up is a placeholder here too (after superseded, as in build)
     return {"node": node, "edges": edges,
             "relations": {e["relation"]: RELATIONS[e["relation"]][1] for e in edges}}
 

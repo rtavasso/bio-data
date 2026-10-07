@@ -1,6 +1,7 @@
 // Response shapes of the Studio, export and federation API (daw.commons.studio, writeup, export).
 import type { Participant } from "../api";
 import type { Budget } from "../components/participation/writes";
+import type { NumberRecordPointer } from "./board";
 import type { MapEdge, MapNode } from "./observatory-map";
 import type { Pointer } from "./participation";
 
@@ -8,16 +9,25 @@ export type Token =
   | { t: "text"; text: string; offset: number; style?: "strong" | "em"; unlinked?: string }
   | { t: "code"; text: string; offset: number }
   | { t: "link"; href: string; text: string; offset: number; autolink?: boolean }
-  | { t: "pointer"; id: string; kind: "claim" | "artifact" | "post" | null; text: string; form: "link" | "citation" | "bare" | "code"; offset: number; length: number }
-  | { t: "figure"; id: string; kind: "claim" | "artifact" | "post" | null; caption: string; offset: number; length: number };
+  | { t: "pointer"; id: string; kind: "claim" | "artifact" | "post" | null; locator?: string | null; text: string; form: "link" | "citation" | "bare" | "code"; offset: number; length: number; text_offset?: number }
+  | { t: "figure"; id: string; kind: "claim" | "artifact" | "post" | null; locator?: string | null; caption: string; offset: number; length: number };
 
+// A number with the pointers that cover it (number-granular, spec v2 C5) and the value-in-record check (V2).
 export interface NumberToken {
   text: string;
   offset: number;
   length: number;
   covered_by: string[];
-  scope: "pointer" | "sentence" | "block" | "none";
+  scope: "cell" | "claim" | "line" | "none";
+  status?: "verified" | "unverified" | "unpointed";
+  pointers?: NumberRecordPointer[];
   reason?: string;
+}
+
+export interface NumberRecord extends NumberToken {
+  line: number;
+  block: number;
+  unit: string;
 }
 
 export interface Sentence {
@@ -85,7 +95,8 @@ export interface PointerEntry {
 }
 
 export interface Problem {
-  kind: "unpointed_number" | "unresolved_pointer" | "pointer_kind_not_allowed" | "figure_not_artifact" | "post_hidden";
+  kind: "unpointed_number" | "unresolved_pointer" | "pointer_kind_not_allowed" | "figure_not_artifact" | "post_hidden"
+    | "claimless_post_cited" | "invalid_locator";
   text?: string;
   pointer?: string;
   offset: number;
@@ -93,6 +104,7 @@ export interface Problem {
   line: number;
   reason: string;
   context?: string;
+  context_start?: number;
   unit?: string;
 }
 
@@ -133,7 +145,10 @@ export interface Writeup {
   pointers?: Record<string, PointerEntry>;
   problems?: Problem[];
   source?: string | null;
-  stats?: { numbers: number; pointed: number; units: number; pointers: number };
+  stats?: { numbers: number; pointed: number; units: number; pointers: number; verified?: number; unverified?: number; unpointed?: number };
+  numbers?: NumberRecord[];
+  verdict?: { source: "recorded" | "computed"; seq?: number; created?: string; verdict_blob?: string; rules: string; note?: string };
+  placeholder?: string;
   regeneration_required: Regeneration | null;
   flagged?: boolean;
   evidence_map?: { nodes: MapNode[]; edges: MapEdge[]; positions: Record<string, [number, number]>; seeds: string[]; note: string } | null;

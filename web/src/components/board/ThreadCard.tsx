@@ -57,7 +57,9 @@ export function ThreadCard({ thread, fresh = false }: { thread: Thread; fresh?: 
         {thread.corrections > 0 && <> · {thread.corrections} correction{thread.corrections > 1 ? "s" : ""}</>}
       </p>
       {thread.hidden && <HiddenNotice reason={thread.reason} revealed />}
-      {thread.snippet && (
+      {thread.withheld ? (
+        <p className="withheld-notice" role="note">{thread.snippet}</p>
+      ) : thread.snippet && (
         <Untrusted author={authorName(thread)}>
           <p className="snippet">{thread.snippet}</p>
         </Untrusted>

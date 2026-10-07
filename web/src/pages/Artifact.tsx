@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { withBase } from "../base";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
@@ -9,7 +9,7 @@ import { ProvenanceTree } from "../components/board/ProvenanceTree";
 import { short, size, when } from "../components/board/format";
 import { Markdown } from "../components/Markdown";
 import { CommentBox, MarkForm } from "../components/participation/Actions";
-import { isWithheld, type ArtifactView, type DerivationInput } from "../types/board";
+import { isWithheld, type ArtifactView, type DerivationInput, type Located } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -35,9 +35,76 @@ function InputSource({ input }: { input: DerivationInput }) {
   return <span className="muted">exact bytes only (no source identity recorded)</span>;
 }
 
+// The locator a number's pointer carries (`?locator=row=B_vs_A;col=log2_ratio`, or the same after `#`).
+export function locatorFrom(search: string, hash: string): string | null {
+  const query = new URLSearchParams(search).get("locator");
+  if (query) return query;
+  const fragment = hash.startsWith("#") ? decodeURIComponent(hash.slice(1)) : "";
+  return /^(row|col|key|line|round)=/.test(fragment) ? fragment : null;
+}
+
+// V2: the artifact page opens at the cited cell (table window with the cell highlighted), JSON key or line.
+function CitedLocation({ id, locator }: { id: string; locator: string }) {
+  const state = useApi<Located>(`/api/artifacts/${id}/locate?locator=${encodeURIComponent(locator)}`);
+  const target = useRef<HTMLElement | null>(null);
+  const found = state.data;
+  useEffect(() => { target.current?.scrollIntoView?.({ block: "center" }); }, [found]);
+  return (
+    <section className="panel" aria-label="Cited location">
+      <h2>Cited location</h2>
+      <p className="mono meta wrap">#{locator}</p>
+      <Status state={state} />
+      {found?.error && <p className="error">{found.present ? "" : "Bytes not available: "}{found.error}</p>}
+      {found && !found.error && found.kind === "key" && (
+        <p>Key <span className="mono">{found.target?.key}</span> = <mark className="cell-target mono" ref={(n) => { target.current = n; }}>{String(found.target?.value)}</mark></p>
+      )}
+      {found && !found.error && found.header && found.rows && (
+        <div className="table-scroll">
+          <table className="cited-table">
+            <thead><tr><th scope="col">#</th>{found.header.map((h, i) => <th key={i} scope="col">{h}</th>)}</tr></thead>
+            <tbody>
+              {found.rows.map((row, r) => {
+                const number = (found.first_row ?? 1) + r;
+                const isRow = found.target?.row === number;
+                return (
+                  <tr key={number} className={isRow ? "row-target" : undefined}>
+                    <th scope="row" className="muted">{number}</th>
+                    {row.map((cell, c) => {
+                      const hit = isRow && found.target?.col === c + 1;
+                      return (
+                        <td key={c} className={hit ? "cell-target" : undefined} aria-current={hit ? "true" : undefined}
+                          ref={hit ? (n) => { target.current = n; } : undefined}>{cell}</td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="meta">Rows {found.first_row}–{(found.first_row ?? 1) + found.rows.length - 1} of {found.total_rows}; read from the verified output bytes.</p>
+        </div>
+      )}
+      {found && !found.error && found.lines && (
+        <pre className="cited-lines">
+          {found.lines.map((line, i) => {
+            const number = (found.first_line ?? 1) + i;
+            const hit = found.target?.line === number;
+            return (
+              <span key={number} className={hit ? "cell-target" : undefined} aria-current={hit ? "true" : undefined}
+                ref={hit ? (n) => { target.current = n; } : undefined}>{`${number}\t${line}\n`}</span>
+            );
+          })}
+        </pre>
+      )}
+    </section>
+  );
+}
+
 // Artifact page: manifest, derivation inputs/code/parameters, provenance, holders, naming posts, fetchers.
 export default function Artifact() {
   const { id = "" } = useParams();
+  const where = useLocation();
+  const locator = locatorFrom(where.search, where.hash);
   const [depth, setDepth] = useState(3);
   const state = useApi<ArtifactView>(`/api/artifacts/${id}?depth=${depth}`);
   const a = state.data;
@@ -56,6 +123,7 @@ export default function Artifact() {
       </header>
       <div className="post-layout">
         <div className="post-main">
+          {locator && <CitedLocation id={a.id} locator={locator} />}
           {m.summary && <Untrusted><p>{m.summary}</p></Untrusted>}
           {m.limitations && m.limitations.length > 0 && (
             <section className="panel"><h2>Limitations</h2><ul>{m.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul></section>

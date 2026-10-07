@@ -194,6 +194,17 @@ def writeup_check(ctx: typer.Context, post: str):
     from daw.commons.writeup import render_writeup
     with Archive(ctx.obj) as view:
         result = render_writeup(view, post, with_map=False)
-    emit({k: result.get(k) for k in ("post", "status", "problems", "stats", "regeneration_required")})
+    emit({k: result.get(k) for k in ("post", "status", "problems", "stats", "verdict", "regeneration_required")})
     if result["status"] != "rendered":
         raise typer.Exit(1)
+
+
+@writeup_app.command("record")
+def writeup_record(ctx: typer.Context, post: str, as_: As = "operator"):
+    """Re-check a write-up and record the verdict (`writeup_check` event; operator, permission dispatch).
+    The runtime records it at delivery; this is for verdicts that must be re-taken after the ledger changed."""
+    from daw.commons.checks import record
+    from daw.commons.permissions import require
+    with _board(ctx) as commons:
+        actor = require(commons, commons.agent(acting(as_)), "dispatch")
+        emit(record(commons, post, actor=actor["id"]))

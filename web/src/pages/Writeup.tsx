@@ -14,9 +14,11 @@ import "../components/map/graph.css";
 import "../components/map/shared.css";
 import "../components/studio/studio.css";
 
-// /studio/:post — a rendered write-up (M6.1). The server refuses a write-up with an unpointed number or an
-// unresolved pointer (shown here with locations), and serves one that cites a withdrawn claim only with its
-// regeneration flag, shown as a band with the replacements and a prefilled commission.
+// /studio/:post — a rendered write-up (M6.1, spec v2 C5/V2). The checker's verdict is recorded at delivery: a
+// refused write-up (an unpointed number, an unresolved pointer, a claimless post citation) is withheld and shown as
+// a placeholder with every location; a rendered one marks each number verified or unverified against its record;
+// one that cites a withdrawn claim is served only with its regeneration flag (a band with the replacements and a
+// prefilled commission).
 
 function RegenerationBand({ flag }: { flag: Regeneration }) {
   const [open, setOpen] = useState(false);
@@ -85,12 +87,15 @@ export default function WriteupPage() {
       </p>
       {data.regeneration_required && <RegenerationBand flag={data.regeneration_required} />}
       {data.status === "refused" ? (
-        <Refusal problems={data.problems ?? []} source={data.source} />
+        <Refusal problems={data.problems ?? []} source={data.source} placeholder={data.placeholder} />
       ) : (
         <>
           <p className="muted st-stats">
-            {data.stats?.numbers} number{data.stats?.numbers === 1 ? "" : "s"}, all pointed · {data.stats?.pointers} pointer
-            {data.stats?.pointers === 1 ? "" : "s"} resolved · rules {data.rules}
+            {data.stats?.numbers} number{data.stats?.numbers === 1 ? "" : "s"}, all pointed
+            {data.stats?.verified !== undefined && <> · <span className="num-verified">{data.stats.verified} verified</span> against
+              their records · <span className="num-unverified">{data.stats.unverified} unverified</span></>}
+            {" "}· {data.stats?.pointers} pointer{data.stats?.pointers === 1 ? "" : "s"} resolved · rules {data.rules}
+            {data.verdict && <> · verdict {data.verdict.source}{data.verdict.created ? ` ${data.verdict.created}` : ""}</>}
           </p>
           <div className="st-layout">
             <Untrusted author={author}>

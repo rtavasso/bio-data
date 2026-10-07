@@ -1,7 +1,51 @@
 import { Fragment, useId, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { withBase } from "../../base";
-import type { Block, PointerEntry, Sentence, Token } from "../../types/studio";
+import type { Block, NumberToken, PointerEntry, Sentence, Token } from "../../types/studio";
+
+// Checked numbers by source offset: verified numbers are underlined, unverified ones marked (spec v2 C5, V2).
+export type NumberMarks = Map<number, NumberToken>;
+
+const MARK_TITLE: Record<string, string> = {
+  verified: "verified against its record", unverified: "pointed, but not found in the cited record", unpointed: "no pointer",
+};
+
+export function numberMarks(blocks: Block[]): NumberMarks {
+  const marks: NumberMarks = new Map();
+  const add = (numbers: NumberToken[] | undefined) => numbers?.forEach((n) => marks.set(n.offset, n));
+  for (const block of blocks) {
+    if (block.type === "table") [block.header, ...block.rows].forEach((row) => add(row.numbers));
+    else if (block.type === "list") block.items.forEach((item) => item.sentences.forEach((s) => add(s.numbers)));
+    else if (block.type === "code") add(block.numbers);
+    else if ("sentences" in block) block.sentences.forEach((s) => add(s.numbers));
+  }
+  return marks;
+}
+
+function why(n: NumberToken): string {
+  const reasons = (n.pointers ?? []).map((p) => (p.result === "verified" ? `found at ${p.at ?? "record"}` : p.reason)).filter(Boolean);
+  return [MARK_TITLE[n.status ?? ""] ?? n.status, ...reasons].filter(Boolean).join(": ");
+}
+
+// Text with each checked number wrapped in a span carrying its status (offsets are source code points).
+export function Marked({ text, offset, marks }: { text: string; offset: number; marks?: NumberMarks }) {
+  if (!marks?.size) return <>{text}</>;
+  const chars = Array.from(text);
+  const out: ReactNode[] = [];
+  let cursor = 0;
+  for (let i = 0; i < chars.length; i++) {
+    const mark = marks.get(offset + i);
+    if (!mark || !mark.status) continue;
+    const length = Array.from(mark.text).length;
+    if (chars.slice(i, i + length).join("") !== mark.text) continue;
+    if (i > cursor) out.push(chars.slice(cursor, i).join(""));
+    out.push(<span key={i} className={`num num-${mark.status}`} data-number={mark.status} title={why(mark)}>{mark.text}</span>);
+    cursor = i + length;
+    i = cursor - 1;
+  }
+  if (cursor < chars.length) out.push(chars.slice(cursor).join(""));
+  return <>{out}</>;
+}
 
 // Renders the server's HTML-safe write-up blocks without ever injecting HTML. Every pointer is a link to its
 // record; hovering or focusing shows what it opens, and clicking pins the record in the detail pane, which
@@ -26,11 +70,13 @@ function summary(id: string, entry?: PointerEntry): string {
   return `Post: ${entry.title ?? id}`;
 }
 
-function Pointer({ token, entry, onOpen, active }: {
-  token: Extract<Token, { t: "pointer" }>; entry?: PointerEntry; onOpen: (id: string) => void; active: boolean;
+function Pointer({ token, entry, onOpen, active, marks }: {
+  token: Extract<Token, { t: "pointer" }>; entry?: PointerEntry; onOpen: (id: string) => void; active: boolean; marks?: NumberMarks;
 }) {
   const tip = useId();
-  const label = token.form === "link" ? token.text : token.form === "citation" ? `[${shortId(token.id)}]` : shortId(token.id);
+  const label = token.form === "link"
+    ? (token.text_offset !== undefined ? <Marked text={token.text} offset={token.text_offset} marks={marks} /> : token.text)
+    : token.form === "citation" ? `[${shortId(token.id)}${token.locator ? `#${token.locator}` : ""}]` : shortId(token.id);
   const withdrawn = entry?.kind === "claim" && (entry.status === "withdrawn" || entry.withdrawn_by);
   const className = `st-pointer kind-${token.kind ?? "unknown"}${withdrawn ? " withdrawn" : ""}${active ? " active" : ""}`;
   return (
@@ -44,15 +90,20 @@ function Pointer({ token, entry, onOpen, active }: {
   );
 }
 
-function Tokens({ tokens, pointers, onOpen, active }: {
-  tokens: Token[]; pointers: Record<string, PointerEntry>; onOpen: (id: string) => void; active: string | null;
+function Tokens({ tokens, pointers, onOpen, active, marks }: {
+  tokens: Token[]; pointers: Record<string, PointerEntry>; onOpen: (id: string) => void; active: string | null; marks?: NumberMarks;
 }) {
   return (
     <>
       {tokens.map((token, n) => {
         switch (token.t) {
           case "text": {
-            const text = token.text.split("\n").map((line, i) => <Fragment key={i}>{i ? <br /> : null}{line}</Fragment>);
+            let at = token.offset;
+            const text = token.text.split("\n").map((line, i) => {
+              const start = at;
+              at += Array.from(line).length + 1;
+              return <Fragment key={i}>{i ? <br /> : null}<Marked text={line} offset={start} marks={marks} /></Fragment>;
+            });
             return token.style === "strong" ? <strong key={n}>{text}</strong> : token.style === "em" ? <em key={n}>{text}</em> : <Fragment key={n}>{text}</Fragment>;
           }
           case "code":
@@ -60,7 +111,7 @@ function Tokens({ tokens, pointers, onOpen, active }: {
           case "link":
             return <a key={n} href={token.href} rel="nofollow noopener noreferrer" target="_blank">{token.text}</a>;
           case "pointer":
-            return <Pointer key={n} token={token} entry={pointers[token.id]} onOpen={onOpen} active={active === token.id} />;
+            return <Pointer key={n} token={token} entry={pointers[token.id]} onOpen={onOpen} active={active === token.id} marks={marks} />;
           case "figure":
             return <Pointer key={n} token={{ ...token, t: "pointer", text: `figure: ${token.caption}`, form: "link" }}
               entry={pointers[token.id]} onOpen={onOpen} active={active === token.id} />;
@@ -72,7 +123,7 @@ function Tokens({ tokens, pointers, onOpen, active }: {
   );
 }
 
-function Sentences({ sentences, ...rest }: { sentences: Sentence[]; pointers: Record<string, PointerEntry>; onOpen: (id: string) => void; active: string | null }) {
+function Sentences({ sentences, ...rest }: { sentences: Sentence[]; pointers: Record<string, PointerEntry>; onOpen: (id: string) => void; active: string | null; marks?: NumberMarks }) {
   return (
     <>
       {sentences.map((s, i) => (
@@ -103,7 +154,7 @@ function Figure({ id, caption, entry, onOpen }: { id: string; caption: string; e
 export function WriteupBlocks({ blocks, pointers, onOpen, active }: {
   blocks: Block[]; pointers: Record<string, PointerEntry>; onOpen: (id: string) => void; active: string | null;
 }) {
-  const shared = { pointers, onOpen, active };
+  const shared = { pointers, onOpen, active, marks: numberMarks(blocks) };
   const out: ReactNode[] = blocks.map((block, n) => {
     switch (block.type) {
       case "heading": {

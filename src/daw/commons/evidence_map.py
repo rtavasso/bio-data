@@ -385,10 +385,13 @@ def segment_events(view, graph, *, after=0):
 
 
 def segment_claims(view, graph):
+    from daw.commons.checks import verified_claim_pointers
+    verified = verified_claim_pointers(view)  # V2: numbers in recorded write-up verdicts verified against the claim
     for claim in view.rows("SELECT id,post,author,ordinal,status,created FROM claim ORDER BY created,id"):
+        count = verified.get(claim["id"], 0)
         graph.node(claim["id"], "claim", store="board", guard=claim["post"], on_hidden="claim",
-                   label=f"claim {claim['ordinal']} · {claim['status']}", status=claim["status"],
-                   author=claim["author"], created=claim["created"])
+                   label=f"claim {claim['ordinal']} · {claim['status']}" + (f" · {count} verified" if count else ""),
+                   status=claim["status"], author=claim["author"], created=claim["created"], verified_pointers=count)
         graph.edge(claim["id"], claim["post"], "claim_of", {"store": "board", "table": "claim", "id": claim["id"]},
                    created=claim["created"])
 
@@ -500,7 +503,16 @@ def build(view, vis=None):
     for node in graph.nodes.values():
         node["stores"].sort()
     _label_superseded(graph)
+    _label_withheld(vis, graph)
     return graph
+
+
+def _label_withheld(vis, graph):
+    """C5: a write-up the number checker refused is a placeholder here too; its recorded edges stay."""
+    for pid in vis.refused_writeups:
+        node = graph.nodes.get(pid)
+        if node is not None and vis.refused(pid):
+            node.update(label=vis.title(pid, None), title=None, withheld=True)
 
 
 def _label_superseded(graph):
@@ -541,27 +553,16 @@ def _comment_target(content, evidence):
 
 
 def fingerprint(view):
-    """Workspace catalogs change without board events (registrations, links); include their extent in cache keys."""
+    """Workspace catalogs change without board events (registrations, links); include their extent in cache keys.
+
+    Catalog content fingerprints come from `daw.commons.graphstore.catalog_fingerprints`: a catalog whose file
+    is unchanged since the graph store recorded it is not reopened (spec v2 V6)."""
+    from daw.commons.graphstore import catalog_fingerprints
     parts = [view.sequence(), view.rows("SELECT target_kind,target_id,state FROM moderation ORDER BY target_kind,"
                                         "target_id")]
     for table, column in (("mark", "created"), ("frontier_item", "updated"), ("claim", "created")):
         parts.append(view.one(f"SELECT count(*) AS n, max({column}) AS m FROM {table}"))
-    stores = [("library", view.library)]
-    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY id"):
-        try:
-            stores.append((agent["id"], view.workspace(agent["id"])))
-        except DawError:
-            stores.append((agent["id"], None))
-    for name, ws in stores:
-        if ws is None:
-            parts.append([name, None])
-            continue
-        parts.append([name] + [ws.one(sql) for sql in (
-            "SELECT count(*) AS n, max(created) AS m FROM artifact",
-            "SELECT count(*) AS n FROM artifact_input",
-            "SELECT count(*) AS n, max(created) AS m FROM work_event",
-            "SELECT count(*) AS n, max(updated) AS m FROM question",
-            "SELECT count(*) AS n FROM asset_revision")])
+    parts.append(catalog_fingerprints(view))
     return digest(parts)[:32]
 
 
@@ -854,6 +855,10 @@ def _node_record(view, identity, vis):
         if vis.withheld(identity):
             return {"kind": "post", "id": identity, "record": vis.stub(identity), "hidden": True,
                     "reason": vis.reason(identity)}
+        if vis.refused(identity):  # C5: a refused write-up is a placeholder on every surface
+            post = view.one("SELECT id,author,created,channel,parent,supersedes FROM post WHERE id=?", (identity,))
+            return {"kind": "post", "id": identity, "record": vis.placeholder(identity, {**post, "excerpt": None}),
+                    "content_is_untrusted_data": True}
         post = view.post(identity)
         content = post["content"]
 

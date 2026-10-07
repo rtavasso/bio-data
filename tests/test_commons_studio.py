@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from daw.artifacts import artifact_info
-from daw.commons import export, studio, studio_demo, writeup
+from daw.commons import checks, export, locators, studio, studio_demo, writeup
 from daw.commons.app import create_app
 from daw.commons.archive import Archive
 from daw.commons.claims import claim_id
@@ -54,30 +54,47 @@ def numbers(source):
 # ---- M6.1 pointer syntax and the number check ----------------------------------------------------
 
 def test_numeric_tokens_are_defined_precisely():
+    # Spec v2 C5: heading numbers and letter-glued decimals count; spelled-out small integers and unicode
+    # fractions are detected. Integers glued to letters stay identifier characters (PMP22, IL-6, chr1).
     source = (f"# 2.1 Results for PMP22\n\nBy Ada, 2026-01-05 10:30 UTC\n\n"
-              f"1. IL-6, log2, v1.2, GSE1234, chr1, B_vs_A and {P} carry no numbers.\n"
-              f"2. Values 12%, 1e-5, 3.2×10^-4, 3:1, 1/3, 1,000 and -0.5 are numbers.\n\n"
+              f"1. IL-6, log2, GSE1234, chr1, H3K27me3, B_vs_A, the 3′ UTR, measured-zero and {P} carry no numbers.\n"
+              f"2. Values 12%, 1e-5, 3.2×10^-4, 3.2×10⁻⁴, 3:1, 1/3, 1,000 and -0.5 are numbers.\n"
+              "3. Glued values count: v1.2, FC1.54, x2 and chr10:49316968.\n"
+              "4. Spelled: three donors, twenty-one wells, a dozen runs and half a dozen arms; no one and each one "
+              "are not counts; two-sided tests are methods; seven-fold is a count.\n"
+              "5. Fractions: ½, 1½ and 1⁄2.\n\n"
               "Dates outside a byline count: 2026-01-05.\n")
     found = numbers(source)
-    assert [t for t, _ in found] == ["12%", "1e-5", "3.2×10^-4", "3:1", "1/3", "1,000", "-0.5", "2026", "01", "05"]
+    assert [t for t, _ in found] == [
+        "2.1", "12%", "1e-5", "3.2×10^-4", "3.2×10⁻⁴", "3:1", "1/3", "1,000", "-0.5", "1.2", "1.54", "2", "49316968",
+        "three", "twenty-one", "a dozen", "half a dozen", "seven", "½", "1½", "1⁄2", "2026", "01", "05"]
     assert all(scope == "none" for _, scope in found)
     assert numbers("A 5mg dose on the 2nd day.") == [("5", "none"), ("2", "none")]  # digits before letters count
+    values = {t: locators.parse_number(t)["value"] for t, _ in found if t not in ("2026", "01", "05")}
+    assert values["twenty-one"] == 21 and values["half a dozen"] == 6 and values["1½"] == 1.5
+    assert values["3.2×10⁻⁴"] == pytest.approx(3.2e-4) and values["1/3"] == pytest.approx(1 / 3)
 
 
-def test_sentences_pointer_links_citations_and_units():
+def test_coverage_is_number_granular():
+    # A pointer covers the numbers in its own link text, or the one number right before its bracket in the same
+    # clause. Sentence-level coverage is gone: two numbers and one pointer leave the other number unpointed.
     source = (f"The contrast is [1.54]({C}). Means were 11.0 and 32.0 [{A}]. Approx. 5 samples e.g. in Fig. 2 "
-              f"[{C}].\nThe value is 7. [{A}] Context only: 4 samples [see]({P}).\n\n"
-              f"| a | b |\n|---|---|\n| x | 3 |\n| y [{C}] | 9 |\n\n![Figure 1: 2 panels]({A})\n\n"
-              f"```\nvalue 8 {A}\nother 6\n```\n")
+              f"[{C}].\nThe value is 7. [{A}] Context only: [4 samples]({P}). Ratio 1.54, p = 0.003 [{C}]. "
+              f"Fold 2 [{A}] [{C}]. Cell 1.54 [{A}#row=B_vs_A;col=log2_ratio] and key [0.5]({A}#key=stats.fit[0]).\n\n"
+              f"| a | b |\n|---|---|\n| x | 3 |\n| y 8 [{C}] | 9 |\n\n![2 panels]({A})\n\n"
+              f"```\nvalue 8 {A}\nother 6, {A}\n```\n")
     found = numbers(source)
-    assert found == [("1.54", "pointer"), ("11.0", "sentence"), ("32.0", "sentence"), ("5", "sentence"),
-                     ("2", "sentence"), ("7", "sentence"), ("4", "none"), ("3", "none"), ("9", "sentence"),
-                     ("1", "pointer"), ("2", "pointer"), ("8", "block"), ("6", "block")]
+    assert found == [("1.54", "claim"), ("11.0", "none"), ("32.0", "line"), ("5", "none"), ("2", "claim"),
+                     ("7", "line"), ("4", "none"), ("1.54", "none"), ("0.003", "claim"), ("2", "claim"),
+                     ("1.54", "cell"), ("0.5", "cell"), ("3", "none"), ("8", "claim"), ("9", "none"),
+                     ("2", "line"), ("8", "line"), ("6", "none")]
     blocks = writeup.parse(source)
     sentences = blocks[0]["sentences"]
-    assert len(sentences) == 5 and sentences[3]["pointers"] == [A]  # a citation after the period belongs to it
-    unit = next(u for _, u in writeup.units(blocks) for n in u["numbers"] if n["text"] == "4")
-    assert unit["numbers"][0]["reason"] == "only post pointers (context) in this sentence"
+    assert len(sentences) == 8 and sentences[3]["pointers"] == [A]  # a citation after the period belongs to it
+    context = next(n for _, _, n in writeup.all_numbers(blocks) if n["text"] == "4")
+    assert context["reason"].startswith("a post pointer gives context only")
+    cell = next(n for _, _, n in writeup.all_numbers(blocks) if n["scope"] == "cell")
+    assert cell["pointers"] == [{"id": A, "kind": "artifact", "locator": "row=B_vs_A;col=log2_ratio", "form": "citation"}]
 
 
 def _writeup_post(board, author, body, *, parent=None):
@@ -102,23 +119,32 @@ def test_renderer_refuses_unpointed_numbers_and_unresolved_pointers_with_locatio
                      ("unpointed_number", "2"), ("pointer_kind_not_allowed", run), ("unresolved_pointer", "claim_123")]
     first = refused["problems"][0]
     assert body[first["offset"]:first["offset"] + first["length"]] == "3" and first["line"] == 1
-    assert first["context"] == "The marker rose 3-fold." and refused["source"] == body
-    assert "blocks" not in refused  # a refused write-up is never served
+    assert first["context"] == "The marker rose 3-fold." and first["context_start"] == 0
+    # A refused write-up is never served: no blocks, no source, a placeholder (spec v2 C5).
+    assert "blocks" not in refused and "source" not in refused and refused["placeholder"].startswith("This write-up")
+    assert refused["verdict"]["source"] == "computed"  # not delivered as a writing task: checked at read time
 
 
 def test_rendered_writeup_is_three_clicks_from_bytes_with_the_cited_subgraph(demo):
     root, ctx = demo
     claim = ctx["claims"]["current"]
     figure = ctx["observatory_map"]["figure"]
-    body = (f"# Corrected contrast\n\nBy dana, 2026-01-05\n\nThe ratio is [1.54]({claim}). Means were 11.0 and 32.0 "
-            f"[{ctx['artifacts']['measurement']}].\n\n![Figure 1: synthetic figure]({figure})\n\n"
-            f"Context: [the correction]({ctx['claims']['correction']}).")
+    measurement = ctx["artifacts"]["measurement"]
+    body = (f"# Corrected contrast\n\nBy dana, 2026-01-05\n\nThe ratio is [1.54]({claim}). Means were "
+            f"[11.0]({measurement}#row=A;col=mean) and [32.0]({measurement}#row=B;col=mean).\n\n"
+            f"![Figure 1: synthetic figure]({figure})\n\nContext: [the correction]({ctx['claims']['correction']}).")
     with Community(root) as board:
         post = _writeup_post(board, ctx["agents"]["dana"], body)
     http = client(root)
     rendered = http.get(f"/api/studio/writeups/{post}").json()
     assert rendered["status"] == "rendered" and rendered["regeneration_required"] is None
-    assert rendered["stats"] == {"numbers": 4, "pointed": 4, "units": 6, "pointers": 4}
+    # Every number is pointed; the figure caption's "1" is pointed at a PNG, so it is unverified (shown, not refused).
+    assert {k: rendered["stats"][k] for k in ("numbers", "pointed", "verified", "unverified", "unpointed", "units",
+                                              "pointers")} == {"numbers": 4, "pointed": 4, "verified": 3,
+                                                               "unverified": 1, "unpointed": 0, "units": 6, "pointers": 4}
+    assert [(n["text"], n["scope"], n["status"]) for n in rendered["numbers"]] == [
+        ("1.54", "claim", "verified"), ("11.0", "cell", "verified"), ("32.0", "cell", "verified"),
+        ("1", "line", "unverified")]
     # Sentence -> claim pointer -> artifact -> verified bytes.
     sentence = next(s for b in rendered["blocks"] for s in b.get("sentences", []) if claim in s["pointers"])
     entry = rendered["pointers"][claim]
@@ -178,6 +204,153 @@ def test_regeneration_flag_after_a_supersede_and_the_studio_listing(demo):
         again = commission(board, human(ctx), prefill["task_type"], ctx["agents"]["dana"], {"minutes": 10},
                            subject_kind=prefill["subject_kind"], subject_id=prefill["subject_id"], note=prefill["note"])
     assert again["task_type"] == "writing" and again["state"] == "pending"
+
+
+# ---- Spec v2 C5, V1, V2: one checker for every rendering, value-in-record pointers ------------------------
+
+def _writing(root, ctx, text, *, task_type="writing", target="dana"):
+    """Commission a writing (or digest) task and deliver `text` through the runtime (scripted harness)."""
+    with Community(root) as board, scripted_runtime(root) as (_, answers):
+        request = commission(board, human(ctx), task_type, ctx["agents"][target], {"minutes": 10},
+                             subject_kind="post", subject_id=ctx["claims"]["correction"], note="Spec v2 checker test.")
+        done = deliver(board, answers, request, text)
+        return done, events(board, "writeup_check")
+
+
+def test_unpointed_number_is_a_placeholder_on_post_search_studio_and_export(demo, tmp_path):
+    """C5: the verdict is recorded at delivery; a refused write-up completes its request but every surface serves a
+    placeholder. A sentence with two numbers and one pointer refuses the second."""
+    root, ctx = demo
+    claim = ctx["claims"]["current"]
+    text = f"Zebrafinch summary: the log2 ratio is [1.54]({claim}) across 4 samples."
+    done, recorded = _writing(root, ctx, text)
+    post = done["answer"]
+    assert done["state"] == "completed" and post
+    [check] = [r for r in recorded if r["post"] == post]
+    assert check["status"] == "refused" and check["task_type"] == "writing" and check["request"] == done["id"]
+    assert [(n["text"], n["status"], n["offset"]) for n in check["numbers"]] == [
+        ("1.54", "verified", text.index("1.54")), ("4", "unpointed", text.index("4 samples"))]
+    assert [(p["kind"], p["text"], p["line"]) for p in check["problems"]] == [("unpointed_number", "4", 1)]
+    http = client(root)
+    with Archive(root) as view:  # the verdict blob in the library is the full record
+        body = checks.verdict_body(view, check)
+    assert body["status"] == "refused" and body["post"] == post and body["body_blob"] == check["body_blob"]
+    # /post/:id read model: placeholder, no content, no numbers; the verdict's locations are listed.
+    shown = http.get(f"/api/posts/{post}").json()
+    assert shown["content"] is None and shown["numbers"] == [] and shown["withheld"]["status"] == "refused"
+    assert shown["withheld"]["title"] == checks.PLACEHOLDER_TITLE and shown["withheld"]["problems"][0]["text"] == "4"
+    # Thread and listing cards, and search snippets, show the placeholder.
+    tree = http.get(f"/api/threads/{post}").json()["tree"]
+
+    def walk(node):
+        yield node
+        for child in node["children"] + node["corrections"]:
+            yield from walk(child)
+    node = next(n for n in walk(tree) if n["id"] == post)
+    assert node["title"] == checks.PLACEHOLDER_TITLE and "Zebrafinch" not in json.dumps(tree)
+    listing = http.get("/api/posts", params={"kind": "answer", "full": True}).json()
+    assert "Zebrafinch" not in json.dumps(listing)
+    found = http.get("/api/posts", params={"q": "Zebrafinch"}).json()
+    hits = [h for item in found["items"] for h in item.get("hits", []) if h["post"] == post]
+    assert hits and all("Zebrafinch" not in (h["snippet"] or "") for h in hits) and "withheld" in hits[0]["snippet"]
+    assert "Zebrafinch" not in json.dumps(found["items"])
+    # Studio: 422 with the recorded verdict and a placeholder; the source is not served.
+    studio_view = http.get(f"/api/studio/writeups/{post}")
+    assert studio_view.status_code == 422
+    refused = studio_view.json()
+    assert refused["verdict"]["source"] == "recorded" and "source" not in refused and "blocks" not in refused
+    assert [p["text"] for p in refused["problems"] if p["kind"] == "unpointed_number"] == ["4"]
+    overview = http.get("/api/studio").json()
+    item = next(i for i in overview["groups"]["writeups"] if i["request"] == done["id"])
+    assert item["outputs"][0]["status"] == "refused" and item["outputs"][0]["title"] == checks.PLACEHOLDER_TITLE
+    assert item["answer"]["title"] == checks.PLACEHOLDER_TITLE and "Zebrafinch" not in json.dumps(overview)
+    # The evidence map labels it with the placeholder and its node record has no excerpt.
+    node = http.get(f"/api/map/node/{post}").json()["record"]
+    assert node["title"] == checks.PLACEHOLDER_TITLE and node["excerpt"] is None
+    mapped = next(n for n in http.get("/api/map", params={"limit": 10000}).json()["nodes"] if n["id"] == post)
+    assert mapped["label"] == checks.PLACEHOLDER_TITLE and mapped["withheld"]
+    # Digests that quote it see the placeholder.
+    with Archive(root) as view:
+        skeleton = studio.digest_skeleton(view, {}, None, None)
+    quoted = next(p for p in skeleton["sections"]["posts"] if p["id"] == post)
+    assert quoted["title"] == checks.PLACEHOLDER_TITLE and quoted["withheld"] and "Zebrafinch" not in skeleton["markdown"]
+    # Export: the same verdict in the snapshot, a placeholder page.
+    with Community(root) as board:
+        export.export_snapshot(board, "operator", "board", output=tmp_path / "site")
+    site = tmp_path / "site"
+    page = (site / f"posts/{post}.html").read_text()
+    assert checks.PLACEHOLDER_TITLE in page and "Zebrafinch" not in page and "across 4 samples" not in page
+    listed = {e["path"] for e in json.loads((site / "snapshot.json").read_text())["files"]}
+    assert f"checks/{post}.json" in listed
+    exported = json.loads((site / f"checks/{post}.json").read_text())
+    assert exported["status"] == "refused" and exported["verdict"]["source"] == "recorded"
+    assert [p["text"] for p in exported["problems"]] == ["4"] and "context" not in exported["problems"][0]
+    assert "Zebrafinch" not in "".join(p.read_text() for p in site.rglob("*.html"))
+
+
+def test_two_numbers_and_one_bracket_refuse_the_number_the_bracket_does_not_follow(demo):
+    """C5: the bracket covers the number immediately before it, in its clause; nothing else in the sentence."""
+    root, ctx = demo
+    claim = ctx["claims"]["current"]
+    with Community(root) as board:
+        post = _writeup_post(board, ctx["agents"]["dana"], f"In 4 samples the log2 ratio is 1.54 [{claim}].")
+        second = _writeup_post(board, ctx["agents"]["dana"], f"The log2 ratio is 1.54 [{claim}] in 4 samples.")
+        clause = _writeup_post(board, ctx["agents"]["dana"], f"The log2 ratio is 1.54, in 4 samples [{claim}].")
+    with Archive(root) as view:
+        for pid, refused in ((post, "4"), (second, "4"), (clause, "1.54")):
+            result = writeup.render_writeup(view, pid, with_map=False)
+            assert result["status"] == "refused"
+            assert [p["text"] for p in result["problems"] if p["kind"] == "unpointed_number"] == [refused]
+
+
+def test_writing_task_refuses_to_cite_a_claimless_post(demo):
+    """V1: a writing task refuses to cite a post without ledger claims; a digest may cite posts as items."""
+    root, ctx = demo
+    claimless = ctx["posts"]["reply"]
+    with Archive(root) as view:
+        assert not view.rows("SELECT id FROM claim WHERE post=?", (claimless,))
+    text = f"See [the normalization reply]({claimless}) and [the correction]({ctx['claims']['correction']})."
+    done, recorded = _writing(root, ctx, text)
+    [check] = [r for r in recorded if r["post"] == done["answer"]]
+    assert check["status"] == "refused"
+    assert [(p["kind"], p["pointer"]) for p in check["problems"]] == [("claimless_post_cited", claimless)]
+    digest, recorded = _writing(root, ctx, f"This period: [{claimless}] replied to the finding.", task_type="digest")
+    [check] = [r for r in recorded if r["post"] == digest["answer"]]
+    assert check["status"] == "rendered" and check["task_type"] == "digest"
+
+
+def test_cited_cell_value_that_differs_from_the_prose_is_unverified_and_the_artifact_opens_at_it(demo):
+    """V2: the checker compares the cited cell with the prose at the declared or implied rounding."""
+    root, ctx = demo
+    contrast = ctx["artifacts"]["contrast"]
+    cell = "row=B_vs_A;col=log2_ratio"
+    text = (f"Reported [1.45]({contrast}#{cell}); measured [1.54]({contrast}#{cell}); rounded [1.5]({contrast}#{cell}) "
+            f"and [1.5]({contrast}#{cell};round=1); declared [1.5]({contrast}#{cell};round=2); by column number "
+            f"[1.54]({contrast}#row=%231;col=%232).")
+    done, recorded = _writing(root, ctx, text)
+    [check] = [r for r in recorded if r["post"] == done["answer"]]
+    assert check["status"] == "rendered"  # unverified numbers are shown, not refused
+    assert [n["status"] for n in check["numbers"]] == ["unverified", "verified", "verified", "verified", "unverified",
+                                                       "verified"]
+    assert all(n["scope"] == "cell" for n in check["numbers"])
+    http = client(root)
+    rendered = http.get(f"/api/studio/writeups/{done['answer']}").json()
+    first = rendered["numbers"][0]
+    assert first["pointers"][0]["result"] == "unverified"
+    assert first["pointers"][0]["reason"] == "the cited cell holds 1.54, not this number"
+    assert first["pointers"][0]["found"] == {"row": 1, "col": 2, "row_key": "B_vs_A", "column": "log2_ratio",
+                                             "value": "1.54"}
+    assert rendered["stats"]["verified"] == 4 and rendered["stats"]["unverified"] == 2
+    # The post page marks them the same way and links each number to the artifact at its locator.
+    numbers = http.get(f"/api/posts/{done['answer']}").json()["numbers"]
+    assert [n["status"] for n in numbers] == [n["status"] for n in check["numbers"]]
+    assert numbers[1]["pointers"][0]["route"] == f"/artifact/{contrast}?locator=row%3DB_vs_A%3Bcol%3Dlog2_ratio"
+    # The artifact page opens at the locator: the table window with the cited cell.
+    located = http.get(f"/api/artifacts/{contrast}/locate", params={"locator": cell}).json()
+    assert located["kind"] == "cell" and located["header"] == ["contrast", "log2_ratio"]
+    assert located["target"] == {"row": 1, "col": 2, "row_key": "B_vs_A", "column": "log2_ratio", "value": "1.54"}
+    assert located["rows"] == [["B_vs_A", "1.54"]] and located["value"] == 1.54
+    assert http.get(f"/api/artifacts/{contrast}/locate", params={"locator": "row=B_vs_A"}).status_code == 400
 
 
 # ---- M6.2 reviews as marks ----------------------------------------------------------------------
@@ -778,6 +951,9 @@ def test_writeup_check_cli_exit_codes(demo, monkeypatch):
     ok = runner.invoke(app, ["--root", str(root), "writeup", "check", made["writeup"]])
     assert ok.exit_code == 0 and json.loads(ok.output)["status"] == "rendered"
     refused = runner.invoke(app, ["--root", str(root), "writeup", "check", made["refused"]])
-    assert refused.exit_code == 1 and [p["text"] for p in json.loads(refused.output)["problems"]] == ["1.31", "15%"]
+    problems = json.loads(refused.output)["problems"]
+    assert refused.exit_code == 1 and [(p["kind"], p.get("text")) for p in problems] == [
+        ("claimless_post_cited", None), ("unpointed_number", "1.31"), ("unpointed_number", "15%")]
+    assert json.loads(refused.output)["verdict"]["source"] == "recorded"  # stored at delivery by the runtime hook
     skeleton = runner.invoke(app, ["--root", str(root), "digest", "skeleton", "--markdown"])
     assert skeleton.exit_code == 0 and skeleton.output.startswith("# Digest skeleton")
