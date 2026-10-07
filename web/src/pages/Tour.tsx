@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { withBase } from "../base";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
-import type { Tour as TourData, TourListing, TourStep } from "../types/publishing";
+import type { Tour as TourData, TourFinal, TourListing, TourStep } from "../types/publishing";
 import { useApi } from "../useApi";
 import "./publishing.css";
 
@@ -82,6 +82,41 @@ function Step({ step }: { step: TourStep }) {
   );
 }
 
+// Spec v3 G2: the tour walks every number of its finals: the author's pointers, people's curated pointers (each
+// two clicks from bytes, with the curator's name), numbers a person marked unlocatable, and the rest.
+function FinalWalk({ final }: { final: TourFinal }) {
+  if (!final.available) {
+    return <li className="panel"><span className="mono">{short(final.post)}</span> <span className="muted">is not shown here (hidden or withheld).</span></li>;
+  }
+  const numbers = final.numbers ?? [];
+  return (
+    <li className="panel tour-final" aria-label={`Final ${final.title ?? final.post}`}>
+      <p>
+        <Link to={final.route ?? `/post/${final.post}`}>{final.title ?? short(final.post)}</Link>{" "}
+        <span className="muted small">
+          {numbers.length} numbers · {final.author_verified ?? 0} by the author's pointers · {final.curated ?? 0} curated ·{" "}
+          {final.unlocatable ?? 0} unlocatable · {final.unresolved ?? 0} unresolved
+          {final.curators && final.curators.length > 0 && <> · curated by {final.curators.join(", ")}</>}
+        </span>
+      </p>
+      <ul className="tour-numbers">
+        {numbers.map((n) => (
+          <li key={n.offset} className={`tour-number-${n.resolution}`}>
+            {n.route && n.resolution !== "unresolved" && n.resolution !== "unlocatable"
+              ? <Link to={n.route} className="mono">{n.text}</Link> : <span className="mono">{n.text}</span>}{" "}
+            <span className="muted small">
+              {n.resolution === "author" && "the author's pointer"}
+              {n.resolution === "curated" && <>curated by {n.curated?.curator_name}{n.curated?.locator && <> at <span className="mono">#{n.curated.locator}</span></>}</>}
+              {n.resolution === "unlocatable" && <>unlocatable ({n.unlocatable?.curator_name}: {n.unlocatable?.note})</>}
+              {n.resolution === "unresolved" && "no pointer yet"}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}
+
 export function TourView({ name }: { name: string }) {
   const state = useApi<TourData>(`/api/tours/${encodeURIComponent(name)}`);
   const tour = state.data;
@@ -100,6 +135,16 @@ export function TourView({ name }: { name: string }) {
         located each number's value and the commons' checker re-verifies it against the bytes on every visit.
       </p>
       <ol className="tour-steps">{tour.steps.map((s) => <Step key={s.step} step={s} />)}</ol>
+      {tour.finals && tour.finals.length > 0 && (
+        <section aria-labelledby="tour-finals">
+          <h2 id="tour-finals">Every number of these finals</h2>
+          <p className="muted">
+            {tour.summary.finals_resolved ?? 0} of {tour.finals.length} finals have every number resolved: pointed by its
+            author, curated by a person (a pointer that is theirs, not the author's) or marked unlocatable with a reason.
+          </p>
+          <ol className="tour-finals">{tour.finals.map((f) => <FinalWalk key={f.post} final={f} />)}</ol>
+        </section>
+      )}
     </section>
   );
 }

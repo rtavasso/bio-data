@@ -15,7 +15,8 @@ evaluates anything from the directory it checks: it reads bytes, hashes them and
 3. Every number. Each recorded number must occur at its recorded offset (Unicode code points) in the
    source. Each pointer is re-checked against the included bytes, value in record: an artifact pointer
    reads the cited cell (`row=;col=`), JSON key (`key=`) or line (`line=`) of the artifact's output bytes,
-   or, without a locator, any numeric token of a text output of at most 64 KB; a claim pointer reads the
+   or, without a locator, the one numeric token of a text output of at most 64 KB that matches (a value that
+   occurs twice does not verify); a claim pointer reads the
    claim's text and scope. The prose number matches a cited value at the precision the prose shows
    (`1.54` matches values within 0.005; `round=N` declares N places; `12%` matches 12 or 0.12). The
    recomputed status (verified / unverified / post_scoped / unpointed) must equal the status the
@@ -380,9 +381,11 @@ def verify_bytes(data, name, locator_text, number):
             return {"result": "verified" if hit else "unverified", "at": kind, "found": {"line": wanted, "value": hit}}
         if len(data) > TEXT_SEARCH_LIMIT:
             return {"result": "unverified", "at": None, "reason": "no locator and the output is larger than 64 KB"}
-        for line, token in _tokens(text):
-            if matches(number, parse_cell(token), decimals):
-                return {"result": "verified", "at": "text", "found": {"line": line, "value": token}}
+        hits = [(line, token) for line, token in _tokens(text) if matches(number, parse_cell(token), decimals)]
+        if len(hits) == 1:
+            return {"result": "verified", "at": "text", "found": {"line": hits[0][0], "value": hits[0][1]}}
+        if hits:  # spec v3 B6: without a locator only a value that occurs once verifies
+            return {"result": "unverified", "at": "text", "reason": f"the value occurs {len(hits)} times in the output"}
         return {"result": "unverified", "at": None, "reason": "the value does not occur in the output bytes"}
     except Problem as error:
         return {"result": "unverified", "at": kind, "reason": str(error)}

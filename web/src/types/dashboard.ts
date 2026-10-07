@@ -76,18 +76,24 @@ export interface ClaimsAuthoring {
   cell_pointer_share: Num;
 }
 
-// Number coverage of a group's finals (spec v2 C11, V1): pointers at the number (cell, claim, line) versus only the
-// post's evidence list (post) or none; statuses from the value-in-record check. null: no final in the group.
+// Number coverage of a group's finals (spec v2 C11, V1; v3 B6, G2): the author's pointers at the number (cell,
+// claim, line, text) versus people's curated pointers (curated) and numbers covered only by the post's evidence
+// list (post) or nothing (none); statuses from the value-in-record check. verified_share counts the author's cell,
+// claim and line pointers only. null: no final in the group.
 export interface NumberCoverage {
   finals: number;
   numbers: number;
-  scopes: { cell: number; claim: number; line: number; post: number; none: number };
+  scopes: { cell: number; claim: number; line: number; text?: number; curated?: number; post: number; none: number };
   statuses: { verified: number; unverified: number; post_scoped: number; unpointed: number };
+  pointers?: { author: number; curated: number; unpointed: number; unlocatable: number };
   number_level: number;
   number_level_share: Num;
   claim_share: Num;
   cell_share: Num;
   verified_share: Num;
+  author_verified?: number;
+  text_verified?: number;
+  curated_verified?: number;
 }
 
 export interface Group {

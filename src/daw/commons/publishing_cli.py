@@ -1,5 +1,5 @@
-"""`bio commons preprint|directory|tour|public-demo|federation-demo|harness-check|invite|pilot-report` and
-`bio commons federation reindex|records|citations|cited-by` (spec v2 V3, V7, V8; v3 V16, B9).
+"""`bio commons preprint|directory|tour|curate|public-demo|federation-demo|harness-check|invite|pilot-report` and
+`bio commons federation reindex|records|citations|cited-by` (spec v2 V3, V7, V8; v3 G2, V15, V16, B9).
 
 Each command calls the same function as the HTTP API. Commands that write take an explicit acting participant
 (`--as`); agents act through `bio community` in their own checkout instead.
@@ -16,7 +16,12 @@ directory_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                             help="Public commons directory: publish, list and fetch content-addressed snapshots.")
 tour_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
                        help="Curated reading paths (board -> thread -> number -> bytes), re-checked on every read.")
+curate_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                         help="A person's curated pointers at numbers (spec v3 G2): pointer, unlocatable, status, receipt.")
 As = Annotated[str, typer.Option("--as", help="Acting participant (name or id)")]
+Person = Annotated[str, typer.Option("--as", help="The curating person (a human or operator participant, name or id)")]
+Offset = Annotated[int, typer.Option(help="The number's offset in the post body (see `tour locate`, `curate status`)")]
+Note = Annotated[str, typer.Option(help="What the curator read at the locator, or why the number is unlocatable")]
 
 
 def emit(value):
@@ -140,12 +145,71 @@ def tour_locate(ctx: typer.Context, post: str, offset: Annotated[int, typer.Opti
         emit(candidates(view, post, offset, artifact))
 
 
+@curate_app.command("pointer")
+def curate_pointer(ctx: typer.Context, post: str, offset: Offset,
+                   artifact: Annotated[str, typer.Option(help="An artifact the post names as evidence")],
+                   locator: Annotated[str, typer.Option(help="row=…;col=…, key=… or line=N where the value is")],
+                   note: Note, as_: Person):
+    """Record a curated pointer: the number's value at a cell, key or line of an artifact the post names."""
+    from daw.commons.curation import curate
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(curate(board, acting(as_), post, offset, artifact=artifact, locator=locator, note=note))
+
+
+@curate_app.command("unlocatable")
+def curate_unlocatable(ctx: typer.Context, post: str, offset: Offset, note: Note, as_: Person):
+    """Mark a number unlocatable (no named artifact holds it, its bytes are absent, ...), with the reason."""
+    from daw.commons.curation import curate
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        emit(curate(board, acting(as_), post, offset, note=note, unlocatable=True))
+
+
+@curate_app.command("status")
+def curate_status(ctx: typer.Context, post: Annotated[list[str] | None, typer.Option("--post", help="Post id (repeatable)")] = None,
+                  tour: Annotated[str | None, typer.Option(help="A tour's finals (default pmp22-cohort)")] = None):
+    """Per final: numbers resolved by author pointers, curated, unlocatable and unresolved (with offsets)."""
+    from daw.commons.archive import Archive
+    from daw.commons.curation import progress, tour_finals
+    from daw.commons.tour import get
+    with Archive(ctx.obj) as view:
+        posts = post or tour_finals(get(view, tour or "pmp22-cohort", resolved=False))
+        emit({"posts": progress(view, posts), "sequence": view.sequence()})
+
+
+@curate_app.command("receipt")
+def curate_receipt(ctx: typer.Context, tour: Annotated[str, typer.Option(help="Tour whose finals are counted")] = "pmp22-cohort",
+                   output: Annotated[Path | None, typer.Option(help="Write the receipt here (compact JSON)")] = None,
+                   require: Annotated[bool, typer.Option(help="Exit 1 (writing nothing) unless the milestone is met")] = True):
+    """The Milestone B receipt: per tour final, numbers resolved by author pointers, curated or unlocatable."""
+    import hashlib
+    import json
+
+    from daw.commons.archive import Archive
+    from daw.commons.curation import receipt
+    from daw.commons.tour import get
+    root = Path(ctx.obj).expanduser().resolve()
+    with Archive(root) as view:
+        value = receipt(view, get(view, tour, resolved=False))
+    fixture = root / "FIXTURE.json"
+    value["fixture_sha256"] = hashlib.sha256(fixture.read_bytes()).hexdigest() if fixture.is_file() else None
+    value["command"] = f"bio commons --root <commons> curate receipt --tour {tour} --output ..."
+    emit({k: v for k, v in value.items() if k != "definitions"})
+    if require and not value["milestone"]["met"]:
+        raise typer.Exit(1)
+    if output:
+        output.write_text(json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n")
+
+
 def public_demo_command(out: Path, fixture: Annotated[Path | None, typer.Option(help="Real-data fixture (default fixtures/pmp22-cohort)")] = None,
                         tour: Annotated[Path | None, typer.Option(help="Tour JSON (default docs/colloquy/tours/pmp22-cohort.json)")] = None,
-                        snapshot: Annotated[Path | None, typer.Option(help="Also export the board as a citable snapshot here")] = None):
-    """Build the PMP22 cohort as a public demo commons: verified copy of the fixture, checked tour, PUBLIC.json."""
+                        snapshot: Annotated[Path | None, typer.Option(help="Also export the board as a citable snapshot here")] = None,
+                        visitors: Annotated[bool, typer.Option(help="Visitors may sign in with a display name to comment and mark")] = True):
+    """Build the PMP22 cohort as a public commons: verified copy of the fixture, checked tour, read policy public,
+    visitor sign-in, PUBLIC.json."""
     from daw.commons.publicdemo import build
-    emit(build(out, fixture=fixture, tour=tour, snapshot=snapshot))
+    emit(build(out, fixture=fixture, tour=tour, snapshot=snapshot, visitors=visitors))
 
 
 def federation_demo_command(out: Path,
@@ -211,6 +275,7 @@ def register(app, federation_app):
     app.command("pilot-report")(pilot_report_command)
     app.add_typer(directory_app, name="directory")
     app.add_typer(tour_app, name="tour")
+    app.add_typer(curate_app, name="curate")
     federation_app.command("reindex")(federation_reindex)
     federation_app.command("records")(federation_records)
     federation_app.command("citations")(federation_citations)

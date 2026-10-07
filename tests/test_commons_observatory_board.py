@@ -143,7 +143,8 @@ def test_every_number_in_agent_finals_has_an_artifact_pointer(demo):
     assert report and all(not unpointed for unpointed in report.values()), report
     brief_answer = next(p for p in answer_ids if api.get(f"/api/posts/{p}").json()["numbers"])
     numbers = {n["text"]: n for n in api.get(f"/api/posts/{brief_answer}").json()["numbers"]}
-    assert {"1.54", "11.0", "32.0"} <= set(numbers) and numbers["1.54"]["scope"] == "line"
+    # A pointer without a locator found once in a small text artifact is scope text (v3 B6), not line.
+    assert {"1.54", "11.0", "32.0"} <= set(numbers) and numbers["1.54"]["scope"] == "text"
 
 
 def test_unpointed_numbers_are_reported_not_hidden(demo):

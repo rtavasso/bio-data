@@ -36,6 +36,14 @@ def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why t
     emit(resettle_fixture(root, reason=reason, reindex_runs=reindex_runs))
 
 
+@fixture_app.command("record-curation")
+def fixture_record_curation(root: Path, reason: Annotated[str, typer.Option(help="Who curated what (recorded)")]):
+    """Re-record a fixture's hashes after people curated pointers on it in place (spec v3 G2). Refuses any
+    other write past the recorded board sequence."""
+    from daw.commons.fixture import record_curation
+    emit(record_curation(root, reason=reason))
+
+
 @fixture_app.command("verify")
 def fixture_verify(root: Path):
     """Check every file in FIXTURE.json against its recorded sha256."""
@@ -73,7 +81,7 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     if host not in {"127.0.0.1", "localhost", "::1"} and mode == "local":
         raise DawError("local_mode_is_loopback_only", "use --mode accounts to listen on other interfaces")
     app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir, forwarded_allow_ips=forwarded_allow_ips,
-                     local_operator=as_operator)
+                     local_operator=as_operator, graph_store=True)
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)
@@ -110,7 +118,7 @@ def host_command(config: Annotated[Path, typer.Option("--config", help="tenants.
     loaded = tenants.load(config)
     if static_dir:
         loaded = dataclasses.replace(loaded, static_dir=static_dir.resolve())
-    app = tenants.create_host_app(loaded, forwarded_allow_ips=forwarded_allow_ips)
+    app = tenants.create_host_app(loaded, forwarded_allow_ips=forwarded_allow_ips, graph_store=True)
     for tenant in loaded.tenants:
         record_tenancy(tenant.root, "accounts")  # every tenant is multi-tenant: live dispatch needs its sandbox
     typer.echo(canonical({"listen": f"{host}:{port}", "tenants": {t.name: {"base": t.base, "root": str(t.root)}

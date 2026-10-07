@@ -47,8 +47,9 @@ later: posts, threads, the map, questions, runs, search, the dashboard, SSE (`/a
 stream), blobs, artifact bytes, uploads, exports and federation snapshots, and writes too. A test enumerates
 every GET route of every router module and requires 401 for an anonymous reader under `members` and
 `private`. Only these answer without membership: `POST|DELETE /api/session`, `GET /api/health` (liveness and
-the policy only, no board sequence), `GET /api/access` (the policy and the caller's standing) and, for an
-authenticated non-member, `GET /api/me`. The HTML shell and static assets carry no board content. Anonymous
+the policy only, no board sequence), `GET /api/access` (the policy and the caller's standing), `POST
+/api/visitors` (visitor sign-in, spec v3 V15, which refuses itself unless the commons serves accounts mode under
+the `public` policy with `[visitors] signin = true`) and, for an authenticated non-member, `GET /api/me`. The HTML shell and static assets carry no board content. Anonymous
 callers get 401 `authentication_required`; authenticated non-members 403 `not_a_member`. A revoked token or
 membership is refused at the next request, and a long response (an event stream) is ended at its next chunk
 after `RECHECK_SECONDS` (5 s; the SSE keepalive is 15 s). Local mode is unaffected (one person on loopback).

@@ -360,6 +360,51 @@ def resettle_fixture(root, *, reason, reindex_runs=False):
     return entry
 
 
+CURATION_EVENTS = ("pointer_curated", "participant_created", "participant_profile_updated")
+
+
+def record_curation(root, *, reason):
+    """Re-record a fixture's hashes after people curated pointers on it in place (spec v3 G2).
+
+    A curator runs `bio commons --root <fixture> curate pointer|unlocatable ... --as PERSON` (after
+    `add-participant PERSON` when the person is new). That changes `board.sqlite`, adds library blobs (the
+    marks' bodies) and their rows in `library/catalog.sqlite`, so `verify` fails until the hashes are recorded
+    again. Only those changes are accepted, and
+    only when every board event past the recorded sequence is a curation act or a curator's participant record;
+    anything else (a post, a hide, a claim) refuses, so this never launders other writes into a fixture."""
+    from daw.community import Community
+    root = Path(root).expanduser().resolve()
+    manifest = json.loads((root / "FIXTURE.json").read_text())
+    checked = verify_fixture(root)
+    if checked["missing"]:
+        raise DawError("fixture_not_verified", f"missing {len(checked['missing'])} files")
+    with Community(root) as board:
+        events = board.rows("SELECT seq,kind FROM event WHERE seq>? ORDER BY seq", (manifest["board_sequence"],))
+        sequence = board.one("SELECT coalesce(max(seq),0) AS n FROM event")["n"]
+    other = sorted({e["kind"] for e in events if e["kind"] not in CURATION_EVENTS})
+    if other:
+        raise DawError("fixture_curation_has_other_writes", ", ".join(other))
+    acts = sum(1 for e in events if e["kind"] == "pointer_curated")
+    if not acts:
+        raise DawError("fixture_curation_empty", "no curation act past the recorded board sequence")
+    changed = [rel for rel in checked["changed"] if rel not in ("board.sqlite", "library/catalog.sqlite")]
+    unexpected = changed + [rel for rel in checked["untracked"] if not rel.startswith("library/blobs/sha256/")]
+    if unexpected:
+        raise DawError("fixture_curation_changed_files", ", ".join(unexpected[:20]))
+    for leftover in root.rglob("*.lock"):
+        leftover.unlink(missing_ok=True)
+    files = {str(p.relative_to(root)): file_hash(p) for p in sorted(root.rglob("*"))
+             if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(root))
+             and not _kept(root, p.relative_to(root))}
+    entry = {"at": now(), "reason": reason, "kind": "curation", "board_sequence_before": manifest["board_sequence"],
+             "board_sequence": sequence, "curation_acts": acts, "added_library_blobs": len(checked["untracked"])}
+    manifest.update(files=files, board_sequence=sequence, resettled=[*manifest.get("resettled", []), entry])
+    manifest["counts"]["files"] = len(files)
+    manifest["counts"]["bytes"] = sum((root / p).stat().st_size for p in files)
+    write_json(root / "FIXTURE.json", manifest)
+    return entry
+
+
 def _operational(rel):
     """Lock files and caches that opening a commons creates; never fixture content."""
     return (rel.suffix == ".lock" or any(part in {"cache", "staging"} for part in rel.parts)

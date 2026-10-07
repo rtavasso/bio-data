@@ -88,6 +88,10 @@ export interface Health {
   sequence: number;
   mode: string;
   demo: boolean;
-  public_demo?: { fixture: string; board_sequence: number; real_data: boolean; tour?: { name: string } | null } | null;
+  public_demo?: { fixture: string; board_sequence: number; real_data: boolean; tour?: { name: string } | null;
+    first_screen?: string } | null;
+  // Spec v3 V15: a public commons may let visitors sign in with a display name to comment and mark.
+  visitor_signin?: boolean;
+  read_policy?: string;
   content_policy: string;
 }

@@ -85,10 +85,11 @@ def test_coverage_is_number_granular():
               f"| a | b |\n|---|---|\n| x | 3 |\n| y 8 [{C}] | 9 |\n\n![2 panels]({A})\n\n"
               f"```\nvalue 8 {A}\nother 6, {A}\n```\n")
     found = numbers(source)
-    assert found == [("1.54", "claim"), ("11.0", "none"), ("32.0", "line"), ("5", "none"), ("2", "claim"),
-                     ("7", "line"), ("4", "none"), ("1.54", "none"), ("0.003", "claim"), ("2", "claim"),
+    # An artifact pointer without a locator (a citation, a figure, an identifier in code) has scope text (v3 B6).
+    assert found == [("1.54", "claim"), ("11.0", "none"), ("32.0", "text"), ("5", "none"), ("2", "claim"),
+                     ("7", "text"), ("4", "none"), ("1.54", "none"), ("0.003", "claim"), ("2", "claim"),
                      ("1.54", "cell"), ("0.5", "cell"), ("3", "none"), ("8", "claim"), ("9", "none"),
-                     ("2", "line"), ("8", "line"), ("6", "none")]
+                     ("2", "text"), ("8", "text"), ("6", "none")]
     blocks = writeup.parse(source)
     sentences = blocks[0]["sentences"]
     assert len(sentences) == 8 and sentences[3]["pointers"] == [A]  # a citation after the period belongs to it
@@ -151,7 +152,7 @@ def test_rendered_writeup_is_three_clicks_from_bytes_with_the_cited_subgraph(dem
                                                                "unverified": 1, "unpointed": 0, "units": 6, "pointers": 4}
     assert [(n["text"], n["scope"], n["status"]) for n in rendered["numbers"]] == [
         ("1.54", "claim", "verified"), ("11.0", "cell", "verified"), ("32.0", "cell", "verified"),
-        ("1", "line", "unverified")]
+        ("1", "text", "unverified")]
     # Sentence -> claim pointer -> artifact -> verified bytes.
     sentence = next(s for b in rendered["blocks"] for s in b.get("sentences", []) if claim in s["pointers"])
     entry = rendered["pointers"][claim]

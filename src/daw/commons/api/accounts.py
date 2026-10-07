@@ -20,7 +20,7 @@ from daw.commons.api.write import Actor, call
 from daw.commons.archive import Archive
 from daw.commons.auth import CSRF_HEADER, WRITERS
 from daw.commons.participants import describe
-from daw.commons.permissions import ACTIONS, suspended
+from daw.commons.permissions import actions, is_visitor, suspended
 from daw.commons.ratelimit import token_key
 from daw.commons.tasks import TASK_TYPES
 from daw.util import DawError
@@ -41,6 +41,11 @@ class ProfileIn(Strict):
 
 class LoginIn(Strict):
     token: str
+
+
+class VisitorIn(Strict):
+    display_name: str
+    affiliation: str | None = None
 
 
 class TokenIn(Strict):
@@ -99,7 +104,7 @@ def summary(view, participant, mode):
                         "seq": row["seq"], "created": row["created"]})
     kind = participant.get("kind", "agent")
     return {**describe(participant), "mode": mode, "auth": participant.get("auth"),
-            "permissions": sorted(ACTIONS.get(kind, ())), "writes_over_http": kind in WRITERS,
+            "permissions": sorted(actions(participant)), "visitor": is_visitor(participant), "writes_over_http": kind in WRITERS,
             "suspended": suspended(view, pid), "budget": participation.budget_summary(view, participant),
             "posts": authored, "comments": comments,
             "promotions": [participation.request_row(r) for r in tasks if r["kind"] == "promotion"],
@@ -150,6 +155,37 @@ def login(body: LoginIn, request: Request, view: Annotated[Archive, Depends(_log
         raise DawError("permission_denied", f"{participant['kind']} participants do not log in to the web app")
     response = JSONResponse({**describe(participant), "mode": config.mode})
     response.set_cookie(accounts.COOKIE, accounts.sign_session(config.root, credential, participant["id"]),
+                        max_age=accounts.SESSION_SECONDS, httponly=True, samesite="strict", path=config.base,
+                        secure=request.url.scheme == "https")
+    return response
+
+
+def _visitor_view(request: Request, view: Annotated[Archive, Depends(archive)]):
+    if request.headers.get(CSRF_HEADER) != "1":
+        raise DawError("permission_denied", f"send the {CSRF_HEADER}: 1 header")
+    return view
+
+
+@router.post("/visitors")
+def visitor_sign_in(body: VisitorIn, request: Request, view: Annotated[Archive, Depends(_visitor_view)], config: Config):
+    """Spec v3 V15: a visitor's lightweight sign-in on a public commons (`daw.commons.visitors`). Creates a visitor
+    participant (comment and mark only), returns a token shown once and sets the session cookie."""
+    from daw.commons import visitors
+    if not visitors.enabled(config):
+        raise DawError("visitor_signin_disabled", "this commons does not offer visitor sign-in ([visitors] signin "
+                                                  "in commons.toml, accounts mode, public read policy)")
+    limiter = request.app.state.login_limiter
+    key = "visitor-ip:" + (request.client.host if request.client else "unknown")
+    wait = limiter.retry_after(key)
+    if wait:
+        return JSONResponse({"error": "rate_limited", "detail": "too many visitor sign-ins; try again later"},
+                            status_code=429, headers={"Retry-After": str(math.ceil(wait))})
+    person, issued = call(config, visitors.sign_in, body.display_name, affiliation=body.affiliation)
+    limiter.failed(key)  # every sign-in from an address counts against its [login] attempt window
+    response = JSONResponse({**describe(person), "mode": config.mode, "visitor": True, "token": issued["token"],
+                             "note": "Keep this token to sign in again (POST /api/session); only its hash is kept. "
+                                     "Visitors read, comment and mark; their acts are attributed to them."})
+    response.set_cookie(accounts.COOKIE, accounts.sign_session(config.root, issued["credential"]["id"], person["id"]),
                         max_age=accounts.SESSION_SECONDS, httponly=True, samesite="strict", path=config.base,
                         secure=request.url.scheme == "https")
     return response

@@ -126,8 +126,10 @@ function Panels({ groups }: { groups: Group[] }) {
   return <div className="multiples">{groups.map((g) => <Panel key={g.key} g={g} scale={scale} />)}</div>;
 }
 
-// C11/V1: per cohort, the share of numbers in finals with a pointer at the number (line, claim or cell scope),
-// beside the numbers covered only by the post's evidence list and the unpointed ones.
+// C11/V1: per cohort, the share of numbers in finals with the author's pointer at the number (cell, claim, line or
+// text scope), beside people's curated pointers (G2, never the author's) and the unpointed numbers (covered only by
+// the post's evidence list, or by nothing). Author-verified counts cell, claim and line pointers; a text match (B6)
+// and curated pointers are shown apart.
 function NumberCoverageTable({ groups }: { groups: Group[] }) {
   const rows = groups.filter((g) => g.board.numbers !== undefined);
   return (
@@ -136,8 +138,9 @@ function NumberCoverageTable({ groups }: { groups: Group[] }) {
         <thead>
           <tr>
             <th scope="col">Group</th><th scope="col">Finals</th><th scope="col">Numbers</th>
-            <th scope="col">Pointer at the number</th><th scope="col">cell / claim / line</th>
-            <th scope="col">Verified</th><th scope="col">Post's evidence only</th><th scope="col">Unpointed</th>
+            <th scope="col">Author pointer at the number</th><th scope="col">cell / claim / line / text</th>
+            <th scope="col">Author-verified</th><th scope="col">Curated pointers</th>
+            <th scope="col">Post's evidence only</th><th scope="col">Unpointed</th>
           </tr>
         </thead>
         <tbody>
@@ -150,11 +153,13 @@ function NumberCoverageTable({ groups }: { groups: Group[] }) {
                   <>
                     <td>{n.finals}</td><td>{n.numbers}</td>
                     <td>{ratioText(n.number_level_share)} <span className="muted small">({n.number_level})</span></td>
-                    <td>{n.scopes.cell} / {n.scopes.claim} / {n.scopes.line}</td>
-                    <td>{ratioText(n.verified_share)} <span className="muted small">({n.statuses.verified}; {n.statuses.unverified} unverified)</span></td>
-                    <td>{n.statuses.post_scoped}</td><td>{n.statuses.unpointed}</td>
+                    <td>{n.scopes.cell} / {n.scopes.claim} / {n.scopes.line} / {n.scopes.text ?? 0}</td>
+                    <td>{ratioText(n.verified_share)} <span className="muted small">({n.author_verified ?? n.statuses.verified}; {n.statuses.unverified} unverified{n.text_verified ? `; ${n.text_verified} text matches apart` : ""})</span></td>
+                    <td>{n.pointers?.curated ?? 0} <span className="muted small">({n.curated_verified ?? 0} verified; a person's, not the author's)</span></td>
+                    <td>{n.statuses.post_scoped}</td>
+                    <td>{n.statuses.unpointed}{n.pointers?.unlocatable ? <span className="muted small"> ({n.pointers.unlocatable} marked unlocatable)</span> : null}</td>
                   </>
-                ) : <td colSpan={7}><span className="unavailable">unavailable</span> <span className="muted small">no final in this group</span></td>}
+                ) : <td colSpan={8}><span className="unavailable">unavailable</span> <span className="muted small">no final in this group</span></td>}
               </tr>
             );
           })}

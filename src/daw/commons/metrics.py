@@ -78,7 +78,9 @@ LIMITATIONS = [
     "Compaction hygiene reads session databases (Hermes) and prompt.txt: a summary 'missing the assignment' names "
     "neither the request post nor the assignment key; context per call is what the stream reports (per call or per turn).",
     "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
-    "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
+    "line, claim, cell and text scopes are the author's pointers at the number, post scope is only the post's "
+    "evidence list. verified_share counts the author's cell, claim and line pointers only; a text match (a value "
+    "found once anywhere in a small output) and a person's curated pointer are counted apart, never as the author's.",
     "Turn economics (V13) are read from each run's turn_economics.json record; runs without one are counted as "
     "unrecorded, never as zero. " + " ".join(economics.LIMITATIONS),
     "Claims authoring (V1) counts ledger claims per post, evidence-carrying posts (artifacts or a notebook) with "
@@ -428,19 +430,27 @@ def _final_numbers(view):
 
 
 def number_coverage(index, posts):
-    """Share of numbers in the group's finals with a pointer at the number (cell, claim or line scope), and the
-    full scope/status split. None when the group has no final (unavailable, never zero)."""
+    """Share of numbers in the group's finals with the author's pointer at the number (cell, claim, line or text
+    scope), the share the author's pointers verify (cell, claim or line: a text match, spec v3 B6, and a person's
+    curated pointer, G2, never count), author pointers, curated pointers and unpointed numbers apart, and the full
+    scope/status split. None when the group has no final (unavailable, never zero)."""
+    from daw.commons.checks import NUMBER_LEVEL, SCOPES, STATUSES
     rows = [index["numbers"][p["id"]] for p in posts if p["id"] in index.get("numbers", {})]
     if not rows:
         return None
     total = sum(r["numbers"] for r in rows)
-    scopes = {k: sum(r["scopes"][k] for r in rows) for k in ("cell", "claim", "line", "post", "none")}
-    statuses = {k: sum(r["statuses"][k] for r in rows) for k in ("verified", "unverified", "post_scoped", "unpointed")}
-    level = scopes["cell"] + scopes["claim"] + scopes["line"]
-    return {"finals": len(rows), "numbers": total, "scopes": scopes, "statuses": statuses,
+    scopes = {k: sum(r["scopes"][k] for r in rows) for k in SCOPES}
+    statuses = {k: sum(r["statuses"][k] for r in rows) for k in STATUSES}
+    level = sum(scopes[k] for k in NUMBER_LEVEL)
+    pointers = {k: sum(r["pointers"][k] for r in rows) for k in ("author", "curated", "unpointed", "unlocatable")}
+    author_verified = sum(r["author_verified"] for r in rows)
+    return {"finals": len(rows), "numbers": total, "scopes": scopes, "statuses": statuses, "pointers": pointers,
             "number_level": level, "number_level_share": _ratio(level, total, 4),
             "claim_share": _ratio(scopes["claim"], total, 4), "cell_share": _ratio(scopes["cell"], total, 4),
-            "verified_share": _ratio(statuses["verified"], total, 4)}
+            "author_verified": author_verified, "verified_share": _ratio(author_verified, total, 4),
+            "text_verified": sum(r["text_verified"] for r in rows),
+            "curated_verified": sum(r["curated_verified"] for r in rows),
+            "curated_share": _ratio(pointers["curated"], total, 4)}
 
 
 POINTER_KINDS = ("artifact", "locator", "post", "receipt", "accession")
