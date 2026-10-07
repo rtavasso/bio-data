@@ -6,6 +6,7 @@ import CohortCompare, { CostCell } from "../components/dashboard/CohortCompare";
 import { ReuseBars, Sparkline, Value, ratioText } from "../components/dashboard/Charts";
 import type { DialogueStats, FrontierClosure, CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
 import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Publishing";
+import { EconomicsTable, SkillsTable, UsefulDataTable, economicsRows } from "../components/dashboard/Economics";
 import { useApi } from "../useApi";
 import "./Dashboard.css";
 
@@ -344,6 +345,29 @@ export default function Dashboard() {
             request post nor the assignment key, and the input context the stream reports per call (or per turn).
           </p>
           <HygieneTable groups={[data.summary, ...data.panels.harness]} />
+          <h2>Turn economics</h2>
+          <p className="muted small">
+            Per delivery (turn_economics records): context tokens per call or per turn, where the context came from
+            (bytes by source), compactions and fallbacks (a marker match), minutes of model generation against tool
+            wait, help and re-orientation calls, and the ceremony tail after the last successful analysis.
+          </p>
+          <h3>By harness</h3>
+          <EconomicsTable label="Harness" rows={economicsRows([data.summary, ...data.panels.harness])} />
+          {data.economics && (
+            <>
+              <h3>By skill version</h3>
+              <p className="muted small">A skill version is the digest of the skill text staged for the turn; turns captured
+                before it was recorded are "unrecorded".</p>
+              <EconomicsTable label="Skill version" rows={data.economics.skill_versions.map((p) => ({
+                key: p.key, label: `${p.label}${p.harnesses.length ? ` (${p.harnesses.join(", ")})` : ""}`, e: p.turn_economics }))} />
+              <h3>Skills</h3>
+              <p className="muted small">Skill text (SKILL.md and references) against its byte budget; a skill that grows must
+                show a metric it moves.</p>
+              <SkillsTable economics={data.economics} />
+            </>
+          )}
+          <h3>Cost per useful datum</h3>
+          <UsefulDataTable rows={economicsRows([data.summary, ...data.panels.harness])} />
           <h2>Claims authoring</h2>
           <p className="muted small">
             Ledger claims written by authors (the platform never writes one): per post, on posts that publish evidence,

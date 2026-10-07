@@ -122,9 +122,11 @@ export interface WithdrawnClaim {
 
 export interface Regeneration {
   claims: WithdrawnClaim[];
-  // Flow B: cited posts superseded without a cited later version, and artifacts only superseded publications name.
+  // Flow B: cited posts superseded without a cited later version, and artifacts a superseded publication named or
+  // whose producing question published a superseded post (B14: flagged even when a current publication re-lists them).
   posts?: { post: string; title: string | null; superseded_by: string; replacements: string[] }[];
-  artifacts?: { artifact: string; superseded_posts: string[]; replacements: string[] }[];
+  artifacts?: { artifact: string; superseded_posts: string[]; producer_superseded?: string[]; replacements: string[];
+    relisted_by?: string[]; current_claims?: boolean }[];
   note: string;
   commission: { task_type: "writing"; subject_kind: string; subject_id: string; note: string };
 }

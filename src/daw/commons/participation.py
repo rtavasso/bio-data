@@ -20,7 +20,8 @@ untrusted to every reader.
   status the platform computes.
 - Promotion and commission are the only paths that schedule new work. They create
   a request with a task type, budget and deadline, spent against the person's
-  operator-set allowance.
+  operator-set allowance (their own, else the commons default in commons.toml
+  [allowance]); a person with neither is refused, never unlimited.
 - Rate limits are checked inside the board writer lock, so concurrent requests
   cannot both pass the same remaining allowance of writes.
 - A human post that supersedes the person's own earlier post notifies the readers
@@ -531,8 +532,13 @@ def marks(db_owner, target_kind, target_id):
 
 # --- promotions and commissions (M2.7) ----------------------------------------------------------
 
+# A human's budgeted requests need an allowance: their own, or this commons default. Without either they are
+# refused, never unlimited (B13).
+ALLOWANCE_SETTING = "[allowance] in commons.toml (e.g. minutes = 120)"
+
+
 def default_allowance(root):
-    """Commons-wide default allowance for humans without their own (commons.toml [allowance]); {} = unlimited."""
+    """Commons-wide default allowance for humans without their own (commons.toml [allowance]); {} = none set."""
     path = root / "commons.toml"
     if not path.is_file():
         return {}
@@ -544,14 +550,15 @@ def default_allowance(root):
 
 
 def allowance(board, participant):
-    """Operator-set budget allowance for a human; operators are not limited. None means unlimited."""
+    """A human's budget allowance: their own (operator-set), else the commons default. None means not limited
+    (operators); {} means no allowance is configured, and the person's budgeted requests are refused."""
     if participant["kind"] != "human":
         return None
     config = participant["config"] if isinstance(participant["config"], dict) else json.loads(participant["config"])
     configured = config.get("budget")
     if configured is None:
         configured = default_allowance(board.root)
-    return normalize_budget(configured) or None
+    return normalize_budget(configured)
 
 
 def spent(db_owner, participant_id):
@@ -569,7 +576,8 @@ def budget_summary(db_owner, participant):
     limit = allowance(db_owner, participant)
     used = spent(db_owner, participant["id"])
     remaining = None if limit is None else {k: v - used.get(k, 0) for k, v in limit.items()}
-    return {"allowance": limit, "spent": used, "remaining": remaining, "unlimited": limit is None}
+    return {"allowance": limit, "spent": used, "remaining": remaining, "unlimited": limit is None,
+            "configured": limit is None or bool(limit), **({"setting": ALLOWANCE_SETTING} if limit == {} else {})}
 
 
 def set_allowance(board, actor, participant, budget):
@@ -591,13 +599,16 @@ def set_allowance(board, actor, participant, budget):
 def allowance_permits(db_owner, request):
     """Whether a person's typed request may be delivered now: the asker's current allowance covers everything
     they have committed (this request included) and every resource it limits is budgeted in this request.
-    Requests created by agents (peer questions) and by participants without an allowance are not limited."""
+    Requests created by agents (peer questions) and operators are not limited; a human without an allowance has
+    none to spend."""
     asker = db_owner.one("SELECT a.* FROM post p JOIN agent a ON a.id=p.author WHERE p.id=?", (request["post"],))
     if not asker:
         return False
     limit = allowance(db_owner, asker)
     if limit is None:
         return True
+    if not limit:
+        return False
     budget = json.loads(request["budget"]) if isinstance(request.get("budget"), str) else (request.get("budget") or {})
     used = spent(db_owner, asker["id"])
     return all(key in budget and used.get(key, 0) <= value for key, value in limit.items())
@@ -607,6 +618,9 @@ def _within_allowance(board, person, budget):
     limit = allowance(board, person)
     if limit is None:
         return
+    if not limit:
+        raise DawError("allowance_not_configured", f"{person['name']} has no allowance; an operator sets a commons "
+                                                     f"default, {ALLOWANCE_SETTING}, or this person's own")
     used = spent(board, person["id"])
     for key, value in limit.items():
         if key not in budget:

@@ -173,7 +173,7 @@ Stall detection: no stdout growth for `--stall-minutes` (default 20) writes
 participant. The process keeps running; only an explicit `--stall-timeout
 SECONDS` stops it, recording `state: stalled` and the reason.
 
-## Delivery records (spec v2 V6)
+## Delivery records (spec v2 V6, v3 B10, G3, V13)
 
 The capture layer records what the timeline used to attribute. Code:
 `daw/agent_capture.py` (`ClockRecords`), `daw/commons/records.py`, the adapters'
@@ -182,11 +182,16 @@ The capture layer records what the timeline used to attribute. Code:
 | Record | Written | Contents |
 |---|---|---|
 | `runs/<run>/clock.jsonl` | by `agent_capture.execute` while the harness runs: a `start` record at launch, a `tick` every 10 s of monotonic time (`clock_seconds`), a `finish` record | `{n, kind, wall, monotonic, stdout_bytes}`: `wall` is `time.time()` (includes host sleep), `monotonic` is seconds since launch (excludes it on macOS and Linux). `execution.json` names the file, cadence and count under `clock` |
-| `runs/<run>/compactions.jsonl` | after the turn, from the run's own session snapshot (`agent-state/state.db`), bounded by the delivery window | a header `{kind: header, available, harness, source, count, fallbacks}` then one `{kind: compaction, message_id, timestamp, session, fallback, bytes, sha256}` per `[CONTEXT COMPACTION…` message (no summary text). Hermes and the scripted harness expose them; Claude Code, Codex and MCP harnesses record `available: false` with the reason (unavailable, never zero) |
+| `runs/<run>/compactions.jsonl` | after the turn, from the run's own session snapshot (`compaction_store`: `agent-state/state.db` for Hermes and the scripted harness, `agent-state/projects` transcripts for Claude Code), bounded by the delivery window | a header `{kind: header, available, harness, source, count, fallbacks, fallback_detection}` then one `{kind: compaction, message_id, timestamp, session, fallback, fallback_detection, bytes, sha256}` per summary (no summary text): `[CONTEXT COMPACTION…` messages (Hermes) or `isCompactSummary` transcript entries (Claude Code). `message_id` is the source row id. `fallback` is a **marker match** (`fallback_detection: marker_match`: the text contains `deterministic fallback`), never a harness signal; Claude Code writes no marker, so its `fallback` is None. Codex and MCP harnesses record `available: false` with the reason (unavailable, never zero) |
+| `runs/<run>/turn_economics.json` | after the turn (v3 V13, `daw/commons/economics.py`) | tokens, context per call or per turn, bytes of model-facing content by source (system prompt, delivery prompt, skills, tool outputs, summaries, conversation; shares only when every source was measured), compactions and fallbacks, generation versus tool-wait minutes from the stream's timestamps, help and re-orientation calls, ceremony tail, skill reads and the sha256 of each staged skill's text ([dashboard.md](dashboard.md#turn-economics-spec-v3-v13)) |
 | `runs/<run>/receipts.json`, `runs/<run>/receipts/<sha256>.json` | after the turn | run_analysis.py receipt files written during the delivery, found by the `--receipt` paths the stream's run_analysis.py calls named (and the `analysis_executed` lines they printed) and by a scan of the checkout's `workspace/questions/**` JSON files (skipping `inputs`, `sources`, `cache`, `staging`, `raw`); kept only when the receipt's own `started` and `finished` fall inside the delivery window (±2 s) and its `cwd` names no other participant's checkout (a fork's inherited copies). Each entry: checkout-relative path, sha256, a content-addressed copy, start/finish, exit code, `complete`, producer and outputs (paths relative, host paths dropped), the stream line that named it, and `verified`: the sha256 printed into the stream (`matches`/`differs`), and whether the producer and outputs are `unchanged`, `changed` or `missing` now. `unreceipted_calls` lists run_analysis.py calls with no receipt |
 
 A `receipts_indexed` board event `{request, run, agent, receipts, pass, fail,
-file_sha256, unreceipted_calls}` records each index. Records are written once
+file_sha256, unreceipted_calls}` records each index. Each recorded compaction
+summary is a `compaction_observed` board event `{request, run, agent, harness,
+source, source_row_id, bytes, sha256, timestamp, session, fallback,
+fallback_detection}` written at capture time (v3 B10), so compactions are board
+events, not a later text scan. Records are written once
 (an existing file is never rewritten), for failed deliveries too, and a record
 that cannot be written is reported in `records-error.json`; it never fails the
 delivery. After each delivery the runtime also refreshes the graph store
@@ -202,10 +207,20 @@ platform file.
 **Old runs.** `bio commons runs reindex RUN... | --all [--as operator]` (operator,
 `recover` permission) builds the missing records from what exists: clock records
 only for pairs of clocks that were recorded (execution.json's launch and finish,
-heartbeat.json's last sample; each marked `reindexed` with its `source`, never
-interpolated), compactions from a session database if the run folder still has
-one (else `available: false` with the reason), and receipts from the checkout as
-it is now (`reindexed` in the index and the event). A run whose checkout is gone
+heartbeat.json's last sample) and, where two of those show a suspension between
+them, the stream's own event timestamps on either side of the only gap between
+stamped events long enough to hold it (v3 G3; each sample pairs the event's wall
+timestamp with the anchor's monotonic clock advanced or rewound by the wall
+time, assuming one contiguous suspension per window; a window with no such gap
+or several gets no stream samples). Every sample is marked `reindexed` with its
+`source` (`events.jsonl:<line>`) and the derivation, never interpolated. The
+timeline places a suspension between such samples as "placed between reindexed
+samples" (`reindexed: true`, not attributed); a window they cannot narrow stays
+attributed. Reindex also writes compactions from a session database if the run
+folder still has one (else `available: false` with the reason; summaries become
+`compaction_observed` events marked `reindexed`), turn economics (marked
+`reindexed`, skill versions unrecorded) and receipts from the checkout as it is
+now (`reindexed` in the index and the event). A run whose checkout is gone
 or whose execution.json does not bound it gets no receipt index (unknown, not
 zero). Existing record files are kept; a running delivery is refused.
 
@@ -341,11 +356,13 @@ the service delivers them (or `--dispatch` delivers sequentially), and
   (`tests/test_commons_records.py`): clock cadence and an untouched stream, a
   mocked two-hour wall-clock jump recorded as one window, a scripted delivery whose
   fixture hook runs run_analysis.py (indexed, copied, verified) and writes a
-  compaction fallback into the session database, unavailable compactions for
-  Claude Code, window and fork filtering of receipts, and reindexing on a copy of
-  the cohort. No live harness has produced clock records across a real host sleep;
-  Claude Code's own compaction entries are not read (recorded as unavailable)
-  because their transcript format has no receipt here.
+  compaction fallback into the session database (one `compaction_observed` event
+  per summary), Claude Code's `compact_boundary` stream event and
+  `isCompactSummary` transcript entry from the stand-in, window and fork filtering
+  of receipts, and the committed cohort's reindexed records. No live harness has
+  produced clock records across a real host sleep, and the Claude Code compaction
+  formats follow its stream-json and transcript conventions without a live
+  receipt here.
 - Claude Code reports tool errors, not shell exit codes; a successful command's
   exit code is unknown. The MCP harness's native state is opaque (not snapshotted).
 - The board root is no longer mounted into the sandbox: agents publish, answer,

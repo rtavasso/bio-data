@@ -121,6 +121,7 @@ export interface Group {
   compaction_hygiene?: Hygiene;
   // Spec v3 V11: community reads per turn (one delivery is one turn), from captured terminal commands.
   agent_reads?: AgentReads;
+  turn_economics?: TurnEconomics;
   board: BoardCriteria;
   cost: Cost;
   trend: TrendPoint[];
@@ -180,6 +181,7 @@ export interface Dashboard {
   };
   summary: Group;
   panels: Record<Dimension, Group[]>;
+  economics?: Economics;
   projection: { runs: number; stored: number; stale: number; missing: number; note: string };
   frontier?: FrontierClosure;
   dialogue?: DialogueStats;
@@ -223,5 +225,49 @@ export interface Comparison {
   claims_recorded: boolean;
   pricing: Pricing;
   note: string;
+  limitations: string[];
+}
+
+// Spec v3 V13: turn economics per group (daw.commons.economics.criteria), from each run's turn_economics.json.
+// Composition is bytes of model-facing content by source; shares only where every source was measured.
+export type Component = "system_prompt" | "delivery_prompt" | "skills" | "tool_outputs" | "summaries" | "conversation";
+
+export interface TurnEconomics {
+  runs: number;
+  recorded_runs: number;
+  unrecorded_runs: number;
+  reindexed_runs: number;
+  context: { unit: string | null; records: number; mean_input_tokens: Num; max_input_tokens: Num; model_calls: Num };
+  composition: { bytes_measured: Record<Component, Num>; complete_runs: number; shares: Record<Component, number> | null };
+  compactions: { stream_markers: Num; summaries: Num; fallbacks: Num; fallback_detection: string };
+  time: { runs: number; generation_minutes: Num; tool_wait_minutes: Num; tool_wait_share: Num };
+  orientation: { runs: number; help_calls_per_turn: Num; reorientation_calls_per_turn: Num; by_kind: Record<string, number> };
+  ceremony_tail_minutes: { runs: number; median: Num };
+  skill_reads: { runs: number; total: Num; per_turn: Record<string, Num> };
+  tokens: Num;
+  tokens_reported_runs: number;
+  useful_data: { registered_artifacts: Num; verified_claims: Num; promoted_frontier_items: Num };
+  tokens_per: { registered_artifact: Num; verified_claim: Num; promoted_frontier_item: Num };
+}
+
+export interface SkillVersionPanel {
+  key: string;
+  label: string;
+  first: string;
+  harnesses: string[];
+  turn_economics: TurnEconomics;
+}
+
+export interface SkillRow {
+  skill: string;
+  bytes: Num;
+  budget: Num;
+  reads: Num;
+  reads_per_turn: Num;
+}
+
+export interface Economics {
+  skill_versions: SkillVersionPanel[];
+  skills: { runs: number; items: SkillRow[] };
   limitations: string[];
 }

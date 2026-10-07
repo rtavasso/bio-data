@@ -61,10 +61,12 @@ its correction (`Post.tsx`).
 
 Studio write-ups (`writeup.regeneration`) are flagged for regeneration when
 they cite a withdrawn claim, a superseded post without citing any later version
-of it, or an artifact that superseded publications named and no current
-publication or current claim names any longer. Supersession is read from
-`post.supersedes`, evidence from `published` events; nothing is matched by
-meaning.
+of it, or an artifact that a superseded publication named or whose producing
+question (its `produced` link) published a superseded post. A current
+publication that re-lists the artifact does not clear the flag (a correction may
+re-list what it corrects); the flag lists it as `relisted_by` and the write-up
+page shows it. Supersession is read from `post.supersedes`, evidence from
+`published` events; nothing is matched by meaning.
 
 ## Frontier index (M1.7)
 
@@ -349,6 +351,14 @@ from open retrieval gaps and 35 from the LABBOOK template's `Open questions` sec
 non-gap suggestion per question. None of the ten LABBOOKs has a section headed discriminating test or
 next step, none holds a sealed prediction ledger and none a proposal file; some rows are status notes the
 author would delete.
+
+## Useful data for cost (spec v3 V13)
+
+The dashboard's cost per useful datum reads the ledger without writing it: claims count when they are not
+withdrawn and at least one number in a rendered write-up points at them with a `verified` checker verdict
+(`checks.verified_claim_pointers`); frontier items count when the projection says `promoted` (or names
+`promoted_to`). Scope follows the group: by author for participant and harness panels, made during the group's
+runs otherwise ([dashboard.md](dashboard.md#turn-economics-spec-v3-v13)).
 
 ## Demo
 

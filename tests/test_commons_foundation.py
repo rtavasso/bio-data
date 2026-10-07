@@ -273,7 +273,7 @@ def test_serving_the_cohort_and_every_get_route_leaves_the_fixture_verified(coho
         assert response.status_code < 500, (path, response.text[:300])
     assert sum(1 for s in statuses.values() if s == 200) >= 40, statuses
     checked = verify_fixture(cohort_copy)
-    assert checked["verified"] and checked["untracked"] == [], checked
+    assert checked["verified"] and checked["untracked"] == [] and checked["empty_dirs"] == [], checked
     with Archive(cohort_copy) as view:
         assert view.sequence() == before
     assert http.get("/api/frontier").json()["total"] >= 59

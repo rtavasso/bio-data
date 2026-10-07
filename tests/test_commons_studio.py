@@ -137,7 +137,13 @@ def test_rendered_writeup_is_three_clicks_from_bytes_with_the_cited_subgraph(dem
         post = _writeup_post(board, ctx["agents"]["dana"], body)
     http = client(root)
     rendered = http.get(f"/api/studio/writeups/{post}").json()
-    assert rendered["status"] == "rendered" and rendered["regeneration_required"] is None
+    assert rendered["status"] == "rendered"
+    # B14: the measurement's producing question published posts later superseded (the finding and the structured
+    # summary); citing the corrections does not clear an artifact flag.
+    flag = rendered["regeneration_required"]
+    assert flag["claims"] == [] and flag["posts"] == []
+    assert [(a["artifact"], set(a["superseded_posts"]), a["relisted_by"]) for a in flag["artifacts"]] == [
+        (measurement, {ctx["posts"]["finding"], ctx["claims"]["summary"]}, [])]
     # Every number is pointed; the figure caption's "1" is pointed at a PNG, so it is unverified (shown, not refused).
     assert {k: rendered["stats"][k] for k in ("numbers", "pointed", "verified", "unverified", "unpointed", "units",
                                               "pointers")} == {"numbers": 4, "pointed": 4, "verified": 3,
@@ -775,7 +781,8 @@ def test_replication_request_from_any_person_is_a_commission_with_a_default_budg
             participation.request_replication(board, rhea, contrast, ctx["agents"]["alice"])
         with pytest.raises(DawError, match="invalid_commission_subject"):
             participation.request_replication(board, rhea, ctx["posts"]["finding"], ctx["agents"]["bob"])
-    (root / "commons.toml").write_text("[replication]\ndefault_budget = {minutes = 20}\n")
+    toml = root / "commons.toml"  # keeps the demo's [allowance] (B13)
+    toml.write_text(toml.read_text() + "[replication]\ndefault_budget = {minutes = 20}\n")
     http = client(root, local_user="rhea")
     assert http.post("/api/replications", json={"artifact": contrast, "target": "bob"}).status_code == 403
     over = http.post("/api/replications", headers=WRITE, json={"artifact": contrast, "target": "bob"})
@@ -1191,7 +1198,9 @@ def test_studio_demo_overview_groups_outputs_by_type(demo):
     assert {k: len(v) for k, v in groups.items()} == {"writeups": 3, "reviews": 1, "replications": 1, "digests": 1}
     statuses = {o["post"]: o["status"] for i in groups["writeups"] for o in i["outputs"]}
     assert statuses == {made["writeup"]: "rendered", made["flagged"]: "rendered", made["refused"]: "refused"}
-    assert [f["post"] for f in overview["regeneration_flags"]] == [made["flagged"]]
+    # The stale report cites a withdrawn claim; the current write-up cites artifacts of the superseded summary that
+    # the correction re-lists, which no longer clears the flag (B14).
+    assert {f["post"] for f in overview["regeneration_flags"]} == {made["flagged"], made["writeup"]}
     assert [m["kind"] for m in groups["reviews"][0]["review"]["marks"]] == ["checked_source", "disputed", "checked_source"]
     # The local demo replication is unsandboxed: a rehearsal of identical bytes, never a confirmation (v3 B3).
     assert groups["replications"][0]["replication"]["followup"][0]["outcome"] == "local_rehearsal"
@@ -1220,8 +1229,9 @@ def test_writeup_check_cli_exit_codes(demo, monkeypatch):
 
 
 def test_regeneration_flags_superseded_posts_and_artifacts_not_only_withdrawn_claims(demo):
-    """v2 C8: a write-up that cites a superseded post (and none of its later versions), or an artifact that only
-    superseded publications name, is flagged for regeneration; citing the replacement too clears the post flag."""
+    """v2 C8: a write-up that cites a superseded post (and none of its later versions), or an artifact that a
+    superseded publication named, is flagged for regeneration; citing the replacement too clears the post flag.
+    B14: a current publication re-listing the artifact does not clear the artifact flag; the flag names it."""
     root, ctx = demo
     with Community(root) as board:
         alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
@@ -1244,13 +1254,18 @@ def test_regeneration_flags_superseded_posts_and_artifacts_not_only_withdrawn_cl
         flag = writeup.render_writeup(view, stale["id"], with_map=False)["regeneration_required"]
         assert flag["claims"] == []
         assert [(p["post"], p["superseded_by"]) for p in flag["posts"]] == [(first["id"], second["id"])]
-        assert [(a["artifact"], a["superseded_posts"], a["replacements"]) for a in flag["artifacts"]] == \
-            [(interim, [first["id"]], [second["id"]])]
+        assert [(a["artifact"], a["superseded_posts"], a["replacements"], a["relisted_by"]) for a in flag["artifacts"]] \
+            == [(interim, [first["id"]], [second["id"]], [])]
         assert first["id"] in flag["commission"]["note"] and interim in flag["commission"]["note"]
         assert "cites superseded posts" in flag["note"]
-        # Citing a later version clears the post flag; an artifact a current publication still names is not flagged
-        # (the contrast table is named by the demo's current correction).
-        assert writeup.render_writeup(view, acknowledged["id"], with_map=False)["regeneration_required"] is None
+        # Citing a later version clears the post flag. The contrast table was named by the demo's superseded finding
+        # and summary; both corrections re-list it, and the flag stays, naming them (B14).
+        flag = writeup.render_writeup(view, acknowledged["id"], with_map=False)["regeneration_required"]
+        assert flag["claims"] == [] and flag["posts"] == []
+        assert [(a["artifact"], set(a["superseded_posts"]), set(a["relisted_by"])) for a in flag["artifacts"]] == [
+            (ctx["artifacts"]["contrast"], {ctx["posts"]["finding"], ctx["claims"]["summary"]},
+             {ctx["posts"]["correction"], ctx["claims"]["correction"]})]
+        assert "re-listed by" in flag["commission"]["note"] and ctx["claims"]["correction"] in flag["commission"]["note"]
     # Over HTTP the flag travels with the response; this write-up also cites a claimless post, which the checker
     # (v2 C5) refuses, and a refusal still carries the regeneration flag.
     response = client(root).get(f"/api/studio/writeups/{stale['id']}")

@@ -239,7 +239,7 @@ export interface FrontierBoardView {
   by_kind: Record<FrontierKind, number>;
   by_column: Record<BoardColumnKey, number>;
   allowance: { allowance: Record<string, number> | null; spent: Record<string, number>;
-               remaining: Record<string, number> | null; unlimited: boolean } | null;
+               remaining: Record<string, number> | null; unlimited: boolean; configured?: boolean } | null;
   policy: string;
 }
 

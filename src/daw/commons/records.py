@@ -1,15 +1,18 @@
-"""Delivery records for what the timeline used to attribute (spec v2 V6).
+"""Delivery records for what the timeline used to attribute (spec v2 V6, v3 B10, G3, V13).
 
-The runtime writes three records into each run folder at capture time, beside the harness's own stream:
+The runtime writes these records into each run folder at capture time, beside the harness's own stream:
 
 - `clock.jsonl` (written by `daw.agent_capture.execute` while the harness runs): heartbeat records with
   both clocks at a fixed cadence. Consecutive records whose wall clock advanced much more than their
   monotonic clock bracket a host suspension, so the timeline places it by record instead of by the largest
   gap between event timestamps. events.jsonl is never touched (see `agent_capture.ClockRecords`).
-- `compactions.jsonl`: after the turn, the compaction summaries the harness wrote to its session database
-  during the delivery window (message id, timestamp, whether the summary was the deterministic fallback,
-  its size and sha256), read from the run's own session snapshot. A harness whose session state does not
-  expose them gets a header line with `available: false` and the reason: unavailable, never zero.
+- `compactions.jsonl`: after the turn, the compaction summaries the harness wrote to its session store
+  during the delivery window (source row id, timestamp, size and sha256), read from the run's own session
+  snapshot (`adapter.compaction_store`: the Hermes session database, or Claude Code's session transcripts). A
+  summary is labelled the deterministic fallback by a marker match (its text contains FALLBACK_MARKER), never
+  by a harness signal; the header and every item say so. Each summary is also a `compaction_observed` board
+  event (v3 B10) carrying the source row id and its length as captured. A harness whose session state does
+  not expose summaries gets a header line with `available: false` and the reason: unavailable, never zero.
 - `receipts.json` plus `receipts/<sha256>.json`: run_analysis.py receipt files written during the delivery,
   found in the agent's checkout by the paths its run_analysis.py calls named and by a scan of the
   question folders, kept only when the receipt's own start and finish fall inside the delivery window and
@@ -17,12 +20,15 @@ The runtime writes three records into each run folder at capture time, beside th
   addressed) and checked against what exists now: the producer's current bytes, the outputs' current bytes,
   and the sha256 run_analysis.py printed into the stream. A board event `receipts_indexed` records the
   indexing.
+- `turn_economics.json` (v3 V13, `daw.commons.economics`): what the turn cost and where its context went.
 
 `bio commons runs reindex RUN` builds the same records for runs captured before they existed, only from what
-the run folder and the checkout still hold: a clock record is written only for a pair of clocks that was
-recorded (execution.json's start and finish, heartbeat.json's last sample), never interpolated; such
-records are coarse, so a suspension inside them is still placed by a heuristic and stays attributed.
-Records are append-only: an existing record file is never rewritten.
+the run folder and the checkout still hold (v3 G3). Clock records come from samples that pair both clocks:
+execution.json's start and finish, heartbeat.json's last sample, and, where those samples show a suspension,
+the stream's own event timestamps on either side of the only gap between stamped events long enough to hold it
+(`reindex_clock`). Every reindexed record says `reindexed: true` and names its source; nothing is
+interpolated, and a window the samples cannot narrow stays coarse, so its suspension is still placed by a
+heuristic and stays attributed. Records are append-only: an existing record file is never rewritten.
 """
 import hashlib
 import json
@@ -38,7 +44,8 @@ from daw.util import DawError, file_hash, now, read_json, write_json
 RECEIPTS_FILE = "receipts.json"
 RECEIPT_DIR = "receipts"
 COMPACTIONS_FILE = "compactions.jsonl"
-RECORD_FILES = (CLOCK_FILE, COMPACTIONS_FILE, RECEIPTS_FILE)
+ECONOMICS_FILE = "turn_economics.json"
+RECORD_FILES = (CLOCK_FILE, COMPACTIONS_FILE, RECEIPTS_FILE, ECONOMICS_FILE)
 # A clock-record interval whose wall advance exceeds its monotonic advance by more than this is a suspension.
 SUSPENSION_GAP_SECONDS = 10
 # A suspension bracketed by records closer than this (monotonic seconds) is placed by record; wider windows
@@ -49,7 +56,11 @@ MAX_RECEIPT_BYTES = 1_000_000
 MAX_SCANNED_FILES = 20000
 WINDOW_SLACK_SECONDS = 2
 COMPACTION_PREFIX = "[CONTEXT COMPACTION"
+# A summary whose text contains this marker is counted as the deterministic fallback (the summarizer failed).
+# It is a text match, not a signal from the harness: records and the UI label it "marker match".
 FALLBACK_MARKER = "deterministic fallback"
+FALLBACK_DETECTION = {"method": "marker_match", "marker": FALLBACK_MARKER,
+                      "note": "a summary counts as the deterministic fallback when its text contains the marker"}
 ANALYSIS = re.compile(r"run_analysis\.py")
 AGENT_DIR = re.compile(r"/agents/(agent_[0-9a-f]+)/")
 
@@ -101,11 +112,15 @@ def clock_windows(records):
         wall, mono = b["wall"] - a["wall"], b["monotonic"] - a["monotonic"]
         if wall - mono > SUSPENSION_GAP_SECONDS:
             coarse = mono > RECORDED_PRECISION_SECONDS
+            # G3: reindexed samples taken from the stream's own events sit on either side of one gap between
+            # stamped events (`reindex_clock`), so no event lies inside the window: its position is fixed.
+            bracketed = any(r.get("kind") == "event" and r.get("reindexed") for r in (a, b))
             found.append({"wall_from": a["wall"], "wall_to": b["wall"], "monotonic_from": a["monotonic"],
                           "monotonic_to": b["monotonic"], "seconds": round(wall - mono, 3),
                           "records": [a.get("n"), b.get("n")],
                           "sources": sorted({str(r.get("source") or CLOCK_FILE) for r in (a, b)}),
-                          "precise": not coarse})
+                          "precise": not coarse, "reindexed": bool(a.get("reindexed") and b.get("reindexed")),
+                          "bracketed_by_events": bracketed})
     return found
 
 
@@ -124,10 +139,58 @@ def clock_summary(records, execution):
             "unrecorded_seconds": round(max(0.0, total - recorded), 3) if total is not None else None}
 
 
-def reindex_clock(execution, heartbeat):
-    """Clock records from the samples an old run folder actually holds: execution.json's start (both clocks
-    at launch) and finish (wall and monotonic seconds), and heartbeat.json's last sample. Nothing is
-    interpolated; a run without both clocks in execution.json gets no clock records."""
+def stream_stamps(parsed):
+    """(epoch seconds, stream line) of every event that carries its own timestamp (milliseconds since the epoch,
+    as Hermes writes them), in stream order."""
+    out = []
+    for entry in parsed.get("events", []) if parsed else []:
+        value = entry["event"].get("timestamp")
+        if _number(value):
+            out.append((value / 1000, entry["line"]))
+    return out
+
+
+def _event_samples(a, b, stamps):
+    """Stream samples bracketing the suspension between two recorded samples a and b (G3), or [].
+
+    Between a and b the wall clock advanced `held` seconds more than the monotonic clock. A suspended process
+    emits no event, so the suspended time lies in gaps between stamped events. When exactly one such gap is at
+    least `held` seconds long, the events on either side of it are paired with a monotonic time: before the gap
+    wall and monotonic time advanced together from a, after it they advanced together up to b. This assumes the
+    window's suspension is one contiguous host sleep (several shorter sleeps could share the window); when no
+    gap or more than one gap could hold it, nothing is derived and the window stays as wide as a and b."""
+    held = (b["wall"] - a["wall"]) - (b["monotonic"] - a["monotonic"])
+    if held <= SUSPENSION_GAP_SECONDS:
+        return []
+    inside = [(wall, line) for wall, line in stamps if a["wall"] < wall < b["wall"]]
+    points = [(a["wall"], None)] + inside + [(b["wall"], None)]
+    gaps = [(q[0] - p[0], p, q) for p, q in zip(points, points[1:], strict=False)]
+    candidates = [g for g in gaps if g[0] >= held]
+    if len(candidates) != 1:
+        return []
+    _, before, after = candidates[0]
+    basis = (f"the only gap between stamped events in [{a['source']}, {b['source']}] long enough to hold the "
+             f"{round(held, 3)} s suspended there; one contiguous suspension assumed")
+    samples = []
+    if before[1] is not None:
+        samples.append({"kind": "event", "wall": before[0], "monotonic": a["monotonic"] + (before[0] - a["wall"]),
+                        "source": f"events.jsonl:{before[1]}", "side": "before_gap",
+                        "derived": f"wall: the event's timestamp; monotonic: {a['source']} plus the wall advance "
+                                   f"(no suspension before the gap). Gap: {basis}"})
+    if after[1] is not None:
+        samples.append({"kind": "event", "wall": after[0], "monotonic": b["monotonic"] - (b["wall"] - after[0]),
+                        "source": f"events.jsonl:{after[1]}", "side": "after_gap",
+                        "derived": f"wall: the event's timestamp; monotonic: {b['source']} minus the wall advance "
+                                   f"(no suspension after the gap). Gap: {basis}"})
+    return samples
+
+
+def reindex_clock(execution, heartbeat, stamps=()):
+    """Clock records from the samples an old run folder actually holds (G3): execution.json's start (both clocks
+    at launch) and finish (wall and monotonic seconds), heartbeat.json's last sample, and, between two of those
+    whose clocks diverged, the stream's own event timestamps on either side of the one gap that can hold the
+    suspension (`_event_samples`). Nothing is interpolated; a run without both clocks in execution.json gets no
+    clock records. Every record says `reindexed: true` and names its source."""
     start = epoch(execution.get("started"))
     if start is None or not (_number(execution.get("wall_seconds")) and _number(execution.get("monotonic_seconds"))):
         return []
@@ -140,6 +203,8 @@ def reindex_clock(execution, heartbeat):
                     "monotonic": float(execution["monotonic_seconds"]),
                     "source": "execution.json:wall_seconds,monotonic_seconds"})
     samples.sort(key=lambda r: r["monotonic"])
+    derived = [s for a, b in zip(samples, samples[1:], strict=False) for s in _event_samples(a, b, list(stamps))]
+    samples = sorted(samples + derived, key=lambda r: (r["monotonic"], r["wall"]))
     return [{"n": n, **{k: (round(v, 3) if k in ("wall", "monotonic") else v) for k, v in r.items()},
              "reindexed": True} for n, r in enumerate(samples)]
 
@@ -182,8 +247,47 @@ def state_db_compactions(path, execution):
         data = content.encode("utf-8", errors="replace")
         items.append({"kind": "compaction", "message_id": value[identity], "timestamp": ts,
                       "session": value.get(session) if session else None,
-                      "fallback": FALLBACK_MARKER in content, "bytes": len(data),
-                      "sha256": hashlib.sha256(data).hexdigest()})
+                      "fallback": FALLBACK_MARKER in content, "fallback_detection": "marker_match",
+                      "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+    return items, None
+
+
+def transcript_compactions(path, execution):
+    """Compaction summaries in Claude Code session transcripts (`projects/<cwd>/<session>.jsonl` snapshots),
+    bounded by the delivery window: the entries Claude Code marks `isCompactSummary` after a compact boundary.
+    Claude Code writes no fallback marker, so `fallback` is None (unavailable), never False.
+
+    Returns (items, reason) like `state_db_compactions`; `message_id` is the entry's uuid (else file:line)."""
+    path = Path(path)
+    if not path.is_dir() or path.is_symlink():
+        return None, "no session transcripts in this run folder"
+    start, finish = window(execution)
+    items = []
+    for transcript in sorted(path.rglob("*.jsonl")):
+        if transcript.is_symlink() or not transcript.is_file():
+            continue
+        with transcript.open("rb") as stream:
+            for number, raw in enumerate(stream, 1):
+                try:
+                    entry = json.loads(raw)
+                except ValueError:
+                    continue
+                if not isinstance(entry, dict) or entry.get("isCompactSummary") is not True:
+                    continue
+                ts = epoch(entry.get("timestamp"))
+                if ts is not None and ((start is not None and ts < start - 1) or (finish is not None and ts > finish + 1)):
+                    continue  # a resumed transcript holds earlier deliveries' summaries
+                message = entry.get("message") if isinstance(entry.get("message"), dict) else {}
+                content = message.get("content")
+                text = content if isinstance(content, str) else "\n".join(
+                    c.get("text", "") for c in content or [] if isinstance(c, dict))
+                data = text.encode("utf-8", errors="replace")
+                items.append({"kind": "compaction",
+                              "message_id": entry.get("uuid") or f"{transcript.relative_to(path).as_posix()}:{number}",
+                              "timestamp": ts, "session": entry.get("sessionId"), "fallback": None,
+                              "fallback_detection": None, "bytes": len(data),
+                              "sha256": hashlib.sha256(data).hexdigest()})
+    items.sort(key=lambda i: (i["timestamp"] is None, i["timestamp"] or 0))
     return items, None
 
 
@@ -195,11 +299,27 @@ def compaction_records(adapter, folder, execution, harness):
     if not source:
         return [{**header, "available": False, "source": None,
                  "reason": "this harness's session state does not expose compaction summaries"}]
-    items, reason = state_db_compactions(Path(folder) / source, execution)
+    reader = state_db_compactions if source.endswith(".db") else transcript_compactions
+    items, reason = reader(Path(folder) / source, execution)
     if items is None:
         return [{**header, "available": False, "source": source, "reason": reason}]
+    marked = reader is state_db_compactions
     return [{**header, "available": True, "source": source, "count": len(items),
-             "fallbacks": sum(1 for i in items if i["fallback"])}] + items
+             "fallbacks": sum(1 for i in items if i["fallback"]) if marked else None,
+             "fallback_detection": FALLBACK_DETECTION if marked else None}] + items
+
+
+def observed_events(lines, *, request, run, agent, harness, reindexed=False):
+    """`compaction_observed` board event bodies, one per recorded summary (B10): its source row id and length as
+    captured, the store it came from, and the fallback label (a marker match, or None where unavailable)."""
+    header, items = lines[0], lines[1:]
+    if not header.get("available"):
+        return []
+    return [{"request": request, "run": run, "agent": agent, "harness": harness, "source": header["source"],
+             "source_row_id": item["message_id"], "bytes": item["bytes"], "sha256": item["sha256"],
+             "timestamp": item.get("timestamp"), "session": item.get("session"), "fallback": item.get("fallback"),
+             "fallback_detection": item.get("fallback_detection"), **({"reindexed": True} if reindexed else {})}
+            for item in items]
 
 
 def read_compactions(folder):
@@ -480,15 +600,23 @@ def _write_once(path, value):
 
 
 def record_delivery(board, request_id, run_id, agent, adapter, folder, trial, execution, parsed, *, harness=None):
-    """Capture-time records after one delivery: compactions.jsonl, receipts.json and a `receipts_indexed`
-    board event. Each part is best effort and reported; a failure here never fails the delivery."""
+    """Capture-time records after one delivery: compactions.jsonl with one `compaction_observed` board event per
+    summary, receipts.json with a `receipts_indexed` board event, and turn_economics.json. Each part is best
+    effort and reported; a failure here never fails the delivery."""
+    from daw.commons import economics
     folder = Path(folder)
+    harness = harness or getattr(adapter, "name", None)
     done, problems = {}, {}
     try:
         if not (folder / COMPACTIONS_FILE).exists():
-            lines = compaction_records(adapter, folder, execution, harness or getattr(adapter, "name", None))
+            lines = compaction_records(adapter, folder, execution, harness)
             _write_lines(folder / COMPACTIONS_FILE, lines)
             done["compactions"] = lines[0].get("count") if lines[0]["available"] else "unavailable"
+            observed = observed_events(lines, request=request_id, run=run_id, agent=agent["id"], harness=harness)
+            if observed:
+                with board.writer(), board.db:
+                    for body in observed:
+                        board.event("compaction_observed", body)
     except (OSError, ValueError, sqlite3.Error) as error:
         problems["compactions"] = str(error)
     try:
@@ -502,6 +630,14 @@ def record_delivery(board, request_id, run_id, agent, adapter, folder, trial, ex
                                                  "unreceipted_calls": len(index["unreceipted_calls"])})
     except (OSError, ValueError, DawError, sqlite3.Error) as error:
         problems["receipts"] = getattr(error, "reason", None) or str(error)
+    try:
+        if not (folder / ECONOMICS_FILE).exists():
+            record = economics.turn_economics(folder, parsed, execution, harness=harness, run=run_id,
+                                              agent=agent["id"], config=agent.get("config"), trial=trial)
+            _write_once(folder / ECONOMICS_FILE, record)
+            done["turn_economics"] = True
+    except (OSError, ValueError, DawError, sqlite3.Error) as error:
+        problems["turn_economics"] = getattr(error, "reason", None) or str(error)
     if problems:
         write_json(folder / "records-error.json", {"observed": now(), "problems": problems})
     return {"recorded": done, "problems": problems}
@@ -526,6 +662,8 @@ def reindex_run(board, actor, run):
     except DawError:
         adapter = None
     execution = read_json(folder / "execution.json") if (folder / "execution.json").is_file() else {}
+    parsed = adapter.parse(folder / "events.jsonl") if adapter else {"items": [], "events": []}
+    harness = getattr(adapter, "name", None)
     written, kept, unavailable = [], [], {}
     if (folder / CLOCK_FILE).exists():
         kept.append(CLOCK_FILE)
@@ -536,7 +674,7 @@ def reindex_run(board, actor, run):
                 heartbeat = read_json(folder / "heartbeat.json")
             except ValueError:
                 heartbeat = None
-        records = reindex_clock(execution, heartbeat)
+        records = reindex_clock(execution, heartbeat, stream_stamps(parsed))
         if records:
             _write_lines(folder / CLOCK_FILE, records)
             written.append(CLOCK_FILE)
@@ -545,12 +683,18 @@ def reindex_run(board, actor, run):
     if (folder / COMPACTIONS_FILE).exists():
         kept.append(COMPACTIONS_FILE)
     else:
-        lines = compaction_records(adapter, folder, execution, getattr(adapter, "name", None))
+        lines = compaction_records(adapter, folder, execution, harness)
         lines[0]["reindexed"] = True
         _write_lines(folder / COMPACTIONS_FILE, lines)
         written.append(COMPACTIONS_FILE)
         if not lines[0]["available"]:
             unavailable[COMPACTIONS_FILE] = lines[0]["reason"]
+        observed = observed_events(lines, request=attempt["request"], run=run, agent=agent["id"], harness=harness,
+                                   reindexed=True)
+        if observed:
+            with board.writer(), board.db:
+                for body in observed:
+                    board.event("compaction_observed", {**body, "actor": actor})
     counts = None
     trial = board.trial(agent) if agent.get("trial") else None
     start, finish = window(execution)
@@ -561,7 +705,6 @@ def reindex_run(board, actor, run):
     elif start is None or finish is None:
         unavailable[RECEIPTS_FILE] = "execution.json does not bound the delivery"
     else:
-        parsed = adapter.parse(folder / "events.jsonl") if adapter else {"items": []}
         index = index_receipts(trial, folder, execution, parsed, agent=agent["id"], run=run)
         index["reindexed"] = {"by": actor, "note": "indexed after the delivery from the checkout as it is now"}
         write_json(folder / RECEIPTS_FILE, index)
@@ -571,5 +714,15 @@ def reindex_run(board, actor, run):
             board.event("receipts_indexed", {"request": attempt["request"], "run": run, "agent": agent["id"], **counts,
                                              "file_sha256": file_hash(folder / RECEIPTS_FILE), "reindexed": True,
                                              "actor": actor, "unreceipted_calls": len(index["unreceipted_calls"])})
+    if (folder / ECONOMICS_FILE).exists():
+        kept.append(ECONOMICS_FILE)
+    else:
+        from daw.commons import economics
+        record = economics.turn_economics(folder, parsed, execution, harness=harness, run=run, agent=agent["id"],
+                                          config=agent.get("config"), trial=None)
+        record["reindexed"] = {"by": actor, "note": "computed after the delivery from the run folder; the skill text "
+                                                    "staged for the turn was not recorded"}
+        write_json(folder / ECONOMICS_FILE, record)
+        written.append(ECONOMICS_FILE)
     return {"run": run, "written": written, "kept": kept, "unavailable": unavailable, "receipts": counts}
 

@@ -669,6 +669,7 @@ def test_agent_reads_of_frontier_acts_and_overview_on_the_cohort(cohort_copy, mo
     for name in ("BIO_AGENT", "BIO_BOARD_URL", "BIO_COMMUNITY"):
         monkeypatch.delenv(name, raising=False)
     root, runner = cohort_copy, CliRunner()
+    (root / "commons.toml").write_text("[allowance]\nminutes = 120\n")  # B13: a person's ask needs an allowance
 
     def cli(*args):
         result = runner.invoke(app, ["community", "--root", str(root), *args])

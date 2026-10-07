@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query
 
 from daw.commons import directory, export, federation, pilotkit, preprint, tour
 from daw.commons.api.deps import Config, View
+from daw.commons.api.read import Reader
 from daw.commons.api.write import Actor, Strict, call
 
 router = APIRouter(prefix="/api", tags=["publishing"])
@@ -31,9 +32,11 @@ def tour_view(name: str, view: View):
 
 
 @router.get("/curation/locate")
-def curation_locate(view: View, post: str, offset: int, artifact: str | None = None):
-    """Curators' aid: locators at which a number's value occurs in its post's artifacts (read-only)."""
-    return tour.candidates(view, post, offset, artifact)
+def curation_locate(view: View, caller: Reader, post: str, offset: int, artifact: str | None = None,
+                    full: bool = False):
+    """Curators' aid: locators at which a number's value occurs in its post's artifacts (read-only). A hidden
+    post is its moderation stub (`full` reveals it only to a holder of `hide`)."""
+    return tour.candidates(view, post, offset, artifact, caller=caller, full=full)
 
 
 @router.get("/directory")

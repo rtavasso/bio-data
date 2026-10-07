@@ -52,8 +52,13 @@ function RegenerationBand({ flag }: { flag: Regeneration }) {
         ))}
         {(flag.artifacts ?? []).map((a) => (
           <li key={a.artifact}>
-            Cites <Link to={`/artifact/${a.artifact}`} className="mono">{a.artifact}</Link>, named only by superseded{" "}
-            {a.superseded_posts.map((p, i) => <span key={p}>{i > 0 && ", "}<Link to={`/post/${p}`} className="mono">{p}</Link></span>)}.
+            Cites <Link to={`/artifact/${a.artifact}`} className="mono">{a.artifact}</Link>, from superseded{" "}
+            {a.superseded_posts.map((p, i) => <span key={p}>{i > 0 && ", "}<Link to={`/post/${p}`} className="mono">{p}</Link></span>)}
+            {(a.relisted_by ?? []).length > 0 && (
+              <>; re-listed by{" "}
+                {(a.relisted_by ?? []).map((p, i) => <span key={p}>{i > 0 && ", "}<Link to={`/post/${p}`} className="mono" aria-label={`re-listed by ${p}`}>{p}</Link></span>)}
+                , which does not clear the flag</>
+            )}.
           </li>
         ))}
       </ul>
