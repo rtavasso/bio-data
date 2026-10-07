@@ -627,6 +627,7 @@ await step("C3 the frontier shows candidate evidence; applicability stays with t
   await page.goto(`${base}/frontier`);
   const card = page.getByLabel(`Frontier item ${itemC}`);
   await card.getByText("candidate evidence").first().waitFor();
+  await card.getByText("set by watcher").waitFor(); // v2 C9: the setter is recorded, not inferred
   await card.getByText(/1 run · 1 found/).waitFor();
   await card.getByRole("button", { name: "Watchers" }).click();
   await card.getByRole("button", { name: "Runs" }).click();
@@ -634,6 +635,7 @@ await step("C3 the frontier shows candidate evidence; applicability stays with t
   await snap("flowC-candidate");
   const item = await api(`/api/frontier/${itemC}`);
   check(item.status === "candidate_evidence", `status ${item.status}`);
+  check(item.candidate_evidence?.set_by === "watcher", `candidate evidence set by ${item.candidate_evidence?.set_by}`);
   await page.goto(`${base}/board`);
   await page.getByText(`New evidence may fit ${itemC}`).first().waitFor();
 });

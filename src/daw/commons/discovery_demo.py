@@ -1,4 +1,4 @@
-"""Demo extension for discovery: a frontier item for the recorded gap, a weekly watcher, one receipted run
+"""Demo extension for discovery: the indexed frontier item of the recorded gap, a weekly watcher, one receipted run
 from a recorded (synthetic) Europe PMC response, and pinned-model embeddings for every catalog.
 
 No network is used: the watcher's transport is an httpx.MockTransport that serves a fixture, labelled
@@ -11,8 +11,9 @@ import httpx
 
 from daw.commons.demo import SYNTHETIC, _no_reserve
 from daw.commons.embeddings import embed_commons
+from daw.commons.frontier import item_id, rebuild_frontier
 from daw.commons.watchers import add_watcher, list_watchers, open_workspace, tick
-from daw.util import digest, now
+from daw.util import DawError
 
 RECORDED_SEARCH = {
     "version": "6.9", "hitCount": 1,
@@ -32,23 +33,14 @@ def recorded_transport(payload=RECORDED_SEARCH):
 
 
 def ensure_gap_item(board, ctx):
-    """Index the demo's recorded retrieval gap as a frontier item unless one already points at that event."""
-    event = ctx["gap_event"]
-    pattern = f"%{event}%"
-    existing = board.one("SELECT id FROM frontier_item WHERE source=? OR source LIKE ? OR pointers LIKE ? ORDER BY created LIMIT 1",
-                         (event, pattern, pattern))
-    if existing:
-        return existing["id"]
-    dana = board.agent(ctx["agents"]["dana"])
-    identity = "frontier_" + digest(["work_event", event])[:24]
-    pointers = [{"kind": "receipt", "id": event, "locator": "work_event"}]
-    with board.writer(), board.db:
-        board.db.execute(
-            "INSERT INTO frontier_item(id,question,author,workspace,kind,text,status,blocked_by,watcher_query,pointers,"
-            "source,created,updated,promoted_to) VALUES(?,?,?,?,'gap',?,'open','missing_data',NULL,?,?,?,?,NULL)",
-            (identity, ctx["questions"]["dana"], dana["id"], f"{dana['trial']}/workspace",
-             "Per-sample counts after marker knockdown", json.dumps(pointers), "work_event:" + event, now(), now()))
-        board.event("frontier_item_indexed", {"item": identity, "source": "work_event:" + event, "kind": "gap"})
+    """The frontier item for Dana's recorded retrieval gap. The gap is an agent work event in Dana's own
+    workspace (`bio work gap`); the frontier projection indexes it. The platform never authors an item."""
+    identity = item_id(ctx["agents"]["dana"], ctx["gap_event"])
+    if not board.one("SELECT id FROM frontier_item WHERE id=?", (identity,)):
+        rebuild_frontier(board)
+    row = board.one("SELECT id,source FROM frontier_item WHERE id=?", (identity,))
+    if not row or json.loads(row["source"]).get("event") != ctx["gap_event"]:
+        raise DawError("frontier_item_not_indexed", ctx["gap_event"])
     return identity
 
 

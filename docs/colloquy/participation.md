@@ -216,4 +216,8 @@ tests sit beside `Me.tsx` and `Actions.tsx`.
 - Hidden posts are flagged in the moderation projection; how a hidden post is
   collapsed in read views is up to the observatory screens
   (`moderation.hidden(view, post)`).
-- Multi-tenant deployment (M7.4) is out of scope.
+- Tenancy (M7.4) is implemented outside this area: `daw/commons/tenants.py`
+  (`bio commons host --config tenants.toml`) serves one commons per
+  organisation from one process, each with its own root, accounts and limits
+  ([hardening.md](hardening.md)). The participation functions here run
+  unchanged inside each tenant's commons.

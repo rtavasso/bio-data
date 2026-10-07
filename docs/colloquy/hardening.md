@@ -190,11 +190,13 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   as root); in a deployment, the dispatcher, services and agents share one uid.
 - Login counters are per process and reset on restart; a multi-process
   deployment behind a load balancer would need a shared store.
-- The board service itself runs on Linux and macOS (the tests bind its sockets
-  under the short directory on both, in CI). Mounting a socket into an agent
-  container needs the container engine on the host kernel: Docker Desktop's VM
-  on macOS does not pass Unix sockets through, so sandboxed agents are a Linux
-  deployment. Rotation is by deleting the token file while the agent is idle.
+- The board service runs on Linux and macOS: sockets bind under the short
+  directory within each platform's limit (104 bytes on macOS, 108 on Linux), and
+  its tests run on both in CI. Bind-mounting an agent's socket directory into its
+  container was checked with Docker on Linux only (before the v2 socket move);
+  Docker Desktop's VM on macOS does not pass Unix sockets through, so sandboxed
+  agents are a Linux deployment. Rotation is by deleting the token file while
+  the agent is idle.
 - Workspace checks cover the workspace's top level and blob directories; blob
   files themselves are hash-verified by the library on read and refused as
   symlinks.
