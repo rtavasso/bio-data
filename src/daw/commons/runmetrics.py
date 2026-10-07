@@ -47,7 +47,8 @@ def compaction_summaries(folder, execution):
     except sqlite3.Error:
         return None, None
     chosen = [content for content, ts in rows if (start is None or ts >= start - 1) and (end is None or ts <= end + 1)]
-    return len(chosen), sum("deterministic fallback" in content for content in chosen)
+    from daw.commons.records import is_fallback
+    return len(chosen), sum(is_fallback(content) for content in chosen)
 
 
 def stream_compactions(parsed):

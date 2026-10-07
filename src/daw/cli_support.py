@@ -37,7 +37,7 @@ RENAMES = {
     "": {"answer": "community answer REQUEST --body FILE", "publish": "community publish TITLE --body FILE",
          "inbox": "community inbox", "sync": "work sync Q", "gap": "work gap Q --need ...",
          "new": "work new TITLE", "show": "work show Q, data show SUBJECT, artifact show ARTIFACT, community show POST",
-         "use": "artifact use ARTIFACT --question Q", "python": "./bin/python SCRIPT (inline -c is blocked; save the script)"},
+         "use": "artifact use ARTIFACT --question Q", "python": "./bin/python SCRIPT (save analysis code as a script so its receipt names it)"},
 }
 
 

@@ -188,8 +188,9 @@ def fetch(ctx: typer.Context, asset: str, allow_raw: bool = False, question: str
 
 
 @data_app.command("fulltext")
-def data_fulltext(ctx: typer.Context, pmcid: str):
-    """Fetch Europe PMC JATS full text; index paragraphs with stable locators (sec[2]/p[3]) and SHA-256."""
+def data_fulltext(ctx: typer.Context, pmcid: Annotated[str, typer.Argument(metavar="PMCID|PMID|DOI")]):
+    """Full text of an open-access article (PMCID, PMID or DOI): Europe PMC, NCBI efetch, then BioC; index paragraphs
+    with stable locators (sec[2]/p[3]) and SHA-256. Abstract-only results are labelled, not counted as full text."""
     with session(ctx) as ws:
         source = Sources(ws)
         try:
@@ -199,7 +200,7 @@ def data_fulltext(ctx: typer.Context, pmcid: str):
 
 
 @data_app.command("supplementary")
-def data_supplementary(ctx: typer.Context, pmcid: str, max_files: int = 10, max_bytes: int = 256 * 2**20,
+def data_supplementary(ctx: typer.Context, pmcid: Annotated[str, typer.Argument(metavar="PMCID|PMID|DOI")], max_files: int = 10, max_bytes: int = 256 * 2**20,
                        max_asset_bytes: int = 64 * 2**20):
     """List an article's supplementary files, fetch tables within budgets and inspect them safely (receipted)."""
     with session(ctx) as ws:

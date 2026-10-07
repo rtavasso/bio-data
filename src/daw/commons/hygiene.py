@@ -20,6 +20,7 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from daw.commons.records import is_fallback
 
 POST_MARKER = re.compile(r"(?:Request|Question) post: (post_[0-9a-f]{32})")
 KEY_MARKER = re.compile(r"Assignment key(?: phrase)?: *([^\s.,;]{6,120})")
@@ -114,7 +115,7 @@ def run_hygiene(folder, harness=None):
     if texts and markers:
         missing = sum(1 for text in texts if not any(marker in text for marker in markers))
     return {"compaction_summaries": None if texts is None else len(texts),
-            "compaction_fallbacks": None if texts is None else sum("deterministic fallback" in t for t in texts),
+            "compaction_fallbacks": None if texts is None else sum(is_fallback(t) for t in texts),
             "summaries_missing_assignment": missing, "assignment_markers": len(markers),
             "context_per_call": context_per_call(folder / "events.jsonl")}
 
