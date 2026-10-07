@@ -603,7 +603,7 @@ await step("C1 attach a watcher query to a frontier item (UI)", async () => {
   const card = page.getByLabel(`Frontier item ${itemC}`);
   await card.getByRole("button", { name: "Watchers" }).click();
   const form = card.getByRole("form", { name: "Attach a watcher query" });
-  await form.getByLabel("Provider").locator("option", { hasText: "europepmc" }).waitFor({ state: "attached" });
+  await form.getByLabel("Provider").locator('option[value="europepmc"]').waitFor({ state: "attached" });
   await form.getByLabel("Watcher query").fill("demo marker qPCR donor-matched");
   await form.getByLabel("Provider").selectOption("europepmc");
   await form.getByRole("button", { name: "Attach watcher" }).click();
