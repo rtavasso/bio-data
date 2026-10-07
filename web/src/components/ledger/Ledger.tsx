@@ -102,7 +102,7 @@ export function ClaimCard({ claim, onChange }: { claim: Claim; onChange?: () => 
         </ul>
       )}
       <footer className="ledger-actions">
-        <span className="mono muted">{claim.id}</span>
+        <Link className="mono muted" to={`/claims/${claim.id}`}>{claim.id}</Link>
         <Toggle label="Mark"><MarkForm targetKind="claim" targetId={claim.id} onDone={onChange} /></Toggle>
       </footer>
     </article>

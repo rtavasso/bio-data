@@ -99,9 +99,21 @@ export interface MeSummary extends Participant {
   commissions: TaskRequest[];
   marks: MarkRecord[];
   uploads: UploadRecord[];
+  /** Snapshots this participant imported into the federation index (spec v3 B9); absent on older servers. */
+  imports?: SnapshotImport[];
   inbox: RequestRow[];
   tokens: Credential[];
   csrf_header: string;
+}
+
+export interface SnapshotImport {
+  snapshot: string;
+  already_imported: boolean;
+  scope?: Record<string, unknown> | null;
+  counts?: Record<string, number> | null;
+  index?: { claims: number; artifacts: number; citations: number; changed: boolean } | null;
+  seq: number;
+  created: string;
 }
 
 export interface ModerationRecord {

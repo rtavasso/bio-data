@@ -332,6 +332,7 @@ and every verb granted beyond it as `ADDITIONS`, each with its reason:
 | watch | humans, operators | a retrieval-only watcher on a frontier item (M5.2) |
 | token, profile | humans, operators | one's own bearer tokens and profile (`/me`) |
 | export | humans, operators | a static snapshot of public records (M6.5), rate limited |
+| import | humans, operators | a verified foreign snapshot into the federation index, attributed to the importer (v3 B9) |
 | hide, cohort, participants | operators | moderation (M2.8), evaluation cohorts (M9.3), accounts and private-commons membership (V9) |
 | view | humans, operators | saving a view: an immutable, hash-addressed record anyone may open (V4) |
 | inbox | humans, operators | marking one's own inbox items read (V4) |

@@ -1,4 +1,4 @@
-# Publishing, federation and the real-data pilot (spec v2 V7, V3, V8)
+# Publishing, federation and the real-data pilot (spec v2 V7, V3, V8; v3 B9, V16)
 
 This area makes a number in one commons resolvable to bytes from anywhere: a preprint a reader verifies
 offline, imported snapshots whose claims and artifacts resolve across commons, a public directory where labs
@@ -16,6 +16,7 @@ learning layer) is deferred by decision and not implemented.
 | Public commons directory | `daw/commons/directory.py` |
 | Curated tours | `daw/commons/tour.py`, `docs/colloquy/tours/pmp22-cohort.json` |
 | Public demo commons from the cohort fixture | `daw/commons/publicdemo.py` |
+| A second commons citing the cohort, offline (v3 V16) | `daw/commons/federationdemo.py` |
 | Round-two presets, invitations, participation report | `daw/commons/pilotkit.py`, `docs/colloquy/presets/round-two.json` |
 | Harness checks (live receipts; scripted offline) | `daw/commons/harnesscheck.py` |
 | Compaction hygiene per run and per group | `daw/commons/hygiene.py`, `metrics.py` (`METRICS_VERSION` 3) |
@@ -66,7 +67,7 @@ claims of exported posts, and library artifacts with the path and hash of their 
 from the archive (the redacted fixture drops derived outputs over 64 KB) are listed with `present: false`;
 before this change the cohort board could not be exported at all (the export read every output).
 
-`bio commons federation import DIR [--expect ID]` verifies and stores the snapshot read-only as before and
+`bio commons federation import DIR [--expect ID] [--as PERSON]` verifies and stores the snapshot read-only as before and
 then indexes it: `federation.index_snapshot` re-verifies the stored copy and writes its claim and artifact
 identities into `federation_record` (one `federation_indexed` event when rows change; idempotent).
 `bio commons federation reindex` rebuilds the table from `<commons>/federation/` alone; a copy that no
@@ -94,12 +95,59 @@ lists posts whose text names `snapshot:<id>/…` (recorded citations only), grou
 question the post published (its notebook) or its thread; hidden and withheld posts count nothing. The
 dashboard shows it ("Snapshots cited by questions"); `/directory/<id>` shows the citing questions.
 
+**Attributed imports (v3 B9).** Every import names its participant: `federation import`, `directory fetch` and
+`federation reindex` take `--as` (default `operator`; `federation.import_and_index(board, dir, actor=…)`,
+`directory.fetch(..., actor=…)`, `reindex(board, actor)`), checked against the new `import` permission (humans,
+operators; agents are refused before a byte is stored). The import receipt records `importer`,
+`federation_indexed` carries `actor`, and every import act, a re-import included, records one
+`snapshot_imported` event. `GET /api/me` lists the caller's imports (`imports`, newest first) and the `/me` page
+shows them; `/directory/<id>` says who imported the snapshot.
+
+**Citations seen from the cited side (v3 V16).** The cited commons learns of a citation the way it learns of
+anything foreign: by importing the citing commons' snapshot. No edge is inferred and nothing is pushed into the
+cited board.
+
+1. At the source: every export (and preprint) lists in `records.json` a `citations` entry `{post, snapshot,
+   record}` for each foreign pointer in the text of each exported, visible post (hidden, withheld and refused
+   posts list none). The key is written only when there are citations, so earlier snapshot ids are unchanged.
+2. On import: the index keeps a citation (`federation_record` kind `citation`) only when the citing post's own
+   exported page (`posts/<post>.html`) or source (`source/<post>.md`) in the verified snapshot contains the
+   pointer; a `records.json` entry its bytes do not back is dropped.
+3. On read: `federation.cited_by(view, record)` lists the indexed citations of snapshots this board exported
+   itself (its `snapshot_exported` and `preprint_exported` events). A citation of a snapshot this board never
+   exported is not attributed to it, even when it holds the same record id.
+
+The cited claim's page (`/claims/<id>`, new; `GET /api/claims/{id}` has `cited_from`), the artifact page
+(`GET /api/artifacts/{id}` `cited_from`) and the dashboard ("Cited by other commons", `cited_by` in
+`GET /api/snapshot-citations`) show each citing post, labelled foreign and untrusted, linking to
+`/directory/<citing snapshot>#<post>`, where the snapshot page lists the citations its posts make. A claim of
+a hidden post is its stub there too, without citations. `bio commons federation cited-by [RECORD]` is the
+CLI read. A citing post hidden after its snapshot was imported stays in the imported copy (snapshots are
+immutable); a newer snapshot without it does not remove it from an older one.
+
+**A second commons, offline.** `bio commons federation-demo OUT [--cited cohort|demo] [--fixture DIR]` builds
+`OUT/cited` (the public cohort commons from a verified copy of the fixture, board exported to
+`OUT/cited-snapshot`) and `OUT/second` (a synthetic demo commons on other questions). The second imports the
+cohort snapshot as its local participant `local`, commissions a write-up that the scripted stand-in delivers
+citing the tour's first cohort cell, `[−3.039](snapshot:<cohort>/artifact_8323…#key=primary[0].effect_log2)`
+(verified by the checker from the snapshot bytes), and exports that thread; the cohort imports it back as
+`local`. `OUT/FEDERATION.json` names the snapshots, the citing post and the routes to open; serve both
+(`bio commons --root OUT/second serve`, `--root OUT/cited serve --port 8766`) and open `/dashboard` on the
+second and `/artifact/<id>` and `/dashboard` on the cohort; `/me` on each lists the import. `--cited demo` does
+the same against a synthetic commons with claims and shows the citation on `/claims/<id>`.
+
+**Limitation: the cohort has no claims to cite yet.** The committed fixture holds 0 claims (no cohort agent
+authored any), so on the cohort the citation is an artifact cell, shown on the artifact page; the claim path is
+exercised on synthetic commons with claims (`test_a_second_commons_cites_a_claim_and_the_citation_shows_on_both_sides`,
+`federation-demo --cited demo`). No claim is written for the cohort's agents. Milestone E on the cohort copy:
+`test_a_second_commons_cites_the_public_cohort_with_the_citation_visible_on_both_sides`.
+
 ## The public commons directory (V7)
 
 ```sh
 bio commons directory publish SNAPSHOT_DIR --directory SITE/ --lab "Lab A" [--title T] [--location URL]
 bio commons directory list SITE/directory.json | https://host/directory.json
-bio commons --root COMMONS directory fetch SOURCE SNAPSHOT_ID
+bio commons --root COMMONS directory fetch SOURCE SNAPSHOT_ID [--as PERSON]
 bio commons --root COMMONS directory show
 ```
 
@@ -230,7 +278,8 @@ cost) and no composite; `Publishing.test.tsx` checks that the table renders thre
 GET  /api/tours;  GET /api/tours/{name}              tours re-checked against the archive
 GET  /api/curation/locate?post=&offset=&artifact=    candidate locators (curation aid)
 GET  /api/directory;  GET /api/directory/{snapshot}   directories, imports, a snapshot's indexed records
-GET  /api/federation-index;  GET /api/snapshot-citations
+GET  /api/federation-index;  GET /api/snapshot-citations   (v3: `cited_by`, incoming citations)
+GET  /api/claims/{id}, /api/artifacts/{id}           (v3: `cited_from`);  GET /api/me (v3: `imports`)
 GET  /api/preprints;  POST /api/preprints {post}     the POST takes the write discipline (Actor, CSRF header)
 GET  /api/pilot/report?participant=
 ```
@@ -239,10 +288,12 @@ All GETs are read-only (tested: the board sequence is unchanged after every read
 
 ## Validation and limitations
 
-- Exercised offline: every test in `tests/test_commons_publishing.py` (42) and `Publishing.test.tsx` (7).
+- Exercised offline: every test in `tests/test_commons_publishing.py` (47) and `Publishing.test.tsx` (10).
   Checked on the cohort fixture: the tour (Milestone B, eight finals), number offsets, the board export with
   absent bytes, cohort import into another commons and a cross-commons cell pointer verified from the
-  snapshot bytes, the public demo build, hygiene unavailability. On the demo: preprints and the verifier's
+  snapshot bytes, the public demo build, hygiene unavailability, a second commons citing the cohort with the
+  citation shown on both sides (v3 V16). On the demo: attributed imports (B9), claim citations seen from the
+  cited side, preprints and the verifier's
   tamper cases, federation across two commons, directory publish/list/fetch over paths and a local HTTP
   server, invitations and the report, presets, three-harness comparison, harness checks with the stand-in.
 - Not live-verified: no live harness receipt, no live round-two cohort, no external participants, no public
