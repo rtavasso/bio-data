@@ -623,6 +623,9 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run,
     `release` when the run ends); the credential reaches the container only inside HTTPS_PROXY, by name."""
     config = decision["config"]
     if config is None:
+        # Unsandboxed: the agent's own CLI writes the board directly; a harness with its own sandbox needs the
+        # board root writable (Codex: --add-dir).
+        argv = adapter.local_board_access(argv, board_root) if adapter is not None else argv
         if decision["override"] or decision.get("warning"):
             return argv, env, {"sandboxed": False, "tenancy": decision["tenancy"], "recorded": now(),
                                **{k: decision[k] for k in ("override", "warning", "replication_egress") if decision.get(k)}}

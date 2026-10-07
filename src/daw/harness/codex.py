@@ -83,6 +83,17 @@ class CodexAdapter(Adapter):
         return codex_command(executable, trial, None, model=config["model"], reasoning_effort=config["effort"],
                              public=config["public"], ephemeral=False, resume=resume)
 
+    def local_board_access(self, argv, board_root):
+        """Codex's own workspace-write sandbox allows writes only under --cd. Unsandboxed by the platform (local
+        mode), `bio community publish/fetch/answer` must write the board (its lock, database and library), so the
+        board root is added as a writable directory. Round three's first Codex turn had every board write refused
+        with `Operation not permitted: .board.lock` without it. A platform-sandboxed dispatch never reaches here:
+        the board is not mounted and writes go through the board service."""
+        if "exec" not in argv or "--add-dir" in argv:
+            return argv
+        at = argv.index("exec") + 1
+        return argv[:at] + ["--add-dir", str(Path(board_root).resolve())] + argv[at:]
+
     def environment(self, base, trial):
         env = super().environment(base, trial)
         env["CODEX_HOME"] = str(self.home(trial))

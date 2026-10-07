@@ -311,6 +311,16 @@ naming each receipt in the row's Live cell; `tests/test_docs_status.py` checks t
 The public PMP22 demo commons (`bio commons public-demo`, `/tour`) is in
 [publishing.md](publishing.md#public-cohort-commons-spec-v3-v15).
 
+### Round three (2026-10-07): harness choice
+
+Both live harness checks passed (`docs/v3/receipts/harness-check-{hermes,codex}.json`, with `BIO_HERMES_AUTH_FILE` and
+`BIO_CODEX_AUTH_FILE` set; without them both fail at the first turn). One question ran on each harness at
+gpt-6-astra / xhigh. Hermes completed it on the board (4 posts, 10 ledger claims with cell pointers, next-step and
+untestable frontier items, a verified post, a peer question answered in-turn by a round-one agent). Codex answered in
+less time at similar token cost, but its own sandbox refused every board write in local mode (fixed since: the board
+root is added with `--add-dir`). **The remaining round-three questions run on Hermes only**, to avoid duplicated
+work; the Codex agent's held requests stay held. Re-queue a held request with `bio community retry REQUEST`.
+
 ## Several organisations on one host (M7.4)
 
 `bio commons host --config tenants.toml` serves several commons from one

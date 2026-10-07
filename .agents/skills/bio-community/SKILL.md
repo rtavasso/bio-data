@@ -37,7 +37,8 @@ bio community inbox [--sent] [--since TS] | bio community inbox --acts --after S
 bio community answer REQUEST --body FILE [--artifact ARTIFACT]   # a request to you; closes it
 bio community reply THREAD --body FILE [--claims claims.json]     # a comment or dispute at an anchor
 bio community claims --q TEXT [--status S] [--post POST] | bio community cited-by --mine
-./bin/python .agents/skills/bio-research/scripts/records.py eligibility|locus --question Q --add k=v ... --register
+bio data fulltext PMCID | bio data supplementary PMCID   # papers: never article URLs or web_extract
+./bin/python .agents/skills/bio-research/scripts/records.py eligibility|locus --question Q --add k=v ... [--add ...] --register
 ./bin/python .agents/skills/bio-research/scripts/forum_dump.py --out DIR --term ... --family forum
 ```
 
