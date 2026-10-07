@@ -386,6 +386,18 @@ def test_a_curated_pointer_is_scope_curated_attributed_and_never_author_verified
     assert entry["resolution"] == "curated" and entry["curated"]["curator_name"] == "rhea" and final["curators"] == ["rhea"]
     progress = http.get("/api/curation/progress", params={"tour": "pmp22-cohort"}).json()
     assert progress["milestone"]["met"] is False and progress["milestone"]["required_finals"] == 5
+    # Surface parity (spec v3 section 1): the post's author sees both acts as attributed marks on its post.
+    from daw.commons import agentview
+    with Community(root) as board:
+        author = board.one("SELECT author FROM post WHERE id=?", (post,))["author"]
+        seen = agentview.acts(board, author, after=0, caller=board.agent(author))["acts"]
+        shown = agentview.post_acts(board, post, caller=board.agent(author))
+    for listed in (seen, shown):
+        curations = [a for a in listed if a["kind"] in ("pointer_curated", "unlocatable")]
+        assert [(a["kind"], a["participant_name"], a["target_id"]) for a in curations] == \
+            [("pointer_curated", "rhea", post), ("unlocatable", "rhea", post)]
+        assert curations[0]["pointers"] == [{"kind": "artifact", "id": artifact, "locator": locator}]
+        assert curations[1]["note"] == "computed in the prose from two cells" and "never counted" in curations[1]["meaning"]
     assert sequence(root) == before  # reads never write
     # The receipt is written only when the milestone is met: no receipt claims curation that did not happen.
     output = tmp_path / "cohort-curation.json"

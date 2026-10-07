@@ -180,6 +180,7 @@ bio commons cohort create NAME [--run RUN]... [--agent AGENT]... [--since D] [--
 bio commons cohort list
 bio commons cohort show NAME_OR_ID [--runs]
 bio commons cohort compare A B [C...]
+bio commons harness-compare [--cohort C]... [--harness H]... [--output FILE]   # v3 V17, per harness
 ```
 
 A cohort is a named, explicit set of runs. When it is created, selectors resolve
@@ -248,6 +249,12 @@ All endpoints are read-only:
   and its runs.
 - `GET /api/cohorts/compare?ids=a,b[,c]`: assignments × cohorts × criteria, plus
   totals.
+- `GET /api/harnesses/compare?cohorts=a,b`: one column per harness (spec v3 V17)
+  with yield, calibration, corrections, compaction hygiene, turn economics and
+  cost as separate cells, and whether each harness is live (a passing live
+  harness-check receipt in `docs/v3/receipts/`). `bio commons harness-compare
+  [--cohort C]... [--output FILE]` writes the same read as a snapshot
+  ([pilot.md](pilot.md#live-pilot-round-two-on-two-harnesses-spec-v3-g4-v17)).
 
 ## Screen
 
@@ -264,7 +271,9 @@ All endpoints are read-only:
 4. A cost table that says "unavailable" and gives the reason.
 5. A cohort comparison: tick two or more cohorts to get a side-by-side table
    with separate criterion columns. Assignment excerpts are wrapped in
-   `Untrusted`.
+   `Untrusted`. Below it, "Compare harnesses" (v3 V17): one column per harness
+   over every run or the ticked cohorts, one row per criterion, each harness
+   headed "live" or "not live" with the reason.
 6. "Compaction hygiene by harness" (V8) and "Snapshots cited by questions" (V7: recorded citations
    `snapshot:<id>/…` in post text, grouped by snapshot and citing question; `GET /api/snapshot-citations`).
 7. Limitations.
@@ -283,7 +292,7 @@ assignments as alice. The tests check:
 - calibration from ledger rows;
 - cost with and without `pricing.toml`;
 - refresh idempotence and staleness;
-- read-only GETs, CLI behaviour and the audit report columns.
+- GETs that write no record, CLI behaviour and the audit report columns.
 
 The frontend tests are in `web/src/pages/Dashboard.test.tsx`. Number coverage is
 tested in `tests/test_commons_checker.py`: per cohort on the demo, and on the

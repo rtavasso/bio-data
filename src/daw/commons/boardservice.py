@@ -7,7 +7,7 @@ agent-permitted board operations as that agent, through the same `Community`
 functions the local CLI calls:
 
     publish  answer  reply  ask  fetch            (writes: permission publish, answer, reply, ask, fetch)
-    inbox  show  search  verify  claims  agents  overview  frontier  experiments  (reads)
+    inbox  show  search  verify  claims  agents  overview  frontier  experiments  cited_by  (reads)
 
 Identity is bound twice. Each agent's socket lives in its own short directory
 `$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/` (see "provisioning" below; the
@@ -69,6 +69,7 @@ OPERATIONS = {
     "overview": ("read", {"after"}),
     "frontier": ("read", {"kind", "status", "question", "mine"}),
     "experiments": ("read", set()),
+    "cited_by": ("read", {"record", "mine"}),
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
@@ -395,8 +396,11 @@ def execute(root, agent_id, operation, payload):
         if operation == "fetch":
             return board.fetch(_text(payload, "post", True), workspace(), _text(payload, "question", True),
                                artifact=_text(payload, "artifact"), author=agent["id"])
-        if operation in {"overview", "frontier", "experiments"} or (operation == "inbox" and payload.get("acts")):
+        if operation in {"overview", "frontier", "experiments", "cited_by"} or (operation == "inbox" and payload.get("acts")):
             from daw.commons import agentview
+            if operation == "cited_by":
+                return agentview.cited_by(board, agent, record=_text(payload, "record"), mine=bool(payload.get("mine")),
+                                          caller=agent)
             if operation == "frontier":
                 return agentview.frontier_list(board, kind=_text(payload, "kind"), status=_text(payload, "status"),
                                                question=_text(payload, "question"),

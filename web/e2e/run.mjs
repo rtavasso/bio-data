@@ -16,7 +16,9 @@
 // Browsers (spec v2 C1): Playwright is a pinned devDependency of web/ (`npm ci` installs it); its browser
 // comes from `npx playwright install chromium` (CI: `--with-deps` on Linux), into the default cache or
 // PLAYWRIGHT_BROWSERS_PATH. A pre-installed browser is honoured: E2E_CHROMIUM names one explicitly, and
-// when the pinned revision is missing the newest Chromium under PLAYWRIGHT_BROWSERS_PATH is used.
+// when the pinned revision is missing the newest Chromium under PLAYWRIGHT_BROWSERS_PATH is used. That
+// fallback is a local convenience and is NOT reproducible (whatever revision happens to be installed); CI
+// installs the pinned browser and never takes it. report.json records which browser ran (`browser`).
 // Every number on the demo board is a synthetic fixture; nothing here validates science.
 import { execFile, spawn } from "node:child_process";
 import crypto from "node:crypto";
@@ -72,9 +74,16 @@ function preinstalledChromium(root = process.env.PLAYWRIGHT_BROWSERS_PATH) {
   return null;
 }
 
+// Which browser ran, for report.json: the pinned Playwright revision, an explicit E2E_CHROMIUM, or the
+// non-reproducible fallback.
+let browserSource = { source: "pinned", reproducible: true, executable: null };
+
 async function launchChromium(chromium) {
   const options = { headless: !process.env.E2E_HEADED };
-  if (process.env.E2E_CHROMIUM) return chromium.launch({ ...options, executablePath: process.env.E2E_CHROMIUM });
+  if (process.env.E2E_CHROMIUM) {
+    browserSource = { source: "E2E_CHROMIUM", reproducible: null, executable: process.env.E2E_CHROMIUM };
+    return chromium.launch({ ...options, executablePath: process.env.E2E_CHROMIUM });
+  }
   try {
     return await chromium.launch(options);
   } catch (error) {
@@ -84,7 +93,8 @@ async function launchChromium(chromium) {
         "Install the pinned browser: npx --prefix web playwright install chromium (Linux CI: --with-deps), " +
         "or set E2E_CHROMIUM to a Chromium binary.");
     }
-    console.log(`  note: the pinned Playwright browser is not installed; using ${fallback}`);
+    console.log(`  note: the pinned Playwright browser is not installed; using ${fallback} (not reproducible)`);
+    browserSource = { source: "newest-preinstalled-fallback", reproducible: false, executable: fallback };
     return chromium.launch({ ...options, executablePath: fallback });
   }
 }
@@ -240,6 +250,7 @@ async function pendingRequest(target, taskType) {
 // ---- browser -------------------------------------------------------------------------------------
 
 const browser = await launchChromium(chromium);
+browserSource.version = browser.version();
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 const page = await context.newPage();
 const problems = [];
@@ -876,7 +887,7 @@ await browser.close();
 stopServers();
 
 const failed = results.filter((r) => !r.ok);
-const report = { started: stamp, base, commons, results, metrics, console_problems: problems,
+const report = { started: stamp, base, commons, browser: browserSource, results, metrics, console_problems: problems,
   passed: results.length - failed.length, failed: failed.length,
   note: "Synthetic demo commons; the scripted harness stands in for agents. No model, credential or network was used." };
 fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 2));

@@ -263,7 +263,8 @@ def test_frontier_rebuild_is_idempotent_and_derives_board_state_from_events(demo
 def test_frontier_projection_rebuilds_byte_equal_on_the_cohort(cohort_copy):
     """v2 C3 on real data: drop the cohort board's frontier_item table, rebuild, compare every row."""
     with Community(cohort_copy) as board:
-        frontier.rebuild_frontier(board)
+        assert frontier.is_current(board)  # the committed (resettled) projection: current before any rebuild
+        assert frontier.rebuild_frontier(board)["inserted"] == 0
         before = projection(board)
         assert len(before) >= 59
         assert {r["kind"] for r in before} >= {"gap"}

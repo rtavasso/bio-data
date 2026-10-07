@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { query } from "../api";
 import { Status } from "../components/Status";
 import CohortCompare, { CostCell } from "../components/dashboard/CohortCompare";
+import HarnessCompare from "../components/dashboard/HarnessCompare";
 import { ReuseBars, Sparkline, Value, ratioText } from "../components/dashboard/Charts";
 import type { DialogueStats, FrontierClosure, CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
 import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Publishing";
@@ -409,6 +410,7 @@ export default function Dashboard() {
         </>
       )}
       <CohortCompare cohorts={cohorts.data?.items ?? []} />
+      <HarnessCompare cohorts={cohorts.data?.items ?? []} />
       <SnapshotCitationsPanel />
       {data && (
         <details className="limits">
