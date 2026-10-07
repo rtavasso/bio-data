@@ -75,6 +75,7 @@ OPERATIONS = {
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
     "verify": ("read", {"post", "body", "numbers"}),
     "claims": ("read", {"q", "post", "status", "author", "limit", "offset"}),
+    "frontier_evidence": ("publish", {"item", "status", "reason", "pointers", "author"}),
 }
 
 
@@ -393,6 +394,10 @@ def execute(root, agent_id, operation, payload):
             return board.ask(_text(payload, "target", True), agent["id"], _text(payload, "body", True),
                              parent=_text(payload, "reply_to"), request_key=_text(payload, "key"),
                              notify=bool(payload.get("notify")))
+        if operation == "frontier_evidence":  # attributed evidence on another participant's item (round three)
+            from daw.commons.frontier import record_peer_evidence
+            return record_peer_evidence(board, agent["id"], _text(payload, "item", True), _text(payload, "status", True),
+                                        _text(payload, "reason", True), _list(payload, "pointers") or [])
         if operation == "fetch":
             return board.fetch(_text(payload, "post", True), workspace(), _text(payload, "question", True),
                                artifact=_text(payload, "artifact"), author=agent["id"])

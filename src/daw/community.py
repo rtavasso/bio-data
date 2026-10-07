@@ -625,6 +625,12 @@ class Community:
         elif agent["kind"] not in {"human", "operator"}:
             raise DawError("participant_cannot_receive_requests", agent["kind"])
         with self.writer(), self.library.writer():
+            asker = self.agent(author)
+            if asker["kind"] == "agent" and not (request_key and self.one("SELECT 1 FROM post WHERE request_key=?",
+                                                                            (request_key,))):
+                # Round three: an agent's same question to many owners is refused after FANOUT_TARGETS per run.
+                from daw.commons.participation import check_ask_fanout
+                check_ask_fanout(self, asker["id"], agent["id"], body)
             post = self._post(author, "Question for " + agent["name"], body, parent=parent,
                               request_key=request_key, kind="question",
                               evidence={"target": agent["id"], "notify": bool(notify)})

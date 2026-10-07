@@ -36,7 +36,7 @@ def author(value):
 # In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
 # (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
 REMOTE = {"publish", "answer", "reply", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents", "overview",
-          "frontier", "experiments", "cited-by"}
+          "frontier", "experiments", "cited-by", "frontier-evidence"}
 
 
 def remote():
@@ -287,6 +287,22 @@ def frontier_command(ctx: typer.Context, kind: str | None = None,
     with Community(ctx.obj) as board:
         emit(frontier_list(board, kind=kind, status=status, question=question, author=author(None) if mine else None,
                            page=limit, offset=offset))
+
+
+@app.command("frontier-evidence")
+def frontier_evidence(ctx: typer.Context, item: Annotated[str, typer.Argument(help="Board frontier_ id (community frontier)")],
+                      status: Annotated[str, typer.Option(help="candidate_evidence or closed (what you propose)")],
+                      reason: Annotated[str, typer.Option(help="What the evidence shows for this item")],
+                      pointer: Annotated[list[str], typer.Option("--pointer", help="kind:id of a published record (post, artifact, receipt, locator, accession); repeatable")],
+                      as_agent: Annotated[str | None, typer.Option("--author")] = None):
+    """Record attributed evidence on another participant's frontier item or gap, instead of asking its owner.
+    Wakes no one and changes no status; the owner sees it and may accept it with frontier-status."""
+    from daw.commons.frontier import record_peer_evidence
+    if client := remote():
+        return emit(client.call("frontier_evidence", {"item": item, "status": status, "reason": reason,
+                                                      "pointers": pointer, "author": as_agent}))
+    with Community(ctx.obj) as board:
+        emit(record_peer_evidence(board, author(as_agent), item, status, reason, pointer))
 
 
 @app.command()

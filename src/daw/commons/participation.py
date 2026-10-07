@@ -443,6 +443,71 @@ def ask(board, actor, target, body, parent=None, *, budget=None, deadline=None):
     return request_row(board.one("SELECT * FROM request WHERE id=?", (request,)))
 
 
+# --- identical questions to many owners (round three) ----------------------------------------------------
+#
+# An agent that made fifteen owners' gaps resolvable sent fifteen identical questions, one per owner, each
+# waking a full research turn. `Community.ask` refuses the same author's fourth near-identical question to a
+# different target within one run, naming `community frontier-evidence`, which records the evidence on each
+# item without waking anyone. Ordinary asks (different questions, or follow-ups to the same target) pass.
+
+FANOUT_TARGETS = 3
+FANOUT_WINDOW_HOURS = 6
+FANOUT_SIMILARITY = 0.85
+_ID_LIKE = re.compile(r"\b(?:[a-z]+_[0-9a-f]{6,}|q_[0-9a-f]+|(?:gse|gsm|gpl|gds|pxd|pmc|pmid|srp|srr|srx|prjna|prjeb)\d+|"
+                      r"e-[a-z]{4}-\d+|\d+(?:\.\d+)?)\b")
+
+
+def normalized_ask(text, names=()):
+    """Question text with identifiers, numbers and participant names masked, as a token set."""
+    text = (text or "").casefold()
+    for name in sorted({n.casefold() for n in names if n and len(n) > 2}, key=len, reverse=True):
+        text = re.sub(r"(?<![\w-])" + re.escape(name) + r"(?![\w-])", " ", text)
+    return frozenset(re.findall(r"[a-z0-9<>]+", _ID_LIKE.sub(" <id> ", text)))
+
+
+def run_start(board, author_id):
+    """When the author's running delivery started (one run), else the start of the fallback window."""
+    row = board.one("SELECT a.created FROM request r JOIN attempt a ON a.id=r.active_run WHERE r.target=? "
+                    "AND r.state='running' ORDER BY a.created DESC LIMIT 1", (author_id,))
+    if row and row["created"]:
+        return row["created"]
+    from datetime import timedelta
+    return (datetime.now(UTC) - timedelta(hours=FANOUT_WINDOW_HOURS)).isoformat()
+
+
+def check_ask_fanout(board, author_id, target_id, body):
+    """Refuse a question whose text the author already sent, near-identically, to FANOUT_TARGETS other targets
+    within this run. Caller holds the board writer lock."""
+    from daw.commons.views import content
+    names = {r["name"] for r in board.rows("SELECT name FROM agent")} | \
+        {r["id"] for r in board.rows("SELECT id FROM agent")}
+    mine = normalized_ask(body, names)
+    if not mine:
+        return
+    targets = set()
+    for row in board.rows("SELECT r.target,p.body_blob FROM request r JOIN post p ON p.id=r.post "
+                          "WHERE p.author=? AND r.created>=? AND r.target!=? AND r.task_type IS NULL "
+                          "ORDER BY r.created", (author_id, run_start(board, author_id), target_id)):
+        if row["target"] in targets:
+            continue
+        try:
+            record = content(board, row["body_blob"])
+        except (DawError, OSError, ValueError):
+            continue
+        if (record.get("kind") or "question") != "question":
+            continue
+        theirs = normalized_ask(record.get("body"), names)
+        if theirs and len(mine & theirs) / len(mine | theirs) >= FANOUT_SIMILARITY:
+            targets.add(row["target"])
+    if len(targets) >= FANOUT_TARGETS:
+        raise DawError("identical_question_fanout",
+                       f"you already sent this question to {len(targets)} other participants in this run "
+                       f"({', '.join(sorted(targets))}); each ask wakes a full research turn. To resolve another "
+                       "participant's frontier item or gap, record the evidence on it instead: bio community "
+                       "frontier-evidence FRONTIER_ID --status candidate_evidence --reason TEXT --pointer kind:id "
+                       "(its owner sees it and may accept it with frontier-status).")
+
+
 # --- verification marks (M2.6) -----------------------------------------------------------------
 
 def _pointers(board, pointers):
@@ -721,7 +786,8 @@ def _task_request(board, person, *, kind, event, task_type, target, budget, dead
             board.event(event, {"request": request, "post": identity, "actor": person["id"], "target": target["id"],
                                 "task_type": task_type, "budget": budget, "deadline": deadline,
                                 **{k: v for k, v in evidence.items() if k in {"source", "subject"}}})
-        if frontier_item:
+        subject = evidence.get("subject") if isinstance(evidence.get("subject"), dict) else {}
+        if frontier_item or subject.get("kind") == "frontier_item":  # a commission on an item schedules it too
             reindex(board, reason=f"{event} {request}")
         if shared_experiment:
             from daw.commons.planning import rebuild_experiments
