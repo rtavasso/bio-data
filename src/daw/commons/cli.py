@@ -537,6 +537,89 @@ def board_service_command(ctx: typer.Context,
     service.serve_forever(poll_seconds)
 
 
+# ---- spec v2 V9: read policy, membership, audit log, sandbox uids -----------------------------------------
+member_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,
+                         help="Membership of a private commons ([access] read = \"private\" in commons.toml).")
+app.add_typer(member_app, name="member")
+
+
+@member_app.command("grant")
+def member_grant(ctx: typer.Context, participant: str, reason: str = "", as_: As = "operator"):
+    """Grant a person (or system participant) read access to a private commons. Event-logged."""
+    from daw.commons.access import grant
+    run(ctx, grant, acting(as_), participant, reason)
+
+
+@member_app.command("revoke")
+def member_revoke(ctx: typer.Context, participant: str, reason: str = "", as_: As = "operator"):
+    """Revoke membership; the next request (and any open event stream within seconds) is refused."""
+    from daw.commons.access import revoke
+    run(ctx, revoke, acting(as_), participant, reason)
+
+
+@member_app.command("list")
+def member_list(ctx: typer.Context):
+    """Membership records and the commons' read policy."""
+    from daw.commons.access import members, policy
+    run(ctx, lambda board: {"read_policy": policy(board.root), "items": members(board)})
+
+
+@member_app.command("rebuild")
+def member_rebuild(ctx: typer.Context):
+    """Rebuild the membership projection from member_granted / member_revoked events."""
+    from daw.commons.access import rebuild
+    run(ctx, lambda board: {"rows": rebuild(board)})
+
+
+@app.command("access")
+def access_command(ctx: typer.Context):
+    """Show the commons' read policy (public, members or private; set it in commons.toml [access] read)."""
+    from daw.commons.access import NOTES, policy
+    value = policy(Path(ctx.obj).expanduser().resolve())
+    emit({"read_policy": value, "note": NOTES[value], "local_mode": "bio commons serve --mode local is unaffected"})
+
+
+@app.command("audit-log")
+def audit_command(ctx: typer.Context, kind: str | None = None, participant: str | None = None,
+                  since: str | None = None, until: str | None = None, before: int | None = None, limit: int = 100,
+                  as_: As = "operator"):
+    """Operator audit log: board events filtered by kind (comma-separated), participant and time, newest first."""
+    from daw.commons.archive import Archive
+    from daw.commons.audit import audit_log
+    with Archive(ctx.obj) as view:
+        emit(audit_log(view, view.participant(acting(as_)), kinds=(kind or "").split(","), participant=participant,
+                       since=since, until=until, before=before, limit=limit, full=True))
+
+
+sandbox_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None, help="Sandbox uids and quotas (spec v2 V9).")
+app.add_typer(sandbox_app, name="sandbox")
+
+
+@sandbox_app.command("uids")
+def sandbox_uids(ctx: typer.Context):
+    """Each agent's container uid, gid and quota project, and the one-time commands that prepare its checkout."""
+    from daw.commons import sandbox
+    from daw.community import Community
+    with Community(ctx.obj) as board:
+        config = sandbox.load(board.root)
+        if config is None:
+            raise DawError("sandbox_not_configured", "no sandbox.toml in this commons")
+        rows = []
+        for agent in board.rows("SELECT id,name,trial FROM agent WHERE kind='agent' AND trial IS NOT NULL "
+                                "ORDER BY created,id"):
+            user = sandbox.agent_user(config, board.root, agent["id"])
+            trial = board.root / agent["trial"]
+            commands = []
+            if user["policy"] == "per-agent":
+                commands.append(f"chown -R {user['uid']}:{user['gid']} {trial}")
+            if config.disk_quota_bytes and config.disk_quota_method == "xfs-project":
+                project = config.xfs_project_base + sandbox.agent_index(board.root, agent["id"])
+                commands += [f"xfs_quota -x -c 'project -s -p {trial} {project}' <mount>",
+                             f"xfs_quota -x -c 'limit -p bhard={config.disk_quota_bytes} {project}' <mount>"]
+            rows.append({"agent": agent["id"], "name": agent["name"], **user, "checkout": str(trial),
+                         "prepare_as_root": commands})
+    emit({"policy": config.agent_uid, "disk_quota_bytes": config.disk_quota_bytes,
+          "disk_quota_method": config.disk_quota_method, "agents": rows})
 # ---- spec v2 V6: recorded delivery records and the graph store ----------------------------------------------
 
 graph_app = typer.Typer(no_args_is_help=True, rich_markup_mode=None,

@@ -1,0 +1,25 @@
+.wb-viewbar { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; }
+.wb-inbox-list { list-style: none; padding: 0; margin: 0; }
+/* Titles and participant ids are long unbroken tokens: let them wrap rather than widen a narrow page. */
+.wb-inbox-item { border-left: 3px solid transparent; padding: 0.4rem 0.6rem; margin-bottom: 0.4rem; min-width: 0;
+  overflow-wrap: anywhere; }
+.wb-inbox-item.unread { border-left-color: var(--accent, #3b6fd8); background: var(--panel, rgba(127, 127, 127, 0.06)); }
+.wb-unread { font-weight: 600; }
+.wb-kind { font-weight: 600; }
+.wb-badge { display: inline-block; min-width: 1.2rem; padding: 0 0.35rem; margin-left: 0.25rem; border-radius: 0.6rem;
+  background: var(--accent, #3b6fd8); color: #fff; font-size: 0.75rem; text-align: center; }
+.wb-reply { margin: 0.4rem 0 0 1rem; display: flex; flex-direction: column; gap: 0.3rem; max-width: 40rem; }
+.wb-reply textarea { min-height: 3.5rem; }
+.wb-review { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: end; }
+.wb-reading { display: grid; grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); gap: 1.5rem; }
+.wb-reading-pane { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; }
+.wb-reading-item { border-left: 3px solid var(--border, #ccc); padding: 0.3rem 0.8rem; margin-bottom: 1rem; }
+.wb-reading-item.correction { border-left-color: var(--warn, #c78a00); }
+.wb-reading-item.claim { border-left-color: var(--good, #2e8b57); }
+.wb-reading .num.wb-current { outline: 2px solid var(--accent, #3b6fd8); outline-offset: 1px; }
+.wb-keys kbd { font-family: inherit; border: 1px solid var(--border, #ccc); border-radius: 3px; padding: 0 0.25rem; }
+.wb-audit table { width: 100%; border-collapse: collapse; }
+.wb-audit td, .wb-audit th { text-align: left; vertical-align: top; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border, #ddd); }
+.wb-audit pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 0.8rem; max-height: 10rem; overflow: auto; }
+.wb-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin-bottom: 1rem; }
+@media (max-width: 800px) { .wb-reading { grid-template-columns: 1fr; } .wb-reading-pane { position: static; } }

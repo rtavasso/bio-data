@@ -11,6 +11,7 @@
 [tenants.lab-a]
 root = "/srv/colloquy/lab-a"         # absolute, or relative to this file
 title = "Lab A"
+read = "private"                     # overrides lab-a's commons.toml [access] read: public | members | private
 
 [tenants.lab-b]
 root = "/srv/colloquy/lab-b"

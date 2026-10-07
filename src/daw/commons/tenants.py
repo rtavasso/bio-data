@@ -19,8 +19,11 @@ reads another's work only as an exported snapshot imported read-only.
     root = "/commons/lab-a"             # an initialized commons (bio community init); relative to this file
     title = "Lab A"                     # optional, shown on the host index
     login = { attempts = 10, window_seconds = 300 }   # optional override of the commons' [login]
+    read = "private"                    # optional override of the commons' [access] read (spec v2 V9)
 
-Tenants are always served in accounts mode (people log in with tokens).
+Tenants are always served in accounts mode (people log in with tokens). Each tenant enforces its own read policy
+(`daw.commons.access`); the host's aggregate health and index never disclose a non-public tenant's board sequence
+or title.
 """
 import html
 import re
@@ -31,7 +34,7 @@ from pathlib import Path
 from daw.util import DawError
 
 NAME = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
-TENANT_KEYS = {"root", "title", "login"}
+TENANT_KEYS = {"root", "title", "login", "read"}
 HOST_KEYS = {"static_dir"}
 
 
@@ -41,6 +44,7 @@ class Tenant:
     root: Path
     title: str = ""
     login: dict = field(default_factory=dict)
+    read: str | None = None
 
     @property
     def base(self):
@@ -72,13 +76,17 @@ def load(path):
         if not NAME.fullmatch(name):
             raise DawError("invalid_tenant_name", f"{name!r}: lowercase letters, digits and inner '-' (max 63)")
         if not isinstance(entry, dict) or set(entry) - TENANT_KEYS or not isinstance(entry.get("root"), str):
-            raise DawError("invalid_tenants_config", f"tenant {name}: root (required), title and login only")
+            raise DawError("invalid_tenants_config", f"tenant {name}: root (required), title, login and read only")
         if not isinstance(entry.get("login", {}), dict) or not isinstance(entry.get("title", ""), str):
             raise DawError("invalid_tenants_config", f"tenant {name}: login is a table and title a string")
         root = (path.parent / Path(entry["root"]).expanduser()).resolve()
         if not (root / "board.sqlite").is_file():
             raise DawError("community_not_initialized", f"tenant {name}: {root} (create it with bio community init)")
-        tenants.append(Tenant(name, root, entry.get("title", ""), dict(entry.get("login", {}))))
+        read = entry.get("read")
+        if read is not None:
+            from daw.commons.access import policy
+            policy(root, read)  # validated here: public | members | private
+        tenants.append(Tenant(name, root, entry.get("title", ""), dict(entry.get("login", {})), read))
     for i, one in enumerate(tenants):
         for other in tenants[i + 1:]:
             if one.root.is_relative_to(other.root) or other.root.is_relative_to(one.root):
@@ -87,8 +95,19 @@ def load(path):
     return HostConfig(tuple(tenants), (path.parent / static).resolve() if static else None)
 
 
+def tenant_policy(tenant):
+    """The tenant's read policy: its tenants.toml override, else its commons.toml [access] read."""
+    from daw.commons.access import policy
+    return policy(tenant.root, tenant.read)
+
+
 def index_page(config):
-    items = "".join(f'<li><a href="{html.escape(t.base)}">{html.escape(t.title or t.name)}</a> '
+    def label(tenant):
+        read = tenant_policy(tenant)
+        # A members-only or private tenant is listed by its configured name only, with its policy.
+        shown = html.escape(tenant.title if read == "public" and tenant.title else tenant.name)
+        return shown if read == "public" else f"{shown} <em>({html.escape(read)})</em>"
+    items = "".join(f'<li><a href="{html.escape(t.base)}">{label(t)}</a> '
                     f'<code>{html.escape(t.name)}</code></li>' for t in config.tenants)
     return ("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" "
             "content=\"width=device-width, initial-scale=1\"><title>Colloquy commons</title><style>"
@@ -118,7 +137,11 @@ def create_host_app(config, *, forwarded_allow_ips=None):
         for tenant in config.tenants:
             try:
                 with Archive(tenant.root) as view:
-                    tenants.append({"name": tenant.name, "base": tenant.base, "ok": True, "sequence": view.sequence()})
+                    read = tenant_policy(tenant)
+                    entry = {"name": tenant.name, "base": tenant.base, "ok": True, "read_policy": read}
+                    if read == "public":  # a non-public tenant's sequence is board information
+                        entry["sequence"] = view.sequence()
+                    tenants.append(entry)
             except Exception as error:  # report, never raise: one broken tenant must not hide the others
                 tenants.append({"name": tenant.name, "base": tenant.base, "ok": False,
                                 "error": getattr(error, "reason", type(error).__name__)})
@@ -137,7 +160,7 @@ def create_host_app(config, *, forwarded_allow_ips=None):
 
     for tenant in config.tenants:
         host.mount(tenant.base.rstrip("/"), create_app(tenant.root, mode="accounts", static_dir=config.static_dir,
-                                                       base=tenant.base, login=tenant.login))
+                                                       base=tenant.base, login=tenant.login, read_policy=tenant.read))
     from daw.commons.app import trusted_proxies
     if trusted_proxies(forwarded_allow_ips):
         from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware

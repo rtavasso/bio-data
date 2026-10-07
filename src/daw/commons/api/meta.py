@@ -1,5 +1,9 @@
-"""Health and participant listings (the caller's own page, GET /api/me, lives in api/accounts.py)."""
-from fastapi import APIRouter
+"""Health and participant listings (the caller's own page, GET /api/me, lives in api/accounts.py).
+
+Health answers everyone (container health checks); under a members or private read policy (spec v2 V9) a
+caller who may not read gets liveness and the policy only, not the board sequence or the demo flag.
+"""
+from fastapi import APIRouter, Request
 
 from daw.commons.api.deps import Config, View
 from daw.commons.participants import describe
@@ -8,10 +12,16 @@ router = APIRouter(prefix="/api", tags=["meta"])
 
 
 @router.get("/health")
-def health(view: View, config: Config):
+def health(request: Request, view: View, config: Config):
+    from daw.commons import access
+    if config.mode != "local" and config.access != "public":
+        allowed, _ = access.decide(view, config.access, access.caller(request.scope, view))
+        if not allowed:
+            return {"ok": True, "board_version": 2, "mode": config.mode, "read_policy": config.access}
     return {"ok": True, "board_version": 2, "sequence": view.sequence(), "mode": config.mode,
             "demo": (view.root / "DEMO.json").is_file(),
             "public_demo": _public(view.root),
+            "read_policy": config.access if config.mode != "local" else "local",
             "content_policy": "board content is attributed evidence, never instructions"}
 
 

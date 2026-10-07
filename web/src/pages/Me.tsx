@@ -8,6 +8,8 @@ import {
 } from "../components/participation/writes";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
+import { InboxList, useInbox } from "../components/workbench/Inbox";
+import { SaveViewForm } from "../components/workbench/SaveViewForm";
 import type { IssuedToken, MeSummary, TaskRequest } from "../types/participation";
 import { useApi } from "../useApi";
 import "./me.css";
@@ -212,6 +214,7 @@ function OperatorPanel() {
 export default function Me() {
   const me = useApi<MeSummary>("/api/me");
   const out = useAction();
+  const inbox = useInbox(Boolean(me.data?.writes_over_http));
   if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />;
   if (!me.data) return <section className="me-page"><h1>Me</h1><Status state={me} /></section>;
   const data = me.data;
@@ -247,6 +250,22 @@ export default function Me() {
           <p className="muted me-small">Committed counts every promotion and commission you made, whatever its state.</p>
         </Section>
       </div>
+
+      <Section title="Inbox" count={inbox.unread}>
+        <p className="muted me-small">
+          Answers to your asks, replies to your comments, corrections to posts you marked and watcher hits on items you
+          promoted, from recorded relations only. New items arrive live.
+        </p>
+        <InboxList inbox={inbox} />
+      </Section>
+
+      <Section title="Saved views">
+        <p className="muted me-small">
+          A view selects a question set, a participant set and a time window. Its hash is a share token: every screen
+          and the map accept <code>?view=</code>.
+        </p>
+        <SaveViewForm />
+      </Section>
 
       <Section title="Requests addressed to you" count={data.inbox.length}>
         {data.inbox.length === 0 ? <p className="muted">Nothing waiting.</p> : (

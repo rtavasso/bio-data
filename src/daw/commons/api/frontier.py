@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from daw.commons import claims, frontier, planning
 from daw.commons.api.deps import Config, View
 from daw.commons.api.read import Reader
+from daw.commons.api.scoping import Scoped, collect, question_lookup, scoped
 from daw.commons.api.write import Actor, call
 from daw.util import DawError
 
@@ -37,16 +38,41 @@ def _key(view):
 
 
 @router.get("/claims")
-def claim_search(view: View, caller: Reader, q: str = "", status: str | None = None, scope: str | None = None,
-                 author: str | None = None, post: str | None = None, limit: int = 50, offset: int = 0,
-                 full: bool = False):
-    return claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=limit, offset=offset,
-                              caller=caller, full=full)
+def claim_search(view: View, caller: Reader, saved: Scoped, q: str = "", status: str | None = None,
+                 scope: str | None = None, author: str | None = None, post: str | None = None, limit: int = 50,
+                 offset: int = 0, full: bool = False):
+    # `scope` is the claim's stated scope text (a ledger filter); `?view=` is a saved view (V4).
+    if saved is None:
+        return claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=limit,
+                                  offset=offset, caller=caller, full=full)
+    if not 1 <= limit <= 200 or offset < 0:
+        raise DawError("invalid_search_bounds")
+    first = claims.list_claims(view, q, status=status, scope=scope, author=author, post=post, limit=200, offset=0,
+                               caller=caller, full=full)
+    items = collect(lambda size, start: claims.list_claims(view, q, status=status, scope=scope, author=author,
+                                                           post=post, limit=size, offset=start, caller=caller,
+                                                           full=full), 200)
+    return scoped({**first, "items": items}, saved, _claim_facts(view, caller, full), limit=limit, offset=offset)
+
+
+def _claim_facts(view, caller, full):
+    questions = question_lookup(view, caller, full)
+    return lambda c: ({c.get("author")}, questions(c.get("post")), c.get("created"))
 
 
 @router.get("/claims/contradictions")
-def contradiction_queue(view: View):
-    return _cached(view, "contradictions", view.sequence(), lambda: claims.contradictions(view))
+def contradiction_queue(view: View, scope: Scoped):
+    result = _cached(view, "contradictions", view.sequence(), lambda: claims.contradictions(view))
+    if scope is None:
+        return result
+    facts = _claim_facts(view, None, False)
+
+    def pair(item):
+        each = [facts(c) for c in item["claims"]]
+        stamps = sorted(f[2] for f in each if f[2])
+        return (set().union(*(f[0] for f in each)), set().union(*(f[1] for f in each)),
+                stamps[0] if stamps else None, stamps[-1] if stamps else None)
+    return scoped(result, scope, pair)
 
 
 @router.get("/claims/{identity}")
@@ -65,10 +91,17 @@ def correction(post: str, view: View, caller: Reader, full: bool = False):
 
 
 @router.get("/frontier")
-def frontier_items(view: View, kind: str | None = None, status: str | None = None,
+def frontier_items(view: View, scope: Scoped, kind: str | None = None, status: str | None = None,
                    blocked_by: str | None = None, question: str | None = None, author: str | None = None):
     result = frontier.browse(view, kind=kind, status=status, blocked_by=blocked_by, question=question, author=author)
     result["projection_current"] = frontier.is_current(view)
+    if scope is None:
+        return result
+    result = scoped(result, scope, lambda i: ({i["author"]}, {i["question"]}, i.get("created"), i.get("updated")))
+    kept = {i["id"] for i in result["items"]}
+    result["by_kind"] = {k: [i for i in ids if i in kept] for k, ids in result["by_kind"].items()}
+    result["by_blocker"] = [{**b, "items": [i for i in b["items"] if i in kept]} for b in result["by_blocker"]
+                            if any(i in kept for i in b["items"])]
     return result
 
 
@@ -117,9 +150,19 @@ def frontier_item(identity: str, view: View):
 
 
 @router.get("/wishlist")
-def dataset_wishlist(view: View):
+def dataset_wishlist(view: View, scope: Scoped):
     # LABBOOK lines are read from workspaces, so the key also covers their work events.
-    return _cached(view, "wishlist", frontier.refresh_key(view), lambda: frontier.wishlist(view))
+    result = _cached(view, "wishlist", frontier.refresh_key(view), lambda: frontier.wishlist(view))
+    if scope is None:
+        return result
+    # A group's recorded time is that of its frontier items; LABBOOK lines carry none (unknown: outside a window).
+    created = {r["id"]: r["created"] for r in view.rows("SELECT id,created FROM frontier_item")}
+
+    def facts(group):
+        stamps = sorted(created[s["item"]] for s in group.get("sources", []) if s.get("item") in created)
+        return ({s.get("author") for s in group.get("sources", [])}, {s.get("question") for s in group.get("sources", [])},
+                stamps[0] if stamps else None, stamps[-1] if stamps else None)
+    return scoped(result, scope, facts)
 
 
 @router.get("/wishlist/export")

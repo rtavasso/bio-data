@@ -84,6 +84,20 @@ CREATE TABLE IF NOT EXISTS digest_schedule (
 -- Keys are sha256 digests (never raw addresses or tokens); rows older than the window are pruned on write.
 CREATE TABLE IF NOT EXISTS login_failure (key TEXT NOT NULL, at REAL NOT NULL);
 CREATE INDEX IF NOT EXISTS login_failure_key ON login_failure(key,at);
+-- V4 saved views: a question set, a participant set and a time window, keyed by the sha256 of the canonical
+-- spec JSON (daw.commons.savedviews). Immutable: the same spec always names the same record.
+CREATE TABLE IF NOT EXISTS saved_view (
+ id TEXT PRIMARY KEY, spec TEXT NOT NULL, created_by TEXT NOT NULL REFERENCES agent(id), created TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS saved_view_creator ON saved_view(created_by,created);
+-- V4 inbox read state: one immutable row per person and inbox item, written only by that person's own
+-- "mark read" action (daw.commons.inbox.mark_read). Unread is the absence of a row.
+CREATE TABLE IF NOT EXISTS inbox_read (
+ participant TEXT NOT NULL REFERENCES agent(id), item TEXT NOT NULL, read_at TEXT NOT NULL,
+ PRIMARY KEY(participant,item));
+-- V9 private-commons membership: projection of member_granted / member_revoked events (daw.commons.access).
+CREATE TABLE IF NOT EXISTS membership (
+ participant TEXT PRIMARY KEY REFERENCES agent(id), state TEXT NOT NULL, actor TEXT NOT NULL REFERENCES agent(id),
+ reason TEXT NOT NULL, event_seq INTEGER NOT NULL, updated TEXT NOT NULL);
 -- V5 shared experiments: a person's cluster confirmation as a board-owned planning record that merges nothing.
 -- Projection of frontier_cluster_confirmed and promotion_created events (daw.commons.planning); rebuildable.
 CREATE TABLE IF NOT EXISTS shared_experiment (
@@ -103,7 +117,7 @@ CREATE TABLE IF NOT EXISTS federation_record (
  body TEXT NOT NULL, indexed TEXT NOT NULL, PRIMARY KEY(snapshot,record));
 """
 
-IMMUTABLE = ("mark", "upload", "watcher_run")
+IMMUTABLE = ("mark", "upload", "watcher_run", "saved_view", "inbox_read")
 
 
 def triggers():

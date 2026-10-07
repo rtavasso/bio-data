@@ -708,6 +708,84 @@ await step("D2 the author answers in its next turn; the answer appears under the
   await snap("flowD-answer-under-anchor");
 });
 
+// ---- spec v2 V4: the human workbench ------------------------------------------------------------------
+
+console.log("Workbench (spec v2 V4): inbox, anchored replies, reading mode, saved views");
+await step("V4 the answer under the anchor is in the asker's inbox at /me; mark read", async () => {
+  await page.goto(`${base}/me`);
+  const inbox = page.getByLabel("Inbox");
+  await inbox.getByText("Answer to your request").first().waitFor();
+  const before = await api("/api/me/inbox");
+  check(before.items.some((i) => i.kind === "answer" && i.request === commentD.request.id), "inbox lacks the answer to the ask");
+  await inbox.getByRole("button", { name: "Mark all read" }).click();
+  await inbox.getByText(/^0 unread of/).waitFor();
+  check((await api("/api/me/inbox")).unread === 0, "mark read was not recorded");
+  await snap("v4-inbox");
+  return { items: before.items.length };
+});
+
+await step("V4 a reply under the anchor stays at the anchor", async () => {
+  await page.goto(`${base}/post/${postD}`);
+  const summary = page.locator("summary", { hasText: "Reply under this anchor" }).first();
+  await summary.click();
+  const form = page.getByLabel("Reply under this anchor").first();
+  await form.getByLabel("Reply").fill("Thanks: noted for the human-cell follow-up.");
+  // React mirrors a controlled textarea's value into its text, so the reply's text is on the page before it is
+  // recorded: wait for the write itself, then for the reply rendered under the anchor (outside the form).
+  const posted = page.waitForResponse((r) => r.request().method() === "POST" && /\/api\/comments\/[^/]+\/replies$/.test(r.url()));
+  await form.getByRole("button", { name: "Reply" }).click();
+  check((await posted).ok(), "reply write failed");
+  await page.locator(".comment-groups p", { hasText: "Thanks: noted for the human-cell follow-up." }).first().waitFor();
+  const detail = await api(`/api/posts/${postD}`);
+  const card = detail.comments.flatMap((g) => g.comments).find((c) => c.id === commentD.id);
+  const reply = card.answers.find((a) => a.kind === "comment");
+  check(reply, "reply not listed under the anchored comment");
+  const shown = await api(`/api/posts/${reply.id}`);
+  check(shown.content.evidence.in_reply_to === commentD.id && shown.content.evidence.anchor?.quote === quote,
+    "reply lost the anchor");
+  return { reply: reply.id };
+});
+
+await step("V4 reading mode: j/k between numbers, Enter opens the record", async () => {
+  await page.goto(`${base}/thread/${posts.correction}/read`);
+  await page.getByRole("heading", { name: "Reading mode" }).waitFor();
+  const reading = await api(`/api/threads/${posts.correction}/reading`);
+  check(reading.numbers.length >= 2, "thread has fewer than two numbers");
+  await page.getByRole("heading", { name: `Number 1 of ${reading.numbers.length}` }).waitFor();
+  await page.keyboard.press("j");
+  await page.getByRole("heading", { name: `Number 2 of ${reading.numbers.length}` }).waitFor();
+  await snap("v4-reading-mode");
+  const target = reading.numbers.findIndex((n) => n.pointers.some((p) => (p.artifact ?? p.id ?? "").startsWith("artifact_")));
+  if (target >= 0) {
+    await page.keyboard.press("k");  // back to the first number, then forward to one that points at an artifact
+    for (let i = 0; i < target; i += 1) await page.keyboard.press("j");
+    await page.getByRole("heading", { name: `Number ${target + 1} of ${reading.numbers.length}` }).waitFor();
+    await page.keyboard.press("Enter");
+    await page.waitForURL(/\/artifact\//);
+  }
+  return { numbers: reading.numbers.length, opened: target >= 0 ? page.url() : null };
+});
+
+await step("V4 a saved view is a hash token every screen and the map accept", async () => {
+  await page.goto(`${base}/me`);
+  const form = page.getByLabel("Save a view");
+  await form.getByLabel("Participants").fill("bob");
+  await form.getByRole("button", { name: "Save view" }).click();
+  const token = await form.locator("code.mono").first().textContent();
+  check(/^[0-9a-f]{64}$/.test(token ?? ""), `no share token: ${token}`);
+  await page.goto(`${base}/board?view=${token}`);
+  await page.getByLabel("Saved view").getByText(/participants bob/).waitFor();
+  const threads = await api(`/api/posts?view=${token}`);
+  const all = await api("/api/posts");
+  check(threads.items.length > 0 && threads.items.length < all.items.length, "view did not narrow the board");
+  await page.goto(`${base}/map?view=${token}`);
+  await page.getByText("Only recorded relations are drawn").first().waitFor();
+  await snap("v4-saved-view-map");
+  const graph = await api(`/api/map?view=${token}`);
+  check(graph.filters.view === token, "the map did not apply the view");
+  return { view: token, threads: threads.items.length, of: all.items.length };
+});
+
 // ---- metrics and tenant smoke ---------------------------------------------------------------------
 
 await step("metric: backed vs unbacked reuse links (dashboard)", async () => {

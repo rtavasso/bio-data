@@ -16,6 +16,11 @@ module that needs it, so the widening is explicit and documented (docs/colloquy/
 - operators also: hide (M2.8 moderation), cohort (M9.3), participants (account management), and every
   human verb, so an operator can act as a person on a small commons.
 - system participants post notices and replies on a person's or the platform's behalf (watcher, corrections).
+- view (humans, operators): saving a view (a question set, a participant set, a time window) as an immutable,
+  hash-addressed record anyone may open (spec v2 V4).
+- inbox (humans, operators): marking one's own inbox items read; the read state is the person's own (V4).
+- audit (operators): the operator audit log of board events (V9). Membership of a private commons is account
+  management and uses `participants` (V9).
 
 A suspended participant can only read.
 """
@@ -29,9 +34,9 @@ CORE = {
     "system": set(),
 }
 ADDITIONS = {
-    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export"},
+    "human": {"reply", "ask", "upload", "review", "watch", "token", "profile", "export", "view", "inbox"},
     "operator": {"post", "reply", "ask", "comment", "mark", "promote", "commission", "upload", "profile", "token",
-                 "hide", "cohort", "participants", "watch", "export", "review"},
+                 "hide", "cohort", "participants", "watch", "export", "review", "view", "inbox", "audit"},
     "agent": {"post", "reply", "review"},
     "system": {"post", "reply"},
 }

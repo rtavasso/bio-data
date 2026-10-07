@@ -16,6 +16,35 @@ Configured per commons in `<commons>/sandbox.toml`:
     env = ["ANTHROPIC_API_KEY"]        # host variables the harness may receive (names only)
     ro_mounts = []                     # host paths mounted read-only at the same path (e.g. a harness install)
     mount_host_python = false          # mount this interpreter read-only when the image does not provide it
+    agent_uid = "dispatcher"           # or "per-agent": each agent its own uid (spec v2 V9, below)
+    uid_base = 200000                  # per-agent uids are uid_base + the agent's recorded index
+    agent_gid = 1000                   # the shared group of per-agent uids (default: the dispatcher's gid)
+    disk_quota_bytes = 21474836480     # quota on the checkout (spec v2 V9, below); omitted: none
+    disk_quota_method = "measure"      # measure | storage-opt | xfs-project
+    xfs_project_base = 50000           # xfs-project: project id = xfs_project_base + the agent's index
+
+Per-agent uids and disk quotas (spec v2 V9). With `agent_uid = "per-agent"` each agent's container runs as
+`uid_base + index:agent_gid`, where `index` is allocated once per agent and recorded in
+`<commons>/service/sandbox/agents.json` (never reused), so the uid is deterministic per agent and appears in
+every run's `sandbox.json`. The checkout must be writable by that uid (owned by it, or owned by the shared group
+with group write); dispatch refuses otherwise with `agent_uid_checkout_not_writable`, naming the `chown`/`chmod`
+an operator runs once (`bio commons sandbox uids` prints them). The board service then makes each agent's
+socket directory and socket group-accessible (0750/0660, group `agent_gid`); a container still mounts only its
+own socket directory and a socket still answers only its own agent's token.
+
+`disk_quota_bytes` bounds the checkout, by one of:
+
+- `measure` (portable, every platform): the checkout's apparent size is measured before each dispatch, which is
+  refused with `disk_quota_exceeded` (and a board event) while it is over, and after each turn (recorded in
+  `sandbox.json`; over quota is a `disk_quota_exceeded` event). A soft limit: not enforced mid-turn.
+- `storage-opt`: adds `--storage-opt size=N` (the engine's per-container limit of its writable layer; Docker on
+  overlay2 over XFS with pquota, devicemapper, btrfs or zfs; Podman on overlay over XFS) and measures the
+  bind-mounted checkout as above, because a bind mount is outside the writable layer. The engine's storage driver
+  is probed (`<engine> info`); anything else is refused with `disk_quota_unsupported`.
+- `xfs-project`: a hard limit from an XFS project quota on the checkout (Linux only). The operator assigns
+  project `xfs_project_base + index` to the checkout and sets its limit once (commands in docs/colloquy/pilot.md);
+  dispatch verifies the checkout carries that project id (FS_IOC_FSGETXATTR) and refuses with
+  `disk_quota_not_configured` when it does not, or `disk_quota_unsupported` off Linux.
 
 The checkout's harness runs with the trial mounted read-write at its own path,
 its platform code (src, skills, bin and instructions) mounted read-only over it,
@@ -86,6 +115,16 @@ class Config:
     env: tuple = ()
     ro_mounts: tuple = ()
     mount_host_python: bool = False
+    agent_uid: str = "dispatcher"
+    uid_base: int = 200000
+    agent_gid: int | None = None
+    disk_quota_bytes: int | None = None
+    disk_quota_method: str = "measure"
+    xfs_project_base: int = 50000
+
+
+UID_POLICIES = ("dispatcher", "per-agent")
+QUOTA_METHODS = ("measure", "storage-opt", "xfs-project")
 
 
 def load(root):
@@ -109,6 +148,21 @@ def load(root):
     for path in config.ro_mounts:
         if not Path(path).is_absolute():
             raise DawError("invalid_sandbox_config", "ro_mounts are absolute host paths")
+    if config.agent_uid not in UID_POLICIES:
+        raise DawError("invalid_sandbox_config", f"agent_uid is one of {', '.join(UID_POLICIES)}")
+    for key in ("uid_base", "xfs_project_base"):
+        value = getattr(config, key)
+        if isinstance(value, bool) or not isinstance(value, int) or not 1000 <= value < 2**31 - 2**20:
+            raise DawError("invalid_sandbox_config", f"{key} must be an integer >= 1000 leaving room for agents")
+    if config.agent_gid is not None and (isinstance(config.agent_gid, bool) or not isinstance(config.agent_gid, int)
+                                         or config.agent_gid < 0):
+        raise DawError("invalid_sandbox_config", "agent_gid must be a non-negative integer")
+    if config.disk_quota_bytes is not None and (isinstance(config.disk_quota_bytes, bool)
+                                                or not isinstance(config.disk_quota_bytes, int)
+                                                or config.disk_quota_bytes <= 0):
+        raise DawError("invalid_sandbox_config", "disk_quota_bytes must be a positive integer")
+    if config.disk_quota_method not in QUOTA_METHODS:
+        raise DawError("invalid_sandbox_config", f"disk_quota_method is one of {', '.join(QUOTA_METHODS)}")
     return config
 
 
@@ -155,6 +209,200 @@ def hosts(config, harness_hosts=()):
                    *harness_hosts})
 
 
+AGENTS_STATE = Path("service") / "sandbox" / "agents.json"
+
+
+def _agents_lock(root):
+    import contextlib
+    import fcntl
+
+    @contextlib.contextmanager
+    def lock():
+        folder = Path(root) / AGENTS_STATE.parent
+        folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+        with (folder / ".agents.lock").open("a") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            try:
+                yield folder / AGENTS_STATE.name
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+    return lock()
+
+
+def agent_index(root, agent_id):
+    """The agent's sandbox index: allocated once (1, 2, …), recorded in service/sandbox/agents.json, never reused."""
+    import json
+    with _agents_lock(root) as path:
+        state = json.loads(path.read_text()) if path.is_file() else {"format": 1, "agents": {}}
+        entry = state["agents"].get(agent_id)
+        if entry is None:
+            entry = {"index": 1 + max((e["index"] for e in state["agents"].values()), default=0), "recorded": now()}
+            state["agents"][agent_id] = entry
+            temporary = path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(state, indent=1, sort_keys=True))
+            os.replace(temporary, path)
+        return entry["index"]
+
+
+def recorded_agents(root):
+    import json
+    path = Path(root) / AGENTS_STATE
+    return json.loads(path.read_text())["agents"] if path.is_file() else {}
+
+
+def agent_user(config, root, agent_id):
+    """The (uid, gid) an agent's container runs as, with the policy that chose it (recorded in sandbox.json)."""
+    if config.agent_uid == "dispatcher":
+        return {"policy": "dispatcher", "uid": os.getuid(), "gid": os.getgid()}
+    index = agent_index(root, agent_id)
+    uid = config.uid_base + index
+    gid = config.agent_gid if config.agent_gid is not None else os.getgid()
+    if uid == os.getuid():
+        raise DawError("agent_uid_collision", f"uid {uid} is the dispatcher's own uid; choose another uid_base")
+    return {"policy": "per-agent", "uid": uid, "gid": gid, "index": index}
+
+
+def check_checkout_access(trial, user):
+    """A per-agent uid must be able to write its checkout: owned by it, or by its group with group write."""
+    if user["policy"] != "per-agent":
+        return
+    trial = Path(trial)
+    for path in (trial, trial / "workspace"):
+        if not path.exists():
+            continue
+        info = path.stat()
+        if info.st_uid == user["uid"] or (info.st_gid == user["gid"] and info.st_mode & 0o020):
+            continue
+        raise DawError("agent_uid_checkout_not_writable",
+                       f"{path} is not writable by uid {user['uid']} (group {user['gid']}). Once, as root: "
+                       f"chown -R {user['uid']}:{user['gid']} {trial} (or chgrp -R {user['gid']} {trial} && "
+                       f"chmod -R g+rwX {trial} && find {trial} -type d -exec chmod g+s {{}} +)")
+
+
+def checkout_usage(trial):
+    """Apparent bytes of the regular files under the checkout (symlinks are not followed)."""
+    total, stack = 0, [str(trial)]
+    while stack:
+        try:
+            entries = list(os.scandir(stack.pop()))
+        except OSError:
+            continue
+        for entry in entries:
+            try:
+                if entry.is_dir(follow_symlinks=False):
+                    stack.append(entry.path)
+                elif entry.is_file(follow_symlinks=False):
+                    total += entry.stat(follow_symlinks=False).st_size
+            except OSError:
+                continue
+    return total
+
+
+STORAGE_OPT_DRIVERS = {"btrfs", "zfs", "devicemapper", "windowsfilter"}
+
+
+def storage_opt_supported(config, run=None):
+    """(supported, reason) for `--storage-opt size=` on this engine, from `<engine> info` (driver and backing fs)."""
+    import json
+    import subprocess
+    run = run or subprocess.run
+    try:
+        result = run([config.engine, "info", "--format", "{{json .}}"], capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as e:
+        return False, f"{config.engine} info failed: {e}"
+    if result.returncode:
+        return False, f"{config.engine} info failed: {result.stderr.strip()[-200:]}"
+    try:
+        info = json.loads(result.stdout)
+    except ValueError:
+        return False, f"{config.engine} info returned no JSON"
+    driver = str(info.get("Driver") or (info.get("store") or {}).get("graphDriverName") or "")
+    status = dict(info.get("DriverStatus") or [])
+    backing = str(status.get("Backing Filesystem") or ((info.get("store") or {}).get("graphStatus") or {}).get(
+        "Backing Filesystem") or "")
+    if driver in STORAGE_OPT_DRIVERS or (driver in {"overlay2", "overlay"} and backing.lower() == "xfs"):
+        return True, f"driver {driver}" + (f" on {backing}" if backing else "")
+    return False, f"driver {driver or 'unknown'} on {backing or 'unknown'} does not support --storage-opt size"
+
+
+FS_IOC_FSGETXATTR = 0x801C581F
+
+
+def project_id(path):
+    """The XFS/ext4 project id of a directory (Linux FS_IOC_FSGETXATTR), or None when unavailable."""
+    import fcntl
+    import struct
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return None
+    try:
+        data = fcntl.ioctl(fd, FS_IOC_FSGETXATTR, bytes(28))
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+    return struct.unpack("5I8x", data)[3]
+
+
+def disk_quota(config, root, agent_id, trial, *, platform=None, run=None, projid=project_id):
+    """Pre-dispatch quota decision: {method, bytes, usage, ...}; refuses what this host cannot enforce."""
+    if not config.disk_quota_bytes:
+        return None
+    method, limit = config.disk_quota_method, config.disk_quota_bytes
+    out = {"method": method, "bytes": limit}
+    if method == "storage-opt":
+        supported, why = storage_opt_supported(config, run)
+        if not supported:
+            raise DawError("disk_quota_unsupported", f"{why}; use disk_quota_method = \"measure\" or \"xfs-project\"")
+        out["engine"] = why
+    if method == "xfs-project":
+        if not (platform or sys.platform).startswith("linux"):
+            raise DawError("disk_quota_unsupported", "xfs-project quotas need Linux; use disk_quota_method = \"measure\"")
+        expected = config.xfs_project_base + agent_index(root, agent_id)
+        found = projid(trial)
+        if found != expected:
+            raise DawError("disk_quota_not_configured",
+                           f"{trial} carries project id {found}, not {expected}. Once, as root, on an XFS mount with "
+                           f"prjquota: xfs_quota -x -c 'project -s -p {trial} {expected}' <mount> && "
+                           f"xfs_quota -x -c 'limit -p bhard={limit} {expected}' <mount>")
+        out.update(project=expected, enforcement="hard (XFS project quota)")
+        return out
+    usage = checkout_usage(trial)
+    out.update(usage_before=usage, enforcement="measured before and after each turn; not enforced mid-turn"
+               + ("; the engine limits the container's writable layer" if method == "storage-opt" else ""))
+    if usage > limit:
+        raise DawError("disk_quota_exceeded", f"the checkout holds {usage} bytes; its quota is {limit}")
+    return out
+
+
+def socket_group(config):
+    """The group that may open board-service sockets: the per-agent uids' shared group, else None (0600)."""
+    if config is None or config.agent_uid != "per-agent":
+        return None
+    return config.agent_gid if config.agent_gid is not None else os.getgid()
+
+
+def preflight(decision, root, agent_id, trial, **probes):
+    """Per-agent user and disk quota for a sandboxed dispatch, decided before any state changes."""
+    config = decision["config"]
+    if config is None:
+        return decision
+    user = agent_user(config, root, agent_id)
+    check_checkout_access(trial, user)
+    return {**decision, "agent_user": user, "disk_quota": disk_quota(config, root, agent_id, trial, **probes)}
+
+
+def after_turn(receipt, trial):
+    """Measure the checkout after the turn; returns (receipt, exceeded bytes or None)."""
+    quota = (receipt or {}).get("disk_quota")
+    if not quota or quota.get("method") == "xfs-project":
+        return receipt, None
+    usage = checkout_usage(trial)
+    quota.update(usage_after=usage, measured=now())
+    return receipt, usage if usage > quota["bytes"] else None
+
+
 def container_env(env, config, proxy=None):
     """Variables the container receives by name. `proxy` is the dispatch's credentialed proxy URL
     (default: the configured proxy, unauthenticated); an empty string means no proxy at all."""
@@ -167,13 +415,14 @@ def container_env(env, config, proxy=None):
 
 
 def container_argv(config, argv, env, *, trial, board_root, auth_files=(), name, board=None, proxy=None,
-                   network=None, ro_files=()):
+                   network=None, ro_files=(), user=None, storage_bytes=None):
     """(argv for the engine client, environment for the client process). Pure: no engine is called.
 
     `board` is the agent's board-service endpoint ({dir, url, token}, `boardservice.provision`); without
     it the container has no board access at all. `board_root` itself is never mounted. `proxy` is the
     dispatch's credentialed proxy URL; `network="none"` isolates the container (no proxy). `ro_files`
-    are (host file, container path) pairs mounted read-only, the sealed harness configuration."""
+    are (host file, container path) pairs mounted read-only, the sealed harness configuration. `user` is the
+    (uid, gid) the container runs as (default: the dispatcher's); `storage_bytes` adds `--storage-opt size=`."""
     trial, board_root = Path(trial).resolve(), Path(board_root).resolve()
     if not trial.is_relative_to(board_root):
         raise DawError("unsafe_agent_path", "the checkout must live under its commons")
@@ -186,8 +435,10 @@ def container_argv(config, argv, env, *, trial, board_root, auth_files=(), name,
     args = [config.engine, "run", "--rm", "-i", "--init", "--name", name, "--label", f"colloquy.run={name}",
             "--network", network, "--read-only", "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges", "--pids-limit", str(config.pids_limit),
-            "--user", f"{os.getuid()}:{os.getgid()}", "--workdir", str(trial),
+            "--user", "{}:{}".format(*(user or (os.getuid(), os.getgid()))), "--workdir", str(trial),
             "--tmpfs", f"/tmp:rw,size={config.scratch_bytes},mode=1777"]
+    if storage_bytes:
+        args += ["--storage-opt", f"size={int(storage_bytes)}"]
     if config.memory:
         args += ["--memory", str(config.memory)]
     if config.cpus:
@@ -357,7 +608,9 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run,
     from daw.commons import boardservice, egress
     name = "colloquy-" + run
     agent = env["BIO_AGENT"]
-    board = boardservice.provision(board_root, agent)
+    user = decision.get("agent_user") or agent_user(config, board_root, agent)
+    quota = decision.get("disk_quota")
+    board = boardservice.provision(board_root, agent, group=socket_group(config))
     # A replication (spec v2 C6) reaches only its harness's model provider; the token-scoped policy below
     # makes the proxy enforce exactly this list, so replication egress is enforced at the proxy (C7).
     allowlist = (sorted(set(adapter.hosts(agent_config))) if decision.get("replication_egress")
@@ -373,14 +626,17 @@ def apply(decision, argv, env, *, trial, board_root, adapter, agent_config, run,
     ro_files = harness_config_mounts(trial, adapter)
     wrapped, client_env = container_argv(config, argv, env, trial=trial, board_root=board_root,
                                          auth_files=adapter.auth_files(env), name=name, board=board, proxy=proxy,
-                                         ro_files=ro_files)
+                                         ro_files=ro_files, user=(user["uid"], user["gid"]),
+                                         storage_bytes=quota["bytes"] if quota and quota["method"] == "storage-opt"
+                                         else None)
     receipt = {"sandboxed": True, "engine": config.engine, "image": config.image, "network": config.network or "none",
                "proxy": config.proxy, "container": name, "harness_argv": argv,
                "environment_names": sorted(k for k in client_env if k not in CLIENT_ENV),
                "egress_allowlist": allowlist, "egress": scope, "board_mounted": False,
                "board_service": {"url": board["url"], "socket": str(board["socket"]), "index": board["index"],
                                  "link": str(board["link"]), "listening": board["socket"].is_socket()},
-               "harness_config_read_only": [str(dst) for _, dst in ro_files], "recorded": now(),
+               "harness_config_read_only": [str(dst) for _, dst in ro_files], "user": user,
+               "disk_quota": dict(quota) if quota else None, "recorded": now(),
                "cleanup": [config.engine, "rm", "-f", name]}
     if decision.get("replication_egress"):
         receipt["replication_egress"] = decision["replication_egress"]

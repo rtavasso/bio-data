@@ -41,12 +41,14 @@ ROUTER_MODULES = [
     "daw.commons.api.watchers",
     "daw.commons.api.studio",
     "daw.commons.api.checker",
+    "daw.commons.api.workbench",
+    "daw.commons.api.access",
     "daw.commons.api.publishing",
 ]
 
 STATUS = {"authentication_required": 401, "permission_denied": 403, "participant_suspended": 403,
           "rate_limited": 429, "live_opt_in_required": 409, "writer_busy": 409, "agent_busy": 409,
-          "hidden_by_moderation": 403, "writeup_withheld": 403}
+          "hidden_by_moderation": 403, "writeup_withheld": 403, "not_a_member": 403}
 
 
 BASE = re.compile(r"/(?:(?!\.\.?/)[A-Za-z0-9._~-]+/)*")
@@ -62,6 +64,7 @@ class Settings:
     base: str = "/"               # URL path prefix, always starting and ending with "/"
     login: dict = field(default_factory=dict)   # {attempts, window_seconds} (daw.commons.ratelimit)
     forwarded_allow_ips: tuple = ()            # trusted reverse proxies (addresses, networks or literals)
+    access: str = "public"                     # read policy (daw.commons.access): public | members | private
 
 
 def status_for(error: DawError):
@@ -96,13 +99,15 @@ def trusted_proxies(value):
 
 
 def create_app(root, *, mode="local", local_user="local", static_dir=None, base="/", login=None,
-               forwarded_allow_ips=None):
+               forwarded_allow_ips=None, read_policy=None):
     """One commons' API and web app. `login` overrides its `[login]` attempt limits (multi-tenant host);
-    `forwarded_allow_ips` names trusted reverse proxies (see the module docstring)."""
+    `forwarded_allow_ips` names trusted reverse proxies (see the module docstring); `read_policy` overrides the
+    commons' `[access] read` (a tenant's setting). In accounts mode the read policy is enforced for every /api
+    request by `daw.commons.access.ReadPolicy` (spec v2 V9)."""
     from fastapi import FastAPI, Request
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-    from daw.commons import auth
+    from daw.commons import access, auth
     from daw.commons.ratelimit import BoardAttemptLimiter, login_limits
     from daw.community import Community
 
@@ -112,7 +117,7 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
         raise DawError("invalid_base_path", "a path such as / or /c/lab/ (letters, digits, '.', '_', '~', '-')")
     root = Path(root).expanduser().resolve()
     settings = Settings(root, mode, local_user, static_dir or default_static_dir(), base, login_limits(root, login),
-                        trusted_proxies(forwarded_allow_ips))
+                        trusted_proxies(forwarded_allow_ips), access.policy(root, read_policy))
     # Opening the board read-write once applies the additive schema; views then use mode=ro.
     with Community(settings.root) as board:
         auth.prepare(board, settings)
@@ -121,6 +126,8 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
     app.state.settings = settings
     # Failed-login counters live on the board, so a restart does not reset them (daw.commons.ratelimit).
     app.state.login_limiter = BoardAttemptLimiter(root, settings.login["attempts"], settings.login["window_seconds"])
+    # The read policy (public | members | private) guards every /api route, SSE and bytes included (V9).
+    app.add_middleware(access.ReadPolicy, settings=settings)
     if settings.forwarded_allow_ips:
         from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
         app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=list(settings.forwarded_allow_ips))

@@ -131,7 +131,8 @@ def _safe_id(agent_id):
     return agent_id
 
 
-def _private_dir(path, *, owned=False):
+def _private_dir(path, *, owned=False, group=None):
+    """A service directory: 0700, or 0750 with `group` (per-agent uids share a group, spec v2 V9)."""
     path.mkdir(parents=True, exist_ok=True, mode=0o700)
     if path.is_symlink():
         raise DawError("unsafe_service_path", str(path))
@@ -139,7 +140,20 @@ def _private_dir(path, *, owned=False):
         info = path.stat()
         if hasattr(os, "getuid") and info.st_uid != os.getuid():
             raise DawError("unsafe_service_path", f"{path} belongs to another user; set {SOCKET_ROOT_ENV}")
-    path.chmod(0o700)
+    if group is not None:
+        _group(path, group)
+        path.chmod(0o750)
+    else:
+        path.chmod(0o700)
+
+
+def _group(path, group):
+    if path.stat().st_gid != group:
+        try:
+            os.chown(path, -1, group)
+        except PermissionError as e:
+            raise DawError("socket_group_unavailable", f"cannot give {path} to group {group}: the board service's "
+                           "user must belong to the sandbox's agent_gid") from e
 
 
 @contextlib.contextmanager
@@ -164,7 +178,7 @@ def socket_state(root):
     return json.loads(path.read_text())
 
 
-def provision_socket(root, agent_id, *, bind=False):
+def provision_socket(root, agent_id, *, bind=False, group=None):
     """The agent's stable index and socket path, recorded in the service state.
 
     The board service (`bind=True`) is authoritative: it records the path it binds, computed from its
@@ -187,7 +201,7 @@ def provision_socket(root, agent_id, *, bind=False):
         check_socket_path(socket_path)
         _private_dir(socket_path.parent.parent.parent, owned=True)
         _private_dir(socket_path.parent.parent)
-        _private_dir(socket_path.parent)
+        _private_dir(socket_path.parent, group=group)
         socket_path = check_socket_path(socket_path)
         changed = entry.get("socket") != str(socket_path)
         entry.update(socket=str(socket_path), **({"recorded": now()} if changed else {}))
@@ -242,10 +256,11 @@ def read_token(root, agent_id):
     return path.read_text().strip()
 
 
-def provision(root, agent_id, *, bind=False):
+def provision(root, agent_id, *, bind=False, group=None):
     """Socket directory and token for one agent. Returns what dispatch mounts and passes by name:
-    {dir, socket, url, token, index, link} where `link` is the old in-commons location (a symlink)."""
-    placed = provision_socket(root, agent_id, bind=bind)
+    {dir, socket, url, token, index, link} where `link` is the old in-commons location (a symlink).
+    With `group` (per-agent container uids, spec v2 V9) the socket directory is 0750 and the socket 0660 for it."""
+    placed = provision_socket(root, agent_id, bind=bind, group=group)
     socket_path = placed["socket"]
     return {"dir": socket_path.parent, "socket": socket_path, "url": f"unix://{socket_path}",
             "token": agent_token(root, agent_id), "index": placed["index"], "link": placed["link"]}
@@ -455,14 +470,18 @@ class _AgentServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
     daemon_threads = True
     allow_reuse_address = False
 
-    def __init__(self, service, agent_id, path):
+    def __init__(self, service, agent_id, path, group=None):
         self.service, self.root, self.agent_id = service, service.root, agent_id
         if path.is_socket():
             path.unlink()  # a stale socket from a stopped service
         elif path.exists() or path.is_symlink():
             raise DawError("unsafe_service_path", str(path))
         super().__init__(str(check_socket_path(path)), _Handler)
-        path.chmod(0o600)
+        if group is not None:
+            _group(path, group)
+            path.chmod(0o660)  # the agent's own uid reaches it through the shared group; the token still binds it
+        else:
+            path.chmod(0o600)
 
 
 class BoardService:
@@ -477,6 +496,9 @@ class BoardService:
         self.servers, self._lock = {}, threading.Lock()
         # Refuse at startup, not at the first agent: the longest index this commons could need must fit.
         check_socket_path(commons_socket_dir(self.root) / "999999" / "999999.sock")
+        # Per-agent container uids reach their sockets through the sandbox's shared group (spec v2 V9).
+        from daw.commons import sandbox
+        self.group = sandbox.socket_group(sandbox.load(self.root))
 
     def log(self, agent, operation, outcome):
         line = canonical({"time": now(), "agent": agent, "operation": operation, "outcome": outcome}).decode()
@@ -494,8 +516,8 @@ class BoardService:
         for agent_id in ids:
             if agent_id in self.servers or (self.only and agent_id not in self.only):
                 continue
-            endpoint = provision(self.root, agent_id, bind=True)
-            server = _AgentServer(self, agent_id, endpoint["socket"])
+            endpoint = provision(self.root, agent_id, bind=True, group=self.group)
+            server = _AgentServer(self, agent_id, endpoint["socket"], self.group)
             server.socket_path = endpoint["socket"]
             threading.Thread(target=server.serve_forever, name=f"board-{agent_id}", daemon=True).start()
             self.servers[agent_id] = server

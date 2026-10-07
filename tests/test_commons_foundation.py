@@ -234,8 +234,8 @@ def _get_paths(app, ids):
     fill = {"/api/participants/{identity}": ids["agent"], "/api/participants/{identity}/activity": ids["agent"],
             "/api/frontier/{identity}": ids["item"], "/api/map/node/{identity}": ids["post"]}
     for route in api_routes(app):
-        if "GET" not in route.methods or route.path == "/api/events":
-            continue  # the live stream is exercised with once=true below
+        if "GET" not in route.methods or route.path in {"/api/events", "/api/me/inbox/stream"}:
+            continue  # the live streams are exercised with once=true below
         path = route.path
         if path in fill:
             path = path.replace("{identity}", fill[path])
@@ -246,6 +246,7 @@ def _get_paths(app, ids):
                 .replace("{qid}", ids["question"]).replace("{owner}", "library").replace("{sha}", ids["blob"]))
         yield concrete(path)
     yield "/api/events?once=true"
+    yield "/api/me/inbox/stream?once=true"
     yield f"/api/marks?target_kind=post&target_id={ids['post']}"
     yield f"/api/requests?task_type=question&target={ids['agent']}"
     yield "/api/search?q=PMP22"

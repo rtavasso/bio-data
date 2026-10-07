@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from daw.commons import metrics
 from daw.commons.api.deps import View
+from daw.commons.api.scoping import Scoped, question_lookup, scoped
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
 
@@ -19,9 +20,15 @@ def dashboard(view: View, cohort: str | None = None, participant: str | None = N
 
 
 @router.get("/metrics/runs")
-def metric_runs(view: View, cohort: str | None = None, participant: str | None = None, harness: str | None = None,
-                task_type: str | None = None):
-    return metrics.run_rows(view, cohort_id=cohort, participant=participant, harness=harness, task_type=task_type)
+def metric_runs(view: View, scope: Scoped, cohort: str | None = None, participant: str | None = None,
+                harness: str | None = None, task_type: str | None = None):
+    result = metrics.run_rows(view, cohort_id=cohort, participant=participant, harness=harness, task_type=task_type)
+    if scope is None:
+        return result
+    questions = question_lookup(view)
+    posts = {r["id"]: r["post"] for r in view.rows("SELECT id,post FROM request")}
+    return scoped(result, scope, lambda r: ({r["participant"]}, questions(posts.get(r["request"])), r["created"],
+                                            r.get("finished")))
 
 
 @router.get("/cohorts")

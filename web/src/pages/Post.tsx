@@ -11,6 +11,7 @@ import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
 import { ModeratePost } from "../components/participation/Moderation";
+import { ReplyBox, RequestReview } from "../components/workbench/AnchorActions";
 import { isWithheld, type CommentGroup, type Corrections, type HiddenStub, type PostCard, type PostDetail,
   type PostResponse, type ThreadView, type Withheld } from "../types/board";
 import { useApi } from "../useApi";
@@ -77,7 +78,25 @@ function anchorCheck(group: CommentGroup, post: PostDetail) {
   return anchor.quote && source !== anchor.quote ? "quote differs from the source bytes at this offset" : null;
 }
 
-function Comments({ post }: { post: PostDetail }) {
+// "Request review" at a comment thread's anchor: choose one of this post's claims (spec v2 V4).
+function AnchorReview({ post, comment, onDone }: { post: PostDetail; comment: string; onDone: () => void }) {
+  const live = post.claims.filter((c) => c.status !== "withdrawn");
+  const [claim, setClaim] = useState(live[0]?.id ?? "");
+  if (!live.length) return null;
+  return (
+    <details>
+      <summary>Request an adversarial review of a claim at this anchor</summary>
+      <label className="pp-field"><span>Claim</span>
+        <select value={claim} onChange={(e) => setClaim(e.target.value)} aria-label="Claim to review">
+          {live.map((c) => <option key={c.id} value={c.id}>claim {post.claims.indexOf(c) + 1} ({c.status}) {short(c.id)}</option>)}
+        </select>
+      </label>
+      {claim && <RequestReview claim={claim} comment={comment} onDone={onDone} />}
+    </details>
+  );
+}
+
+function Comments({ post, reload }: { post: PostDetail; reload: () => void }) {
   if (!post.comments.length) return <p className="muted">No comments yet. Select text in the post to comment at an anchor.</p>;
   return (
     <ul className="comment-groups">
@@ -115,6 +134,11 @@ function Comments({ post }: { post: PostDetail }) {
                   </p>
                 )}
                 {(c.answers ?? []).map((a) => <AnswerCard key={a.id} answer={a} />)}
+                <details>
+                  <summary>Reply under this anchor</summary>
+                  <ReplyBox comment={c.id} onDone={reload} />
+                </details>
+                {group.anchor && <AnchorReview post={post} comment={c.id} onDone={reload} />}
               </div>
             ))}
           </li>
@@ -133,7 +157,7 @@ function AnswerCard({ answer: a }: { answer: PostCard }) {
   return (
     <div className="comment comment-answer" aria-label="Answer to this comment">
       <p className="meta">
-        <ParticipantLink id={a.author.id} /> answered · <Link to={`/post/${a.id}`}>{when(a.created)}</Link>
+        <ParticipantLink id={a.author.id} /> {a.kind === "comment" ? "replied" : "answered"} · <Link to={`/post/${a.id}`}>{when(a.created)}</Link>
       </p>
       {a.hidden && <HiddenNotice reason={a.reason} revealed />}
       <Untrusted author={"name" in a.author ? a.author.name : undefined}>
@@ -296,6 +320,7 @@ export default function Post() {
           {post.run && <> · <Link to={`/run/${post.run}`}>delivery {short(post.run)}</Link></>}
           {post.notebook && <> · <Link to={`/question/${post.author}/${post.notebook.question}`}>notebook {post.notebook.question}</Link></>}
           {post.parent && <> · reply to <Link to={`/post/${post.parent}`}>{short(post.parent)}</Link></>}
+          {" · "}<Link to={`/thread/${post.thread}/read`}>Reading mode</Link>
         </p>
       </header>
 
@@ -390,6 +415,16 @@ export default function Post() {
                     )}
                     <MarkList marks={c.marks} />
                     <details><summary>Mark this claim</summary><MarkForm targetKind="claim" targetId={c.id} onDone={reload} /></details>
+                    {c.status !== "withdrawn" && (
+                      <details>
+                        <summary>Request an adversarial review</summary>
+                        <p className="muted small">
+                          {anchor ? <>Anchored at the selected passage: “{anchor.quote}”.</> : "Anchored on the claim itself; select a passage in the post first to anchor it there."}
+                        </p>
+                        <RequestReview claim={c.id} onDone={reload}
+                          anchor={anchor ? { kind: "paragraph", blob: post.body_blob, offset: anchor.offset, length: anchor.length, quote: anchor.quote } : undefined} />
+                      </details>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -398,7 +433,7 @@ export default function Post() {
 
           <section className="panel">
             <h2>Comments at anchors</h2>
-            <Comments post={post} />
+            <Comments post={post} reload={reload} />
           </section>
 
           {post.replies.length > 0 && (
