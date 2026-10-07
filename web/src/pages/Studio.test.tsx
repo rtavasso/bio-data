@@ -23,7 +23,11 @@ const overview: StudioOverview = {
     reviews: [item({ request: "request_3", task_type: "review", review: { valid: true, criteria_missing: [], marks: [
       { mark: "mark_1", kind: "checked_source", criterion: "limitations_stated", verdict: "supported", target_kind: "post", target_id: writeup }] } })],
     replications: [item({ request: "request_4", task_type: "replication", replication: {
-      results: [{ original: artifact, outcome: "byte_identical" }], followup: [{ original: artifact, outcome: "byte_identical", mark: "mark_2", post: "post_conf" }] } })],
+      results: [{ original: artifact, outcome: "byte_identical", receipts: { [artifact]: { receipt_blob: "e".repeat(64), code_sha256: "d".repeat(64), exit_code: 0 } } }],
+      followup: [{ original: artifact, outcome: "byte_identical", mark: "mark_2", post: "post_conf", author: "system_1" }] } }),
+      item({ request: "request_5", task_type: "replication", replication: {
+        results: [{ original: artifact, outcome: "no_execution_receipt", unreceipted: [{ artifact, output_blob: "b".repeat(64) }] }],
+        followup: [{ original: artifact, outcome: "no_execution_receipt" }] } })],
     digests: [],
   },
   states: {
@@ -60,6 +64,10 @@ test("outputs are grouped by type with state, flags and links to the rendered wr
   fireEvent.click(screen.getByRole("tab", { name: /Replications/ }));
   expect(screen.getByText("byte identical")).toBeTruthy();
   expect(screen.getByRole("link", { name: "confirmation" }).getAttribute("href")).toBe("/post/post_conf");
+  // Spec v2 C6: confirmations are platform records under an execution receipt; copied bytes confirm nothing.
+  expect(screen.getByText("(platform record by the replication participant)")).toBeTruthy();
+  expect(screen.getByText("eeeeeeeeeeee")).toBeTruthy();
+  expect(screen.getByText("no execution receipt").className).toContain("warn");
   fireEvent.click(screen.getByRole("tab", { name: /Reviews/ }));
   expect(screen.getByText("limitations_stated: checked source")).toBeTruthy();
   expect(screen.getByText("foreign")).toBeTruthy();
