@@ -42,10 +42,11 @@ which is shown, not refused; it is distinct from `unpointed` and from `verified`
 notation (`1e-5`, `3.2×10^-4`, `3.2×10⁻⁴`), percentages, ratios (`3:1`, `1/3`), unicode vulgar fractions
 (`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty (`twenty-one` to `twenty-nine` as one number) and
 `a dozen` / `half a dozen`. Heading numbers count like any other number. An integer glued to one lone
-lowercase letter is a number with a label, like every other glued form (`n12`, `k5`, the fold multiplier `x2`;
-spec v3 B6). **Not numbers:** record identifiers, hashes and URLs; integers glued to an uppercase letter, to two
-or more letters, to a letter on both sides (`e2e`), or through one hyphen (identifier characters: `PMP22`,
-`P1`, `log2`, `GSE1234`, `H3K27me3`, `IL-6`, `measured-zero`); strand ends `3′`/`5′` followed by a prime; digits after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
+lowercase letter, and not followed by a letter, is a number with a label, like every other glued form (`n12`,
+`k5`, the fold multiplier `x2`; spec v3 B6; `e2e` is a word). **Not numbers:** record identifiers, hashes and URLs; integers glued to an uppercase letter, to two
+or more letters, or through one hyphen (identifier characters: `PMP22`, `P1`, `log2`, `GSE1234`, `H3K27me3`,
+`IL-6`, `measured-zero`); strand ends `3′`/`5′`
+followed by a prime; digits after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
 dates and times in a byline (a paragraph among the first two blocks starting with By / Written by / Prepared
 by / Author(s): / Date: / Updated:); spelled `one` after no/the/this/that/each/any/every/which or before
 `another`, and spelled numbers in `-sided`, `-tailed` and `-way` compounds. Decimals, exponents and
@@ -448,11 +449,9 @@ def _multiplier(masked, start):
 
 def _labelled(masked, start, end):
     """`n12`, `k5`: one lone lowercase letter glued to an integer labels a number (B6); a letter that follows
-    another letter, a digit, `_` or `-` is part of an identifier (`log2`, `IL-6`), uppercase prefixes
-    (`P1`, `H3`) name things, and an integer with a letter on both sides is a word (`e2e`, `b2b`)."""
-    if start < 1 or not ("a" <= masked[start - 1] <= "z"):
-        return False
-    if end < len(masked) and masked[end].isalpha():
+    another letter, a digit, `_` or `-` is part of an identifier (`log2`, `IL-6`), uppercase prefixes (`P1`,
+    `H3`) name things, and an integer with a letter after it is inside a word (`e2e`, `p53b`)."""
+    if start < 1 or not ("a" <= masked[start - 1] <= "z") or (end < len(masked) and masked[end].isalpha()):
         return False
     return start < 2 or not (masked[start - 2].isalnum() or masked[start - 2] in "_-−")
 

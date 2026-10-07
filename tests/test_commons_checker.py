@@ -308,9 +308,10 @@ def test_a_text_anywhere_match_is_scope_text_unique_only_and_excluded_from_verif
     assert "unique" in twice["reason"] and twice["found"]["lines"] == [2, 3]
     once = locators.verify_artifact(None, "t", None, locators.parse_number("7"), cache)
     assert once["result"] == "verified" and once["at"] == "text" and once["found"]["line"] == 4
-    # n12 is a number like every other glued form; identifier characters and letter-bounded words (e2e) are not.
-    found = [n["text"] for n in writeup.numbers_in("n12 of PMP22 and P1 (log2, IL-6, GSE1234, H3K27me3) at x2 in e2e", 0)]
+    # n12 is a number like every other glued form; identifier characters stay identifiers.
+    found = [n["text"] for n in writeup.numbers_in("n12 of PMP22 and P1 (log2, IL-6, GSE1234, H3K27me3) at x2", 0)]
     assert found == ["12", "2"]
+    assert writeup.numbers_in("an e2e test of p53b", 0) == []  # a letter after the integer: inside a word
     root, ctx = demo
     measurement, contrast = ctx["artifacts"]["measurement"], ctx["artifacts"]["contrast"]
     done = deliver_writing(root, ctx, f"Means: [32.0]({measurement}); the ratio is [1.54]({contrast}#row=B_vs_A;"

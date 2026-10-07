@@ -76,11 +76,10 @@ fractions (`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty
 **Heading numbers count** (the old heading-numbering exemption is gone), and
 **decimals, exponents and percentages glued to letters count** (`x2.5`,
 `FC1.54`, `v1.2`; the old letter-glued exemption is gone), and so does **an
-integer glued to one lone lowercase letter** (`n12`, `k5`, `p14`, `v9`, the fold
+integer glued to one lone lowercase letter**, not followed by a letter (`e2e` is a word) (`n12`, `k5`, `p14`, `v9`, the fold
 multiplier `x2`; spec v3 B6, rules `writeup-pointers/3`). **Not numbers:**
 record identifiers, hashes and URLs; integers glued to an uppercase letter, to
-two or more letters, to a letter on both sides (`e2e`, a word: found by the e2e
-suite, whose fixture text says "Synthetic e2e fixture."), or through one hyphen, which are identifier characters
+two or more letters, or through one hyphen, which are identifier characters
 (`PMP22`, `P1`, `log2`, `GSE1234`, `H3K27me3`, `IL-6`, `chr10` in
 `chr10:49316968`, `measured-zero`); strand ends `3′`/`5′` before a prime; digits
 after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
