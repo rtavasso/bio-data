@@ -57,6 +57,17 @@ def person_token(root, name):
 
 # ---- M7.4 tenancy ---------------------------------------------------------------------------------
 
+
+def short_dir():
+    """A short scratch directory for socket paths: pytest's tmp_path on macOS (/private/var/folders/…) alone
+    can exceed the 104-byte socket limit, which the service correctly refuses."""
+    import shutil
+    import tempfile
+    path = Path(tempfile.mkdtemp(prefix="cq", dir="/tmp"))
+    import atexit
+    atexit.register(shutil.rmtree, path, True)
+    return path
+
 def test_tenant_config_is_validated(two_commons, tmp_path):
     a, b, _ = two_commons
     good = tenants.load(write_config(tmp_path, '[tenants.lab-a]\nroot = "tenants/lab-a"\ntitle = "Lab A"\n'
@@ -322,7 +333,7 @@ def test_board_service_binds_each_socket_to_one_agent(service, tmp_path):
     with pytest.raises(DawError, match="authentication_required"):
         BoardClient(b_end["url"], b_end["token"]).call("inbox", {})
     with pytest.raises(DawError, match="board_service_unavailable"):
-        BoardClient(f"unix://{tmp_path / 'none.sock'}", "t").call("inbox", {})
+        BoardClient(f"unix://{short_dir() / 'none.sock'}", "t").call("inbox", {})
 
 
 def test_sandboxed_checkout_uses_the_board_service_without_the_board(service, monkeypatch, tmp_path):
@@ -408,9 +419,10 @@ def test_board_sockets_bind_under_a_short_per_commons_directory(tmp_path, monkey
     state = boardservice.socket_state(root)["agents"]
     assert {k: v["index"] for k, v in state.items()} == {"agent_one": 1, "agent_two": 2}
     # The service's own environment is authoritative; dispatch reuses the recorded path.
-    monkeypatch.setenv(boardservice.SOCKET_ROOT_ENV, str(tmp_path / "s"))
+    sockets = short_dir()
+    monkeypatch.setenv(boardservice.SOCKET_ROOT_ENV, str(sockets))
     bound = boardservice.provision(root, "agent_one", bind=True)
-    assert bound["socket"] == (tmp_path / "s").resolve() / digest / "1" / "1.sock"
+    assert bound["socket"] == sockets.resolve() / digest / "1" / "1.sock"
     monkeypatch.delenv(boardservice.SOCKET_ROOT_ENV)
     assert boardservice.provision(root, "agent_one")["socket"] == bound["socket"]
     assert Path(os.readlink(bound["link"])) == bound["socket"]
