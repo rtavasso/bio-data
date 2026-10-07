@@ -203,7 +203,7 @@ def _frontier(board, ctx, identity="frontier_demo"):
     with board.db:
         board.db.execute("INSERT INTO frontier_item(id,question,author,workspace,kind,text,status,blocked_by,watcher_query,"
                          "pointers,source,created,updated,promoted_to) VALUES(?,?,?,NULL,'next_step',?,'open',NULL,NULL,?,"
-                         "'LABBOOK.md','t','t',NULL)",
+                         "'{\"labbook\": \"LABBOOK.md\"}','t','t',NULL)",
                          (identity, ctx["questions"]["alice"], ctx["agents"]["alice"], "Test donor structure.",
                           json.dumps([{"kind": "artifact", "id": ctx["artifacts"]["contrast"]}])))
     return identity

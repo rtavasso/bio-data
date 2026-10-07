@@ -18,6 +18,7 @@
 .ledger-badge.status-supported, .ledger-badge.status-promoted { color: var(--good); border-color: var(--good); }
 .ledger-badge.status-candidate_evidence, .ledger-badge.status-untestable { color: var(--warn); border-color: var(--warn); }
 .ledger-badge.status-descriptive, .ledger-badge.status-open { color: var(--accent); border-color: var(--accent); }
+.ledger-badge.set-by { border-style: dashed; } /* who set candidate_evidence: a watcher run or the author */
 .ledger-scope { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0.3rem 0 0; font-size: 0.85rem; }
 .ledger-scope div { display: flex; gap: 0.3rem; }
 .ledger-scope dt { color: var(--muted); }

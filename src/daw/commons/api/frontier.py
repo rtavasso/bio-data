@@ -89,7 +89,7 @@ def frontier_item(identity: str, view: View, config: Config):
     item = frontier.describe_item(row)
     item["watch"] = frontier.watcher_status(view, [identity])[identity]
     item["question_title"] = frontier.question_titles(view).get(item["question"])
-    return item
+    return frontier.annotate(view, [item])[0]
 
 
 @router.get("/wishlist")

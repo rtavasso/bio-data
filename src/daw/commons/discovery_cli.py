@@ -20,7 +20,8 @@ def _board(ctx):
 
 @watch_app.command("add")
 def watch_add(ctx: typer.Context, item: str, query: Annotated[str, typer.Option(help="Provider query text")],
-              provider: Annotated[str, typer.Option(help="europepmc, zenodo, encode, chipatlas, pride, cellxgene or gtex")],
+              provider: Annotated[str, typer.Option(help="europepmc, zenodo, encode, chipatlas, pride, cellxgene, gtex, or "
+                                                      "europepmc-fulltext (query: one PMID, PMCID or DOI)")],
               filter: Annotated[list[str] | None, typer.Option(help="FIELD=VALUE literal equality on returned hits")] = None,
               interval: Annotated[int, typer.Option(help="Seconds between runs (default one week)")] = 604800,
               max_pages: int = 1, page_size: int = 25,
