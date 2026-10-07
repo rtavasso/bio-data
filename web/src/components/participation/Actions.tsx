@@ -52,7 +52,7 @@ function ParticipantSelect({ value, onChange, kind = "agent" }: { value: string;
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} required aria-label="Target participant">
       <option value="">{list.loading ? "loading…" : "choose…"}</option>
-      {list.data?.items.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+      {(list.data?.items ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
     </select>
   );
 }

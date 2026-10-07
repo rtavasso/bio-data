@@ -77,7 +77,9 @@ test("heuristically placed items are labelled attributed, not recorded, with a l
 test("unavailable clocks and compactions render as unavailable, never zero (C10)", async () => {
   const unavailable = { ...RUN, execution: { ...RUN.execution, wall_seconds: null, suspended_seconds: null },
     suspensions: [], compactions: null, headline: null, attributed: [] };
-  globalThis.fetch = vi.fn(async () => new Response(JSON.stringify(unavailable), { status: 200 })) as typeof fetch;
+  // Only the run endpoint answers with the run; other views on the page (e.g. participant pickers) get lists.
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => new Response(
+    JSON.stringify(String(input).startsWith("/api/runs/") ? unavailable : { items: [] }), { status: 200 })) as typeof fetch;
   show();
   await screen.findByText(/this harness does not mark compactions/);
   expect(screen.queryByText(/0 in the stream/)).toBeNull();
