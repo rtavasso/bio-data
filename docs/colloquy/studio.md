@@ -258,7 +258,11 @@ is computed from the ledger at read time, also over a recorded verdict, so the
 renderer cannot serve a write-up citing a withdrawn claim without it and the
 verdict never needs rewriting. `/studio` lists every flagged output;
 `/studio/:post` shows a band with the replacements and a `CommissionForm`
-prefilled from the flag.
+prefilled from the flag. Superseded posts and artifacts of superseded
+publications are flagged by the rules in
+[ledger.md](ledger.md#correction-propagation-flow-b); an artifact entry lists
+`relisted_by`, the current publications that re-list it, which the band names
+and which no longer clear the flag (B14).
 
 ## Reviews as marks (M6.2)
 
