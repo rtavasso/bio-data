@@ -321,22 +321,18 @@ def test_every_frontier_kind_named_in_presets_and_skills_is_a_kind():
     assert [entry for entry in sorted(named) if entry[1] not in frontier.KINDS] == []
 
 
-def test_a_kind_alias_is_refused_with_the_kind_to_use_and_the_vocabulary(tmp_path):
+def test_a_kind_alias_is_refused_with_the_kind_to_use_and_the_vocabulary(ws):
     from daw.work import create_question
-    ws = Workspace.create(tmp_path / "ws")
-    try:
-        with ws.writer():
-            question = create_question(ws, "Aliases")["question"]
-            for alias, use in (("blocked", "use untestable"), ("wishlist", "use proposed_experiment"),
-                               ("Question", "use open_question")):
-                with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
-                    frontier.record_item(ws, question, kind=alias, text="An item.")
-                assert use in refused.value.detail and "is not a frontier kind" in refused.value.detail
-                assert all(kind in refused.value.detail for kind in frontier.KINDS)
+    with ws.writer():
+        question = create_question(ws, "Aliases")["question"]
+        for alias, use in (("blocked", "use untestable"), ("wishlist", "use proposed_experiment"),
+                           ("Question", "use open_question")):
             with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
-                frontier.record_item(ws, question, kind="hunch", text="An item.")
-            assert refused.value.detail == "unknown kind 'hunch'; frontier kinds are " + ", ".join(frontier.KINDS)
-            assert not ws.rows("SELECT id FROM work_event WHERE kind='frontier_item'")  # nothing remapped or recorded
-            assert frontier.record_item(ws, question, kind="untestable", text="An item.", blocked_by="No data.")["id"]
-    finally:
-        ws.close()
+                frontier.record_item(ws, question, kind=alias, text="An item.")
+            assert use in refused.value.detail and "is not a frontier kind" in refused.value.detail
+            assert all(kind in refused.value.detail for kind in frontier.KINDS)
+        with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
+            frontier.record_item(ws, question, kind="hunch", text="An item.")
+        assert refused.value.detail == "unknown kind 'hunch'; frontier kinds are " + ", ".join(frontier.KINDS)
+        assert not ws.rows("SELECT id FROM work_event WHERE kind='frontier_item'")  # nothing remapped or recorded
+        assert frontier.record_item(ws, question, kind="untestable", text="An item.", blocked_by="No data.")["id"]
