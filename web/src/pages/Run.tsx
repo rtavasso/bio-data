@@ -63,6 +63,7 @@ export default function RunPage() {
         {" · "}<a href={withBase(t.links.raw)} target="_blank" rel="noopener noreferrer">raw stream</a>
       </p>
       {t.request.title && <Untrusted><strong>{t.request.title}</strong></Untrusted>}
+      {t.request.hidden && !t.request.title && <p className="hidden-notice" role="note">The request post is hidden by moderation: {t.request.reason}.</p>}
       <Clock timeline={t} />
 
       <section className="obs-section">
@@ -153,6 +154,9 @@ export default function RunPage() {
             <p className="muted">From {t.final.source}.</p>
             <Untrusted author={t.agent.name}><Markdown source={t.final.text} /></Untrusted>
           </>
+        ) : t.final.hidden ? (
+          <p className="hidden-notice" role="note">The answer post is hidden by moderation: {t.final.reason}. Its text,
+            the raw stream and the model-facing messages are withheld; operators can read them.</p>
         ) : <p className="muted">No final answer was produced.</p>}
       </section>
 

@@ -113,8 +113,11 @@ export interface Regeneration {
 
 export interface WriteupPost {
   id: string;
-  title: string | null;
-  author: { id: string; name?: string; kind?: string };
+  /** A write-up hidden by moderation is served as `{id, hidden: true, reason}` (spec v2 C2). */
+  hidden?: boolean;
+  reason?: string | null;
+  title?: string | null;
+  author?: { id: string; name?: string; kind?: string };
   created: string;
   kind: string | null;
   body_blob: string;

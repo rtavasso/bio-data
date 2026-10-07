@@ -13,8 +13,12 @@ The snapshot ID is the sha256 of `snapshot.json`'s bytes, so citing a snapshot c
   and the map layout is seeded, so exporting the same archive state twice gives the same ID.
 - No JavaScript. Every untrusted value is HTML-escaped; Markdown is rendered from
   `daw.commons.writeup.parse` (raw HTML shown as text, only http(s)/mailto links leave the site).
-  Pages carry a Content-Security-Policy that forbids scripts. Hidden posts keep their identity and
-  the moderation reason, not their content.
+  Pages carry a Content-Security-Policy that forbids scripts.
+- Moderation (spec v2 C2, resolved by `daw.commons.moderation.Visibility`): a hidden post is exported as
+  its identity and its moderation event (sequence, reason, actor, time) only, with no title, body,
+  author, evidence, claims or marks; replies to a hidden post (posts whose parent is hidden and comments
+  on it) keep their identity, author and time but not their title or body. `snapshot.json` lists the
+  moderation events.
 
 `import_snapshot` verifies every hash and size in a snapshot's manifest (and that no unlisted file
 or link is present) and stores it read-only under `<commons>/federation/<snapshot_id>/`. Imported
@@ -68,6 +72,15 @@ svg{max-width:100%;height:auto;border:1px solid var(--line);background:var(--pan
 ul.thread{padding-left:1.2rem}footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
 """
 CSP = "default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+
+
+def participation_target(content):
+    """The post a comment targets (None for other posts and other targets)."""
+    from daw.commons.participation import comment_target
+    if not isinstance(content, dict) or content.get("kind") != "comment":
+        return None
+    kind, identity = comment_target(content.get("evidence") or {})
+    return identity if kind == "post" else None
 
 
 def esc(value):
@@ -275,8 +288,9 @@ def map_svg(nodes, edges, positions, link):
 
 # ---------------------------------------------------------------------------- export
 
-def _public_map(view, keep, hidden):
-    """Evidence-map nodes and edges among exported records, from board and library records only."""
+def _public_map(view, keep, hidden, replies=frozenset()):
+    """Evidence-map nodes and edges among exported records, from board and library records only.
+    The graph is built for an anonymous reader, so hidden posts are already ids without relations to their body."""
     graph = evidence_map.build(view)
     upstream = {}
     for edge in graph.edges.values():
@@ -306,6 +320,8 @@ def _public_map(view, keep, hidden):
             label = node.get("qid") or identity.rsplit(":", 1)[-1]
         elif identity in hidden:
             label = "post hidden by moderation"
+        elif identity in replies:
+            label = "reply to a hidden post"
         nodes.append({"id": identity, "kind": node["kind"], "family": node["family"], "label": label,
                       "present": node["present"], "created": node.get("created")})
     return nodes, edges, evidence_map.layout([n["id"] for n in nodes], edges)
@@ -314,18 +330,27 @@ def _public_map(view, keep, hidden):
 def build_site(view, kind, identity=None):
     """(site, manifest) for one scope. Pure function of the archive state."""
     index = views.thread_index(view)
-    hidden = views.hidden_posts(view)
+    hidden = views.visibility(view).records  # an export is read by anyone: nobody reads through a hide
     people = index["people"]
     scope, members = _scope(view, index, kind, identity)
     members = sorted(set(members), key=lambda p: index["posts"][p]["seq"])
     exported = set(members)
+
+    def answers_hidden(pid):
+        row = index["posts"][pid]
+        target = participation_target(row["content"])
+        return row["parent"] in hidden or target in hidden
+
+    # Replies to a hidden post (and comments on it) answer withheld text: their bodies are withheld too.
+    answering = {p for p in members if p not in hidden and answers_hidden(p)}
+    withheld = set(hidden) | answering
     site = Site()
     claims, marks, notebooks, named = {}, {}, {}, []
     for pid in members:
         row = index["posts"][pid]
         claims[pid] = []
-        if pid in hidden:
-            continue  # A hidden post keeps its identity and reason only; its evidence and claims stay home.
+        if pid in withheld:
+            continue  # A hidden post (or a reply to one) keeps its identity only; its evidence and claims stay home.
         evidence = row["content"].get("evidence") or {}
         named += [a for a in evidence.get("artifacts") or [] if isinstance(a, str)]
         claims[pid] = [dict(c) for c in view.rows("SELECT * FROM claim WHERE post=? ORDER BY ordinal", (pid,))]
@@ -338,7 +363,7 @@ def build_site(view, kind, identity=None):
     artifacts = _library_artifacts(view, named)
     claim_ids = {c["id"] for cs in claims.values() for c in cs}
     for row in view.rows("SELECT * FROM mark ORDER BY created,id"):
-        if (row["target_kind"] == "post" and row["target_id"] in exported) or (
+        if (row["target_kind"] == "post" and row["target_id"] in exported - set(hidden)) or (
                 row["target_kind"] == "artifact" and row["target_id"] in artifacts) or (
                 row["target_kind"] == "claim" and row["target_id"] in claim_ids):
             marks.setdefault(row["target_id"], []).append(row)
@@ -362,7 +387,11 @@ def build_site(view, kind, identity=None):
         return people.get(pid, {}).get("name") or pid
 
     def title_of(pid):
-        return "(hidden by moderation)" if pid in hidden else index["posts"][pid]["content"].get("title") or pid
+        if pid in hidden:
+            return "(hidden by moderation)"
+        if pid in answering:
+            return "(reply to a hidden post)"
+        return index["posts"][pid]["content"].get("title") or pid
 
     # Artifacts: page, stripped manifest and verified output bytes.
     images = {}
@@ -388,7 +417,8 @@ def build_site(view, kind, identity=None):
             label = esc(source or item.get("blob"))
             shown = f"<a href=\"{esc(target)}\">{label}</a>" if target else label
             inputs.append(f"<li>{shown} <span class=\"muted mono\">blob {esc(item.get('blob'))}</span></li>")
-        naming = [p for p in members if aid in ((index["posts"][p]["content"].get("evidence") or {}).get("artifacts") or [])]
+        naming = [p for p in members if p not in withheld
+                  and aid in ((index["posts"][p]["content"].get("evidence") or {}).get("artifacts") or [])]
         body = (f"<p class=\"mono\">{esc(aid)}</p><dl><dt>Output role</dt><dd>{esc(row['output_role'])}</dd>"
                 f"<dt>Derivation key</dt><dd class=\"mono\">{esc(row['derivation_key'])}</dd>"
                 f"<dt>Output bytes</dt><dd><a href=\"{esc(aid)}/{esc(name)}\">{esc(name)}</a> · sha256 "
@@ -439,6 +469,13 @@ def build_site(view, kind, identity=None):
         content = row["content"]
         page = paths[pid]
         link = linker(page)
+        if pid in hidden:
+            record = hidden[pid]
+            site.page(page, f"Hidden post {pid}",
+                      f"<p class=\"mono\">{esc(pid)}</p><p class=\"band\">Hidden by moderation (board event "
+                      f"{esc(record['event_seq'])}, {esc(record['updated'])}): {esc(record['reason'])}. The record is "
+                      "preserved on its commons; its content is not exported.</p>")
+            continue
         meta = (f"<p class=\"muted\">{esc(content.get('kind'))} by {esc(who(row['author']))} "
                 f"({esc(people.get(row['author'], {}).get('kind'))}) · {esc(row['created'])} · "
                 f"<span class=\"mono\">{esc(pid)}</span></p>")
@@ -451,10 +488,10 @@ def build_site(view, kind, identity=None):
             href = link(other)
             rel.append("<p class=\"band\">Superseded by " + (f"<a href=\"{esc(href)}\">{esc(other)}</a>" if href
                                                               else esc(other)) + "</p>")
-        if pid in hidden:
-            body = meta + "".join(rel) + (f"<p class=\"band\">Hidden by moderation: {esc(hidden[pid]['reason'])}. "
-                                          "The record is preserved on its commons; its content is not exported.</p>")
-            site.page(page, f"Hidden post {pid}", body)
+        if pid in answering:
+            body = meta + "".join(rel) + ("<p class=\"band\">A reply to a post hidden by moderation; its title and "
+                                          "body are not exported.</p>")
+            site.page(page, f"Reply {pid}", body)
             continue
         evidence = content.get("evidence") or {}
         items = []
@@ -491,9 +528,9 @@ def build_site(view, kind, identity=None):
 
     # Evidence map: board and library relations among exported records only.
     keep = set(members) | set(artifacts) | claim_ids | {m["id"] for ms in marks.values() for m in ms}
-    keep |= {index["posts"][p]["author"] for p in members}
+    keep |= {index["posts"][p]["author"] for p in members if p not in hidden}
     keep |= {evidence_map.question_node(a, q) for a, q, _ in notebooks}
-    nodes, edges, positions = _public_map(view, keep, hidden)
+    nodes, edges, positions = _public_map(view, keep, hidden, answering)
     site.add("map.json", canonical({"nodes": nodes, "edges": edges, "positions": positions,
                                     "note": "Recorded relations among exported records (board and library records "
                                             "only); no inferred edges."}))
@@ -510,8 +547,8 @@ def build_site(view, kind, identity=None):
     # Index.
     def tree(pid, depth=0):
         children = [c for c in index["children"].get(pid, []) if c in exported]
-        return (f"<li><a href=\"{esc(paths[pid])}\">{esc(title_of(pid))}</a> <span class=\"muted\">by "
-                f"{esc(who(index['posts'][pid]['author']))}</span>"
+        by = "" if pid in hidden else f" <span class=\"muted\">by {esc(who(index['posts'][pid]['author']))}</span>"
+        return (f"<li><a href=\"{esc(paths[pid])}\">{esc(title_of(pid))}</a>{by}"
                 + (f"<ul class=\"thread\">{''.join(tree(c, depth + 1) for c in children)}</ul>" if children else "")
                 + "</li>")
     roots = [p for p in members if not index["posts"][p]["parent"] or index["posts"][p]["parent"] not in exported]
@@ -531,6 +568,9 @@ def build_site(view, kind, identity=None):
                 "counts": {"posts": len(members), "artifacts": len(artifacts), "notebooks": len(notebooks),
                            "claims": len(claim_ids), "marks": sum(len(m) for m in marks.values()),
                            "map_nodes": len(nodes), "map_edges": len(edges)},
+                "moderation": [{"post": pid, "event_seq": hidden[pid]["event_seq"], "reason": hidden[pid]["reason"],
+                                "actor": hidden[pid]["actor"], "updated": hidden[pid]["updated"]}
+                               for pid in members if pid in hidden],
                 "files": [{"path": path, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
                           for path, data in sorted(site.files.items())],
                 "note": "Content-addressed static export: the snapshot ID is the sha256 of this file's bytes "

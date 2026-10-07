@@ -26,7 +26,7 @@ import uuid
 from datetime import UTC, datetime
 
 from daw.commons.archive import Archive
-from daw.commons.moderation import check_rate, limits
+from daw.commons.moderation import check_rate, hidden, limits
 from daw.commons.permissions import require
 from daw.commons.replication import refuse_producer
 from daw.commons.tasks import BUDGET_FIELDS, COMMISSION_TYPES, TASK_TYPES, check_deadline, check_task_type, normalize_budget
@@ -554,11 +554,16 @@ def _source(board, kind, identity):
         return text, None
     if kind == "post":
         shown = board.show(identity)
+        if hidden(board, shown["id"]):
+            # Quoting would re-publish withheld text in a new post and an agent prompt (spec v2 C2).
+            raise DawError("hidden_by_moderation", f"post {shown['id']} is hidden; unhide it before promoting it")
         return f"Post {identity} by {shown['author']}: {shown['content']['title']}", identity
     if kind == "claim":
         claim = board.one("SELECT * FROM claim WHERE id=?", (identity,))
         if not claim:
             raise DawError("unknown_claim", identity)
+        if hidden(board, claim["post"]):
+            raise DawError("hidden_by_moderation", f"claim {identity} belongs to hidden post {claim['post']}")
         text = (f"Claim {claim['id']} ({claim['status']}) in post {claim['post']} by {claim['author']}:\n\n> "
                 + claim["text"].replace("\n", "\n> ") + "\n\nPointers:\n" + _pointer_lines(json.loads(claim["pointers"])))
         return text, claim["post"]

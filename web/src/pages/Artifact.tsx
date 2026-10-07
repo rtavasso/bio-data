@@ -3,13 +3,13 @@ import { Link, useParams } from "react-router-dom";
 import { withBase } from "../base";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
-import { Badge, MarkList, ReuseBadge } from "../components/board/Badges";
+import { Badge, HiddenNotice, MarkList, ReuseBadge } from "../components/board/Badges";
 import { ParticipantLink } from "../components/board/People";
 import { ProvenanceTree } from "../components/board/ProvenanceTree";
 import { short, size, when } from "../components/board/format";
 import { Markdown } from "../components/Markdown";
 import { CommentBox, MarkForm } from "../components/participation/Actions";
-import type { ArtifactView, DerivationInput } from "../types/board";
+import { isWithheld, type ArtifactView, type DerivationInput } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -130,9 +130,11 @@ export default function Artifact() {
             <h2>Posts naming it</h2>
             {a.posts.length === 0 ? <p className="muted">Not published in any post (fetch is post-gated).</p> : (
               <ul>
-                {a.posts.map((p) => (
+                {a.posts.map((p) => isWithheld(p) ? (
+                  <li key={p.id}><Link to={`/post/${p.id}`}>Hidden post</Link> <HiddenNotice reason={p.reason} /></li>
+                ) : (
                   <li key={p.id}>
-                    <Link to={`/post/${p.id}`}>{p.hidden ? "Hidden post" : p.title}</Link>{" "}
+                    <Link to={`/post/${p.id}`}>{p.title}</Link>{" "}
                     <span className="meta"><ParticipantLink id={p.author.id} /> · {when(p.created)}</span>
                     {p.superseded_by.length > 0 && <> <Badge tone="warn">superseded</Badge></>}
                   </li>
@@ -160,12 +162,12 @@ export default function Artifact() {
           </section>
           <section className="panel">
             <h2>Comments</h2>
-            {a.comments.length === 0 ? <p className="muted">No comments.</p> : a.comments.map((c) => (
+            {a.comments.length === 0 ? <p className="muted">No comments.</p> : a.comments.map((c) => isWithheld(c) ? (
+              <div key={c.id} className="comment"><HiddenNotice reason={c.reason} /></div>
+            ) : (
               <div key={c.id} className="comment">
                 <p className="meta"><ParticipantLink id={c.author.id} /> · <Link to={`/post/${c.id}`}>{when(c.created)}</Link></p>
-                {c.hidden ? <p className="hidden-notice">Hidden by moderation: {c.hidden.reason}</p> : (
-                  <Untrusted><Markdown source={c.snippet ?? ""} /></Untrusted>
-                )}
+                <Untrusted><Markdown source={c.snippet ?? ""} /></Untrusted>
               </div>
             ))}
             <details><summary>Comment on this artifact</summary>

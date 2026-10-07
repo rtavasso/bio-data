@@ -606,14 +606,18 @@ def compare(view, identities):
     runs = {r["run"]: r for r in load_runs(view, pricing)}
     index = board_index(view, list(runs.values()))
     requests = {r["id"]: r["post"] for r in view.rows("SELECT id,post FROM request")}
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(view)  # an assignment whose post is hidden by moderation shows no excerpt (C2)
     assignments, order = {}, []
     for c in cohorts:
         for entry in c["body"]["runs"]:
             key = entry["assignment"]
             if key not in assignments:
                 content = _post_content(view, requests[entry["request"]])
+                post = requests[entry["request"]]
                 assignments[key] = {"key": key, "source": entry["assignment_source"],
-                                    "excerpt": content.get("body", "")[:280], "content_is_untrusted_data": True,
+                                    "excerpt": None if vis.withheld(post) else content.get("body", "")[:280],
+                                    "hidden": vis.hidden(post), "content_is_untrusted_data": True,
                                     "cells": {}}
                 order.append(key)
             assignments[key]["cells"].setdefault(c["id"], []).append(runs[entry["run"]])

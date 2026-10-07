@@ -71,14 +71,15 @@ export default function WriteupPage() {
   }, [data]);
   if (error) return <p className="error">Could not load: {error.message}</p>;
   if (!data) return <p className="muted">Loading…</p>;
-  const author = data.post.author.name ?? data.post.author.id;
+  const author = data.post.author ? data.post.author.name ?? data.post.author.id : undefined;
   const selectedNode = data.evidence_map?.nodes.find((n) => n.id === mapSelected);
   return (
     <article className="st-page">
       <p className="muted"><Link to="/studio">Studio</Link> · write-up <span className="mono">{data.post.id}</span></p>
-      <h1>{data.post.title ?? data.post.id}</h1>
+      <h1>{data.post.hidden ? "Hidden post" : data.post.title ?? data.post.id}</h1>
       <p className="muted">
-        {data.post.kind} by <Link to={`/agent/${data.post.author.id}`}>{author}</Link> ({data.post.author.kind}) · {data.post.created}
+        {data.post.author ? <>{data.post.kind} by <Link to={`/agent/${data.post.author.id}`}>{author}</Link>{" "}
+          ({data.post.author.kind}) · {data.post.created}</> : <>Hidden by moderation: {data.post.reason}</>}
         {data.request && <> · answers {data.request.task_type} request <span className="mono">{data.request.id}</span></>}
         {" · "}<Link to={`/post/${data.post.id}`}>post page</Link>
       </p>

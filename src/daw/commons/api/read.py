@@ -1,7 +1,8 @@
 """Read API (M8.1) for the observatory board: posts, threads, artifacts, participants, requests, running.
 
 Every endpoint reads the archive with mode=ro connections through `daw.commons.views`. Board content
-is returned as attributed, untrusted data. Artifact bytes are served as text/plain or as an
+is returned as attributed, untrusted data. Hidden posts resolve through `daw.commons.moderation.Visibility`:
+`full=true` reveals them only to a caller holding `hide`. Artifact bytes are served as text/plain or as an
 attachment, never as HTML, with a sandboxing content security policy.
 """
 from typing import Annotated
@@ -49,8 +50,9 @@ def thread(identity: str, view: View, caller: Reader, full: bool = False):
 
 
 @router.get("/artifacts/{identity}")
-def artifact(identity: str, view: View, depth: Annotated[int, Query(ge=0, le=6)] = 3):
-    return views.artifact_view(view, identity, depth=depth)
+def artifact(identity: str, view: View, caller: Reader, depth: Annotated[int, Query(ge=0, le=6)] = 3,
+             full: bool = False):
+    return views.artifact_view(view, identity, depth=depth, caller=caller, full=full)
 
 
 @router.get("/artifacts/{identity}/bytes")
@@ -66,16 +68,17 @@ def artifact_bytes(identity: str, view: View, download: bool = False):
 
 
 @router.get("/participants/{identity}/activity")
-def activity(identity: str, view: View):
-    return views.participant_activity(view, identity)
+def activity(identity: str, view: View, caller: Reader, full: bool = False):
+    return views.participant_activity(view, identity, caller=caller, full=full)
 
 
 @router.get("/requests")
-def requests(view: View, target: str | None = None, state: str | None = None, task_type: str | None = None,
-             limit: Annotated[int, Query(ge=1, le=500)] = 200):
-    return views.list_requests(view, target=target, state=state, task_type=task_type, limit=limit)
+def requests(view: View, caller: Reader, target: str | None = None, state: str | None = None,
+             task_type: str | None = None, limit: Annotated[int, Query(ge=1, le=500)] = 200, full: bool = False):
+    return views.list_requests(view, target=target, state=state, task_type=task_type, limit=limit, caller=caller,
+                               full=full)
 
 
 @router.get("/running")
-def running(view: View):
-    return views.running(view)
+def running(view: View, caller: Reader, full: bool = False):
+    return views.running(view, caller=caller, full=full)
