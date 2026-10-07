@@ -67,6 +67,8 @@ LIMITATIONS = [
     "Participant and harness panels count posts by author; cohort and task-type panels count posts made during their runs.",
     "Human marks are marks by human or operator participants; a mark is attribution, never a status change.",
     "Token totals and costs are given only when every run in the group reported them; partial sums are labelled.",
+    "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
+    "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
 ]
 _RUN_CACHE, _POST_CACHE = {}, {}
 
@@ -374,7 +376,32 @@ def board_index(view, runs):
                 continue  # inherited by a fork: not this participant's reuse
             links.append({**entry, "participant": identity, "created": created})
     return {"posts": posts, "marks": marks, "claims": claims, "claims_recorded": bool(claims),
-            "superseded": superseded, "links": links, "agents": agents}
+            "superseded": superseded, "links": links, "agents": agents, "numbers": _final_numbers(view)}
+
+
+def _final_numbers(view):
+    """Number coverage of every visible final (C11, V1): {answer post: checks.summarize(...)}."""
+    from daw.commons import checks, views
+    hidden = views.hidden_posts(view)
+    withheld = views.thread_index(view)["withheld"]
+    return {pid: checks.number_summary(view, pid) for pid in checks.finals(view)
+            if pid not in hidden and pid not in withheld}
+
+
+def number_coverage(index, posts):
+    """Share of numbers in the group's finals with a pointer at the number (cell, claim or line scope), and the
+    full scope/status split. None when the group has no final (unavailable, never zero)."""
+    rows = [index["numbers"][p["id"]] for p in posts if p["id"] in index.get("numbers", {})]
+    if not rows:
+        return None
+    total = sum(r["numbers"] for r in rows)
+    scopes = {k: sum(r["scopes"][k] for r in rows) for k in ("cell", "claim", "line", "post", "none")}
+    statuses = {k: sum(r["statuses"][k] for r in rows) for k in ("verified", "unverified", "post_scoped", "unpointed")}
+    level = scopes["cell"] + scopes["claim"] + scopes["line"]
+    return {"finals": len(rows), "numbers": total, "scopes": scopes, "statuses": statuses,
+            "number_level": level, "number_level_share": _ratio(level, total, 4),
+            "claim_share": _ratio(scopes["claim"], total, 4), "cell_share": _ratio(scopes["cell"], total, 4),
+            "verified_share": _ratio(statuses["verified"], total, 4)}
 
 
 def _total(values):
@@ -425,7 +452,8 @@ def board_criteria(index, runs, *, authors=None):
             "registered_artifacts": sum(1 for link in links if link["relationship"] == "produced"),
             "reuse": {"backed": backed, "unbacked": len(reused) - backed, "backed_ratio": _ratio(backed, len(reused))},
             "claims": ({s: statuses.count(s) for s in CLAIM_STATUSES} | {"total": len(statuses)})
-            if index["claims_recorded"] else None}
+            if index["claims_recorded"] else None,
+            "numbers": number_coverage(index, posts)}
 
 
 def cost_summary(runs, pricing):

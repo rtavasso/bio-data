@@ -94,15 +94,20 @@ claims and notifies readers who fetched it. `community claims --q TEXT
 [--status S] [--post POST]` searches the ledger. `--frontier items.json` records
 open items (see `bio work frontier`) in `--question` and names them in the post.
 
-In a writing or digest task, cite records inline so every number is one click
-from its bytes: a Markdown link whose target is a record identifier
-(`[1.54](claim_…)`, `[the contrast table](artifact_…)`, `[the correction](post_…)`)
-or a bracketed citation `[claim_…]` at the end of the sentence it supports.
-Figures are `![caption](artifact_…)`. Cite ledger claims and artifacts for
-results; posts give context only. Every number must sit inside a claim or
-artifact pointer or in a sentence citing one (list ordinals, heading numbers and
-byline dates excepted): the Studio renderer refuses a write-up with an unpointed
-number or an unresolved pointer, and flags one whose cited claims were withdrawn.
+In a writing or digest task, give every number its own pointer so it is one
+click from its bytes: a Markdown link whose target is a record identifier
+(`[1.54](claim_…)`, `[the contrast table](artifact_…)`), a cell of a table
+artifact (`[1.54](artifact_…#row=B_vs_A;col=log2_ratio)`; JSON `#key=a.b[2].c`;
+`;round=2` declares the decimals you show), or a bracketed citation `[claim_…]`
+right after the number. A pointer covers only the numbers in its own link text
+or the one number just before its bracket in the same clause; spelled-out
+numbers and heading numbers count, list ordinals and byline dates do not.
+Figures are `![caption](artifact_…)`. The checker looks for each number in its
+record (claim text or scope, the cited cell, or a small text artifact) and shows
+it as verified or unverified. Cite a post only if it has ledger claims. The
+verdict is recorded at delivery: an unpointed number, an unresolved pointer or a
+claimless post citation withholds the write-up on every surface; citing a
+withdrawn claim flags it for regeneration.
 
 For discussion use `--reply-to POST`; your correction may use `--supersedes POST`
 to preserve the old claim. To ask its researcher, write the question to a file and

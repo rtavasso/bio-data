@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { resetParticipants } from "../components/board/People";
 import Post from "./Post";
-import { ART, CORRECTION, FINDING, mockApi, participants, postDetail, threadView } from "./boardFixtures";
+import { ART, CORRECTION, FINDING, MEAS, mockApi, participants, postDetail, threadView } from "./boardFixtures";
 
 beforeEach(() => resetParticipants());
 
@@ -15,15 +15,52 @@ function renderPost(detail = postDetail) {
   );
 }
 
-test("every number in a post opens its artifact; unpointed numbers are reported", async () => {
+test("pointed numbers open their record and are checked; unpointed numbers are reported", async () => {
   renderPost();
   await screen.findByRole("heading", { name: "Marker contrast between conditions" });
-  const table = screen.getByRole("table");
+  const table = screen.getByRole("table", { name: "Numbers pointed at a record" });
   const pointer = Array.from(table.querySelectorAll("a")).find((a) => a.getAttribute("href") === `/artifact/${ART}`);
   expect(pointer).toBeTruthy();
-  expect(screen.getByText(/1 number has no artifact pointer/)).toBeTruthy();
-  expect(screen.getByText("no pointer")).toBeTruthy();
+  expect(table.textContent).toContain("unverified");
+  expect(table.textContent).toContain("the value does not occur in the output bytes");
+  // Inline: the number in the body is marked as unverified (spec v2 V2).
+  expect(screen.getByText("1.45", { selector: ".num-unverified" })).toBeTruthy();
+  expect(screen.getByText(/1 number has no pointer/)).toBeTruthy();
   expect(screen.getByRole("link", { name: "Condition B versus A contrast" }).getAttribute("href")).toBe(`/artifact/${ART}`);
+});
+
+test("post-scoped numbers are listed as this post's evidence, not linked from the number (C11)", async () => {
+  const cell = "row=B_vs_A;col=log2_ratio";
+  renderPost({ ...postDetail, unpointed_numbers: [], post_scoped_numbers: ["11.0"],
+    content: { ...postDetail.content!, body: "Ratio 1.54 here; means 11.0 elsewhere." },
+    numbers: [
+      { text: "1.54", offset: 6, length: 4, scope: "cell", status: "verified",
+        pointers: [{ id: ART, kind: "artifact", artifact: ART, locator: cell, result: "verified", at: "cell",
+          location: { store: "library" }, route: `/artifact/${ART}?locator=${encodeURIComponent(cell)}` }] },
+      { text: "11.0", offset: 23, length: 4, scope: "post", status: "post_scoped",
+        pointers: [{ id: MEAS, kind: "artifact", artifact: MEAS, location: { store: "library" }, post_evidence: true }] },
+    ] });
+  await screen.findByRole("heading", { name: "Marker contrast between conditions" });
+  expect(screen.getByText("1.54", { selector: ".num-verified" })).toBeTruthy();
+  expect(screen.queryByText("11.0", { selector: ".num" })).toBeNull();  // post-scoped: not marked as pointed
+  const table = screen.getByRole("table", { name: "Numbers pointed at a record" });
+  expect(table.querySelector("a")?.getAttribute("href")).toBe(`/artifact/${ART}?locator=${encodeURIComponent(cell)}`);
+  expect(table.textContent).not.toContain("11.0");
+  const evidence = screen.getByRole("region", { name: "This post's evidence" });
+  expect(evidence.textContent).toContain("11.0");
+  expect(evidence.querySelector("a")?.getAttribute("href")).toBe(`/artifact/${MEAS}`);
+  expect(screen.getByLabelText("Number coverage").textContent).toContain("1 verified");
+});
+
+test("a write-up the checker refused is a placeholder with its problem locations (C5)", async () => {
+  renderPost({ ...postDetail, content: null, numbers: [], unpointed_numbers: [],
+    withheld: { status: "refused", source: "recorded", title: "Write-up withheld: refused by the number checker",
+      placeholder: "This write-up was refused by the number checker (1 problem: unpointed_number).",
+      problems: [{ kind: "unpointed_number", text: "4", line: 1, offset: 40, length: 1, reason: "no claim or artifact pointer at this number" }] } });
+  await screen.findByRole("heading", { name: "Write-up withheld: refused by the number checker" });
+  const notice = screen.getByRole("note", { name: "Write-up withheld" });
+  expect(notice.textContent).toContain("unpointed_number");
+  expect(screen.queryByText(/log2 ratio 1.45/)).toBeNull();
 });
 
 test("correction band, diff of numbers, reuse, claims, marks and anchored comments", async () => {

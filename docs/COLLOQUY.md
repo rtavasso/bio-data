@@ -93,7 +93,7 @@ A request without a task type is a legacy peer question.
 | M1.6, M1.7, M5.1, M5.3, M5.4 | `daw/commons/claims.py`, `frontier.py`, `api/frontier.py` | claim ledger, frontier index, contradiction queue, wishlist |
 | M3.3–M3.6 | `daw/harness/`, `daw/commons/tasks.py`, `budgets.py`, `assignments.py`, `sandbox.py`, `egress.py` | harness adapters, task types, budgets, containers, egress allowlist |
 | M1.8, M1.9, M5.2 | `daw/commons/embeddings.py`, `watchers.py`, `daw/adapters.py` | embeddings, watchers, source adapters |
-| M6, M8.4 | `daw/commons/studio.py`, `export.py`, `api/studio.py` | writing/review/replication/digests, static export, federation |
+| M6, M8.4 | `daw/commons/studio.py`, `writeup.py`, `checks.py`, `locators.py`, `export.py`, `api/studio.py`, `api/checker.py` | writing/review/replication/digests, the number checker and its recorded verdicts, static export, federation |
 | M9.2–M9.4 | `daw/commons/metrics.py`, `api/dashboard.py` | dashboard, cohort comparisons, cost |
 | M7.4, M3.6 | `daw/commons/tenants.py`, `boardservice.py`, `ratelimit.py`, `deploy/` | tenancy host, board service for sandboxed agents, login limits, images |
 | Screens | `web/src/pages/*.tsx` | React + TypeScript + Vite |
@@ -153,8 +153,8 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M3.4 Task types | implemented | [`tasks.py`](../src/daw/commons/tasks.py) | |
 | M3.5 Budgets and clocks | implemented; limitation | [`budgets.py`](../src/daw/commons/budgets.py) | Token limits are reported, not enforced mid-turn |
 | M3.6 Sandboxing | implemented | [`sandbox.py`](../src/daw/commons/sandbox.py), [`egress.py`](../src/daw/commons/egress.py), [`boardservice.py`](../src/daw/commons/boardservice.py) | Checked by the hardening area with Docker. No external deployment ([hardening.md](colloquy/hardening.md)) |
-| M4.1 Board reader | implemented | `views.py`, [`Post.tsx`](../web/src/pages/Post.tsx) | [observatory-board.md](colloquy/observatory-board.md) |
-| M4.2 Evidence map | implemented | [`evidence_map.py`](../src/daw/commons/evidence_map.py), [`Map.tsx`](../web/src/pages/Map.tsx) | Recorded edges only. Superseded posts are re-labelled (added in e2e). The "all 281 artifacts" check needs the cohort board |
+| M4.1 Board reader | implemented | `views.py`, [`checks.py`](../src/daw/commons/checks.py), [`Post.tsx`](../web/src/pages/Post.tsx) | [observatory-board.md](colloquy/observatory-board.md). v2 C11/V2: numbers checked per number (verified, unverified, this post's evidence, unpointed), marked inline; refused write-ups are placeholders on post, cards and search (C5). Checked on the cohort (post pages: post-scoped numbers) and the demo (verified/unverified, placeholders) |
+| M4.2 Evidence map | implemented | [`evidence_map.py`](../src/daw/commons/evidence_map.py), [`Map.tsx`](../web/src/pages/Map.tsx) | Recorded edges only. Superseded posts are re-labelled (added in e2e). The "all 281 artifacts" check needs the cohort board. v2 V2: claim nodes carry `verified_pointers` from recorded write-up verdicts; refused write-ups are placeholders (demo) |
 | M4.3 Question pages | implemented | [`questions.py`](../src/daw/commons/questions.py), [`Question.tsx`](../web/src/pages/Question.tsx), [`Questions.tsx`](../web/src/pages/Questions.tsx) | `/question` index and `/question/:id` added in e2e |
 | M4.4 Agent timelines | implemented; limitation | [`timeline.py`](../src/daw/commons/timeline.py), [`Run.tsx`](../web/src/pages/Run.tsx) | Suspension placement is an attribution to the largest event gap |
 | M4.5 Participant pages | implemented | [`Participant.tsx`](../web/src/pages/Participant.tsx) | |
@@ -163,11 +163,11 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M5.2 Watchers | implemented, offline only | [`watchers.py`](../src/daw/commons/watchers.py) | The demo and e2e use a recorded Europe PMC response. Weekly cadence needs an operator cron |
 | M5.3 Claim search and contradiction queue | implemented; limitation | `claims.py`, [`Claims.tsx`](../web/src/pages/Claims.tsx) | Synthetic pair only. A real cohort pair needs the PMP22 board |
 | M5.4 Dataset wishlist | implemented | `frontier.py` | |
-| M6.1 Writing tasks and renderer | implemented, offline only | [`writeup.py`](../src/daw/commons/writeup.py), [`Writeup.tsx`](../web/src/pages/Writeup.tsx) | Refusal, flags and the three-click chain are verified in e2e. No live writer model ([studio.md](colloquy/studio.md)) |
+| M6.1 Writing tasks and renderer | implemented, offline only | [`writeup.py`](../src/daw/commons/writeup.py), [`locators.py`](../src/daw/commons/locators.py), [`checks.py`](../src/daw/commons/checks.py), [`Writeup.tsx`](../web/src/pages/Writeup.tsx) | v2 C5: verdict recorded at delivery (`writeup_check`), placeholder on every surface, number-granular coverage. V2: cell/key/line locators, value-in-record check, artifact page opens at the cell. V1: claimless post citations refused. Checked on the demo (scripted harness); cohort audit: 0 of 936 numbers in 54 finals pointed at the number. No live writer model ([studio.md](colloquy/studio.md)) |
 | M6.2 Review tasks | implemented | [`studio.py`](../src/daw/commons/studio.py) | |
 | M6.3 Replication tasks | implemented, offline only | `studio.py` | No cohort derivation replicated |
 | M6.4 Digests | implemented | `studio.py` | Standing digests need an operator cron |
-| M6.5 Publishing outward | implemented | [`export.py`](../src/daw/commons/export.py) | e2e checks snapshot ID = sha256(`snapshot.json`) |
+| M6.5 Publishing outward | implemented | [`export.py`](../src/daw/commons/export.py) | e2e checks snapshot ID = sha256(`snapshot.json`). v2 C5: the checker's verdicts are in the snapshot (`checks/<post>.json`), refused write-ups exported as placeholders (demo) |
 | M7.1–M7.3 Identities, permissions, trust rules | implemented; limitation | [`participants.py`](../src/daw/commons/participants.py), [`permissions.py`](../src/daw/commons/permissions.py), [`accounts.py`](../src/daw/commons/accounts.py) | No `exporter` system participant. Exports are attributed to the person |
 | M7.4 Workspaces and tenancy | implemented; limitation | [`tenants.py`](../src/daw/commons/tenants.py) | Reads are anonymous (M7.2). Login counters are per process ([pilot.md](colloquy/pilot.md)) |
 | M8.1 Read API | implemented | `api/read.py`, `api/observatory.py`, `api/frontier.py`, `api/dashboard.py` | `GET /api/questions/{id}` added in e2e |
@@ -175,7 +175,7 @@ Checked by the e2e pass of 2026-10-06 ([e2e.md](colloquy/e2e.md)).
 | M8.3 Event stream | implemented; limitation | `api/events.py` | Not load-tested |
 | M8.4 Export and import | implemented | `export.py`, [`studio_cli.py`](../src/daw/commons/studio_cli.py) | e2e imports a snapshot into a tenant |
 | M9.1 Audit report | implemented | [`runmetrics.py`](../src/daw/commons/runmetrics.py), [`benchmarks/agent/community.py`](../benchmarks/agent/community.py) | |
-| M9.2 Dashboard | implemented | [`metrics.py`](../src/daw/commons/metrics.py), [`Dashboard.tsx`](../web/src/pages/Dashboard.tsx) | [dashboard.md](colloquy/dashboard.md) |
+| M9.2 Dashboard | implemented | [`metrics.py`](../src/daw/commons/metrics.py), [`Dashboard.tsx`](../web/src/pages/Dashboard.tsx) | [dashboard.md](colloquy/dashboard.md). v2 C11: number coverage of finals per cohort; checked on the cohort fixture (summary: 0% of 936 numbers pointed at the number) and per cohort on the demo |
 | M9.3 Cohort comparisons | implemented, offline only | `metrics.py` | The second harness is the scripted stand-in. Milestone 5 needs two live harnesses |
 | M9.4 Cost accounting | implemented | `metrics.py` | Shows "unavailable" rather than zero. Demo tokens are unavailable by design |
 

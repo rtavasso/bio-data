@@ -8,8 +8,10 @@ them (fetches, reuse, questions holding an artifact) are computed on each reques
 
 Edges are recorded relations only: a post's evidence list, `published`/`evidence_fetched` board
 events, `question_artifact` rows, derivation inputs, parent/supersedes links and request rows.
-Numbers in a post are paired with the artifact identifiers the post itself carries; a number
-without one is reported as unpointed, never silently attached to a guess.
+Numbers in a post are reported by the write-up number checker (`daw.commons.checks.post_numbers`): a
+pointer at the number is verified against its record or shown as unverified; a number covered only by
+the post's evidence list is post-scoped; one without either is unpointed, never attached to a guess.
+Refused write-ups (a recorded `writeup_check` verdict) are placeholders on every card and page here.
 """
 import difflib
 import json
@@ -119,8 +121,10 @@ def thread_index(view):
     requests = {}
     for row in view.rows("SELECT * FROM request"):
         requests.setdefault(row["post"], []).append(row)
+    from daw.commons.checks import withheld
     index = {"sequence": key[1], "posts": posts, "children": children, "superseded_by": superseded_by,
-             "roots": roots, "threads": threads, "people": people, "requests": requests}
+             "roots": roots, "threads": threads, "people": people, "requests": requests,
+             "withheld": withheld(view)}  # refused write-ups: placeholders on every card (C5)
     _INDEX[key] = index
     while len(_INDEX) > _INDEX_SIZE:
         _INDEX.popitem(last=False)
@@ -143,8 +147,12 @@ def post_summary(index, pid, hidden, *, reveal=False, snippet=SNIPPET):
             "superseded_by": index["superseded_by"].get(pid, []), "created": row["created"],
             "kind": body.get("kind"), "evidence": evidence_counts(body.get("evidence")),
             "hidden": hidden.get(pid), "content_is_untrusted_data": True}
+    withheld = index.get("withheld", {}).get(pid)
+    card["withheld"] = withheld
     if hidden.get(pid) and not reveal:
         card.update(title=None, snippet=None)
+    elif withheld and not reveal:
+        card.update(title=_placeholder_title(), snippet=_withheld_snippet(withheld))
     else:
         card.update(title=body.get("title"), snippet=body.get("body", "")[:snippet] if snippet else body.get("body"))
     return card
@@ -231,8 +239,10 @@ def list_posts(view, *, family="forum", q="", author=None, kind=None, channel=No
             if pid not in index["posts"] or not _matches(index, pid, **filters):
                 continue
             root = index["roots"][pid]
+            withheld = index["withheld"].get(pid)
             entry = {"post": pid, "score": hit.get("score"),
-                     "snippet": None if hidden.get(pid) and not reveal else hit.get("snippet")}
+                     "snippet": None if hidden.get(pid) and not reveal else
+                     _withheld_snippet(withheld) if withheld and not reveal else hit.get("snippet")}
             if root in seen:
                 seen[root]["hits"].append(entry)
                 continue
@@ -259,6 +269,16 @@ def list_posts(view, *, family="forum", q="", author=None, kind=None, channel=No
             + (["text search considered only the first 1000 index hits"] if truncated else [])}
 
 
+def _placeholder_title():
+    from daw.commons.checks import PLACEHOLDER_TITLE
+    return PLACEHOLDER_TITLE
+
+
+def _withheld_snippet(info):
+    from daw.commons.checks import snippet
+    return snippet(info)
+
+
 # ---------------------------------------------------------------------------- numbers and diffs
 
 def numbers(text):
@@ -271,25 +291,6 @@ def numbers(text):
             found.append({"text": match.group(0), "offset": position + match.start(), "line": line.strip()})
         position += len(line)
     return found
-
-
-def number_pointers(view, text, evidence):
-    """Pair each number with the artifact pointers the post carries.
-
-    scope=line: artifact identifiers on the same line; scope=post: identifiers elsewhere in the text or the
-    post's evidence list; scope=none: no pointer (reported, never hidden). Each pointer says where the
-    artifact can be opened (the library, a participant workspace, or missing)."""
-    evidence = evidence if isinstance(evidence, dict) else {}
-    post_level = list(dict.fromkeys(ARTIFACT_ID.findall(text) + list(evidence.get("artifacts") or [])))
-    located = {aid: locate_artifact(view, aid, quiet=True) for aid in post_level}
-    out = []
-    for item in numbers(text):
-        on_line = list(dict.fromkeys(ARTIFACT_ID.findall(item["line"])))
-        pointers, scope = (on_line, "line") if on_line else (post_level, "post") if post_level else ([], "none")
-        out.append({"text": item["text"], "offset": item["offset"], "scope": scope,
-                    "pointers": [{"artifact": aid, "location": located.get(aid) or locate_artifact(view, aid, quiet=True)}
-                                 for aid in pointers]})
-    return out
 
 
 def diff_texts(old, new):
@@ -536,7 +537,8 @@ def post_view(view, pid, *, caller=None, full=False):
     if pid not in index["posts"]:
         raise DawError("unknown_post", pid)
     hidden = hidden_posts(view)
-    reveal = not hidden.get(pid) or (full and is_operator(caller))
+    withheld = index["withheld"].get(pid)
+    reveal = not (hidden.get(pid) or withheld) or (full and is_operator(caller))
     record = view.post(pid)  # verifies the body bytes against their hash
     body = record["content"]
     evidence = body.get("evidence") if isinstance(body.get("evidence"), dict) else {}
@@ -576,9 +578,13 @@ def post_view(view, pid, *, caller=None, full=False):
         superseded_by=[post_summary(index, s, hidden) for s in index["superseded_by"].get(pid, [])],
         supersedes_chain=chain,
         requests=_requests_for_post(view, index, pid),
-        numbers=number_pointers(view, text, evidence) if reveal else [],
+        numbers=_post_numbers(view, pid, text, evidence) if reveal else [],
+        withheld=_withheld_view(view, pid, withheld) if withheld else None,
     )
-    result["unpointed_numbers"] = [n["text"] for n in result["numbers"] if n["scope"] == "none"]
+    # C11: numbers without a pointer at the number are listed apart from those covered only by the post's evidence.
+    result["unpointed_numbers"] = [n["text"] for n in result["numbers"] if n["status"] == "unpointed"]
+    result["post_scoped_numbers"] = [n["text"] for n in result["numbers"] if n["status"] == "post_scoped"]
+    result["number_summary"] = _summarize(result["numbers"]) if reveal else None
     latest = chain["superseded_by"][-1] if chain["superseded_by"] else None
     result["diff"] = ({"from": pid, "to": latest, **diff_texts(text, index["posts"][latest]["content"].get("body", ""))}
                       if latest and reveal and not hidden.get(latest) else None)
@@ -587,6 +593,28 @@ def post_view(view, pid, *, caller=None, full=False):
                                        **diff_texts(index["posts"][previous]["content"].get("body", ""), text)}
                                       if previous in index["posts"] and reveal and not hidden.get(previous) else None)
     return result
+
+
+def _post_numbers(view, pid, text, evidence):
+    from daw.commons.checks import post_numbers
+    return post_numbers(view, pid, text, evidence)
+
+
+def _summarize(numbers):
+    from daw.commons.checks import summarize
+    return summarize(numbers)
+
+
+def _withheld_view(view, pid, info):
+    """A refused write-up's verdict for its placeholder: status, counts and every problem location."""
+    from daw.commons.checks import PLACEHOLDER_TITLE, placeholder, recorded, verdict_body
+    from daw.commons.writeup import verdict
+    stored = recorded(view).get(pid)
+    value = verdict_body(view, stored) if stored else verdict(view, pid)[0]
+    return {**info, "title": PLACEHOLDER_TITLE, "placeholder": placeholder(value["problems"]),
+            "problems": [{k: p.get(k) for k in ("kind", "text", "pointer", "line", "offset", "length", "reason")}
+                         for p in value["problems"]],
+            "stats": value["stats"], "created": stored["created"] if stored else None}
 
 
 def _requests_for_post(view, index, pid):

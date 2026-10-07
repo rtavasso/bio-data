@@ -98,6 +98,11 @@ export default function NodeDetail({ node, edges, nodes, onSelect }: {
       <p className="muted map-kind">{node.kind.replace("_", " ")}{node.present ? "" : " · missing from every store"}</p>
       <h3 className="map-detail-title">{node.label}</h3>
       <p className="mono map-id">{node.id}</p>
+      {node.kind === "claim" && typeof node.verified_pointers === "number" && (
+        <p className="meta" aria-label="Verified pointers">
+          {node.verified_pointers} verified number pointer{node.verified_pointers === 1 ? "" : "s"} in recorded write-up verdicts
+        </p>
+      )}
       {route && <p><Link to={route}>Open {node.kind}</Link></p>}
       <Status state={detail} />
       {detail.data && <Body detail={detail.data} />}

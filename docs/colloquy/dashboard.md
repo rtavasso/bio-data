@@ -63,6 +63,14 @@ reports the following:
 - Registered artifacts, backed and unbacked `reused` links and the backed
   ratio, read from the workspaces through `daw.artifacts.reuse_links`.
 - Claims by status, when the ledger has any rows.
+- Number coverage of finals (spec v2 C11, V1; `board.numbers`): for the group's
+  finals (answers of research deliveries; `daw.commons.checks.finals`), the
+  numbers by scope (`cell`, `claim`, `line` are pointers at the number; `post` is
+  only the post's evidence list; `none`) and by checker status (`verified`,
+  `unverified`, `post_scoped`, `unpointed`), with `number_level_share`,
+  `claim_share`, `cell_share` and `verified_share`. `null` when the group has no
+  final (unavailable, not zero). Hidden posts and withheld write-ups count
+  nothing. The rules are the write-up checker's ([studio.md](studio.md#the-number-checker)).
 - Cost.
 - A trend by day or ISO week (`bucket=day|week`).
 
@@ -155,18 +163,21 @@ All endpoints are read-only:
 
 ## Screen
 
-`/dashboard` keeps its filters in the URL. It has five parts:
+`/dashboard` keeps its filters in the URL. It has six parts:
 
 1. A summary row.
 2. Tabbed small multiples, one panel per group: ceremony-tail, compaction
    fallback and minutes-per-analysis trends (handwritten SVG, a shared y-scale
    across panels, gaps for unavailable buckets), backed and unbacked reuse bars,
    and human marks per post. A trend table backs each chart.
-3. A cost table that says "unavailable" and gives the reason.
-4. A cohort comparison: tick two or more cohorts to get a side-by-side table
+3. "Number coverage": the summary and every cohort, with the share of numbers
+   pointed at the number, the cell / claim / line split, the verified share,
+   post-evidence-only and unpointed counts (also a summary stat).
+4. A cost table that says "unavailable" and gives the reason.
+5. A cohort comparison: tick two or more cohorts to get a side-by-side table
    with separate criterion columns. Assignment excerpts are wrapped in
    `Untrusted`.
-5. Limitations.
+6. Limitations.
 
 ## Demo and tests
 
@@ -184,7 +195,12 @@ assignments as alice. The tests check:
 - refresh idempotence and staleness;
 - read-only GETs, CLI behaviour and the audit report columns.
 
-The frontend tests are in `web/src/pages/Dashboard.test.tsx`.
+The frontend tests are in `web/src/pages/Dashboard.test.tsx`. Number coverage is
+tested in `tests/test_commons_checker.py`: per cohort on the demo, and on the
+committed PMP22 cohort fixture, where the summary reports 54 finals, 936
+numbers and a 0% share pointed at the number (equal to the audit receipt
+`docs/v3/receipts/cohort-number-audit.json`). The fixture records no cohort
+rows, so its per-cohort panel is empty there; the summary is the cohort.
 
 ## Limitations
 

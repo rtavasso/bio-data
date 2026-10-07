@@ -27,7 +27,7 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from daw.commons import tasks, views, writeup
+from daw.commons import checks, tasks, views, writeup
 from daw.commons.archive import Archive
 from daw.commons.moderation import check_rate
 from daw.commons.permissions import require
@@ -356,9 +356,12 @@ def replication_check(board, request_id, *, actor=None):
 
 
 def after_delivery(board, request):
-    """Runtime post-delivery hook for typed requests: review marks and replication checks. Never raises."""
+    """Runtime post-delivery hook for typed requests: review marks, replication checks and (writing, digest) the
+    number checker's verdict recorded as a `writeup_check` event (daw.commons.checks). Never raises."""
     request = board.one("SELECT * FROM request WHERE id=?", (request["id"],))
     try:
+        if request["task_type"] in checks.WRITEUP_TYPES:
+            return {"writeup_checks": checks.after_delivery(board, request)}
         if request["task_type"] == "review" and request["answer"]:
             return {"review": record_review_marks(board, request["answer"])}
         if request["task_type"] == "replication":
@@ -437,6 +440,7 @@ def digest_skeleton(view, scope, since, until):
     index = views.thread_index(view)
     hidden = views.hidden_posts(view)
     in_scope = _scoped_posts(view, index, scope)
+    withheld = checks.withheld(view)  # refused write-ups are quoted as placeholders (C5)
 
     def within(stamp):
         return bool(stamp) and (not since or stamp >= since) and (not until or stamp < until)
@@ -444,10 +448,11 @@ def digest_skeleton(view, scope, since, until):
     def brief(pid):
         row = index["posts"][pid]
         author = index["people"].get(row["author"], {})
-        return {"id": pid, "title": None if pid in hidden else row["content"].get("title"),
+        return {"id": pid, "title": None if pid in hidden else checks.PLACEHOLDER_TITLE if pid in withheld
+                else row["content"].get("title"),
                 "author": row["author"], "author_name": author.get("name"), "kind": row["content"].get("kind"),
                 "created": row["created"], "parent": row["parent"], "supersedes": row["supersedes"],
-                "hidden": pid in hidden}
+                "hidden": pid in hidden, "withheld": pid in withheld}
 
     posts = [brief(pid) for pid, row in index["posts"].items()
              if pid in in_scope and within(row["created"]) and row["content"].get("kind") != "notice"]
@@ -612,7 +617,8 @@ def digest_tick(board, actor="operator", *, at=None):
 
 def _display(view, index, pid):
     row = index["posts"].get(pid)
-    return {"id": pid, "title": row["content"].get("title") if row else None,
+    withheld = pid in index.get("withheld", {})  # C5: a refused write-up is a placeholder here too
+    return {"id": pid, "title": checks.PLACEHOLDER_TITLE if withheld else row["content"].get("title") if row else None,
             "author": row["author"] if row else None, "kind": row["content"].get("kind") if row else None}
 
 

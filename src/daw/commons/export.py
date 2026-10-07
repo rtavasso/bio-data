@@ -15,6 +15,9 @@ The snapshot ID is the sha256 of `snapshot.json`'s bytes, so citing a snapshot c
   `daw.commons.writeup.parse` (raw HTML shown as text, only http(s)/mailto links leave the site).
   Pages carry a Content-Security-Policy that forbids scripts. Hidden posts keep their identity and
   the moderation reason, not their content.
+- The same number checker as every other surface (`daw.commons.checks`): each exported post's verdict or
+  number report is written as `checks/<post>.json`, numbers are marked verified / unverified / unpointed in
+  the HTML, and a write-up the checker refused is exported as a placeholder with its problem locations.
 
 `import_snapshot` verifies every hash and size in a snapshot's manifest (and that no unlisted file
 or link is present) and stores it read-only under `<commons>/federation/<snapshot_id>/`. Imported
@@ -30,7 +33,7 @@ import stat
 import uuid
 from pathlib import Path, PurePosixPath
 
-from daw.commons import evidence_map, views, writeup
+from daw.commons import checks, evidence_map, views, writeup
 from daw.commons.archive import Archive
 from daw.commons.permissions import require
 from daw.util import DawError, canonical, now
@@ -66,6 +69,8 @@ svg{max-width:100%;height:auto;border:1px solid var(--line);background:var(--pan
 .node-posts{fill:var(--posts)}.node-artifacts{fill:var(--artifacts)}.node-questions{fill:var(--questions)}
 .node-sources{fill:var(--sources)}.node-participants{fill:var(--participants)}.absent{fill-opacity:.25}
 ul.thread{padding-left:1.2rem}footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+.num-verified{text-decoration:underline solid var(--accent)}.num-unverified{text-decoration:underline wavy var(--warn)}
+.num-unpointed{text-decoration:underline dotted var(--bad)}
 """
 CSP = "default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
 
@@ -162,21 +167,44 @@ def _rel(source, target):
     return up + target
 
 
-def _tokens_html(tokens, link):
+NUMBER_TITLES = {"verified": "verified against its record", "unverified": "pointed, but not found in the cited record",
+                 "post_scoped": "not pointed at the number; the post names evidence", "unpointed": "no pointer"}
+
+
+def _marked(text, offset, numbers):
+    """Escaped text with every checked number wrapped in a span carrying its checker status (C5, V2)."""
+    if not numbers or text is None:
+        return esc(text)
+    out, cursor = [], 0
+    for start in sorted(o for o in numbers if offset <= o < offset + len(text)):
+        status, length = numbers[start]
+        local = start - offset
+        if local < cursor:
+            continue
+        out.append(esc(text[cursor:local]))
+        out.append(f"<span class=\"num num-{esc(status)}\" title=\"{esc(NUMBER_TITLES.get(status, status))}\">"
+                   f"{esc(text[local:local + length])}</span>")
+        cursor = local + length
+    out.append(esc(text[cursor:]))
+    return "".join(out)
+
+
+def _tokens_html(tokens, link, numbers=None):
     out = []
     for token in tokens:
         kind = token["t"]
         if kind == "text":
-            text = esc(token["text"])
+            text = _marked(token["text"], token["offset"], numbers)
             out.append(f"<strong>{text}</strong>" if token.get("style") == "strong"
                        else f"<em>{text}</em>" if token.get("style") == "em" else text)
         elif kind == "code":
-            out.append(f"<code>{esc(token['text'])}</code>")
+            out.append(f"<code>{_marked(token['text'], token['offset'], numbers)}</code>")
         elif kind == "link":
-            out.append(f"<a href=\"{esc(token['href'])}\" rel=\"nofollow noopener noreferrer\">{esc(token['text'])}</a>")
+            out.append(f"<a href=\"{esc(token['href'])}\" rel=\"nofollow noopener noreferrer\">"
+                       f"{_marked(token['text'], token['text_offset'], numbers)}</a>")
         elif kind == "pointer":
             href = link(token["id"])
-            label = esc(token["text"])
+            label = _marked(token["text"], token["text_offset"], numbers) if token["form"] == "link" else esc(token["text"])
             out.append(f"<a href=\"{esc(href)}\">{label}</a>" if href
                        else f"<span class=\"missing\" title=\"not in this export\">{label}</span>")
         elif kind == "figure":
@@ -186,34 +214,36 @@ def _tokens_html(tokens, link):
     return "".join(out)
 
 
-def _sentences_html(sentences, link):
-    return " ".join(_tokens_html(s["tokens"], link) for s in sentences)
+def _sentences_html(sentences, link, numbers=None):
+    return " ".join(_tokens_html(s["tokens"], link, numbers) for s in sentences)
 
 
-def markdown_html(source, link, image=None):
-    """Untrusted Markdown as escaped HTML through the write-up parser. `link(id)` gives a relative URL or None."""
+def markdown_html(source, link, image=None, numbers=None):
+    """Untrusted Markdown as escaped HTML through the write-up parser. `link(id)` gives a relative URL or None;
+    `numbers` ({source offset: (status, length)}) marks each checked number with its status."""
     parts = []
     for block in writeup.parse(source or ""):
         kind = block["type"]
         if kind == "heading":
             level = min(6, block["level"] + 1)
-            parts.append(f"<h{level}>{_sentences_html(block['sentences'], link)}</h{level}>")
+            parts.append(f"<h{level}>{_sentences_html(block['sentences'], link, numbers)}</h{level}>")
         elif kind in ("paragraph", "quote"):
-            inner = _sentences_html(block["sentences"], link).replace("\n", "<br>")
+            inner = _sentences_html(block["sentences"], link, numbers).replace("\n", "<br>")
             parts.append(f"<blockquote><p>{inner}</p></blockquote>" if kind == "quote" else f"<p>{inner}</p>")
         elif kind == "list":
             tag = "ol" if block["ordered"] else "ul"
             items = "".join(f"<li class=\"depth-{min(item['depth'], 2)}\""
                             + (f" value=\"{item['ordinal']}\"" if item["ordinal"] is not None else "") + ">"
-                            + _sentences_html(item["sentences"], link) + "</li>" for item in block["items"])
+                            + _sentences_html(item["sentences"], link, numbers) + "</li>" for item in block["items"])
             parts.append(f"<{tag}>{items}</{tag}>")
         elif kind == "table":
             def row(r, cell_tag):
-                return "<tr>" + "".join(f"<{cell_tag}>{_tokens_html(c, link)}</{cell_tag}>" for c in r["cells"]) + "</tr>"
+                return "<tr>" + "".join(f"<{cell_tag}>{_tokens_html(c, link, numbers)}</{cell_tag}>"
+                                        for c in r["cells"]) + "</tr>"
             parts.append("<table><thead>" + row(block["header"], "th") + "</thead><tbody>"
                          + "".join(row(r, "td") for r in block["rows"]) + "</tbody></table>")
         elif kind == "code":
-            parts.append(f"<pre><code>{esc(block['text'])}</code></pre>")
+            parts.append(f"<pre><code>{_marked(block['text'], block['text_offset'], numbers)}</code></pre>")
         elif kind == "figure":
             href, src = link(block["id"]), image(block["id"]) if image else None
             caption = esc(block["caption"])
@@ -362,7 +392,10 @@ def build_site(view, kind, identity=None):
         return people.get(pid, {}).get("name") or pid
 
     def title_of(pid):
-        return "(hidden by moderation)" if pid in hidden else index["posts"][pid]["content"].get("title") or pid
+        return "(hidden by moderation)" if pid in hidden else checks.PLACEHOLDER_TITLE if pid in withheld \
+            else index["posts"][pid]["content"].get("title") or pid
+
+    withheld = index["withheld"]  # refused write-ups: placeholders, never their content (C5)
 
     # Artifacts: page, stripped manifest and verified output bytes.
     images = {}
@@ -456,6 +489,20 @@ def build_site(view, kind, identity=None):
                                           "The record is preserved on its commons; its content is not exported.</p>")
             site.page(page, f"Hidden post {pid}", body)
             continue
+        if pid in withheld:
+            check = _check_record(view, pid, row, artifacts, withheld=True)
+            site.add(f"checks/{pid}.json", canonical(check))
+            problems = "".join(f"<li>{esc(p['kind'])} {esc(p.get('text') or p.get('pointer') or '')} "
+                               f"<span class=\"muted\">line {esc(p.get('line'))}: {esc(p.get('reason'))}</span></li>"
+                               for p in check["problems"])
+            site.page(page, checks.PLACEHOLDER_TITLE, meta + "".join(rel) + (
+                f"<p class=\"band\">{esc(checks.placeholder(check['problems']))}</p>"
+                f"<p>Verdict: <a href=\"{esc(_rel(page, f'checks/{pid}.json'))}\">checks/{esc(pid)}.json</a></p>"
+                f"<h2>Problems</h2><ol>{problems}</ol>"))
+            continue
+        check = _check_record(view, pid, row, artifacts)
+        site.add(f"checks/{pid}.json", canonical(check))
+        number_marks = {n["offset"]: (n["status"], n["length"]) for n in check["numbers"]}
         evidence = content.get("evidence") or {}
         items = []
         for aid in evidence.get("artifacts") or []:
@@ -479,9 +526,17 @@ def build_site(view, kind, identity=None):
                            f"{esc(claim['text'])} <span class=\"muted mono\">{esc(claim['id'])}</span>{withdrawn}"
                            f"<ul>{pointers}</ul>{_marks_html(marks.get(claim['id'], []), who)}</li>")
         replies = [c for c in index["children"].get(pid, []) if c in exported]
+        summary = check["summary"]
+        coverage = (f"<p class=\"muted\">Numbers: {summary['numbers']} · verified {summary['statuses']['verified']} · "
+                    f"unverified {summary['statuses']['unverified']} · this post's evidence only "
+                    f"{summary['statuses']['post_scoped']} · unpointed {summary['statuses']['unpointed']} "
+                    f"(<a href=\"{esc(_rel(page, f'checks/{pid}.json'))}\">checker verdict</a>)</p>"
+                    if summary["numbers"] else "")
         body = (meta + "".join(rel) + untrusted(who(row["author"]),
                                                 markdown_html(content.get("body"), link,
-                                                              lambda a, page=page: _rel(page, images[a]) if a in images else None))
+                                                              lambda a, page=page: _rel(page, images[a]) if a in images else None,
+                                                              numbers=number_marks))
+                + coverage
                 + ("<h2>Evidence</h2><ul>" + "".join(items) + "</ul>" if items else "")
                 + ("<h2>Claims</h2><ul>" + claim_html + "</ul>" if claim_html else "")
                 + _marks_html(marks.get(pid, []), who)
@@ -530,12 +585,48 @@ def build_site(view, kind, identity=None):
     manifest = {"format": FORMAT, "scope": scope,
                 "counts": {"posts": len(members), "artifacts": len(artifacts), "notebooks": len(notebooks),
                            "claims": len(claim_ids), "marks": sum(len(m) for m in marks.values()),
-                           "map_nodes": len(nodes), "map_edges": len(edges)},
+                           "map_nodes": len(nodes), "map_edges": len(edges),
+                           "checks": sum(1 for p in site.files if p.startswith("checks/"))},
                 "files": [{"path": path, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
                           for path, data in sorted(site.files.items())],
                 "note": "Content-addressed static export: the snapshot ID is the sha256 of this file's bytes "
                         "(canonical JSON). Board content is attributed, untrusted data."}
     return site, manifest
+
+
+def _check_record(view, pid, row, exported, *, withheld=False):
+    """The checker's verdict on one exported post, written into the snapshot as `checks/<post>.json` (C5).
+
+    Write-ups carry their verdict (recorded at delivery, else computed now); other posts their number report.
+    Values found in cited bytes are included only for artifacts in this export; a withheld write-up's problems
+    keep their locations but not the source lines."""
+    content = views.content(view, row["body_blob"])
+    numbers = checks.post_numbers(view, pid, content.get("body") or "", content.get("evidence"))
+    stored = checks.recorded(view).get(pid)
+    is_writeup = bool(stored) or pid in checks.writeup_posts(view)
+    value = None
+    if is_writeup:
+        value = checks.verdict_body(view, stored) if stored else writeup.verdict(view, pid)[0]
+
+    def pointer(p):
+        keep = {k: p[k] for k in ("id", "kind", "locator", "result", "at", "reason", "post_evidence") if p.get(k) is not None}
+        if p.get("found") is not None and (p.get("kind") == "claim" or p.get("id") in exported):
+            keep["found"] = p["found"]
+        return keep
+
+    return {"format": "colloquy.snapshot-check/1", "rules": writeup.RULES_VERSION, "post": pid,
+            "body_blob": row["body_blob"], "kind": "writeup" if is_writeup else "post",
+            "status": value["status"] if value else "report",
+            "verdict": ({"source": "recorded" if stored else "computed",
+                         **({"verdict_blob": stored["verdict_blob"]} if stored else {})} if is_writeup else None),
+            "problems": [{k: p.get(k) for k in ("kind", "text", "pointer", "offset", "length", "line", "reason")
+                          if p.get(k) is not None} for p in (value["problems"] if value else [])],
+            "numbers": [] if withheld else [{**{k: n[k] for k in ("text", "offset", "length", "line", "scope", "status")},
+                                             "pointers": [pointer(p) for p in n["pointers"]]} for n in numbers],
+            "summary": checks.summarize([] if withheld else numbers),
+            "note": "Checked by the commons' number checker (rules above). verified: the value is at the cited "
+                    "record; unverified: pointed but not found there; post_scoped: only the post's evidence list; "
+                    "unpointed: no pointer."}
 
 
 def _marks_html(rows, who):

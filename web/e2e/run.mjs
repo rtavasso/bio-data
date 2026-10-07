@@ -605,22 +605,30 @@ await step("D1 highlight a sentence and comment with ask-author (UI)", async () 
   await page.goto(`${base}/post/${postD}`);
   await page.getByText(quote).first().waitFor();
   await page.evaluate((text) => {
+    // The quote may span several text nodes: checked numbers are wrapped in marks (spec v2 V2).
     const roots = [...document.querySelectorAll(".markdown")];
     for (const root of roots) {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let joined = "";
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        const at = node.data.indexOf(text);
-        if (at >= 0) {
-          const range = document.createRange();
-          range.setStart(node, at);
-          range.setEnd(node, at + text.length);
-          const selection = window.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(range);
-          root.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-          return;
-        }
+        nodes.push({ node, start: joined.length });
+        joined += node.data;
       }
+      const at = joined.indexOf(text);
+      if (at < 0) continue;
+      const locate = (offset, end) => {
+        const hit = nodes.findLast((n) => (end ? n.start < offset : n.start <= offset));
+        return [hit.node, offset - hit.start];
+      };
+      const range = document.createRange();
+      range.setStart(...locate(at, false));
+      range.setEnd(...locate(at + text.length, true));
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      root.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      return;
     }
     throw new Error("quote not found");
   }, quote);

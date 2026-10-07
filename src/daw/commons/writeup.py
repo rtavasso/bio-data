@@ -1,51 +1,74 @@
-"""Studio write-ups (M6.1): pointer syntax, the number check, and regeneration flags (Flow B step 5).
+"""Write-ups (M6.1, C5, V2): pointer syntax, the number checker, value-in-record verification and regeneration
+flags (Flow B step 5).
 
-A write-up is an ordinary post (usually the answer to a `writing` commission). Writers point at
-records with Markdown links whose target is a record identifier, `[1.54](claim_…)`,
-`[text](artifact_…)`, `[text](post_…)`, or with a bracketed citation `[claim_…]` placed in or
-directly after the sentence it supports. Figures are images whose target is an artifact,
-`![caption](artifact_…)`. A bare identifier in prose is tolerated as a citation.
+A write-up is an ordinary post (usually the answer to a `writing` or `digest` commission). Writers point at
+records with Markdown links whose target is a record identifier, `[1.54](claim_…)`, `[text](artifact_…)`,
+`[text](post_…)`, or with a bracketed citation `[claim_…]` placed right after the number it supports. An
+artifact pointer may carry a locator, `[1.54](artifact_…#row=B_vs_A;col=log2_ratio)` (grammar in
+`daw.commons.locators`). Figures are images whose target is an artifact, `![caption](artifact_…)`. A bare
+identifier in prose is read as a bracketed citation.
 
-`render_writeup(view, post)` parses the Markdown (a documented subset, below) into HTML-safe
-blocks and refuses, listing every location, when
+**Coverage is number-granular.** A pointer covers only
 
-- a numeric token in prose is neither inside a claim/artifact pointer link nor in a sentence (or
-  table row, heading, code block) that cites at least one claim or artifact. Post pointers give
-  context only; they never cover a number;
-- a pointer does not resolve: claims must be rows of the ledger, artifacts must be catalogued in
-  the library or a participant workspace (their bytes are served by /api/artifacts/{id}/bytes),
-  posts must exist; other identifier kinds (questions, runs, requests…) are not citable;
-- a figure does not reference a resolving artifact.
+- the numbers inside its own link text (`[1.54](claim_…)` covers 1.54; a figure covers its caption), or
+- for a bracketed citation or bare identifier, the number immediately preceding it within the same clause:
+  the nearest number before the citation in the same sentence (table cell, code line), provided the text
+  between them holds no clause boundary (`,` `;` `:` `—` `–` or a spaced hyphen) and no other pointer link,
+  code span or URL. Sentence-final punctuation and closing brackets may sit between (`… = 1.54. [claim_…]`).
+  Consecutive citations (`1.54 [claim_a] [artifact_b]`) all cover the same number.
 
-Numeric tokens: optionally signed integers and decimals (thousands separators allowed),
-scientific notation (`1e-5`, `3.2×10^-4`), percentages and ratios (`3:1`, `1/3`). Not numbers:
-digits inside identifiers (a token preceded by a letter, digit, underscore or '.', or by a
-hyphen that follows a letter: PMP22, log2, GSE1234, v1.2, IL-6), record identifiers, hashes and
-URLs; ordered-list ordinals; heading numbering (`## 2.1 Methods`); and dates or times in a byline
-(a paragraph among the first two blocks starting with By / Written by / Prepared by / Author(s): /
-Date: / Updated:). A digit followed by letters still counts (`5mg`, `2nd`). Code spans in prose
-are prose. Sentences end at `.`, `!` or `?` followed by whitespace and a character that is not a
-lowercase letter, except after common abbreviations (e.g., i.e., et al., Fig., vs., approx.).
-Bracketed citations at the start of the next sentence attach to the previous one.
+So `Means were 11.0 and 32.0 [artifact_…]` covers 32.0 only, and a sentence with two numbers and one pointer
+refuses the other number. Post pointers give context only; they never cover a number.
 
-A write-up that cites a withdrawn claim (ledger `withdrawn_by`) is flagged for regeneration: the
-response carries `regeneration_required` with each withdrawn claim, its replacement post and
-that post's current claims; the renderer never serves such a write-up without the flag. The flag
-is computed from the ledger at read time, so it needs no write and cannot go stale.
+`check` refuses (the write-up is withheld on every surface), listing every location, when
 
-Markdown subset: ATX headings, paragraphs, `-`/`*`/`+` and `1.`/`1)` list items (continuation
-lines indented), `>` quotes, fenced code, GFM pipe tables, thematic breaks, inline code,
-`**strong**` and `*em*`, links and images. Raw HTML is shown as text; only http(s) and mailto
-links leave the commons. Everything here reads a read-only Archive.
+- a number has no claim or artifact pointer (`unpointed_number`);
+- a pointer does not resolve: claims must be ledger rows, artifacts catalogued in the library or a
+  participant workspace, posts must exist; other identifier kinds are not citable; a locator must parse;
+- a figure does not reference a resolving artifact;
+- a writing task cites a post that has no ledger claims (`claimless_post_cited`; V1). Digests cite posts as
+  the items they summarise, so the rule applies to every write-up except digest deliveries.
+
+Each pointed number is then checked against its record (value-in-record): a claim pointer verifies when the
+number occurs in the claim's text or scope; an artifact pointer when the number is at the cited cell, key or
+line (or, without a locator, anywhere in a text output of at most 64 KB), at the declared or implied rounding.
+Otherwise the number is `unverified` (with the reason), which is shown, not refused; it is distinct from
+`unpointed` and from `verified`.
+
+**Numeric tokens:** optionally signed integers and decimals (thousands separators allowed), scientific
+notation (`1e-5`, `3.2×10^-4`, `3.2×10⁻⁴`), percentages, ratios (`3:1`, `1/3`), unicode vulgar fractions
+(`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty (`twenty-one` to `twenty-nine` as one number) and
+`a dozen` / `half a dozen`. Heading numbers count like any other number. **Not numbers:** record identifiers,
+hashes and URLs; integers glued to letters, directly or through one hyphen (identifier characters: `PMP22`,
+`log2`, `GSE1234`, `H3K27me3`, `IL-6`, `measured-zero`), except a fold multiplier `x2`; strand ends `3′`/`5′`
+followed by a prime; digits after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
+dates and times in a byline (a paragraph among the first two blocks starting with By / Written by / Prepared
+by / Author(s): / Date: / Updated:); spelled `one` after no/the/this/that/each/any/every/which or before
+`another`, and spelled numbers in `-sided`, `-tailed` and `-way` compounds. Decimals, exponents and
+percentages glued to letters count (`x2.5`, `FC1.54`, `v1.2`). Code spans in prose are prose. Sentences end
+at `.`, `!` or `?` followed by whitespace and a character that is not a lowercase letter, except after common
+abbreviations (e.g., i.e., et al., Fig., vs., approx.). Bracketed citations at the start of the next sentence
+attach to the previous one.
+
+The verdict is a record: at delivery of a writing or digest task the runtime calls
+`daw.commons.checks.after_delivery`, which stores the verdict as an immutable `writeup_check` board event
+(with every number's location and status) and a verdict blob in the library; every renderer reads it.
+A write-up that cites a withdrawn claim (ledger `withdrawn_by`) is flagged for regeneration; the flag is
+computed from the ledger at read time, so it needs no write and cannot go stale.
+
+Markdown subset: ATX headings, paragraphs, `-`/`*`/`+` and `1.`/`1)` list items (continuation lines indented),
+`>` quotes, fenced code, GFM pipe tables, thematic breaks, inline code, `**strong**` and `*em*`, links and
+images. Raw HTML is shown as text; only http(s) and mailto links leave the commons. Everything here reads a
+read-only Archive.
 """
 import json
 import re
 from collections import OrderedDict
 
-from daw.commons import evidence_map, views
+from daw.commons import evidence_map, locators, views
 from daw.util import DawError
 
-RULES_VERSION = "writeup-pointers/1"
+RULES_VERSION = "writeup-pointers/2"
 CITABLE = {"claim": re.compile(r"claim_[0-9a-f]{32}"), "artifact": re.compile(r"artifact_[0-9a-f]{64}"),
            "post": re.compile(r"post_[0-9a-f]{32}")}
 COVERING = ("claim", "artifact")
@@ -58,26 +81,36 @@ URL = re.compile(r"<[A-Za-z][A-Za-z0-9+.-]*:[^\s<>]+>|\b(?:https?|ftp)://[^\s<>(
 
 _CORE = r"(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|\.\d+)"
 _EXP = r"(?:[eE][-+−]?\d+)?"
-_TIMES10 = r"(?:\s?[×x]\s?10(?:\^|\*\*)?[-+−]?\d+)?"
-NUMBER = re.compile(rf"(?<![\w.])(?<![A-Za-z_][-−])[-+−±]?{_CORE}{_EXP}{_TIMES10}%?(?:[:/]{_CORE}{_EXP}%?)?")
+_TIMES10 = r"(?:\s?[×x]\s?10(?:(?:\^|\*\*)?[-+−]?\d+|[⁻⁺]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+))?"
+_VULGAR = "".join(locators.FRACTIONS)
+NUMBER = re.compile(rf"(?<![\d_.])(?:[-+−±](?=[\d.{_VULGAR}]))?(?:\d*[{_VULGAR}]|\d+⁄\d+|"
+                    rf"{_CORE}{_EXP}{_TIMES10}%?(?:[:/]{_CORE}{_EXP}%?)?)")
+_UNITS = "one|two|three|four|five|six|seven|eight|nine"
+SPELLED_NUMBER = re.compile(rf"\b(?:half a dozen|a dozen|twenty(?:-(?:{_UNITS}))?|zero|{_UNITS}|ten|eleven|twelve|"
+                            r"thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen)\b"
+                            r"(?!-(?:sided|tailed|way)\b)", re.I)
+NOT_A_COUNT = re.compile(r"(?:\b(?:no|the|this|that|each|any|every|which)\s+)$", re.I)
 MONTH = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
 DATE = re.compile(rf"\b\d{{4}}-\d{{2}}-\d{{2}}(?:[T ]\d{{2}}:\d{{2}}(?::\d{{2}}(?:\.\d+)?)?(?:Z|[+-]\d{{2}}:?\d{{2}})?)?\b"
                   rf"|\b\d{{4}}/\d{{2}}/\d{{2}}\b|\b\d{{1,2}}\s+{MONTH}\s+\d{{4}}\b|\b{MONTH}\s+\d{{1,2}},?\s+\d{{4}}\b"
                   rf"|\b{MONTH}\s+\d{{4}}\b|\b\d{{1,2}}:\d{{2}}(?::\d{{2}})?\s*(?:UTC|Z)?\b")
 BYLINE = re.compile(r"^[\s*_]*(?:by|written by|prepared by|authors?:|date:|updated:)\s", re.I)
-HEADING_NUMBER = re.compile(r"^(?:\d+(?:\.\d+)*\.?|[IVXLC]+\.)(?=\s)")
 ABBREVIATIONS = {"e.g", "i.e", "al", "fig", "figs", "vs", "approx", "cf", "eq", "eqs", "no", "ca", "resp", "ref",
                  "refs", "suppl", "sec", "dr", "mr", "ms", "st", "etc"}
 SENTENCE_END = re.compile(r"[.!?]+[\"'”’)\]]*(?=\s)")
+# A clause boundary between a number and the citation after it: the citation does not cover that number.
+CLAUSE = re.compile(r"[;:,—–]|\s[-−]\s")
+_LOCATOR = r"(?:\#[a-z]+=[^\]\s;,()]*(?:;[a-z]+=[^\]\s;,()]*)*)?"
 
-INLINE = re.compile(r"""
+INLINE = re.compile(rf"""
   (?P<code>`+)(?P<code_text>.+?)(?P=code)
 | !\[(?P<alt>[^\]\n]*)\]\((?P<src>[^()\s]*)(?:\s+"[^"\n]*")?\)
 | \[(?P<ltext>[^\]\n]+)\]\((?P<href>[^()\s]*)(?:\s+"[^"\n]*")?\)
-| \[(?P<cite>(?:claim|artifact|post)_[0-9A-Za-z]+(?:\s*[,;]\s*(?:claim|artifact|post)_[0-9A-Za-z]+)*)\](?!\()
-| (?P<bare>\b(?:claim_[0-9a-f]{32}|post_[0-9a-f]{32}|artifact_[0-9a-f]{64})\b)
+| \[(?P<cite>(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}(?:\s*[,;]\s*(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR})*)\](?!\()
+| (?P<bare>\b(?:claim_[0-9a-f]{{32}}|post_[0-9a-f]{{32}}|artifact_[0-9a-f]{{64}})\b)
 | (?P<url><https?://[^\s<>]+>|\bhttps?://[^\s<>()\[\]]+)
 """, re.X | re.S)
+CITE_ITEM = re.compile(rf"(?:claim|artifact|post)_[0-9A-Za-z]+{_LOCATOR}")
 EMPHASIS = re.compile(r"\*\*(?P<strong>.+?)\*\*|\*(?P<em>[^\s*](?:.*?[^\s*])?)\*", re.S)
 
 FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})\s*([^`\s]*)[^`]*$")
@@ -248,6 +281,12 @@ def _pointer_kind(target):
     return None
 
 
+def split_target(target):
+    """`artifact_…#row=B;col=x` -> (identifier, locator or None)."""
+    identity, mark, locator = target.partition("#")
+    return identity, (locator if mark else None)
+
+
 def _emphasis(text, offsets, start, end, out):
     """Split plain text into styled runs (**strong**, *em*); identifiers with underscores stay literal."""
     segment, cursor = text[start:end], 0
@@ -263,7 +302,8 @@ def _emphasis(text, offsets, start, end, out):
 
 
 def inline(text):
-    """Tokens of one block text: text (with style), code, link, pointer, figure, url. Each has its source offset."""
+    """Tokens of one block text: text (with style), code, link, pointer, figure, url. Each has its source offset.
+    Pointer tokens carry `id` (the record identifier), `locator` (after '#', or None) and `form`."""
     raw, out, cursor = text.text, [], 0
     at = text.at
     for match in INLINE.finditer(raw):
@@ -273,28 +313,31 @@ def inline(text):
         if match.group("code"):
             out.append({"t": "code", "text": match.group("code_text"), "offset": at(match.start("code_text"))})
         elif match.group("src") is not None and match.group(0).startswith("!"):
-            target = match.group("src")
-            out.append({"t": "figure", "id": target, "kind": _pointer_kind(target), "caption": match.group("alt"),
-                        "caption_offset": at(match.start("alt")), "offset": offset, "length": length})
+            target, locator = split_target(match.group("src"))
+            out.append({"t": "figure", "id": target, "kind": _pointer_kind(target), "locator": locator,
+                        "caption": match.group("alt"), "caption_offset": at(match.start("alt")), "offset": offset,
+                        "length": length})
         elif match.group("href") is not None:
-            target, label = match.group("href"), match.group("ltext")
+            href, label = match.group("href"), match.group("ltext")
+            target, locator = split_target(href)
             kind = _pointer_kind(target)
             if kind or POINTER_SHAPE.match(target) or OTHER_IDENTIFIER.match(target):
-                out.append({"t": "pointer", "id": target, "kind": kind, "text": label, "form": "link",
-                            "text_offset": at(match.start("ltext")), "offset": offset, "length": length})
-            elif re.match(r"^(?:https?://|mailto:)", target, re.I):
-                out.append({"t": "link", "href": target, "text": label, "text_offset": at(match.start("ltext")),
+                out.append({"t": "pointer", "id": target, "kind": kind, "locator": locator, "text": label,
+                            "form": "link", "text_offset": at(match.start("ltext")), "offset": offset, "length": length})
+            elif re.match(r"^(?:https?://|mailto:)", href, re.I):
+                out.append({"t": "link", "href": href, "text": label, "text_offset": at(match.start("ltext")),
                             "offset": offset})
             else:  # relative paths and other schemes are never linked
-                out.append({"t": "text", "text": label, "offset": at(match.start("ltext")), "unlinked": target})
+                out.append({"t": "text", "text": label, "offset": at(match.start("ltext")), "unlinked": href})
         elif match.group("cite"):
-            for part in re.finditer(r"(?:claim|artifact|post)_[0-9A-Za-z]+", match.group("cite")):
+            for part in CITE_ITEM.finditer(match.group("cite")):
                 start = match.start("cite") + part.start()
-                out.append({"t": "pointer", "id": part.group(0), "kind": _pointer_kind(part.group(0)),
+                target, locator = split_target(part.group(0))
+                out.append({"t": "pointer", "id": target, "kind": _pointer_kind(target), "locator": locator,
                             "text": part.group(0), "form": "citation", "offset": at(start), "length": len(part.group(0))})
         elif match.group("bare"):
             out.append({"t": "pointer", "id": match.group("bare"), "kind": _pointer_kind(match.group("bare")),
-                        "text": match.group("bare"), "form": "bare", "offset": offset, "length": length})
+                        "locator": None, "text": match.group("bare"), "form": "bare", "offset": offset, "length": length})
         else:
             url = match.group("url").strip("<>")
             out.append({"t": "link", "href": url, "text": url, "text_offset": at(match.start()), "offset": offset,
@@ -374,50 +417,124 @@ def _masked(text, extra=()):
     return "".join(masked)
 
 
-def numbers_in(text, offset, *, byline=False, heading=False):
-    """Numeric tokens of a prose string as [{text, offset, length}] (offsets are source code points)."""
+def _multiplier(masked, start):
+    """`x2` / `X10`: a lone x before digits is a fold multiplier, not an identifier letter."""
+    return start >= 1 and masked[start - 1] in "xX" and (start < 2 or not masked[start - 2].isalnum())
+
+
+def numbers_in(text, offset, *, byline=False, spelled=True):
+    """Numeric tokens of a prose string as [{text, offset, length[, spelled]}] (offsets are source code points)."""
     masked = _masked(text, (DATE,) if byline else ())
-    if heading:
-        stripped = masked.lstrip()
-        numbering = HEADING_NUMBER.match(stripped)
-        if numbering:
-            start = len(masked) - len(stripped)
-            masked = masked[:start] + "_" * numbering.end() + masked[start + numbering.end():]
     found = []
     for match in NUMBER.finditer(masked):
-        token = text[match.start():match.end()]
-        if any(ch.isdigit() for ch in token):
-            found.append({"text": token.strip(), "offset": offset + match.start(), "length": match.end() - match.start()})
+        start, end = match.start(), match.end()
+        token = text[start:end]
+        if not any(ch.isdigit() or ch in _VULGAR for ch in token):
+            continue
+        before = masked[start - 1] if start else ""
+        if token[0] in "-−" and before.isalpha():  # a hyphen joining a word (IL-6, SARS-CoV-2) is not a sign
+            start, token = start + 1, token[1:]
+            glued = True
+        else:
+            glued = before.isalpha()
+        separator = re.match(r"\d+[:/]", token) if glued else None
+        if separator:  # chr10:49316968, P1/2: the glued integer is an identifier, the rest a number
+            start, token, glued = start + separator.end(), token[separator.end():], False
+        if glued and token.isdigit() and not _multiplier(masked, start):
+            continue  # integer identifier characters: PMP22, log2, GSE1234, H3K27me3
+        if token in ("3", "5") and text[end:end + 1] in ("′", "'", "’"):
+            continue  # strand ends: 3′ UTR, 5'-end
+        found.append({"text": token.strip(), "offset": offset + start, "length": end - start})
+    if spelled:
+        for match in SPELLED_NUMBER.finditer(masked):
+            start = match.start()
+            if start >= 2 and masked[start - 1] in "-−" and masked[start - 2].isalpha():
+                continue  # hyphen-joined to a word: measured-zero
+            word = match.group(0)
+            if word.lower() == "one" and (NOT_A_COUNT.search(masked[:start])
+                                          or masked[match.end():].lstrip().lower().startswith("another")):
+                continue
+            found.append({"text": word, "offset": offset + start, "length": len(word), "spelled": True})
+        found.sort(key=lambda n: n["offset"])
     return found
 
 
-def _token_numbers(token, **flags):
-    if token["t"] in ("text", "code"):
-        return [(n, None) for n in numbers_in(token["text"], token["offset"], **flags)]
-    if token["t"] == "link":
-        return [(n, None) for n in numbers_in(token["text"], token["text_offset"], **flags)]
-    if token["t"] == "pointer" and token["form"] == "link":
-        return [(n, token) for n in numbers_in(token["text"], token["text_offset"], **flags)]
-    if token["t"] == "figure":
-        return [(n, token) for n in numbers_in(token["caption"], token["caption_offset"], **flags)]
-    return []
+def _token_text(token):
+    """(text, source offset) of the prose a token shows, or (None, None) for tokens without prose numbers."""
+    kind = token["t"]
+    if kind in ("text", "code"):
+        return token["text"], token["offset"]
+    if kind == "link" or (kind == "pointer" and token["form"] == "link"):
+        return token["text"], token["text_offset"]
+    if kind == "figure":
+        return token["caption"], token["caption_offset"]
+    return None, None
 
 
-def check_unit(tokens, **flags):
-    """Numbers in one unit (sentence, row, heading) with the pointers that cover each, or None."""
-    pointers = [t for t in tokens if t["t"] in ("pointer", "figure")]
-    covering = [t["id"] for t in pointers if t.get("kind") in COVERING]
-    context = [t["id"] for t in pointers if t.get("kind") == "post"]
+def _reference(token):
+    return {"id": token["id"], "kind": token.get("kind"), "locator": token.get("locator"),
+            "form": "figure" if token["t"] == "figure" else token["form"]}
+
+
+def _scope(pointers):
+    """cell (an artifact pointer with a cell or JSON-key locator) > claim > line (any other artifact pointer at
+    the number, including `line=N`) > none."""
+    artifacts = [p for p in pointers if p["kind"] == "artifact"]
+    for pointer in artifacts:
+        try:
+            if locators.target_kind(locators.parse_locator(pointer["locator"]) if pointer["locator"] else {}) \
+                    in ("cell", "key"):
+                return "cell"
+        except locators.LocatorError:
+            continue
+    if any(p["kind"] == "claim" for p in pointers):
+        return "claim"
+    return "line" if artifacts else "none"
+
+
+def cover(tokens, **flags):
+    """Numbers of one unit, each with the pointers that cover it (number-granular; see the module docstring)."""
+    per_token = []
+    for token in tokens:
+        text, base = _token_text(token)
+        found = []
+        for number in numbers_in(text, base, **flags) if text is not None else ():
+            item = {**number, "pointers": []}
+            if token["t"] == "figure" or (token["t"] == "pointer" and token["form"] == "link"):
+                item["pointers"].append(_reference(token))
+            found.append((item, number["offset"] - base + number["length"]))
+        per_token.append(found)
+    for i, token in enumerate(tokens):
+        if token["t"] != "pointer" or token["form"] not in ("citation", "bare"):
+            continue
+        gap = ""
+        for j in range(i - 1, -1, -1):
+            previous = tokens[j]
+            if previous["t"] == "pointer" and previous["form"] in ("citation", "bare"):
+                continue
+            if per_token[j]:
+                item, end = per_token[j][-1]
+                if not CLAUSE.search(_token_text(previous)[0][end:] + gap):
+                    item["pointers"].append(_reference(token))
+                break
+            if previous["t"] != "text":
+                break
+            gap = previous["text"] + gap
+            if CLAUSE.search(gap):
+                break
     out = []
-    for number, inside in (pair for token in tokens for pair in _token_numbers(token, **flags)):
-        if inside is not None and inside.get("kind") in COVERING:
-            out.append({**number, "covered_by": [inside["id"]], "scope": "pointer"})
-        elif covering:
-            out.append({**number, "covered_by": list(dict.fromkeys(covering)), "scope": "sentence"})
-        else:
-            out.append({**number, "covered_by": [], "scope": "none",
-                        "reason": "only post pointers (context) in this sentence" if context
-                        else "no claim or artifact pointer in this sentence"})
+    for found in per_token:
+        for item, _ in found:
+            pointers = list({(p["id"], p["locator"]): p for p in item["pointers"]}.values())
+            covering = [p for p in pointers if p["kind"] in COVERING]
+            scope = _scope(covering)
+            entry = {**item, "pointers": pointers, "covered_by": list(dict.fromkeys(p["id"] for p in covering)),
+                     "scope": scope}
+            if scope == "none":
+                entry["reason"] = ("a post pointer gives context only; point the number at a claim or artifact"
+                                   if any(p["kind"] == "post" for p in pointers)
+                                   else "no claim or artifact pointer at this number")
+            out.append(entry)
     return out
 
 
@@ -432,16 +549,39 @@ def _sentence(n, tokens, **flags):
     clean = [t for t in tokens if not (t["t"] == "text" and not t["text"])]
     return {"id": f"s{n}", "offset": start, "length": max(0, end - start), "tokens": clean,
             "pointers": list(dict.fromkeys(t["id"] for t in tokens if t["t"] in ("pointer", "figure"))),
-            "numbers": check_unit(tokens, **flags)}
+            "numbers": cover(tokens, **flags)}
 
 
 def _row(n, cells, fallback):
-    """A table row is one checked unit: a number in any cell needs a claim or artifact pointer in the row."""
+    """A table row is one reported unit; coverage is per cell (a citation covers the number before it in its cell)."""
     tokens = [inline(_text([cell])) for cell in cells]
     flat = [t for cell in tokens for t in cell]
     offset = cells[0][1] if cells else fallback
     unit = _sentence(n, flat or [{"t": "text", "text": "", "offset": offset}])
-    return {"id": unit["id"], "cells": tokens, "pointers": unit["pointers"], "numbers": unit["numbers"], "offset": offset}
+    numbers = [number for cell in tokens for number in cover(cell)]
+    return {"id": unit["id"], "cells": tokens, "pointers": unit["pointers"], "numbers": numbers, "offset": offset}
+
+
+CODE_IDENTIFIER = re.compile(r"claim_[0-9a-f]{32}|artifact_[0-9a-f]{64}|post_[0-9a-f]{32}")
+
+
+def _code_numbers(text, offset):
+    """In a fenced block an identifier covers the number before it on its own line (same clause rule)."""
+    numbers, position = [], offset
+    for line in text.split("\n"):
+        tokens, cursor = [], 0
+        for match in CODE_IDENTIFIER.finditer(line):
+            if match.start() > cursor:
+                tokens.append({"t": "text", "text": line[cursor:match.start()], "offset": position + cursor})
+            tokens.append({"t": "pointer", "id": match.group(0), "kind": _pointer_kind(match.group(0)), "locator": None,
+                           "text": match.group(0), "form": "bare", "offset": position + match.start(),
+                           "length": len(match.group(0))})
+            cursor = match.end()
+        if cursor < len(line):
+            tokens.append({"t": "text", "text": line[cursor:], "offset": position + cursor})
+        numbers += cover(tokens, spelled=False)
+        position += len(line) + 1
+    return numbers
 
 
 def parse(source):
@@ -460,11 +600,12 @@ def parse(source):
             tokens = inline(_text(block["parts"]))
             figure = next(t for t in tokens if t["t"] == "figure")
             out.append({"type": "figure", "offset": block["offset"], "id": figure["id"], "kind": figure["kind"],
-                        "caption": figure["caption"], "sentences": [_sentence(next(counter), [figure])]})
+                        "locator": figure["locator"], "caption": figure["caption"],
+                        "sentences": [_sentence(next(counter), [figure])]})
         elif kind == "heading":
             tokens = inline(_text(block["parts"]))
             out.append({"type": "heading", "level": block["level"], "offset": block["offset"],
-                        "sentences": [_sentence(next(counter), tokens, heading=True)] if tokens else []})
+                        "sentences": [_sentence(next(counter), tokens)] if tokens else []})
         elif kind == "quote":
             groups = sentences(inline(_text(block["parts"])))
             out.append({"type": "quote", "offset": block["offset"],
@@ -482,17 +623,13 @@ def parse(source):
                         "rows": [_row(next(counter), r, block["offset"]) for r in block["rows"]]})
         elif kind == "code":
             text = block["text"]
-            found_ids = list(re.finditer(r"claim_[0-9a-f]{32}|artifact_[0-9a-f]{64}|post_[0-9a-f]{32}", text))
-            cites = [m.group(0) for m in found_ids]
-            covering = [c for c in dict.fromkeys(cites) if _pointer_kind(c) in COVERING]
-            found = []
-            for number in numbers_in(text, block["text_offset"]):
-                found.append({**number, "covered_by": covering, "scope": "block" if covering else "none",
-                              **({} if covering else {"reason": "no claim or artifact identifier in this code block"})})
-            out.append({"type": "code", "offset": block["offset"], "lang": block["lang"], "text": text,
-                        "id": f"s{next(counter)}", "pointers": list(dict.fromkeys(cites)), "numbers": found,
-                        "cites": [{"t": "pointer", "id": m.group(0), "kind": _pointer_kind(m.group(0)), "form": "code",
-                                   "offset": block["text_offset"] + m.start(), "length": len(m.group(0))}
+            found_ids = list(CODE_IDENTIFIER.finditer(text))
+            out.append({"type": "code", "offset": block["offset"], "text_offset": block["text_offset"],
+                        "lang": block["lang"], "text": text,
+                        "id": f"s{next(counter)}", "pointers": list(dict.fromkeys(m.group(0) for m in found_ids)),
+                        "numbers": _code_numbers(text, block["text_offset"]),
+                        "cites": [{"t": "pointer", "id": m.group(0), "kind": _pointer_kind(m.group(0)), "locator": None,
+                                   "form": "code", "offset": block["text_offset"] + m.start(), "length": len(m.group(0))}
                                   for m in found_ids]})
         else:
             out.append({"type": "rule", "offset": block["offset"]})
@@ -516,6 +653,13 @@ def units(blocks):
                 yield n, sentence
 
 
+def all_numbers(blocks):
+    """(block index, unit, number) for every number in reading order."""
+    for n, unit in units(blocks):
+        for number in unit["numbers"]:
+            yield n, unit, number
+
+
 def pointer_tokens(blocks):
     for n, block in enumerate(blocks):
         cells = [block["header"], *block["rows"]] if block["type"] == "table" else []
@@ -536,7 +680,7 @@ def _line(source, offset):
 def _context(source, offset, length):
     start = source.rfind("\n", 0, offset) + 1
     end = source.find("\n", offset + length)
-    return source[start:end if end >= 0 else len(source)][:400]
+    return source[start:end if end >= 0 else len(source)][:400], start
 
 
 def resolve_pointer(view, identity, kind, cache):
@@ -579,44 +723,120 @@ def resolve_pointer(view, identity, kind, cache):
         row = view.one("SELECT id,author,created,body_blob FROM post WHERE id=?", (identity,))
         if row:
             content = views.content(view, row["body_blob"])
+            claims = view.one("SELECT count(*) AS n FROM claim WHERE post=?", (identity,))["n"]
             entry.update(present=True, title=content.get("title"), author=row["author"], created=row["created"],
-                         post_kind=content.get("kind"), route=f"/post/{identity}")
+                         post_kind=content.get("kind"), claims=claims, route=f"/post/{identity}")
     cache[identity] = entry
     return entry
 
 
-def check(view, source, blocks):
-    """(problems, pointer map). Problems carry kind, offset, length, line, quote and the enclosing unit."""
+def verify_numbers(view, blocks, cache, outputs=None):
+    """Value-in-record: annotate every number with `status` (verified | unverified | unpointed) and each covering
+    pointer with its `result`, `at`, `reason` and `found` (the cited cell, key, line or claim text)."""
+    outputs = {} if outputs is None else outputs
+    for _, _, number in all_numbers(blocks):
+        value = locators.parse_number(number["text"])
+        results = []
+        for pointer in number["pointers"]:
+            if pointer["kind"] not in COVERING:
+                continue
+            entry = resolve_pointer(view, pointer["id"], pointer["kind"], cache)
+            if not entry["present"]:
+                result = {"result": "unverified", "at": None, "reason": "the pointer does not resolve"}
+            elif pointer["kind"] == "claim":
+                result = locators.verify_claim(entry, value)
+            else:
+                result = locators.verify_artifact(view, pointer["id"], pointer["locator"], value, outputs)
+            pointer.update(result)
+            results.append(result)
+        number["status"] = ("verified" if any(r["result"] == "verified" for r in results)
+                            else "unverified" if results else "unpointed")
+    return blocks
+
+
+def check(view, source, blocks, *, task_type=None):
+    """(problems, pointer map). Verifies every pointed number in place. Problems carry kind, offset, length,
+    line, the source line as `context` (with `context_start`) and the enclosing unit."""
     problems, cache = [], {}
-    for n, unit in units(blocks):
-        for number in unit["numbers"]:
-            if number["scope"] == "none":
-                problems.append({"kind": "unpointed_number", "text": number["text"], "offset": number["offset"],
-                                 "length": number["length"], "line": _line(source, number["offset"]), "block": n,
-                                 "unit": unit["id"], "reason": number["reason"],
-                                 "context": _context(source, number["offset"], number["length"])})
+
+    def where(offset, length):
+        context, start = _context(source, offset, length)
+        return {"offset": offset, "length": length, "line": _line(source, offset), "context": context,
+                "context_start": start}
+
+    for n, unit, number in all_numbers(blocks):
+        if number["scope"] == "none":
+            problems.append({"kind": "unpointed_number", "text": number["text"], **where(number["offset"], number["length"]),
+                             "block": n, "unit": unit["id"], "reason": number["reason"]})
     for n, token in pointer_tokens(blocks):
         identity, kind = token["id"], token.get("kind")
-        where = {"offset": token["offset"], "length": token.get("length", len(identity)),
-                 "line": _line(source, token["offset"]), "block": n, "pointer": identity,
-                 "context": _context(source, token["offset"], token.get("length", len(identity)))}
+        span = {**where(token["offset"], token.get("length", len(identity))), "block": n, "pointer": identity}
         if token["t"] == "figure" and kind != "artifact":
-            problems.append({"kind": "figure_not_artifact", **where,
+            problems.append({"kind": "figure_not_artifact", **span,
                              "reason": "a figure must reference an artifact (![caption](artifact_…))"})
             continue
         if kind is None:
             shape = POINTER_SHAPE.match(identity)
-            problems.append({"kind": "unresolved_pointer" if shape else "pointer_kind_not_allowed", **where,
+            problems.append({"kind": "unresolved_pointer" if shape else "pointer_kind_not_allowed", **span,
                              "reason": "malformed record identifier" if shape else
                              "only claims, artifacts and (for context) posts can be cited"})
             continue
+        if token.get("locator") is not None:
+            try:
+                if kind != "artifact":
+                    raise locators.LocatorError("only artifact pointers take a locator")
+                locators.parse_locator(token["locator"])
+            except locators.LocatorError as error:
+                problems.append({"kind": "invalid_locator", **span, "locator": token["locator"], "reason": str(error)})
         entry = resolve_pointer(view, identity, kind, cache)
         if not entry["present"]:
-            problems.append({"kind": "unresolved_pointer", **where, "reason": {
+            problems.append({"kind": "unresolved_pointer", **span, "reason": {
                 "claim": "not a claim in the ledger", "artifact": "not catalogued in the library or any workspace",
                 "post": "no such post on this board"}[kind]})
+        elif kind == "post" and task_type != "digest" and not entry.get("claims"):
+            problems.append({"kind": "claimless_post_cited", **span,
+                             "reason": "a writing task does not cite a post without ledger claims; cite the claims "
+                                       "or artifacts it rests on"})
+    verify_numbers(view, blocks, cache)
     problems.sort(key=lambda p: (p["offset"], p["kind"]))
     return problems, cache
+
+
+def number_records(source, blocks):
+    """Compact per-number locations and statuses (stored in verdicts and served to readers)."""
+    out = []
+    for n, unit, number in all_numbers(blocks):
+        out.append({"text": number["text"], "offset": number["offset"], "length": number["length"],
+                    "line": _line(source, number["offset"]), "block": n, "unit": unit["id"],
+                    "scope": number["scope"], "status": number.get("status", "unpointed"),
+                    **({"reason": number["reason"]} if number.get("reason") else {}),
+                    "pointers": [{k: p.get(k) for k in ("id", "kind", "locator", "form", "result", "at", "reason", "found")
+                                  if p.get(k) is not None} for p in number["pointers"]]})
+    return out
+
+
+def statistics(records, blocks, pointers):
+    counted = [r["status"] for r in records]
+    return {"numbers": len(records), "pointed": sum(1 for r in records if r["scope"] != "none"),
+            "verified": counted.count("verified"), "unverified": counted.count("unverified"),
+            "unpointed": counted.count("unpointed"), "units": sum(1 for _ in units(blocks)), "pointers": len(pointers),
+            "scopes": {s: sum(1 for r in records if r["scope"] == s) for s in ("cell", "claim", "line", "none")}}
+
+
+def overlay(blocks, records):
+    """Apply recorded per-number statuses (a stored verdict) to freshly parsed blocks, matched by source offset."""
+    by_offset = {r["offset"]: r for r in records}
+    for _, _, number in all_numbers(blocks):
+        recorded = by_offset.get(number["offset"])
+        if not recorded:
+            continue
+        number["status"], number["scope"] = recorded["status"], recorded["scope"]
+        results = {(p["id"], p.get("locator")): p for p in recorded.get("pointers", [])}
+        for pointer in number["pointers"]:
+            stored = results.get((pointer["id"], pointer.get("locator")))
+            if stored:
+                pointer.update({k: stored[k] for k in ("result", "at", "reason", "found") if k in stored})
+    return blocks
 
 
 # ---------------------------------------------------------------------------- regeneration and subgraph
@@ -694,7 +914,7 @@ def subgraph(view, post_id, pointers):
     return value
 
 
-# ---------------------------------------------------------------------------- render
+# ---------------------------------------------------------------------------- the verdict and render
 
 def writing_request(view, post_id):
     """The writing/digest request this post answers or was published during, when there is one."""
@@ -708,10 +928,31 @@ def writing_request(view, post_id):
     return None
 
 
+def verdict(view, post_id, *, request=None, row=None):
+    """The checker's verdict on a write-up: a pure function of the archive (no timestamps), stored at delivery."""
+    row = row or view.one("SELECT * FROM post WHERE id=?", (post_id,))
+    if not row:
+        raise DawError("unknown_post", post_id)
+    content = views.content(view, row["body_blob"])
+    request = request if request is not None else writing_request(view, post_id)
+    task_type = request["task_type"] if request else None
+    source = content.get("body") or ""
+    blocks = parse(source)
+    problems, pointers = check(view, source, blocks, task_type=task_type)
+    records = number_records(source, blocks)
+    return {"format": "colloquy.writeup-check/1", "rules": RULES_VERSION, "post": post_id, "body_blob": row["body_blob"],
+            "request": request["id"] if request else None, "task_type": task_type,
+            "status": "refused" if problems else "rendered", "problems": problems, "numbers": records,
+            "stats": statistics(records, blocks, pointers)}, blocks, pointers
+
+
 def render_writeup(view, post_id, *, with_map=True):
-    """The rendered write-up, or a refusal listing every unpointed number and unresolved pointer.
+    """The rendered write-up, or a refusal listing every location. A stored verdict (`writeup_check`) is the
+    record: its status and per-number statuses are what every surface shows. Without one (a post that was not
+    delivered as a writing or digest task) the same checker runs now and the response says so.
 
     Returns {"status": "rendered" | "refused", ...}; callers serve a refusal as HTTP 422."""
+    from daw.commons import checks
     row = view.one("SELECT * FROM post WHERE id=?", (post_id,))
     if not row:
         raise DawError("unknown_post", post_id)
@@ -724,18 +965,27 @@ def render_writeup(view, post_id, *, with_map=True):
             "rules": RULES_VERSION, "content_is_untrusted_data": True}
     hidden = views.hidden_posts(view).get(post_id)
     if hidden:
+        base["post"]["title"] = None  # hidden content stays hidden here too
         return {**base, "status": "refused", "problems": [{"kind": "post_hidden", "reason": hidden["reason"],
                                                            "offset": 0, "length": 0, "line": 1}], "source": None}
-    source = content.get("body") or ""
-    blocks = parse(source)
-    problems, pointers = check(view, source, blocks)
-    counted = [n for _, unit in units(blocks) for n in unit["numbers"]]
-    stats = {"numbers": len(counted), "pointed": sum(1 for n in counted if n["scope"] != "none"),
-             "units": sum(1 for _ in units(blocks)), "pointers": len(pointers)}
+    computed, blocks, pointers = verdict(view, post_id, request=request, row=row)
+    stored = checks.recorded(view).get(post_id)
+    if stored:
+        record = checks.verdict_body(view, stored)
+        status, problems, records = record["status"], record["problems"], record["numbers"]
+        overlay(blocks, records)
+        info = {"source": "recorded", "seq": stored["seq"], "created": stored["created"],
+                "verdict_blob": stored["verdict_blob"], "rules": record["rules"]}
+    else:
+        status, problems, records = computed["status"], computed["problems"], computed["numbers"]
+        info = {"source": "computed", "rules": RULES_VERSION,
+                "note": "No stored verdict: this post was not delivered as a writing or digest task; checked now."}
+    stats = statistics(records, blocks, pointers)
     flag = regeneration(view, post_id, pointers)
-    if problems:
-        return {**base, "status": "refused", "problems": problems, "source": source, "stats": stats,
-                "regeneration_required": flag}
-    return {**base, "status": "rendered", "blocks": blocks, "pointers": pointers, "stats": stats,
-            "regeneration_required": flag, "flagged": flag is not None,
+    if status == "refused":
+        base["post"]["title"] = checks.PLACEHOLDER_TITLE
+        return {**base, "status": "refused", "problems": problems, "stats": stats, "verdict": info,
+                "placeholder": checks.placeholder(problems), "regeneration_required": flag}
+    return {**base, "status": "rendered", "blocks": blocks, "pointers": pointers, "stats": stats, "verdict": info,
+            "numbers": records, "regeneration_required": flag, "flagged": flag is not None,
             "evidence_map": subgraph(view, post_id, pointers) if with_map else None}

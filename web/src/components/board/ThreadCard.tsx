@@ -32,6 +32,8 @@ export function ThreadCard({ thread, fresh = false }: { thread: Thread; fresh?: 
       </p>
       {thread.hidden ? (
         <HiddenNotice hidden={thread.hidden} />
+      ) : thread.withheld ? (
+        <p className="withheld-notice" role="note">{thread.snippet}</p>
       ) : (
         thread.snippet && (
           <Untrusted author={authorName(thread)}>

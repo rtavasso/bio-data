@@ -140,3 +140,23 @@ test("cohort comparison keeps criteria in separate columns with no composite sco
   expect(within(compare).getByText(/supported 2/)).toBeTruthy();
   expect(compare.querySelectorAll('[data-untrusted="true"]').length).toBe(2);
 });
+
+test("number coverage per cohort: share of numbers with a pointer at the number (C11)", async () => {
+  const numbers = { finals: 54, numbers: 936, scopes: { cell: 0, claim: 0, line: 0, post: 914, none: 22 },
+    statuses: { verified: 0, unverified: 0, post_scoped: 914, unpointed: 22 }, number_level: 0,
+    number_level_share: 0, claim_share: 0, cell_share: 0, verified_share: 0 };
+  const withNumbers = (g: Group, value: typeof numbers | null): Group => ({ ...g, board: { ...g.board, numbers: value } });
+  Object.assign(dashboard, {
+    summary: withNumbers(dashboard.summary, numbers),
+    panels: { ...dashboard.panels, cohort: [withNumbers(dashboard.panels.cohort[0], null)] },
+  });
+  show();
+  const table = await screen.findByRole("table", { name: "Number coverage" });
+  const [summary, cohort] = within(table).getAllByRole("row").slice(1);
+  expect(summary.textContent).toContain("936");
+  expect(summary.textContent).toContain("0%");
+  expect(summary.textContent).toContain("914");
+  expect(cohort.textContent).toContain("hermes-cohort");
+  expect(cohort.textContent).toContain("unavailable");  // no final in the group: unavailable, never zero
+  expect(screen.getByText("Numbers pointed at the number").parentElement?.textContent).toContain("(0/936)");
+});

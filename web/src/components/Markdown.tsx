@@ -60,9 +60,75 @@ function anchorFromSelection(root: HTMLElement, source: string): TextAnchor | nu
   return { kind: "paragraph", offset, length: quote.length, quote };
 }
 
-export function Markdown({ source, onAnchor }: { source: string; onAnchor?: (anchor: TextAnchor) => void }) {
+// A checked number to mark inline: its source offset (Unicode code points, as the server counts) and status.
+export interface InlineNumber {
+  text: string;
+  offset: number;
+  status?: string;
+  scope?: string;
+  reason?: string;
+}
+
+const MARK_TITLES: Record<string, string> = {
+  verified: "verified against its record", unverified: "pointed, but not found in the cited record",
+  post_scoped: "no pointer at this number; see this post's evidence", unpointed: "no pointer",
+};
+
+// Code-point offsets (Python) -> UTF-16 offsets (JavaScript strings, micromark positions).
+function utf16Offsets(source: string): (cp: number) => number {
+  const map: number[] = [];
+  let unit = 0;
+  for (const ch of source) {
+    map.push(unit);
+    unit += ch.length;
+  }
+  map.push(unit);
+  return (cp) => map[cp] ?? -1;
+}
+
+interface MdNode { type: string; value?: string; children?: MdNode[]; position?: { start: { offset?: number }; end: { offset?: number } }; data?: Record<string, unknown> }
+
+// remark plugin: wrap each checked number found in a text node (whose value is exactly its source span) in a
+// span carrying the checker's status, so verified numbers are underlined and unverified ones marked in place.
+function remarkNumbers(source: string, numbers: InlineNumber[]) {
+  const toUnit = utf16Offsets(source);
+  const marks = numbers
+    .filter((n) => n.status && n.status !== "post_scoped")
+    .map((n) => ({ ...n, start: toUnit(n.offset), end: toUnit(n.offset) + n.text.length }))
+    .filter((n) => n.start >= 0 && source.slice(n.start, n.end) === n.text);
+  const split = (node: MdNode): MdNode[] => {
+    const start = node.position?.start.offset;
+    const end = node.position?.end.offset;
+    if (node.type !== "text" || start === undefined || end === undefined || node.value !== source.slice(start, end)) return [node];
+    const inside = marks.filter((m) => m.start >= start && m.end <= end).sort((a, b) => a.start - b.start);
+    if (!inside.length) return [node];
+    const out: MdNode[] = [];
+    let cursor = start;
+    for (const m of inside) {
+      if (m.start < cursor) continue;
+      if (m.start > cursor) out.push({ type: "text", value: source.slice(cursor, m.start) });
+      out.push({ type: "numberMark", data: { hName: "span", hProperties: { className: ["num", `num-${m.status}`], title: m.reason ?? MARK_TITLES[m.status!] ?? m.status, "data-number": m.status } },
+        children: [{ type: "text", value: m.text }] });
+      cursor = m.end;
+    }
+    if (cursor < end) out.push({ type: "text", value: source.slice(cursor, end) });
+    return out;
+  };
+  const walk = (node: MdNode) => {
+    if (!node.children) return;
+    node.children = node.children.flatMap((child) => {
+      walk(child);
+      return split(child);
+    });
+  };
+  return () => (tree: MdNode) => { walk(tree); };
+}
+
+export function Markdown({ source, onAnchor, numbers }: { source: string; onAnchor?: (anchor: TextAnchor) => void; numbers?: InlineNumber[] }) {
   // Identifier links are added for display only; offsets refer to the original source.
   const display = onAnchor ? source : linkIdentifiers(source);
+  // Number marks need display offsets equal to source offsets (true when identifiers are not rewritten).
+  const plugins = numbers?.length && display === source ? [remarkGfm, remarkNumbers(source, numbers)] : [remarkGfm];
   const block = (Tag: "p" | "li" | "td" | "h1" | "h2" | "h3" | "h4") =>
     function Block({ node, children }: { node?: { position?: { start: { offset?: number } } }; children?: ReactNode }) {
       return <Tag data-offset={node?.position?.start.offset ?? undefined}>{children}</Tag>;
@@ -80,7 +146,7 @@ export function Markdown({ source, onAnchor }: { source: string; onAnchor?: (anc
       }
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={plugins}
         skipHtml
         components={{
           p: block("p"), li: block("li"), td: block("td"), h1: block("h1"), h2: block("h2"), h3: block("h3"), h4: block("h4"),
