@@ -42,8 +42,8 @@ which is shown, not refused; it is distinct from `unpointed` and from `verified`
 notation (`1e-5`, `3.2×10^-4`, `3.2×10⁻⁴`), percentages, ratios (`3:1`, `1/3`), unicode vulgar fractions
 (`½`, `1½`, `1⁄2`), the spelled-out integers zero to twenty (`twenty-one` to `twenty-nine` as one number) and
 `a dozen` / `half a dozen`. Heading numbers count like any other number. An integer glued to one lone
-lowercase letter is a number with a label, like every other glued form (`n12`, `k5`, the fold multiplier `x2`;
-spec v3 B6). **Not numbers:** record identifiers, hashes and URLs; integers glued to an uppercase letter, to two
+lowercase letter, and not followed by a letter, is a number with a label, like every other glued form (`n12`,
+`k5`, the fold multiplier `x2`; spec v3 B6; `e2e` is a word). **Not numbers:** record identifiers, hashes and URLs; integers glued to an uppercase letter, to two
 or more letters, or through one hyphen (identifier characters: `PMP22`, `P1`, `log2`, `GSE1234`, `H3K27me3`,
 `IL-6`, `measured-zero`); strand ends `3′`/`5′`
 followed by a prime; digits after a digit, underscore or `.`; ordered-list ordinals (Markdown structure);
@@ -447,11 +447,11 @@ def _multiplier(masked, start):
     return start >= 1 and masked[start - 1] in "xX" and (start < 2 or not masked[start - 2].isalnum())
 
 
-def _labelled(masked, start):
+def _labelled(masked, start, end):
     """`n12`, `k5`: one lone lowercase letter glued to an integer labels a number (B6); a letter that follows
-    another letter, a digit, `_` or `-` is part of an identifier (`log2`, `IL-6`), and uppercase prefixes
-    (`P1`, `H3`) name things."""
-    if start < 1 or not ("a" <= masked[start - 1] <= "z"):
+    another letter, a digit, `_` or `-` is part of an identifier (`log2`, `IL-6`), uppercase prefixes (`P1`,
+    `H3`) name things, and an integer with a letter after it is inside a word (`e2e`, `p53b`)."""
+    if start < 1 or not ("a" <= masked[start - 1] <= "z") or (end < len(masked) and masked[end].isalpha()):
         return False
     return start < 2 or not (masked[start - 2].isalnum() or masked[start - 2] in "_-−")
 
@@ -474,7 +474,7 @@ def numbers_in(text, offset, *, byline=False, spelled=True):
         separator = re.match(r"\d+[:/]", token) if glued else None
         if separator:  # chr10:49316968, P1/2: the glued integer is an identifier, the rest a number
             start, token, glued = start + separator.end(), token[separator.end():], False
-        if glued and token.isdigit() and not _multiplier(masked, start) and not _labelled(masked, start):
+        if glued and token.isdigit() and not _multiplier(masked, start) and not _labelled(masked, start, end):
             continue  # integer identifier characters: PMP22, log2, GSE1234, H3K27me3
         if token in ("3", "5") and text[end:end + 1] in ("′", "'", "’"):
             continue  # strand ends: 3′ UTR, 5'-end
