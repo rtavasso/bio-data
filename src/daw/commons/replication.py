@@ -321,8 +321,7 @@ def badge(view, artifact, *, vis=None):
     if not row:
         return {"artifact": artifact, "replicated": False, "confirmations": [], "attempts": [],
                 "reason": "not in the shared library: only published artifacts carry a replication badge"}
-    derivation = artifact_info(view.library, artifact)["manifest"].get("derivation") or {}
-    inputs = [item.get("blob") for item in derivation.get("inputs") or []]
+    inputs = False  # read the derivation only when there is a confirmation to check against it
     system = _system_id(view)
     names = {r["id"]: r["name"] for r in view.rows("SELECT id,name FROM agent")}
     confirmations, makers = [], None
@@ -339,6 +338,14 @@ def badge(view, artifact, *, vis=None):
         agent, run, receipts = record.get("agent"), record.get("run"), record.get("receipts") or []
         if makers is None:  # read every participant's catalog only when there is a confirmation to check
             makers = sorted(p for p, made in producers(view, [artifact]).items() if artifact in made)
+        if inputs is False:
+            try:
+                derivation = artifact_info(view.library, artifact)["manifest"].get("derivation") or {}
+                inputs = [item.get("blob") for item in derivation.get("inputs") or []]
+            except DawError as error:  # a manifest whose bytes are absent: inputs cannot be compared
+                if error.reason != "missing_blob":
+                    raise
+                inputs = None
         criteria = {
             "different_participant": {"ok": bool(agent) and agent not in makers, "participant": agent,
                                       "participant_name": names.get(agent), "producers": makers,
@@ -350,7 +357,8 @@ def badge(view, artifact, *, vis=None):
                                                  "helper": (r.get("stream") or {}).get("helper"),
                                                  "line": (r.get("stream") or {}).get("line")} for r in receipts],
                                    "route": f"/run/{run}"},
-            "matching_inputs": {"ok": bool(receipts) and all(r.get("inputs") == inputs for r in receipts),
+            "matching_inputs": {"ok": inputs is not None and bool(receipts)
+                                and all(r.get("inputs") == inputs for r in receipts),
                                 "inputs": inputs, "receipt_inputs": [r.get("inputs") for r in receipts],
                                 "route": f"/artifact/{artifact}"},
             "identical_bytes": {"ok": record.get("output_sha256") == row["output_blob"],
