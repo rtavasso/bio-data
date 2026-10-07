@@ -7,15 +7,20 @@ runtime around one delivery:
   monotonic and the wall clock, so host sleep cannot extend a task.
 - tokens: harness telemetry is read from the parsed stream after the turn and
   reported. Stock harnesses cannot be stopped at a token count mid-turn, so the
-  limit is checked, never enforced. Missing telemetry is "unavailable", never 0.
-- download_bytes: written into the checkout's workspace transport budget
-  (`bundle_bytes` per transport command and `asset_bytes` per file) for the
-  duration of the task, then the original config bytes are restored. The
-  transport enforces per command; the task total is the agent's instruction.
+  limit is checked, never enforced; an exceedance is a `token_budget_exceeded`
+  board event and an operator notice. Missing telemetry is "unavailable", never 0.
+- download_bytes: written to a platform-owned task budget file,
+  `<checkout>/.colloquy/task-budget.json`, which the sandbox mounts read-only
+  (spec v2 C7). The agent's own `workspace/config.toml` is never touched. The
+  transport (`daw.catalog.Workspace`) caps `bundle_bytes` (per transport command)
+  and `asset_bytes` (per file) at the task limit whenever the file is present;
+  the task total is the agent's instruction. The runtime hashes the file before
+  the turn and compares it afterwards: a changed or removed file is a
+  `budget_policy_violation` board event plus an operator notice, never a note.
 """
 import contextlib
 import hashlib
-import tomllib
+import json
 from pathlib import Path
 
 from daw.util import DawError, now
@@ -65,36 +70,92 @@ def dump_toml(document, prefix=()):
     return text
 
 
-@contextlib.contextmanager
-def download_budget(workspace, budget, receipt, keep=None):
-    """Apply a task's download budget to a workspace config for the duration of the block; always restore.
+TASK_BUDGET = Path(".colloquy") / "task-budget.json"
+CAPS = ("bundle_bytes", "asset_bytes")
 
-    `receipt` (a dict) records the original and applied values and the restoration. If the config
-    changed during the task, the changed bytes are kept at `keep` for audit before the original returns.
-    The caller holds the agent's session lock, so no other delivery reads the temporary config.
-    """
+
+def task_budget_path(trial):
+    return Path(trial) / TASK_BUDGET
+
+
+def clear_task_budget(trial):
+    """Remove a stale task budget left by an interrupted dispatch; keep the (empty) platform directory
+    so the sandbox can mount it read-only. The caller holds the agent's session lock."""
+    path = task_budget_path(trial)
+    if path.parent.is_symlink():
+        path.parent.unlink()
+    path.parent.mkdir(exist_ok=True)
+    if path.is_symlink() or path.exists():
+        with contextlib.suppress(OSError):
+            path.chmod(0o600)
+        path.unlink()
+
+
+@contextlib.contextmanager
+def download_budget(trial, budget, receipt, keep=None, *, run=None):
+    """Write the task's download budget to the platform-owned file for the duration of the block.
+
+    `receipt` (a dict) records the limit and the file's hash and, afterwards, whether the file the agent
+    could reach was changed or removed (`policy_violation`; the caller records the board event and the
+    operator notice). Changed bytes are kept at `keep` for audit. The file is removed afterwards.
+    The caller holds the agent's session lock."""
     limit = (budget or {}).get("download_bytes")
     receipt["download_bytes"] = None
+    clear_task_budget(trial)
     if not limit:
         yield receipt
         return
-    path = Path(workspace) / "config.toml"
-    original = path.read_bytes()
-    document = tomllib.loads(original.decode())
-    budgets = dict(document.get("budgets", {}))
-    previous = {k: budgets.get(k, 0) for k in ("bundle_bytes", "asset_bytes")}
-    budgets.update({k: min(v, limit) if v else limit for k, v in previous.items()})
-    temporary = dump_toml({**document, "budgets": budgets}).encode()
-    path.write_bytes(temporary)
-    receipt["download_bytes"] = {"limit": limit, "previous": previous, "applied": {k: budgets[k] for k in previous},
-                                 "applied_at": now(), "config_sha256": hashlib.sha256(original).hexdigest(),
-                                 "enforcement": "per transport command and per file; the task total is instructed"}
+    path = task_budget_path(trial)
+    document = {"format": 1, "run": run, "download_bytes": limit, "caps": {k: limit for k in CAPS}, "issued": now(),
+                "note": "Platform-owned task budget, read-only in the sandbox; the transport applies these caps."}
+    data = json.dumps(document, indent=1, sort_keys=True).encode() + b"\n"
+    path.write_bytes(data)
+    path.chmod(0o444)
+    receipt["download_bytes"] = {"limit": limit, "applied": dict(document["caps"]), "file": str(TASK_BUDGET),
+                                 "sha256": hashlib.sha256(data).hexdigest(), "applied_at": now(),
+                                 "workspace_config_touched": False,
+                                 "enforcement": "per transport command and per file, read by the transport from the "
+                                                "platform-owned task budget file; the task total is instructed"}
     try:
         yield receipt
     finally:
-        current = path.read_bytes()
-        if current != temporary and keep:
-            Path(keep).write_bytes(current)
-        path.write_bytes(original)
-        receipt["download_bytes"].update(restored=path.read_bytes() == original, restored_at=now(),
-                                         changed_during_task=current != temporary)
+        observed = None if path.is_symlink() or not path.is_file() else path.read_bytes()
+        changed = observed != data
+        if changed and keep and observed is not None:
+            Path(keep).write_bytes(observed)
+        if path.is_symlink() or path.exists():
+            with contextlib.suppress(OSError):
+                path.chmod(0o600)
+            with contextlib.suppress(OSError):
+                path.unlink()
+        receipt["download_bytes"].update(
+            removed_at=now(), policy_violation=changed,
+            observed="removed" if observed is None else ("changed" if changed else "unchanged"),
+            observed_sha256=hashlib.sha256(observed).hexdigest() if observed is not None else None)
+
+
+def read_task_budget(workspace_root):
+    """Caps from the platform-owned task budget beside a checkout's workspace, or None.
+
+    The agent's workspace is `<checkout>/workspace`; the file is `<checkout>/.colloquy/task-budget.json`.
+    A malformed file fails closed: the transport refuses rather than running without the cap."""
+    path = Path(workspace_root).parent / TASK_BUDGET
+    if not path.is_file():
+        return None
+    try:
+        caps = json.loads(path.read_text())["caps"]
+        caps = {k: caps[k] for k in CAPS}
+    except (ValueError, KeyError, TypeError) as e:
+        raise DawError("task_budget_invalid", str(path)) from e
+    if any(type(v) is not int or v <= 0 for v in caps.values()):
+        raise DawError("task_budget_invalid", str(path))
+    return caps
+
+
+def apply_task_caps(budgets, workspace_root):
+    """A workspace's transport budgets with the current task's caps applied (the stricter wins; 0 = unlimited)."""
+    caps = read_task_budget(workspace_root)
+    if not caps:
+        return budgets
+    current = {k: getattr(budgets, k) for k in caps}
+    return budgets.model_copy(update={k: min(current[k], cap) if current[k] else cap for k, cap in caps.items()})

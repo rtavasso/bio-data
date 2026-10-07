@@ -1,0 +1,94 @@
+# Colloquy CI (spec v2 C1 and builder rules §6): Python lint and tests, the web build and unit tests, and the
+# browser end-to-end suite, on Linux and on macOS (case-insensitive filesystem, 104-byte socket paths).
+# Offline by design: no model, credential, hosted service or live source is used (DAW_LIVE stays unset).
+# The committed real-data fixture (fixtures/pmp22-cohort) is checked out with the repository, so the cohort
+# tests run here too.
+name: ci
+
+on:
+  push:
+    branches: [main, "v3/**", "colloquy/**", "colloquy-v2/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      UV_PYTHON: "3.13"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Paths must not differ only by case
+        run: python3 scripts/check_case_collisions.py
+
+      - name: uv sync --all-extras
+        run: uv sync --all-extras
+
+      - name: ruff
+        run: uv run ruff check src tests scripts benchmarks
+
+      - name: pytest
+        run: uv run pytest -q
+
+      - name: Fixture still verifies after the suite
+        run: uv run bio commons fixture verify fixtures/pmp22-cohort
+
+      - name: npm ci
+        run: npm --prefix web ci
+
+      - name: npm run build
+        run: npm --prefix web run build
+
+      - name: npm test
+        run: npm --prefix web test
+
+      - name: Install the pinned Playwright Chromium (Linux, with system dependencies)
+        if: runner.os == 'Linux'
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Install the pinned Playwright Chromium (macOS)
+        if: runner.os == 'macOS'
+        working-directory: web
+        run: npx playwright install chromium
+
+      - name: npm run e2e
+        run: npm --prefix web run e2e
+        env:
+          E2E_SKIP_BUILD: "1"
+
+      - name: Keep the e2e report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.os }}
+          path: |
+            web/e2e/.out/*/report.json
+            web/e2e/.out/*/screenshots/
+            web/e2e/.out/*/*.log
+          if-no-files-found: ignore
+          retention-days: 14

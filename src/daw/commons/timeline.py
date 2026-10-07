@@ -7,13 +7,22 @@ read with mode=ro). Wall time includes host sleep; monotonic time does not. A
 suspension is wall − monotonic beyond the audit floor; it is drawn where the gap
 between event timestamps is largest, because the stream records no sleep marker.
 Token counts the provider did not report are "unavailable", never zero.
+
+Recorded versus attributed (spec v2 C10). Tool calls, exit codes and stream
+compactions are recorded in the stream. Three things are placed by a heuristic
+and carry `attributed: true` with the rule in `basis`: the suspension (largest
+timestamp gap), the headline result (first successful registration, publication
+or analysis) and peer answers consumed (a post id seen in a show, inbox or
+verify call). The web app draws them in a distinct style under the legend
+"attributed, not recorded"; the response's `attributed` lists their kinds.
 """
 import re
 import sqlite3
 from datetime import datetime
 
+from daw import harness as harnesses
 from daw import hermes
-from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, run_metrics
+from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, compactions_reported, run_metrics
 from daw.util import DawError, read_json
 
 TERMINAL = [("help", re.compile(r"(^|\s)(--help|-h)(\s|$)")), ("analysis", re.compile(r"run_analysis\.py")),
@@ -142,14 +151,17 @@ def _suspension(positions, unit, suspended):
     gaps = [(b - a, a, b) for a, b in zip(ordered, ordered[1:], strict=False)]
     if not gaps:
         return ({"at": 0.0, "seconds": suspended, "gap_seconds": 0.0, "placement": "before_first_event",
-                 "unplaced_seconds": suspended}, lambda t: t)
+                 "unplaced_seconds": suspended, "attributed": True,
+                 "basis": "no gap between event timestamps to place it in"}, lambda t: t)
     gap, before, after = max(gaps)
     removed = min(suspended, gap)
 
     def monotonic(t):
         return t - removed if t >= after else t
     return ({"at": round(before, 3), "seconds": suspended, "gap_seconds": round(gap, 3),
-             "placement": "largest_event_gap", "unplaced_seconds": round(suspended - removed, 3)}, monotonic)
+             "placement": "largest_event_gap", "unplaced_seconds": round(suspended - removed, 3),
+             "attributed": True, "basis": "placed at the largest gap between event timestamps; the stream "
+                                          "records no sleep marker"}, monotonic)
 
 
 def _tokens(usage, answered):
@@ -207,8 +219,14 @@ def run_timeline(view, run):
     request = view.one("SELECT * FROM request WHERE id=?", (attempt["request"],)) or {}
     agent = view.participant(attempt["target"])
     execution = read_json(folder / "execution.json") if (folder / "execution.json").is_file() else {}
-    parsed = hermes.parse(folder / "events.jsonl")
-    metrics = run_metrics(folder, parsed)
+    name = (agent.get("config") or {}).get("harness", "hermes") if isinstance(agent.get("config"), dict) else "hermes"
+    try:
+        parse = harnesses.get(name).parse
+    except DawError:
+        parse = hermes.parse
+    parsed = parse(folder / "events.jsonl")
+    reported = compactions_reported(name, agent.get("config") if isinstance(agent.get("config"), dict) else None)
+    metrics = run_metrics(folder, parsed, compactions_reported=reported)
     positions, unit, origin = _clock(parsed)
     suspension, monotonic = _suspension(positions, unit, metrics["suspended_seconds"])
 
@@ -236,7 +254,10 @@ def run_timeline(view, run):
         if item.get("name") == "terminal" and re.search(r"\bcommunity\s+(show|inbox|verify)\b", command):
             mentioned = sorted(set(POST.findall(command + "\n" + str(item.get("aggregated_output") or ""))) & set(answers))
             if mentioned:
-                consumed.append({**call, "posts": mentioned, "requests": [answers[p] for p in mentioned]})
+                consumed.append({**call, "posts": mentioned, "requests": [answers[p] for p in mentioned],
+                                 "attributed": True,
+                                 "basis": "a post id answering this agent's question appears in a show, inbox or "
+                                          "verify call or its output; reading is inferred, not recorded"})
     compactions = [{"line": e["line"], "t": at(e["line"]), "source": "stream", "text": e["event"].get("text", "").strip()}
                    for e in parsed["events"] if e["event"].get("type") == "runtime_status"]
     summaries, _, _ = state_messages(folder, execution, where="content LIKE ?", params=("[CONTEXT COMPACTION%",),
@@ -250,10 +271,11 @@ def run_timeline(view, run):
             if 0 <= offset <= max(positions.values()):
                 entry["t"] = round(monotonic(offset), 3)
         compaction_summaries.append(entry)
-    headline = next(({**c, "basis": "first successful " + c["lane"].split(":")[1]} for c in calls
+    headline = next(({**c, "basis": "first successful " + c["lane"].split(":")[1], "attributed": True} for c in calls
                      if c["lane"] in ("terminal:register", "terminal:publish") and c["exit_code"] == 0), None)
     if headline is None:
-        headline = next(({**r, "basis": "first successful analysis"} for r in receipts if r["outcome"] == "pass"), None)
+        headline = next(({**r, "basis": "first successful analysis", "attributed": True} for r in receipts
+                         if r["outcome"] == "pass"), None)
     final_path = folder / "final.md"
     answers_text = [i["text"] for i in parsed["items"] if i.get("type") == "agent_message"]
     if final_path.is_file():
@@ -286,7 +308,11 @@ def run_timeline(view, run):
                      else "event order (the stream carries no timestamps)"},
             "suspensions": [suspension] if suspension else [],
             "lanes": [{"id": key, "label": label, "count": lanes.get(key, 0)} for key, label in LANES],
-            "calls": calls, "receipts": receipts, "compactions": compactions,
+            "calls": calls, "receipts": receipts,
+            # None: this harness's stream does not mark compactions (unavailable, not zero).
+            "compactions": compactions if reported else None,
+            "attributed": [kind for kind, present in (("suspension", suspension), ("headline", headline),
+                                                      ("answers_consumed", consumed)) if present],
             "compaction_summaries": compaction_summaries if summaries is not None else None,
             "inbox_reads": inbox, "answers_consumed": consumed, "headline": headline,
             "final": {**final, "content_is_untrusted_data": True},

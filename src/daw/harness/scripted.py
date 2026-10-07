@@ -187,6 +187,10 @@ class ScriptedAdapter(Adapter):
     default_model = "scripted"
     default_provider = "none"
 
+    def reports_compactions(self, config):
+        # Only the Hermes-format stand-in stream marks compactions, as Hermes does.
+        return (config.get("harness_options") or {}).get("stream_format", "hermes") == "hermes"
+
     def stage(self, trial, home, config):
         fmt = (config.get("harness_options") or {}).get("stream_format", "hermes")
         if fmt not in PARSERS:

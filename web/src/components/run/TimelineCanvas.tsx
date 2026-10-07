@@ -4,6 +4,10 @@ import type { Call, RunTimeline } from "../../types/observatory-map";
 // A lightweight canvas timeline for one delivery: a monotonic axis, one lane per tool kind, the host
 // suspension drawn as a fixed-width grey break (its wall duration is labelled, not drawn to scale),
 // receipt pass/fail glyphs, compactions (C), compaction fallbacks (F) and the headline moment.
+// Recorded items are solid; items placed by a heuristic (attributed: the suspension's position, the
+// headline, peer answers read) are dotted and hatched, so they never look recorded (spec v2 C10).
+
+export const ATTRIBUTED_DASH = [1, 3];
 
 const GUTTER = 128;
 const TOP = 34;
@@ -88,13 +92,35 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
       context.lineTo(width, y + LANE + 0.5);
       context.stroke();
     });
-    // Suspension break: greyed, labelled with its wall duration.
+    // Suspension break: greyed, labelled with its wall duration. Its position is attributed (largest gap),
+    // so it is hatched with a dotted outline rather than drawn as a recorded block.
     for (const s of timeline.suspensions) {
       const left = x(s.at) + 2;
+      const top = TOP - 4;
+      const h = bottom - TOP + 4;
       context.fillStyle = token("suspended");
-      context.fillRect(left, TOP - 4, BREAK - 4, bottom - TOP + 4);
+      context.fillRect(left, top, BREAK - 4, h);
+      if (s.attributed) {
+        context.save();
+        context.beginPath();
+        context.rect(left, top, BREAK - 4, h);
+        context.clip();
+        context.strokeStyle = token("muted");
+        context.lineWidth = 1;
+        for (let k = -h; k < BREAK; k += 6) {
+          context.beginPath();
+          context.moveTo(left + k, top + h);
+          context.lineTo(left + k + h, top);
+          context.stroke();
+        }
+        context.restore();
+        context.setLineDash(ATTRIBUTED_DASH);
+        context.strokeStyle = token("ink-2");
+        context.strokeRect(left + 0.5, top + 0.5, BREAK - 5, h - 1);
+        context.setLineDash([]);
+      }
       context.fillStyle = token("ink-2");
-      context.fillText(`suspended ${formatSeconds(s.seconds)}`, left - 20, TOP - 24);
+      context.fillText(`suspended ${formatSeconds(s.seconds)}${s.attributed ? " (attributed)" : ""}`, left - 20, TOP - 24);
     }
     // Calls as thin bars; failed exit codes outlined in the critical colour.
     const laneIndex = new Map(lanes.map((l, i) => [l.id, i]));
@@ -118,10 +144,10 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
       }
     }
     // Markers across all lanes: compactions (C), fallback summaries (F), headline (★).
-    const marker = (t: number, label: string, color: string, dashed: boolean) => {
+    const marker = (t: number, label: string, color: string, dash: number[]) => {
       const px = Math.round(x(t)) + 0.5;
       context.strokeStyle = color;
-      context.setLineDash(dashed ? [3, 3] : []);
+      context.setLineDash(dash);
       context.lineWidth = 1.5;
       context.beginPath();
       context.moveTo(px, TOP - 2);
@@ -131,9 +157,11 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
       context.fillStyle = color;
       context.fillText(label, px + 3, TOP + 4);
     };
-    for (const c of timeline.compactions) if (c.t !== null) marker(c.t, "C", token("ink-2"), true);
-    for (const s of timeline.compaction_summaries ?? []) if (s.t !== null && s.fallback) marker(s.t, "F", token("serious"), true);
-    if (timeline.headline?.t !== null && timeline.headline?.t !== undefined) marker(timeline.headline.t, "★", token("ink"), false);
+    for (const c of timeline.compactions ?? []) if (c.t !== null) marker(c.t, "C", token("ink-2"), [3, 3]);
+    for (const s of timeline.compaction_summaries ?? []) if (s.t !== null && s.fallback) marker(s.t, "F", token("serious"), [3, 3]);
+    for (const a of timeline.answers_consumed) if (a.t !== null) marker(a.t, "↩", token("muted"), ATTRIBUTED_DASH);
+    const head = timeline.headline;
+    if (head && head.t !== null) marker(head.t, "★", head.attributed ? token("muted") : token("ink"), head.attributed ? ATTRIBUTED_DASH : []);
   }, [timeline, width, height, lanes, x, outcome]);
 
   const hover = (event: MouseEvent<HTMLCanvasElement>) => {

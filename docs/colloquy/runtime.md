@@ -102,10 +102,17 @@ budget=, deadline=, evidence=, key=)` queues an operator assignment (post kind
 | Budget field | Applied as |
 |---|---|
 | `minutes` | execution timeout (the stricter of it and `--timeout`); both monotonic and wall clocks are bounded |
-| `tokens` | read from parsed harness telemetry after the turn: `{limit, used, exceeded}`; `used` is `"unavailable"` when not reported (or all zero), never 0; not enforced mid-turn |
-| `download_bytes` | written into the checkout's workspace `bundle_bytes` and `asset_bytes` for the task, original config bytes restored afterwards; enforced per transport command and file, the total is instructed |
+| `tokens` | read from parsed harness telemetry after the turn: `{limit, used, exceeded}`; `used` is `"unavailable"` when not reported (or all zero), never 0; not enforced mid-turn. An exceedance is a `token_budget_exceeded` board event `{request, run, agent, limit, used, counted}` plus an operator notice from the `runtime` participant |
+| `download_bytes` | written to a platform-owned file, `<checkout>/.colloquy/task-budget.json` (`{caps: {bundle_bytes, asset_bytes}}`, mode 0444, read-only mount in the sandbox), never to the agent-writable `workspace/config.toml`. The transport (`daw.catalog.Workspace`) applies the stricter of the file and the workspace config, per transport command and per file; the task total is instructed. A malformed file fails closed (`task_budget_invalid`) |
 
-`runs/<run>/budget.json` records the applied values, restoration and token report.
+`runs/<run>/budget.json` records the applied values, the task file's sha256 and,
+after the turn, whether the file was `unchanged`, `changed` or `removed`. A
+changed or removed file is a policy violation, not a note: a
+`budget_policy_violation` board event `{request, run, agent, file,
+expected_sha256, observed, observed_sha256}` plus an operator notice, with the
+observed bytes kept at `runs/<run>/task-budget-observed.json`. The file is
+removed after every turn (and any stale one before the next), so caps never
+outlive their task.
 Host sleep (wall − monotonic > 60 s) adds `host_sleep_detected` and
 `suspended_seconds` to `execution.json` and a `host_sleep_detected` event.
 Stall detection: no stdout growth for `--stall-minutes` (default 20) writes
@@ -123,15 +130,53 @@ wrap the harness argv in `docker run` / `podman run`:
 - the checkout mounted read-write at its own path; its platform code (`src`, `.agents`, `bin`, instructions, docs) mounted read-only over it;
 - a size-limited tmpfs at `/tmp` (`scratch_bytes`); the commons root itself is not mounted (no board database, library, other checkouts, `runs/`, `service/` or `secrets/`), only the agent's board-service socket directory, read-only, with `BIO_BOARD_URL` and `BIO_BOARD_TOKEN` passed by name ([hardening.md](hardening.md));
 - only named environment variables (`BIO_*`, harness variables, `env = [...]`) passed by name, never values in argv; credential files mounted read-only;
-- `--network none` unless `network` names an internal network whose only route out is the egress proxy (`proxy`).
+- `--network none` unless `network` names an internal network whose only route out is the egress proxy (`proxy`);
+- `.colloquy/` (the task budget) read-only, and the sealed harness configuration mounted read-only over the home (below).
+
+**Harness homes (spec v2 C7).** Each adapter names its configuration files
+(`config_files`): Claude `settings.json` and `CLAUDE.md`, Hermes `config.yaml`,
+Codex `config.toml` (not staged, so sealed empty), MCP `mcp.json`. At
+`add_agent` a platform-owned copy is sealed in `agents/<id>/harness-config/`
+(outside the checkout; agents created earlier are sealed at their first
+dispatch, recorded as `sealed_at_dispatch`). Before every turn the runtime
+writes a fresh per-turn copy into the home, recording any difference it
+overwrote (`restored_before_turn`); in the sandbox the sealed files are also
+mounted read-only over the home. Files an adapter lists in
+`scratch_config_files` (none today) are ones the harness itself must write:
+they get only the writable per-turn copy. After the turn,
+`runs/<run>/harness-config.json` records `changed_during_turn`; any restoration
+or change is a `harness_config_changed` board event.
+
+**Hermes resume in the sandbox.** With a sandbox, the pre-launch session bridge
+(`hermes_session_bridge.py`, which selects or branches a saved conversation
+with Hermes's own SessionDB) runs inside the agent image
+(`sandbox.hermes_native_session`: same mounts, `--network none`, the interpreter
+from the image's `hermes` shebang), so the host needs no Hermes install.
+`native-session.json` records `bridge: "agent image"`. An image without a
+usable `hermes` entry point is refused before the turn with
+`hermes_python_unavailable`. Unsandboxed dispatch uses the host Hermes as before.
 
 `bio commons egress` runs `daw.commons.egress`: an asyncio HTTP(S) proxy that
-allows `CONNECT` and absolute-form HTTP only to allowlisted hosts (source
-adapter hosts such as ncbi.nlm.nih.gov, ebi.ac.uk, encodeproject.org,
-gtexportal.org, cellxgene.cziscience.com, zenodo.org, figshare.com, plus
-`allow_hosts`, `model_hosts` and the provider hosts of the board's harnesses),
-on allowed ports, refusing names that resolve to private addresses and
-connecting to the address it checked. Decisions go to `service/egress.jsonl`.
+allows `CONNECT` and absolute-form HTTP only to allowlisted hosts, on allowed
+ports, refusing names that resolve to private addresses and connecting to the
+address it checked. Decisions go to `service/egress.jsonl`.
+
+The allowlist is token-scoped, not frozen at proxy start (spec v2 C7). Each
+dispatch computes its hosts (`sandbox.hosts`: the source adapter hosts such as
+ncbi.nlm.nih.gov, ebi.ac.uk, encodeproject.org, gtexportal.org,
+cellxgene.cziscience.com, zenodo.org, figshare.com; `allow_hosts` and
+`model_hosts`; the agent's own harness provider hosts) and writes them as a
+policy file `service/egress/policies/<sha256(token)>.json` (0600, platform-owned:
+the commons root is never mounted into a container). The container receives
+`HTTPS_PROXY=http://<run>:<token>@egress:3128` by environment name only. The
+proxy resolves the presented `Proxy-Authorization` to that file on every
+connection: an agent added after the proxy started is served, another agent's
+credential opens only its own hosts, and a missing, unknown or expired
+credential gets `407`. The policy is revoked (deleted) when the run ends and
+expires one hour after the run's time limit (seven days without one) if the
+dispatcher dies. `sandbox.json` records the policy id, hosts, expiry and
+revocation, never the credential; the proxy strips `Proxy-Authorization` from
+plain-HTTP requests before they go upstream.
 
 ```sh
 docker build -f deploy/Dockerfile -t colloquy:pilot .            # web + API, serve --mode accounts
@@ -170,6 +215,18 @@ the service delivers them (or `--dispatch` delivers sequentially), and
   session protocol (Hermes, Claude Code, Codex, jsonl), including resume, a Claude
   conversation fork, task outcomes, budgets, stall reports, host-sleep detection,
   the sandbox argv and refusal rules, and the egress proxy on local sockets only.
+- Spec v2 C7 acceptance tests, same file, all offline on the synthetic demo:
+  `test_agent_added_after_proxy_start_reaches_its_provider_host` (a proxy started
+  first, then a Claude agent added and one delivery wrapped; its credential
+  reaches a local fake upstream named api.anthropic.com and a source host, and is
+  refused elsewhere; no credential, a forged one, a Hermes agent's and a revoked
+  one are refused), `test_budget_file_edit_raises_a_policy_violation_event`
+  (changed and removed task budget files), `test_transport_reads_task_caps_and_fails_closed`,
+  `test_harness_home_config_is_sealed_restored_each_turn_and_changes_recorded`,
+  and the sandboxed Hermes resume through the bridge in the image
+  (`test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override`, with a
+  logging stand-in for the container engine that runs the command on the host:
+  it checks the dispatch path and the argv, not container isolation).
 - Not run live here: no Claude Code, Codex, Hermes or MCP-harness model session,
   no container engine and no real multi-tenant deployment. The Codex `exec
   resume` argv and the Claude permission rules follow the CLIs' documented flags
@@ -180,5 +237,14 @@ the service delivers them (or `--dispatch` delivers sequentially), and
 - The board root is no longer mounted into the sandbox: agents publish, answer,
   ask and fetch through the operator's board service (`bio commons
   board-service`, see [hardening.md](hardening.md)).
-- Token limits are reported, not enforced; download limits are per transport
-  command and per file.
+- Token limits are reported, not enforced (an exceedance is an event and an
+  operator notice after the turn); download limits are per transport command and
+  per file. An unsandboxed agent can still edit its task budget file (it is
+  only mode 0444); the edit is detected after the turn and reported as a
+  violation, not prevented. Inside the sandbox the file is a read-only mount.
+- Read-only harness configuration and the in-image Hermes bridge have no live
+  receipt: no container engine ran here. If a harness version must write one of
+  its sealed files, list it in the adapter's `scratch_config_files`.
+- The token-scoped proxy relies on the harness honouring credentials in
+  `HTTPS_PROXY` (curl, Python and Node clients do); a client that drops them
+  gets 407 rather than unscoped egress.

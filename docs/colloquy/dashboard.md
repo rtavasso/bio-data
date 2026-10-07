@@ -6,6 +6,38 @@ scientific value. No composite score is computed anywhere: comparisons keep
 each criterion in its own column. A value that a harness or record did not
 report is `null`, shown as **unavailable**. It is never shown as zero.
 
+## None semantics (spec v2 C10)
+
+`runmetrics.run_metrics` (shared by the dashboard, the run timeline and the
+benchmark audit `benchmarks/agent/community.py`) returns `None` for a value whose
+source was not recorded, and a number only for a measurement:
+
+| Value | `None` when | `0` when |
+|---|---|---|
+| `wall_seconds`, `monotonic_seconds` | not in `execution.json` | never (a clock) |
+| `suspended_seconds` | either clock missing | both clocks recorded, gap at or under the 60 s floor |
+| tool, terminal, inbox, search, analysis, registration, script counts | the run has no `events.jsonl` | the stream exists and holds none |
+| `compactions` | the harness stream does not mark compactions (the adapter's `reports_compactions(config)` flag: true for Hermes and the Hermes-format scripted stream; false for Claude Code, Codex and MCP harnesses) or no stream | a marking stream holds none |
+| `compaction_summaries`, `compaction_fallbacks` | no readable `agent-state/state.db` (non-Hermes harnesses; the committed fixture drops session databases) | the database holds none for this run |
+| `analysis_failures` | analyses ran but none reported an exit code (Claude Code reports tool errors, not exit codes); `analysis_exit_codes_unknown` counts them | every reported exit code was 0 |
+| `provider_citation_in_final` | no `final.md` | |
+
+Group totals (`run_criteria`) sum only the runs that recorded a value and are
+`None` when none did; `clock_unavailable_runs` and `compaction_unavailable_runs`
+say how many runs were left out. The audit report prints `unavailable`.
+`METRICS_VERSION` is 2, so stored projections computed under the old zero
+defaults are recomputed. The dashboard, cohort comparison and run timeline
+render `null` as "unavailable" (`Value` in `web/src/components/dashboard/Charts.tsx`).
+
+**Checked on the cohort.** `test_cohort_dashboard_and_audit_reproduce_the_review_numbers`
+(`tests/test_commons_dashboard.py`) reads the committed PMP22 fixture and asserts the
+numbers spec v2 §0 quotes from the review of the live board: 97 runs, 23.47 compute
+(monotonic) hours, 11.65 suspended hours, 279 of 440 plumbing scripts and 57
+compactions, from both the dashboard and the audit report. The review's 13
+compaction fallbacks were read from `agent-state/state.db`, which the fixture
+excludes, so on the fixture they are `None` (unavailable), never 0; that number
+is attributed to the review, not reproduced here.
+
 | Piece | Where |
 |---|---|
 | Per-run metrics (M9.1) | `daw/commons/runmetrics.py` (shared with the audit report) |
@@ -193,8 +225,9 @@ The frontend tests are in `web/src/pages/Dashboard.test.tsx`.
   second harness is the scripted stand-in with a different `config.harness`
   label. Real Codex or Claude adapters (M3.3) must record `harness` in the agent
   config. If their stream format is not Hermes's, they must register a parser in
-  `metrics.PARSERS`. The real PMP22 cohort board is not in this repository, so
-  its numbers have not been reproduced here.
+  `metrics.PARSERS`. The PMP22 cohort's audit numbers are reproduced from the
+  committed fixture (above), except the compaction fallbacks, whose session
+  databases the fixture does not keep.
 - The demo harness emits token fields under keys that the Hermes parser does not
   map, so demo Hermes runs show tokens as unavailable. That is the correct
   rendering of what the parser reports.
