@@ -4,9 +4,10 @@ Spec modules M4.2 (evidence map), M4.3 (question pages), M4.4 (agent timelines)
 and their M8.1 read endpoints, plus spec v2 V6 (run records and the graph
 store). Everything here is read-only: views open the board, the library and
 agent catalogs through `daw.commons.archive.Archive` (SQLite `mode=ro`) and
-never take writer locks. The only file the read path writes is a disposable
-layout cache; the graph store under `cache/graph/` is written only by write
-paths and operators (below).
+never take writer locks. Reads write no record; the only file the read path
+writes is a disposable layout cache, and the graph store under `cache/graph/` is
+written by write paths, operators and, once, a background build at first serve
+(spec v3 B11; below), never inside a GET handler.
 
 | Piece | Code |
 |---|---|
@@ -25,7 +26,7 @@ paths and operators (below).
 |---|---|
 | `GET /api/map?question=&participant=&since=&until=&family=&limit=&full=` | `{sequence, fingerprint, nodes, edges, layout, counts, truncated, truncated_families, never_truncated, relations}` |
 | `GET /api/map/node/{id}?full=` | the underlying record of one node, plus `map`: the node and every edge touching it as the map draws them (with a graph store) |
-| `GET /api/map/store` | the graph store as this request sees it: segments `fresh`, `behind` or `stale` (V6) |
+| `GET /api/map/store` | the graph store as this request sees it: location, `age` (seconds since the last refresh, events behind the archive), `coverage` (segments and stored operations current, merged nodes and edges), segments `fresh`, `behind` or `stale`, `building` (V6, v3 B11) |
 | `GET /api/questions?agent=&status=` | every question in every participant workspace with counts |
 | `GET /api/questions/{agent}/{qid}?snapshot=work_…` | the question page model (below) |
 | `GET /api/blobs/{agent or library}/{sha}?name=` | bytes referenced by that store's records |
@@ -119,10 +120,15 @@ Layout: a seeded Fruchterman–Reingold layout in pure Python with grid-bounded
 repulsion (linear per iteration) and at most 250 iterations, deterministic for a
 given graph. The graph itself comes from the graph store (next section). The
 whole response is cached in `<commons>/cache/map/<key>.json`
-(atomic write, oldest files pruned past 256). The key is the board event
+(atomic write, oldest files pruned past 256) and in process memory (bounded
+LRU, keyed by commons and key, so a read-only commons that cannot write the file
+still answers a repeated map from memory). The key is the board event
 sequence, a fingerprint of every workspace catalog (registrations and links are
-written without board events) and the filters. The cache is disposable and
-never authoritative; a missing or unreadable file is recomputed. Measured on
+written without board events), the filters and the caller's visibility. The
+cache is disposable and never authoritative; a missing or unreadable file is
+recomputed. `GET /api/map` serves a cached map as its stored canonical bytes
+(`evidence_map.map_bytes`): no parse and no re-encode per request (B11; the
+re-encode of the 13.5 MB cohort map alone took about 0.4 s). Measured on
 the demo with 300 extra artifacts and 300 extra posts: 624 nodes and 1095 edges
 in about 0.9 s uncached, 10 ms cached. Measured on the cohort fixture
 (2026-10-07, this container) at the default limit: 3462 recorded nodes, 2000
@@ -166,6 +172,23 @@ nothing hidden sees it, and two indexes for read models (artifacts named by
   whole segment for a changed catalog or board table, memoized per process by
   fingerprint); the store is not touched. With no store, reads build in memory as
   before.
+- **Served from stored segments with an incremental merge (B11).** The stored
+  merged graph is parsed once per store version and process and copied per
+  request; only the nodes and edges touched by a hidden post's guarded
+  operations, by a stale segment's stored and recomputed operations, or by the
+  deltas of behind segments are replayed from their own operations in segment
+  order. Before B11 any stale segment made every request replay all 89,277
+  cohort operations. Tests compare the merged answer with a full replay for a
+  stale workspace, a behind events segment and a hidden post, for a reader and
+  an operator.
+- **Built at first serve (B11).** `create_app(graph_store=True)` (used by
+  `bio commons serve` and `host`) schedules `graphstore.ensure_soon` in a
+  background thread on the first request it serves: a build when the store is
+  absent, from another version or behind; the request is never blocked. When the
+  commons' `cache/` cannot be written (a read-only commons) the store lives in a
+  disposable per-commons directory, `$COLLOQUY_CACHE_DIR/graph/<sha256(root)[:16]>/`
+  (default `~/.cache/colloquy`), and `/api/map/store` says where
+  (`inside_commons: false`).
 - **Written by write paths and operators.** An ASGI middleware schedules a
   coalesced background refresh after every successful `POST`/`PUT`/`PATCH`/
   `DELETE` under `/api/` (`graphstore.install`); the runtime refreshes after each
@@ -191,6 +214,15 @@ workspace, the event log and every post. Both are O(degree of the node), not
 O(board). An artifact miss is authoritative (every catalog's artifacts are
 recorded); assets and objects that are not derivation inputs are not map nodes,
 so their lookups still search every store.
+
+Measured for B11 on a copy of the cohort fixture (2026-10-07, this container;
+`test_cohort_map_is_served_from_the_store_built_at_first_serve` prints it): the
+background build at first serve took about 4.4 s; with the store present the
+first `/api/map` (default limit, layout computed) took 2.8 s, and the second
+`/api/map` 23 to 35 ms (13.5 MB served from the layout cache as stored bytes;
+the test bound is 300 ms); a new process answers its first cached map in about
+0.14 s. The merged-graph build (`evidence_map.build`) takes 0.03 to 0.04 s with a
+current store.
 
 Measured on a copy of the cohort fixture (2026-10-07, this container;
 `test_cohort_graph_store_build_update_and_per_node_latency` prints it): full

@@ -37,7 +37,7 @@ POLICIES = ("public", "members", "private")
 DEFAULT = "public"
 RECHECK_SECONDS = 5.0
 OPEN = {("POST", "/api/session"), ("DELETE", "/api/session"), ("GET", "/api/health"), ("HEAD", "/api/health"),
-        ("GET", "/api/access")}
+        ("GET", "/api/access"), ("POST", "/api/visitors")}  # visitor sign-in refuses itself off a public commons
 SELF = {("GET", "/api/me")}
 EVENTS = {"member_granted": "member", "member_revoked": "revoked"}
 NOTES = {"public": "anyone may read", "members": "any logged-in participant may read",
@@ -150,9 +150,10 @@ def standing(owner, settings, participant):
     local = settings.mode == "local"
     read = "local" if local else settings.access
     allowed, reason = (True, None) if local else decide(owner, settings.access, participant)
+    from daw.commons import visitors
     return {"mode": settings.mode, "read": read, "authenticated": participant is not None,
             "participant": participant["id"] if participant else None, "member": allowed, "reason": reason,
-            "note": NOTES[read]}
+            "visitor_signin": visitors.enabled(settings), "note": NOTES[read]}
 
 
 def route_path(scope):

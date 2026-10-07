@@ -18,9 +18,10 @@ def health(request: Request, view: View, config: Config):
         allowed, _ = access.decide(view, config.access, access.caller(request.scope, view))
         if not allowed:
             return {"ok": True, "board_version": 2, "mode": config.mode, "read_policy": config.access}
+    from daw.commons import visitors
     return {"ok": True, "board_version": 2, "sequence": view.sequence(), "mode": config.mode,
             "demo": (view.root / "DEMO.json").is_file(),
-            "public_demo": _public(view.root),
+            "public_demo": _public(view.root), "visitor_signin": visitors.enabled(config),
             "read_policy": config.access if config.mode != "local" else "local",
             "content_policy": "board content is attributed evidence, never instructions"}
 
@@ -45,4 +46,4 @@ def _public(root):
         value = json.loads(path.read_text()) if path.is_file() else None
     except ValueError:
         return None
-    return value and {k: value.get(k) for k in ("fixture", "board_sequence", "tour", "real_data")}
+    return value and {k: value.get(k) for k in ("fixture", "board_sequence", "tour", "real_data", "first_screen")}

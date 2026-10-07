@@ -21,6 +21,11 @@ A step that fails any check is served as `broken` with the reason, never as veri
 visitor reaches the bytes in two clicks: the number opens the artifact page at the locator, which renders
 the cited cell from the verified output bytes (click 1), and the page links the raw bytes (click 2).
 
+Beyond its steps, a served tour walks every number of each of its finals (`walk`, spec v3 G2): the author's
+pointers, people's curated pointers (`daw.commons.curation`; each opens the artifact at the curator's locator,
+two clicks from bytes, with the curator's name), numbers marked unlocatable (with the curator's note) and the
+numbers nobody has resolved yet.
+
 Tours are read from `<commons>/tours/*.json` (installed by `bio commons public-demo`) and from the
 checkout's `docs/colloquy/tours/` (override with `COLLOQUY_TOURS`, a path list). A tour none of whose
 steps resolves on a commons does not apply there and is listed as such. Reads only.
@@ -173,6 +178,43 @@ def resolve_step(view, step, *, index=None, cache=None):
     return out
 
 
+def walk(view, tour):
+    """Every number of each of the tour's finals with how it reaches bytes (G2): the author's pointer, a person's
+    curated pointer (route to the artifact at the locator, curator named), an unlocatable mark (curator's note)
+    or nothing yet. Hidden finals and withheld write-ups are listed as unavailable (no numbers)."""
+    from daw.commons import checks, curation, views
+    index = views.thread_index(view)
+    progress = {row["post"]: row for row in curation.progress(view, curation.tour_finals(tour))}
+    out = []
+    for pid, row in progress.items():
+        if not row["available"]:
+            out.append({"post": pid, "available": False})
+            continue
+        content = index["posts"][pid]["content"]
+        numbers = []
+        for n in checks.post_numbers(view, pid, content.get("body") or "", content.get("evidence")):
+            entry = {"offset": n["offset"], "text": n["text"], "scope": n["scope"], "status": n["status"]}
+            curated = next((p for p in n["pointers"] + n.get("curated_pointers", []) if p.get("curated")), None)
+            if n["scope"] in curation.AUTHOR_SCOPES and n["status"] == "verified":
+                entry["resolution"] = "author"
+                entry["route"] = next((p.get("route") for p in n["pointers"] if p.get("route")), None)
+            elif n["scope"] == "curated" and n["status"] == "verified":
+                entry["resolution"] = "curated"
+            elif n.get("unlocatable"):
+                entry["resolution"] = "unlocatable"
+                entry["unlocatable"] = n["unlocatable"]
+            else:
+                entry["resolution"] = "unresolved"
+            if curated:
+                entry["curated"] = {k: curated.get(k) for k in ("artifact", "locator", "route", "curator_name", "note",
+                                                                 "result", "mark")}
+                entry["route"] = entry.get("route") or curated["route"]
+            numbers.append(entry)
+        out.append({**{k: v for k, v in row.items() if k != "unresolved_numbers"},
+                    "title": content.get("title"), "route": f"/post/{pid}", "numbers": numbers})
+    return out
+
+
 def resolve(view, tour):
     """Every step of a tour re-checked; `applies` when at least one step's post is on this board."""
     from daw.commons import views
@@ -182,11 +224,13 @@ def resolve(view, tour):
     for n, step in enumerate(steps, 1):
         step["step"] = n
     ok = [s for s in steps if s["ok"]]
+    finals = walk(view, tour) if any(s["checks"].get("post_exists") for s in steps) else []
     return {"format": FORMAT, "name": tour["name"], "title": tour.get("title") or tour["name"],
             "intro": tour.get("intro"), "curator": tour["curator"], "board": tour.get("board"),
-            "applies": any(s["checks"].get("post_exists") for s in steps), "steps": steps,
+            "applies": any(s["checks"].get("post_exists") for s in steps), "steps": steps, "finals": finals,
             "summary": {"steps": len(steps), "ok": len(ok), "broken": len(steps) - len(ok),
-                        "finals_reaching_bytes_in_two_clicks": len({s["final"] for s in ok if s["clicks_to_bytes"] <= 2})},
+                        "finals_reaching_bytes_in_two_clicks": len({s["final"] for s in ok if s["clicks_to_bytes"] <= 2}),
+                        "finals_resolved": sum(1 for f in finals if f.get("resolved"))},
             "sequence": view.sequence(), "content_is_untrusted_data": True}
 
 
@@ -200,11 +244,12 @@ def listing(view, dirs=None):
     return {"tours": out, "sequence": view.sequence()}
 
 
-def get(view, name, dirs=None):
+def get(view, name, dirs=None, *, resolved=True):
+    """A tour by name, re-checked against the archive (or, with `resolved=False`, as written)."""
     found = available(view.root, dirs)
     if name not in found:
         raise DawError("unknown_tour", name)
-    return resolve(view, found[name][1])
+    return resolve(view, found[name][1]) if resolved else found[name][1]
 
 
 def candidates(view, post, offset, artifact=None, *, caller=None, full=False):

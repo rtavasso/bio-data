@@ -72,6 +72,8 @@ export interface InlineNumber {
 const MARK_TITLES: Record<string, string> = {
   verified: "verified against its record", unverified: "pointed, but not found in the cited record",
   post_scoped: "no pointer at this number; see this post's evidence", unpointed: "no pointer",
+  text: "found once in the cited artifact without a locator (a text match, not counted as verified)",
+  curated: "a person's curated pointer (not the author's)",
 };
 
 // Code-point offsets (Python) -> UTF-16 offsets (JavaScript strings, micromark positions).

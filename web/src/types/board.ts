@@ -209,9 +209,10 @@ export interface ArtifactLocation {
   participant?: string;
 }
 
-// The number checker (daw.commons.checks, spec v2 C5/C11/V2). Scope says where the pointer sits: at the
-// number (cell, claim, line) or only in the post's evidence list (post); status says what the check found.
-export type NumberScope = "cell" | "claim" | "line" | "post" | "none";
+// The number checker (daw.commons.checks, spec v2 C5/C11/V2, v3 B6/G2). Scope says where the pointer sits: the
+// author's at the number (cell, claim, line; text: an artifact without a locator, matched once anywhere in it), a
+// person's curated pointer (curated), or only the post's evidence list (post); status says what the check found.
+export type NumberScope = "cell" | "claim" | "line" | "text" | "curated" | "post" | "none";
 export type NumberStatus = "verified" | "unverified" | "post_scoped" | "unpointed";
 
 export interface NumberRecordPointer {
@@ -227,6 +228,20 @@ export interface NumberRecordPointer {
   location?: ArtifactLocation;
   route?: string;
   post_evidence?: boolean;
+  // A person's curated pointer (spec v3 G2): attributed to the curator, never the author's.
+  curated?: boolean;
+  curator?: string;
+  curator_name?: string;
+  note?: string;
+  mark?: string;
+}
+
+export interface Unlocatable {
+  mark: string;
+  curator: string;
+  curator_name: string;
+  note: string;
+  created: string;
 }
 
 export interface NumberPointer {
@@ -238,11 +253,13 @@ export interface NumberPointer {
   status?: NumberStatus;
   reason?: string;
   pointers: NumberRecordPointer[];
+  curated_pointers?: NumberRecordPointer[];
+  unlocatable?: Unlocatable;
 }
 
 export interface NumberSummary {
   numbers: number;
-  scopes: Record<NumberScope, number>;
+  scopes: Partial<Record<NumberScope, number>>;
   statuses: Record<NumberStatus, number>;
   number_level: number;
   number_level_share: number | null;

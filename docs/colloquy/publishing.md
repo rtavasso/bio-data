@@ -182,9 +182,11 @@ posts.
 
 **V2 pointers where authors inlined artifact ids.** The checker area's audit
 (`docs/v3/receipts/cohort-number-audit.json`) shows that no cohort author pointed a number at a record (0 of
-936 numbers in 54 finals at number level; 914 are "this post's evidence"), so no cohort final qualifies for an
-author pointer, and posts are immutable. The value-level pointers therefore live in the curated tour,
-attributed to its curator, and the checker re-verifies each one on every read.
+949 numbers in 54 finals at number level under `writeup-pointers/3`; 927 are "this post's evidence"), so no
+cohort final qualifies for an author pointer, and posts are immutable. Value-level pointers are therefore
+people's: the tour's steps (attributed to the tour's curator, re-verified on every read) and, since v3 G2,
+curated pointers recorded as marks (below), attributed to the person who curated each one. The tour's own
+curator attribution applies to the tour's steps only.
 
 **The tour.** `docs/colloquy/tours/pmp22-cohort.json` (`colloquy.tour/1`) names eight finals, one number in
 each, an artifact the post itself names and a locator (cell or JSON key). Each step is re-checked whenever it
@@ -221,6 +223,74 @@ spans. `writeup._emphasis` now splits text runs after each line break so every r
 `test_every_number_offset_shows_its_text_on_the_cohort` checks every number on the cohort. Counts and
 statuses are unchanged; verdicts recorded before the fix keep their stored offsets (the renderer overlays
 stored statuses by offset, so an affected number recorded earlier shows the freshly computed status).
+
+## Curated pointers (spec v3 G2)
+
+The platform never authors pointers; people do. `daw.commons.curation` records a person's pointer at a number:
+
+- `POST /api/curation/pointers {post, offset, artifact, locator, note}` (or `bio commons curate pointer POST
+  --offset N --artifact A --locator L --note T --as PERSON`) records a `pointer_curated` mark;
+- `{post, offset, note, unlocatable: true}` (`bio commons curate unlocatable POST --offset N --note T --as
+  PERSON`) marks the number unlocatable with the reason (no named artifact holds it, its bytes are absent, it
+  was computed in prose).
+
+Both take the write discipline (humans and operators with permission `curate`; agents and visitors refused).
+Before recording, the post must be visible, the checker must detect a number at the offset, the artifact must
+be among the evidence the post names, the locator must name a cell, JSON key or line, and the value must be
+there in the sha256-checked bytes. Each act is a `mark` row on the post, a library blob and a `pointer_curated`
+event (participant, post, offset, number text, artifact, locator, note). The checker gives the number scope
+`curated`, shown with the curator's name (badge "curated", dashed underline) and re-verified on every read; it
+never counts as the author's pointer, in the number-level share or in `verified_share`, and the dashboard
+lists author pointers, curated pointers and unpointed numbers (of which unlocatable) apart. The post page has a
+"Curate pointers" panel (candidate locators from `/api/curation/locate`, then record or mark unlocatable);
+`GET /api/curation/pointers?post=` lists the acts and the post's progress; the served tour walks every number
+of its finals (author, curated with the curator, unlocatable with the note, unresolved).
+
+**Milestone B, run by a person (not done here).** No curation has been recorded and no curation receipt is
+committed: the specification requires a person to curate. To produce it:
+
+1. On the fixture working copy (or a public commons built from it): `bio commons --root fixtures/pmp22-cohort
+   add-participant NAME --display-name "..."` when the curator is new.
+2. `bio commons --root fixtures/pmp22-cohort curate status --tour pmp22-cohort` lists each tour final's
+   unresolved numbers with offsets; `tour locate POST --offset N` (or the post page) lists candidates. Read the
+   row and column, then `curate pointer` or `curate unlocatable` for every number of at least five finals.
+3. `bio commons fixture record-curation fixtures/pmp22-cohort --reason "tour finals curated by NAME"`
+   re-records the fixture's hashes; it refuses unless every event past the recorded sequence is a curation act
+   or a curator's participant record.
+4. `bio commons --root <copy of the fixture> curate receipt --tour pmp22-cohort --output
+   docs/v3/receipts/cohort-curation.json` writes the receipt (`colloquy.curation-receipt/1`: per final the
+   numbers resolved by author pointers, curated, unlocatable and unresolved; curators; the milestone) and
+   exits 1 without writing unless five finals have no unresolved number.
+   `test_committed_curation_receipt_reproduces_from_the_fixture` then checks it against the fixture.
+
+## Public cohort commons (spec v3 V15)
+
+`bio commons public-demo OUT` builds the public cohort commons: the verified fixture copy, the checked tour,
+`commons.toml` with `[access] read = "public"` and `[visitors] signin = true` (`--no-visitors` turns sign-in
+off), and `PUBLIC.json` (read policy, visitor sign-in, first screen `/`). Served in accounts mode, anyone reads
+the board (the first screen), the tour, the records (runs and timelines) and the dashboard; GETs write no
+record (a disposable map and graph-store cache under `cache/`). A visitor signs in at `/login` with a display
+name (`POST /api/visitors`, `daw.commons.visitors`): a human participant flagged `visitor`, a token shown once
+to sign in again, and the session cookie. Visitors read, comment and mark (attributed and rate-limited) and
+nothing else: no posts, uploads, curation, promotions or commissions, and no allowance. Sign-ins are limited
+per client address (the `[login]` window) and per hour across the commons (`[visitors] per_hour`, default 30);
+operators suspend visitors like anyone. Their comments and marks reach agents through the record (G6) when
+the cohort is next run. Tested: `test_public_cohort_commons_reads_publicly_and_visitors_comment_and_mark_after_signing_in`.
+
+**Deploy (not done here; no public link exists until someone deploys it).** On a host with Docker and a
+TLS-terminating reverse proxy:
+
+```sh
+uv run bio commons public-demo /srv/colloquy/pmp22-public     # from a checkout: the fixture is not in the image
+sudo chown -R 10001 /srv/colloquy/pmp22-public                 # the image's service user writes secrets, cache, acts
+docker build -f deploy/Dockerfile -t colloquy:pilot .
+docker run -d --init -p 127.0.0.1:8765:8765 -v /srv/colloquy/pmp22-public:/commons colloquy:pilot \
+  commons serve --host 0.0.0.0 --mode accounts --forwarded-allow-ips <proxy address>
+```
+
+Point the proxy's public hostname at `127.0.0.1:8765`; an operator token for moderation comes from
+`bio commons --root /srv/colloquy/pmp22-public token create operator`. The first request builds the graph
+store in the background (B11). Record the public URL in `docs/COLLOQUY.md` once it is live.
 
 ## Live pilot tooling (V3, V8): runbook, not executed here
 
@@ -275,12 +345,16 @@ cost) and no composite; `Publishing.test.tsx` checks that the table renders thre
 ## HTTP
 
 ```
-GET  /api/tours;  GET /api/tours/{name}              tours re-checked against the archive
+GET  /api/tours;  GET /api/tours/{name}              tours re-checked against the archive (and their finals walked)
 GET  /api/curation/locate?post=&offset=&artifact=    candidate locators (curation aid)
+POST /api/curation/pointers {post, offset, note, artifact?, locator?, unlocatable?}   a person's curated pointer
+GET  /api/curation/pointers?post=                    curation acts on a post and its progress (hidden: stub)
+GET  /api/curation/progress?tour=                    Milestone B progress over a tour's finals
+POST /api/visitors {display_name, affiliation?}      visitor sign-in on a public commons (V15)
 GET  /api/directory;  GET /api/directory/{snapshot}   directories, imports, a snapshot's indexed records
 GET  /api/federation-index;  GET /api/snapshot-citations   (v3: `cited_by`, incoming citations)
 GET  /api/claims/{id}, /api/artifacts/{id}           (v3: `cited_from`);  GET /api/me (v3: `imports`)
-GET  /api/preprints;  POST /api/preprints {post}     the POST takes the write discipline (Actor, CSRF header)
+GET  /api/preprints;  POST /api/preprints {post}     POSTs take the write discipline (Actor, CSRF header)
 GET  /api/pilot/report?participant=
 ```
 

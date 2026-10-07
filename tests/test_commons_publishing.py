@@ -127,6 +127,7 @@ def test_verifier_number_rules_equal_the_checkers():
     ("log.txt", b"first 1\nsecond 32.0 here\n", "line=1", "32.0"),
     ("log.txt", b"first 1\nsecond 32.0 here\n", None, "32"),
     ("log.txt", b"first 1\nsecond 32.0 here\n", None, "33"),
+    ("log.txt", b"a 32.0\nb 32.0\n", None, "32"),  # v3 B6: twice, so no text match verifies
     ("img.png", b"\x89PNG\r\n\x1a\n\x00\xff", None, "1"),
 ])
 def test_verifier_reads_cited_values_like_the_checker(name, data, locator, prose):
@@ -805,6 +806,67 @@ def test_a_second_commons_cites_the_public_cohort_with_the_citation_visible_on_b
         assert view.one("SELECT count(*) AS n FROM claim")["n"] == 0
         assert view.one("SELECT count(*) AS n FROM post")["n"] == 269
     assert verify_fixture(cohort_copy)["verified"]
+
+
+def test_public_cohort_commons_reads_publicly_and_visitors_comment_and_mark_after_signing_in(tmp_path):
+    """Spec v3 V15: the cohort fixture served as a public commons (accounts mode, read policy public): the first
+    screen is the board, GETs write no record, anonymous callers read but cannot write, and a visitor who signs in
+    with a display name can comment and mark, and nothing else."""
+    source = ROOT / "fixtures" / "pmp22-cohort"
+    if not (source / "FIXTURE.json").is_file():
+        pytest.skip("real-data fixture not checked out")
+    out = tmp_path / "public"
+    built = publicdemo.build(out)
+    assert built["read_policy"] == "public" and built["visitor_signin"] is True and built["first_screen"] == "/"
+    assert "--mode accounts" in built["next"]
+    public = json.loads((out / "PUBLIC.json").read_text())
+    assert public["read_policy"] == "public" and public["first_screen"] == "/"
+    static = tmp_path / "web"
+    static.mkdir()
+    (static / "index.html").write_text('<html><head><meta name="colloquy-base" content="/" /></head>'
+                                       '<body><div id="root"></div></body></html>')
+    api = TestClient(create_app(out, mode="accounts", static_dir=static))
+    assert api.get("/api/access").json()["read"] == "public" and api.get("/api/access").json()["visitor_signin"]
+    health = api.get("/api/health").json()
+    assert health["read_policy"] == "public" and health["public_demo"]["first_screen"] == "/" and health["visitor_signin"]
+    # The first screen: `/` serves the app, whose route `/` is the board (web App.test.tsx), not a prompt.
+    assert api.get("/").status_code == 200 and "colloquy-base" in api.get("/").text
+    step = json.loads(TOUR.read_text())["steps"][0]
+    before = sequence(out)
+    files = {p: p.stat().st_mtime_ns for p in (out / "board.sqlite", out / "library" / "catalog.sqlite")}
+    for path in ("/api/posts?limit=5", f"/api/posts/{step['final']}", "/api/tours/pmp22-cohort", "/api/dashboard",
+                 "/api/runs?limit=5", "/api/frontier", f"/api/curation/pointers?post={step['final']}",
+                 "/api/curation/progress?tour=pmp22-cohort"):
+        assert api.get(path).status_code == 200, path
+    assert sequence(out) == before and {p: p.stat().st_mtime_ns for p in files} == files  # GETs write no record
+    # Anonymous visitors read but never write.
+    write = {"X-Colloquy-Request": "1"}
+    note = {"target_kind": "post", "target_id": step["final"], "body": "Which table holds this number?"}
+    assert api.post("/api/comments", json=note, headers=write).status_code == 401
+    assert api.post("/api/visitors", json={"display_name": "A reviewer"}).status_code == 403  # the write header
+    signed = api.post("/api/visitors", json={"display_name": "A reviewer", "affiliation": "Funder"}, headers=write)
+    assert signed.status_code == 200, signed.text
+    visitor = signed.json()
+    assert visitor["visitor"] and visitor["token"].startswith("colloquy_") and visitor["kind"] == "human"
+    me = api.get("/api/me").json()  # the session cookie is set
+    assert me["visitor"] is True and set(me["permissions"]) == {"read", "comment", "mark", "token", "profile", "inbox"}
+    commented = api.post("/api/comments", json=note, headers=write)
+    assert commented.status_code == 200, commented.text
+    marked = api.post("/api/marks", headers=write, json={"target_kind": "post", "target_id": step["final"],
+                                                         "kind": "checked_source", "note": "Opened the summary JSON."})
+    assert marked.status_code == 200, marked.text
+    # ... and nothing else: no top-level posts, curation, promotions or commissions.
+    refused = [api.post("/api/posts", json={"title": "x", "body": "y"}, headers=write),
+               api.post("/api/curation/pointers", headers=write, json={"post": step["final"], "offset": 0, "note": "x",
+                                                                         "unlocatable": True}),
+               api.post("/api/commissions", headers=write, json={"task_type": "review", "target": "operator",
+                                                                 "budget": {"minutes": 5}, "note": "x"})]
+    assert [r.status_code for r in refused] == [403, 403, 403], [r.text for r in refused]
+    with Archive(out) as view:
+        kinds = [r["kind"] for r in view.rows("SELECT kind FROM event WHERE seq>? ORDER BY seq", (before,))]
+    assert "visitor_signed_in" in kinds and "mark_recorded" in kinds
+    from daw.commons.fixture import verify_fixture
+    assert verify_fixture(source)["verified"]  # the committed fixture itself is untouched
 
 
 # ---- V3 pilot tooling: presets, invitations and the participation report -------------------------------------
