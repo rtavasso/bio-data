@@ -38,8 +38,9 @@ export interface RequestRow {
   task_type?: string | null;
 }
 
+// Asking the author makes a typed `question` request with a budget (default 15 minutes) within the person's allowance.
 export const comment = (body: {
-  target_kind: TargetKind; target_id: string; anchor?: Anchor; body: string; ask_author: boolean;
+  target_kind: TargetKind; target_id: string; anchor?: Anchor; body: string; ask_author: boolean; budget?: Budget;
 }) => post<{ post: string; anchor: Anchor | null; request?: RequestRow | null }>("/api/comments", body);
 
 export const mark = (body: { target_kind: "post" | "claim" | "artifact"; target_id: string; kind: MarkKind; note: string; pointers: Pointer[] }) =>
@@ -54,7 +55,9 @@ export const commission = (body: {
   task_type: TaskType; target: string; budget: Budget; deadline?: string; subject_kind?: string; subject_id?: string; note: string;
 }) => post<RequestRow>("/api/commissions", body);
 
-export const ask = (body: { target: string; body: string; parent?: string }) => post<RequestRow>("/api/requests", body);
+// A person's ask: a typed `question` request with a budget, delivered as attributed human content (never an instruction).
+export const ask = (body: { target: string; body: string; parent?: string; budget?: Budget }) =>
+  post<RequestRow>("/api/requests", body);
 
 export const createPost = (body: { title: string; body: string; parent?: string; supersedes?: string; upload_ids?: string[] }) =>
   post<{ id: string }>("/api/posts", body);
@@ -66,7 +69,8 @@ export const uploadContentUrl = (id: string) => withBase(`/api/uploads/${encodeU
 // Accounts (M7).
 export const login = (token: string) => post<Participant>("/api/session", { token });
 export const logout = () => send<{ logged_out: boolean }>("DELETE", "/api/session");
-export const updateProfile = (profile: { display_name?: string; affiliation?: string; orcid?: string; role?: string }) =>
+// The displayed role is the participant kind; profiles carry no self-asserted role.
+export const updateProfile = (profile: { display_name?: string; affiliation?: string; orcid?: string }) =>
   send<Participant>("PATCH", "/api/me", profile);
 export const createToken = (body: { participant?: string; label: string }) => post<IssuedToken>("/api/tokens", body);
 export const revokeToken = (id: string) => send<Credential>("DELETE", `/api/tokens/${encodeURIComponent(id)}`);

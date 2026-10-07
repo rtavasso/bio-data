@@ -144,3 +144,175 @@ def test_notices_are_inbox_requests_from_a_system_participant(demo):
         shown = board.show(request["post"])
         assert shown["content"]["kind"] == "notice" and board.agent(shown["author"])["kind"] == "system"
         assert any(r["id"] == request["id"] for r in board.inbox(alice))
+
+
+# ---- v2 C3: write-API discipline and read-only reads ------------------------------------------------
+
+WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+def api_routes(app):
+    """Every APIRoute the app serves, flattening included routers (newer FastAPI keeps them nested)."""
+    from fastapi.routing import APIRoute
+
+    def flat(routes):
+        for route in routes:
+            if hasattr(route, "original_router"):
+                yield from flat(route.original_router.routes)
+            elif isinstance(route, APIRoute):
+                yield route
+    return list(flat(app.routes))
+
+
+def concrete(path):
+    import re
+    return re.sub(r"\{[^}]+\}", "x", path)
+
+
+def test_every_write_route_requires_the_request_header(demo):
+    """v2 C3: every POST/PUT/PATCH/DELETE from ROUTER_MODULES refuses a browser write without X-Colloquy-Request,
+    in local mode and with a session cookie, before it touches the board. New routes are covered automatically."""
+    import importlib
+
+    from daw.commons import accounts
+    from daw.commons.api import deps
+    from daw.commons.app import ROUTER_MODULES
+    root, _ = demo
+    local = create_app(root, local_user="rhea", static_dir=root / "missing")
+    routes = [(m, r.path) for r in api_routes(local) for m in sorted(r.methods & WRITE_METHODS)]
+    modules = [importlib.import_module(name).router for name in ROUTER_MODULES]
+    declared = {(m, r.path) for router in modules for r in router.routes for m in r.methods & WRITE_METHODS}
+    assert set(routes) == declared and len(routes) >= 25
+    sequence = Archive(root)
+    try:
+        before = sequence.sequence()
+    finally:
+        sequence.close()
+    http = TestClient(local)
+    for method, path in routes:
+        response = http.request(method, concrete(path), json={})
+        if path == "/api/session" and method == "POST":
+            assert response.json()["error"] == "local_mode_has_no_login"  # no login in local mode at all
+            continue
+        assert response.status_code == 403, (method, path, response.text)
+        assert "X-Colloquy-Request" in response.json()["detail"], (method, path)
+    # Cookie sessions (accounts mode) need the header too; only bearer requests are exempt.
+    with Community(root) as board:
+        person = add_participant(board, "kai", "human")
+        token = accounts.issue_token(board, "operator", person["id"])["token"]
+    cookie = TestClient(create_app(root, mode="accounts", static_dir=root / "missing"))
+    assert cookie.post("/api/session", headers={"X-Colloquy-Request": "1"}, json={"token": token}).status_code == 200
+    for method, path in routes:
+        response = cookie.request(method, concrete(path), json={})
+        assert response.status_code == 403, (method, path, response.text)
+    with Archive(root) as view:
+        written = view.rows("SELECT kind FROM event WHERE seq>?", (before,))
+    assert {r["kind"] for r in written} <= {"participant_created", "token_issued"}  # only the setup above
+    # No endpoint opens the board through the dependency machinery (a connection used across threads);
+    # writes open it in the worker thread with write.call.
+    for route in api_routes(local):
+        assert all(d.call is not deps.board for d in route.dependant.dependencies), route.path
+
+
+def _sample_ids(view):
+    post = view.one("SELECT id,body_blob FROM post ORDER BY seq LIMIT 1")
+    artifact = view.library.one("SELECT id FROM artifact ORDER BY id LIMIT 1")
+    run = view.one("SELECT id FROM attempt ORDER BY created LIMIT 1")
+    agent = view.one("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created LIMIT 1")
+    item = view.one("SELECT id FROM frontier_item ORDER BY id LIMIT 1")
+    question = None
+    workspace = view.workspace(agent["id"])
+    if workspace:
+        row = workspace.one("SELECT id FROM question ORDER BY created LIMIT 1")
+        question = row["id"] if row else None
+    return {"post": post["id"], "blob": post["body_blob"], "artifact": artifact["id"] if artifact else "artifact_x",
+            "run": run["id"] if run else "run_x", "agent": agent["id"], "item": item["id"] if item else "frontier_x",
+            "question": question or "q_0000000000000000"}
+
+
+def _get_paths(app, ids):
+    fill = {"/api/participants/{identity}": ids["agent"], "/api/participants/{identity}/activity": ids["agent"],
+            "/api/frontier/{identity}": ids["item"], "/api/map/node/{identity}": ids["post"]}
+    for route in api_routes(app):
+        if "GET" not in route.methods or route.path == "/api/events":
+            continue  # the live stream is exercised with once=true below
+        path = route.path
+        if path in fill:
+            path = path.replace("{identity}", fill[path])
+        path = (path.replace("/posts/{identity}", f"/posts/{ids['post']}")
+                .replace("/threads/{identity}", f"/threads/{ids['post']}")
+                .replace("/artifacts/{identity}", f"/artifacts/{ids['artifact']}")
+                .replace("{post}", ids["post"]).replace("{run}", ids["run"]).replace("{agent}", ids["agent"])
+                .replace("{qid}", ids["question"]).replace("{owner}", "library").replace("{sha}", ids["blob"]))
+        yield concrete(path)
+    yield "/api/events?once=true"
+    yield f"/api/marks?target_kind=post&target_id={ids['post']}"
+    yield f"/api/requests?task_type=question&target={ids['agent']}"
+    yield f"/api/search?q=PMP22"
+
+
+def test_serving_the_cohort_and_every_get_route_leaves_the_fixture_verified(cohort_copy):
+    """v2 C3 on real data: start the server on a copy of the committed cohort fixture and request every GET
+    route; `fixture verify` stays green on that copy (reads never write).
+
+    Starting a server applies pending additive schema (new tables, indexes or triggers) once, as the first
+    read-write open of any board does; the fixture is a snapshot built with an earlier schema, so that one
+    migration is settled first and its board.sqlite hash recorded in the copy's FIXTURE.json. Nothing else may
+    change: startup and every GET afterwards must leave every file as recorded."""
+    from daw.commons.fixture import verify_fixture
+    from daw.util import file_hash
+    manifest_path = cohort_copy / "FIXTURE.json"
+    assert verify_fixture(cohort_copy)["verified"]
+    with Community(cohort_copy):
+        pass  # the additive migration a first serve would apply
+    migrated = verify_fixture(cohort_copy)
+    assert migrated["changed"] in ([], ["board.sqlite"]) and not migrated["missing"], migrated
+    manifest = json.loads(manifest_path.read_text())
+    manifest["files"]["board.sqlite"] = file_hash(cohort_copy / "board.sqlite")
+    manifest_path.write_text(json.dumps(manifest))
+    app = create_app(cohort_copy, local_user="local", static_dir=cohort_copy / "missing")
+    assert verify_fixture(cohort_copy)["verified"], "server startup wrote to the board"
+    http = TestClient(app)
+    with Archive(cohort_copy) as view:
+        ids = _sample_ids(view)
+        before = view.sequence()
+    statuses = {}
+    for path in _get_paths(app, ids):
+        response = http.get(path)
+        statuses[path] = response.status_code
+        assert response.status_code < 500, (path, response.text[:300])
+    assert sum(1 for s in statuses.values() if s == 200) >= 40, statuses
+    checked = verify_fixture(cohort_copy)
+    assert checked["verified"] and checked["untracked"] == [], checked
+    with Archive(cohort_copy) as view:
+        assert view.sequence() == before
+    assert http.get("/api/frontier").json()["total"] >= 59
+
+
+# ---- v2 C14: triggers on existing boards ------------------------------------------------------------
+
+def test_existing_v2_board_regains_missing_triggers_on_open(tmp_path):
+    from daw.commons import schema
+    with Community.create(tmp_path / "c") as board:
+        assert schema.current(board.db)
+        with board.writer():
+            board.db.execute("DROP TRIGGER immutable_mark_update")
+            board.db.execute("DROP INDEX IF EXISTS login_failure_key")
+        assert not schema.current(board.db)
+    with Community(tmp_path / "c") as board:
+        assert schema.current(board.db)
+        names = {r["name"] for r in board.rows("SELECT name FROM sqlite_master WHERE type='trigger'")}
+        assert "immutable_mark_update" in names
+        board.db.execute("INSERT INTO mark VALUES('m','operator','post','p','checked_source','n','[]','b','t')")
+        with pytest.raises(sqlite3.IntegrityError):
+            board.db.execute("UPDATE mark SET note='changed' WHERE id='m'")
+
+
+def test_permissions_are_the_spec_table_plus_documented_additions():
+    from daw.commons.permissions import ACTIONS, ADDITIONS, CORE
+    assert CORE["human"] == {"post", "comment", "mark", "promote", "commission"}
+    assert CORE["operator"] == {"dispatch", "retry", "recover", "suspend", "budget"}
+    assert CORE["agent"] == {"publish", "ask", "fetch", "answer"}
+    assert {"review", "watch", "token", "profile", "export"} <= ADDITIONS["human"]
+    assert "dispatch" not in ACTIONS["agent"] and "dispatch" not in ACTIONS["human"]
+    assert all(ACTIONS[k] == {"read"} | CORE[k] | ADDITIONS[k] for k in CORE)

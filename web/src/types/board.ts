@@ -368,3 +368,23 @@ export interface RunningItem {
   title: string | null;
   heartbeat: Heartbeat | null;
 }
+
+// GET /api/corrections/{post} (Flow B): who fetched a superseded post's evidence and the notices they received.
+export interface AffectedReader {
+  reader: string;
+  name?: string | null;
+  kind?: string | null;
+  questions: string[];
+  fetches: number;
+  first_fetched: string;
+  notices?: { post: string; request: string | null; state: string | null }[];
+}
+
+export interface Corrections {
+  post: string;
+  supersedes: string | null;
+  superseded_by: { id: string; author: string; created: string }[];
+  withdrawn_claims: { id: string; ordinal: number; text: string; withdrawn_by: string }[];
+  affected: AffectedReader[];
+  fetched_by: AffectedReader[];
+}
