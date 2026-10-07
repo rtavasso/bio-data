@@ -75,12 +75,24 @@ def test_claims_draft_proposes_cell_pointers_from_own_tables_and_needs_the_autho
         for pointer, cell in zip(claim["pointers"], claim["draft"]["cells"], strict=True):
             assert str(resolve(catalog, pointer, claim["draft"]["output"])).strip() == cell["value"]
     assert [s["reason"] for s in document["skipped"]] == ["not a TSV/CSV/JSON output (figure.png)"]
+    # v3 B12: status and scope are the author's; the draft pre-sets neither.
+    assert first["status"].startswith("EDIT:") and first["status"] not in helper["STATUSES"]
+    assert set(first["scope"]) == {"species", "context", "endpoint", "direction"}
+    assert all(v.startswith("EDIT:") for v in first["scope"].values())
     # Confirmation refuses unedited entries; once the author rewrites one it emits a --claims list.
     path = tmp_path / "claims.draft.json"
     path.write_text(json.dumps(document))
     out = tmp_path / "claims.json"
     assert helper["main"](["confirm", str(path), "--out", str(out)]) == 2 and not out.exists()
-    edited = {**document, "claims": [{**first, "text": "B is higher than A (log2 ratio 1.54, p 0.003).",
+    text = "B is higher than A (log2 ratio 1.54, p 0.003)."
+    # Rewritten text alone is not enough: an unset status or scope field is refused, row by row.
+    _, problems = helper["confirm"]({"claims": [{**first, "text": text}]})
+    assert problems == ["claim 0: set status to one of supported, descriptive, untestable, withdrawn",
+                        "claim 0: set or delete scope species, context, endpoint, direction"]
+    _, problems = helper["confirm"]({"claims": [{**first, "text": text, "status": "supported",
+                                                 "scope": {**first["scope"], "context": "synthetic fixture"}}]})
+    assert problems == ["claim 0: set or delete scope species, endpoint, direction"]
+    edited = {**document, "claims": [{**first, "text": text, "status": "supported",
                                       "scope": {"context": "synthetic fixture", "direction": "higher in B"}}]}
     path.write_text(json.dumps(edited))
     assert helper["main"](["confirm", str(path), "--out", str(out)]) == 0
@@ -110,7 +122,7 @@ def test_claims_draft_on_cohort_workspaces_resolves_every_cell(cohort):
         document = helper["draft"](workspace, max_rows=10)
         catalog = helper["Catalog"](workspace)
         for claim in document["claims"]:
-            assert claim["text"].startswith("EDIT:") and claim["status"] == "supported"
+            assert claim["text"].startswith("EDIT:") and claim["status"].startswith("EDIT:")
             for pointer, cell in zip(claim["pointers"], claim["draft"]["cells"], strict=True):
                 assert str(resolve(catalog, pointer, claim["draft"]["output"])).strip() == cell["value"]
         proposed += len(document["claims"])

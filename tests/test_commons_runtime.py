@@ -2,7 +2,6 @@
 import asyncio
 import hashlib
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -21,57 +20,6 @@ from daw.util import DawError, read_json
 
 def events(board, kind):
     return [json.loads(r["body"]) for r in board.rows("SELECT body FROM event WHERE kind=? ORDER BY seq", (kind,))]
-
-
-FAKE_ENGINE = r'''
-import json, os, sys
-from pathlib import Path
-argv = sys.argv[1:]
-with open(LOG, "a") as log:
-    log.write(json.dumps(argv) + "\n")
-if argv[:1] != ["run"]:
-    sys.exit(0)
-VALUED = {"--name", "--label", "--network", "--cap-drop", "--security-opt", "--pids-limit", "--user", "--workdir",
-          "--tmpfs", "--memory", "--cpus", "--mount", "--env"}
-env, workdir, i = {"PATH": os.environ.get("PATH", "")}, None, 1
-while argv[i].startswith("-"):
-    flag = argv[i]
-    if flag in VALUED:
-        value = argv[i + 1]
-        if flag == "--env":
-            key, sep, given = value.partition("=")
-            if sep:
-                env[key] = given
-            elif key in os.environ:
-                env[key] = os.environ[key]
-        elif flag == "--workdir":
-            workdir = value
-        i += 2
-    else:
-        i += 1
-image, command = argv[i], argv[i + 1:]
-if any(part.endswith("hermes_session_bridge.py") for part in command):
-    # Stand-in for Hermes's SessionDB inside the image (the demo's bridge substitute on the scripted state.db).
-    from daw.commons.demo import _fake_native_session
-    at = command.index("--session")
-    print(json.dumps(_fake_native_session(None, Path(env["HERMES_HOME"]), command[at + 1], env["HERMES_CWD"],
-                                          fork="--fork" in command)))
-    sys.exit(0)
-os.chdir(workdir)
-os.execvpe(command[0], command, env)
-'''
-
-
-def fake_engine(folder, monkeypatch):
-    """A `docker` stand-in on PATH that logs its argv and runs the containerized command on the host
-    (no isolation: it checks the dispatch path and receipts, never the container boundary)."""
-    folder.mkdir(parents=True, exist_ok=True)
-    log = folder / "engine.jsonl"
-    engine = folder / "docker"
-    engine.write_text(f"#!{sys.executable}\nLOG = {str(log)!r}\n" + FAKE_ENGINE)
-    engine.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{folder}:{os.environ.get('PATH', '')}")
-    return lambda: [json.loads(line) for line in log.read_text().splitlines()] if log.is_file() else []
 
 
 def operator_notices(board):
@@ -106,18 +54,33 @@ def test_registry_and_legacy_hermes_prompt_is_byte_identical():
     # sentence deliberately: the final-answer structure is now "claims first (a fenced ```claims block), prose
     # second". The digests were re-frozen for that change only; swapping the old final-answer sentence back in
     # must reproduce the pre-V1 digests, so any other drift in the legacy Hermes prompt still fails here.
-    new = hashlib.sha256(assignment_prompt("agent_abc", trial, post).encode()).hexdigest()
-    assert new == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
-    assert hashlib.sha256(assignment_prompt("agent_abc", trial, post, notification=True).encode()).hexdigest() == \
-        "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
+    # Spec v3 changed three sentences: read the overview then the LABBOOK at the start of a turn (V11), read the
+    # frontier before collecting (G5), and name the next computable step as a recorded frontier item (G1).
+    # Swapping them back must reproduce the v2 digests.
+    def digest_of(text):
+        return hashlib.sha256(text.encode()).hexdigest()
+    question, notification = (assignment_prompt("agent_abc", trial, post),
+                              assignment_prompt("agent_abc", trial, post, notification=True))
+    assert digest_of(question) == "07e9c73d9f75ad88cc45cf727ec853bb1f6037e0a6ae1ec49e0d1b789ab44db6"
+    assert digest_of(notification) == "32fb80c0204cb6e12d7b68be67fc4b013b2612d42ebda3456d22c6ef90cb1c76"
     from daw import community_runtime
+    v3_step = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Then name the next computable step"):]
+    v2_step = ("Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
+               "computable step. Receipt and lint details stay in the LABBOOK.\n")
+
+    def v2(text):
+        return (text.replace("At the start of a turn read community overview, then your LABBOOK. ", "")
+                .replace("new data, read community frontier and search the shared forum", "new data, search the shared forum")
+                .replace(v3_step, v2_step))
+    assert digest_of(v2(question)) == "68a4bbdd2389b5b93f8f3aa4afaedcd1f335108937786b7c58bfa71f85812f60"
+    assert digest_of(v2(notification)) == "c4662da6144c2820fd229e5bd8661076a907554b468bb33c3bc144b3a121416a"
     v1_sentence = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Structure it claims first"):]
     pre_v1 = ("Structure it as: the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the "
               "next computable step. Receipt and lint details stay in the LABBOOK.\n")
-    old = assignment_prompt("agent_abc", trial, post).replace(v1_sentence, pre_v1)
-    assert hashlib.sha256(old.encode()).hexdigest() == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
-    old = assignment_prompt("agent_abc", trial, post, notification=True).replace(v1_sentence, pre_v1)
-    assert hashlib.sha256(old.encode()).hexdigest() == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
+    old = v2(question).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
+    assert digest_of(old) == "202c1b97fdde02cac89b77d9347c4eea3ba7aedf79db4ad68977a40af7fa7e12"
+    old = v2(notification).replace(v1_sentence[:v1_sentence.index("Then name")] + v2_step, pre_v1)
+    assert digest_of(old) == "371f700ecf9f10dfef009fe03beaa69e4f52c115fcfcfe39bd6f435b08012dce"
 
 
 def test_codex_command_is_the_evaluator_launch_line_and_resumes_persistently(tmp_path):
@@ -442,7 +405,9 @@ def test_replication_outcome_is_gated_on_an_execution_receipt(demo, executed):
         outcome = events(board, "task_outcome")[-1]
         [result] = outcome["criteria"]["replication"]
         if executed:
-            assert result["outcome"] == "byte_identical" and result["identical"] == [original]
+            # Unsandboxed (local mode): the receipted comparison is a rehearsal, never a confirmation (v3 B3).
+            assert result["outcome"] == "local_rehearsal" and result["rehearsal"] == "byte_identical"
+            assert result["identical"] == [original] and not result["correction_required"]
             assert result["receipts"][original]["exit_code"] == 0 and f"artifact:{original}" in outcome["deliverables_found"]
         else:
             assert result["outcome"] == "no_execution_receipt" and not result["identical"]
@@ -568,9 +533,9 @@ def test_container_argv_mounts_platform_read_only_and_passes_secrets_by_name(tmp
         sandbox.load(root)
 
 
-def test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override(demo, tmp_path, monkeypatch):
+def test_multi_tenant_dispatch_requires_a_sandbox_or_a_recorded_override(demo, tmp_path, fake_engine, monkeypatch):
     root, ctx = demo
-    engine_calls = fake_engine(tmp_path / "engine", monkeypatch)
+    engine_calls = fake_engine  # tmp_path / "engine" / "docker"
     sandbox.record_tenancy(root, "accounts")
     sandbox.record_tenancy(root, "local")
     assert sandbox.tenancy(root) == "accounts"  # sticky
@@ -839,6 +804,47 @@ def test_transport_reads_task_caps_and_fails_closed(tmp_path):
         Workspace(trial / "workspace")
     budgets.clear_task_budget(trial)
     assert Workspace(trial / "workspace").budgets.bundle_bytes == 0
+
+
+def test_a_second_workspace_inside_the_checkout_still_hits_the_task_cap(demo, monkeypatch):
+    """v3 B5: the task budget is resolved from the checkout root (and the running agent's home), so a workspace
+    the agent initialises anywhere inside its checkout is capped like `<checkout>/workspace`; the board service
+    reads and writes only the checkout workspace."""
+    from daw.catalog import Workspace
+    from daw.commons import boardservice
+    monkeypatch.delenv("BIO_WORKSPACE", raising=False)
+    root, ctx = demo
+    with Community(root) as board, scripted_runtime(root) as (executable, answers):
+        request = assign(board, "operator", ctx["agents"]["bob"], "Bounded", "Stay within the cap.",
+                         budget={"download_bytes": 4096})
+        answer_for(answers, request, board, "Done.")
+        # As `bio init sub/ws` would, in the checkout and beside it (found through BIO_AGENT's home).
+        (answers / f"{request['post']}.hook.py").write_text(
+            "import json, os\nfrom pathlib import Path\nfrom daw.catalog import Workspace\ncaps = {}\n"
+            "for name in ('sub/ws', 'deep/er/ws', '../outside-ws'):\n"
+            "    ws = Workspace.create(name)\n"
+            "    caps[name] = [ws.budgets.bundle_bytes, ws.budgets.asset_bytes]\n    ws.close()\n"
+            "Path('caps-during-task.json').write_text(json.dumps(caps))\n")
+        dispatch(board, request["id"], executable)
+        trial = board.trial(board.agent(ctx["agents"]["bob"]))
+        assert read_json(trial / "caps-during-task.json") == {name: [4096, 4096] for name in
+                                                              ("sub/ws", "deep/er/ws", "../outside-ws")}
+        assert Workspace(trial / "sub/ws").budgets.bundle_bytes == 0  # the task is over
+        with budgets.download_budget(trial, {"download_bytes": 2048}, {}, run="run_x"):
+            nested = Workspace(trial / "deep/er/ws")
+            assert (nested.budgets.bundle_bytes, nested.budgets.asset_bytes) == (2048, 2048)
+            nested.close()
+        # A stricter cap the agent writes nearer its second workspace only tightens; a looser one does not loosen.
+        with budgets.download_budget(trial, {"download_bytes": 2048}, {}, run="run_y"):
+            for cap, expected in ((10**12, 2048), (1024, 1024)):
+                local = trial / "sub" / budgets.TASK_BUDGET
+                local.parent.mkdir(exist_ok=True)
+                local.write_text(json.dumps({"caps": {"bundle_bytes": cap, "asset_bytes": cap}}))
+                assert Workspace(trial / "sub/ws").budgets.bundle_bytes == expected
+    with pytest.raises(DawError, match="workspace_not_checkout_workspace"):
+        boardservice.execute(root, ctx["agents"]["bob"], "fetch", {"post": ctx["posts"]["finding"], "question": "q",
+                                                                    "workspace": str(trial / "sub" / "ws")})
+    assert boardservice.checkout_workspace(trial, str(trial / "workspace")) == (trial / "workspace").resolve()
 
 
 def test_harness_home_config_is_sealed_restored_each_turn_and_changes_recorded(demo):

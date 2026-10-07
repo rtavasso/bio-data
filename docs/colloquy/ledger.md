@@ -61,10 +61,12 @@ its correction (`Post.tsx`).
 
 Studio write-ups (`writeup.regeneration`) are flagged for regeneration when
 they cite a withdrawn claim, a superseded post without citing any later version
-of it, or an artifact that superseded publications named and no current
-publication or current claim names any longer. Supersession is read from
-`post.supersedes`, evidence from `published` events; nothing is matched by
-meaning.
+of it, or an artifact that a superseded publication named or whose producing
+question (its `produced` link) published a superseded post. A current
+publication that re-lists the artifact does not clear the flag (a correction may
+re-list what it corrects); the flag lists it as `relisted_by` and the write-up
+page shows it. Supersession is read from `post.supersedes`, evidence from
+`published` events; nothing is matched by meaning.
 
 ## Frontier index (M1.7)
 
@@ -75,6 +77,10 @@ no catalog migration:
   object), missing_measurement?, pointers?, key?, post?}`; `kind` in
   `open_question|untestable|gap|proposed_experiment|next_step`. Validated in
   `work.record_event`, so `bio work event --kind frontier_item` is checked too.
+  A common alias (`blocked`, `wishlist`, `question`, `experiment`, `todo`, …;
+  `frontier.KIND_ALIASES`) is refused, never remapped: `invalid_frontier_kind`
+  names the kind to use and lists the vocabulary (v3 B4). A test checks that
+  every kind named in a preset or skill text is in `frontier.KINDS`.
   Pointers resolve in the author's workspace (artifact, receipt blob,
   accession form, locator); a post pointer is checked for form only because a
   workspace cannot see the board. With `key`, a retry returns the same event
@@ -230,8 +236,11 @@ never writes, completes or infers a claim.
   index-like key becomes `row=#N`) with one `locator` pointer per numeric cell
   (`row=KEY;col=NAME`, percent-encoded, V2 grammar), and one entry per named key
   or record of a JSON output (`key=PATH`). Every text starts `EDIT:` and lists
-  the cells verbatim; `claims_draft.py confirm DRAFT --out claims.json` refuses
-  entries whose text was not rewritten and strips the draft notes. Binary
+  the cells verbatim; status and each scope field are `EDIT:` placeholders (v3
+  B12: the helper never pre-sets a scientific status).
+  `claims_draft.py confirm DRAFT --out claims.json` refuses any entry whose
+  text, status or a scope field the author did not set (a scope field may be
+  deleted) and strips the draft notes. Binary
   outputs, outputs without a table file name and absent bytes are listed as
   skipped with the reason.
 - **Dashboard.** `metrics.claims_authoring` per group (summary and every cohort
@@ -315,6 +324,33 @@ or datasets, and no cluster or shared experiment exists. The wishlist export
 lists all 59 requirements with their questions.
 Shared experiments, scouting datasets and the promotion flow are checked on the
 demo (offline, scripted harness); no live scouting task has run.
+
+## Frontier-first closure and agent reads (spec v3 G1, G5)
+
+- **Completion warns.** `bio work sync QUESTION --status completed` returns (and prints on stderr) a
+  `completion_without_frontier` warning when the question records no frontier item beyond retrieval
+  gaps (withdrawn items do not count); the snapshot is taken either way (`work.completion_warnings`).
+- **Drafting helper.** `.agents/skills/bio-research/scripts/frontier_draft.py --question Q` reads the
+  agent's own catalog (read-only) and question folder and proposes one row per open retrieval gap,
+  sealed prediction marked untestable (`outputs/discoveries*.json` candidates with a `prediction_lock`),
+  `PROPOSAL*.md` body file, and paragraph of a LABBOOK section whose heading names a discriminating test,
+  a next step or experiment, an untestable branch or open questions (plus lines labelled `Next step:`,
+  `Discriminating test:`, `Proposed experiment:`). Every row's kind is `EDIT` (with a `suggested_kind`)
+  and its text starts `EDIT:`; `confirm` refuses rows the author did not set and writes the list for
+  `community publish --frontier`. Pointers are filled in only for bytes already in the workspace. The
+  platform never records an item.
+- **Writers refuse.** A write-up citing a post of a completed question with no non-gap item is refused
+  (`frontierless_question_cited`, [studio.md](studio.md#the-number-checker)).
+- **Agents read the frontier.** `bio community frontier [--kind] [--status] [--question] [--mine]` lists
+  items across questions from the board's projection (`frontier.browse`) with column, blocker,
+  promotion and its request, watcher runs and hits, and scouting datasets; `bio community experiments`
+  lists shared experiments (`daw.commons.agentview`). Both are board-service reads.
+
+On the cohort fixture the helper, run over the ten first-round question folders, proposes 58 rows: 23
+from open retrieval gaps and 35 from the LABBOOK template's `Open questions` sections, at least one
+non-gap suggestion per question. None of the ten LABBOOKs has a section headed discriminating test or
+next step, none holds a sealed prediction ledger and none a proposal file; some rows are status notes the
+author would delete.
 
 ## Useful data for cost (spec v3 V13)
 

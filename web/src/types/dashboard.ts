@@ -119,11 +119,30 @@ export interface Group {
   provider_citation_finals: Num;
   // Spec v2 V8: compaction hygiene per group (daw.commons.hygiene); null fields are unavailable.
   compaction_hygiene?: Hygiene;
+  // Spec v3 V11: community reads per turn (one delivery is one turn), from captured terminal commands.
+  agent_reads?: AgentReads;
   turn_economics?: TurnEconomics;
   board: BoardCriteria;
   cost: Cost;
   trend: TrendPoint[];
   posts_scope: "author" | "run";
+}
+
+export interface AgentReads {
+  inbox_calls: Num; inbox_calls_per_turn: Num; forum_searches: Num; forum_searches_per_turn: Num;
+  overview_calls: Num; overview_calls_per_turn: Num; frontier_reads: Num; frontier_reads_per_turn: Num;
+}
+
+// Spec v3 G1: frontier items per completed question by kind, and finals whose stated next step has an item.
+export interface FrontierClosure {
+  completed_questions: number;
+  completed_with_non_gap_item: number;
+  completed_with_non_gap_share: Num;
+  items_by_kind: Record<string, number>;
+  items_per_completed_question: Record<string, Num>;
+  finals_stating_next_step: number;
+  finals_next_step_matched: number;
+  finals_next_step_matched_share: Num;
 }
 
 export type Dimension = "cohort" | "participant" | "harness" | "task_type";
@@ -148,6 +167,7 @@ export interface Dashboard {
   panels: Record<Dimension, Group[]>;
   economics?: Economics;
   projection: { runs: number; stored: number; stale: number; missing: number; note: string };
+  frontier?: FrontierClosure;
   pricing: Pricing;
   limitations: string[];
 }

@@ -207,13 +207,16 @@ def get(view, name, dirs=None):
     return resolve(view, found[name][1])
 
 
-def candidates(view, post, offset, artifact=None):
+def candidates(view, post, offset, artifact=None, *, caller=None, full=False):
     """Curation aid: locators at which a number's value occurs in the artifacts its post names (cells and
     JSON keys first, then lines). Read-only; the curator decides which, if any, is the number's source."""
     from daw.commons import checks, locators, views
     row = views.thread_index(view)["posts"].get(post)
     if not row:
         raise DawError("unknown_post", post)
+    vis = views.visibility(view, caller, full)
+    if vis.withheld(post):  # a hidden post's numbers, evidence and locators are its content (C2)
+        return vis.stub(post)
     content = row["content"]
     body = content.get("body") or ""
     number = next((n for n in checks.post_numbers(view, post, body, content.get("evidence")) if n["offset"] == offset), None)

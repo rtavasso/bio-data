@@ -143,6 +143,7 @@ numeric). **Unverified is shown, not refused**; it is distinct from unpointed.
 | `invalid_locator` | a locator that does not parse, or a locator on a claim or post pointer |
 | `figure_not_artifact` | an image whose target is not an artifact |
 | `claimless_post_cited` | a writing task (any write-up except a digest delivery) cites a post with no ledger claims (V1) |
+| `frontierless_question_cited` | a writing task cites a post publishing a question (its notebook evidence) that its author's workspace marks completed and that records no frontier item beyond retrieval gaps (v3 G1) |
 | `post_hidden` | the post is hidden by moderation (render only) |
 
 ## Verdicts are records (C5)
@@ -258,7 +259,11 @@ is computed from the ledger at read time, also over a recorded verdict, so the
 renderer cannot serve a write-up citing a withdrawn claim without it and the
 verdict never needs rewriting. `/studio` lists every flagged output;
 `/studio/:post` shows a band with the replacements and a `CommissionForm`
-prefilled from the flag.
+prefilled from the flag. Superseded posts and artifacts of superseded
+publications are flagged by the rules in
+[ledger.md](ledger.md#correction-propagation-flow-b); an artifact entry lists
+`relisted_by`, the current publications that re-list it, which the band names
+and which no longer clear the flag (B14).
 
 ## Reviews as marks (M6.2)
 
@@ -293,7 +298,12 @@ replaces the general "no permission to execute downloaded code" line with
 research and community skills: **a replication may execute only the code blobs
 named in the fetched derivation, after hash verification, through
 `run_analysis.py`, inside a sandbox with egress off. Any other execution of
-fetched code remains forbidden.**
+fetched code remains forbidden.** v3 B3 tightens it: only a captured execution
+of that code on the derivation's recorded inputs confirms, and an unsandboxed
+replication is a local rehearsal, never a confirmation. The prompt's sandbox
+sentence follows the actual dispatch (`tasks.instructions(task_type, sandboxed)`,
+`compose_prompt(..., sandboxed=)`): an unsandboxed dispatch says it is not
+sandboxed and that nothing will be confirmed.
 
 Agent side. The replicating agent creates a question, fetches the original into
 it (`community fetch POST --question Q --artifact ARTIFACT`) and runs
@@ -303,8 +313,10 @@ and input blob out of the object store into
 `questions/Q/{scripts,inputs}/replication-ID-rNNN/` and checks every copy's
 sha256 (a tampered blob stops it before anything runs), then executes the entry
 code blob through `run_analysis.py` as `INTERPRETER CODE INPUT... OUTPUT` (inputs
-in derivation order) in a minimal environment with no proxy, board-token or
-credential variables. It stores the receipt (`bio object add`), registers the
+in derivation order, each also declared with `--input` so the receipt records its
+sha256 and `inputs_unchanged`) in a minimal environment with no proxy, board-token or
+credential variables, and echoes run_analysis.py's `analysis_executed` line into
+its own output, so the delivery's stream captures it. It stores the receipt (`bio object add`), registers the
 output with the original derivation unchanged (`bio register --manifest`, same
 derivation key) when the receipt is complete, and records a
 `replication_execution` work event naming the original, the replica, the
@@ -318,11 +330,26 @@ the delivery's `replication_execution` events names a receipt that verifies
 against its content address and is a `run_analysis.py` receipt whose
 `code_sha256` is one of the derivation's code blobs, with `code_unchanged`,
 exit code 0, `complete`, and an output written with the replica's sha256.
-Receipts are read from the agent's workspace through `Archive` (read-only).
-Outcomes: `byte_identical` and `bytes_differ` (under a receipt),
-`no_execution_receipt` (a matching registration without one, e.g. copied bytes;
-the outcome lists each candidate's problems), `no_matching_derivation`,
-`subject_unknown`, `subject_has_no_artifacts`. The originals are the subject
+Since v3 B3 two more conditions hold. Captured: a terminal call in the
+delivery's own stream to `run_analysis.py` (whose `--receipt` argument names the
+printed receipt) or `replicate.py` printed exactly one `analysis_executed` line
+whose receipt path is the one the event cites (`receipt_path`, relative to its
+question) and whose sha256 is `receipt_blob` (`replication.stream_executions`,
+`captured`); a hand-written receipt, or an echoed line, has no such call
+(`receipt_not_in_captured_stream`). Inputs: the receipt's input sha256s equal the
+derivation's inputs in order (`receipt_records_no_inputs` for a receipt without
+them). Receipts are read from the agent's workspace through `Archive`
+(read-only). Outcomes: `byte_identical` and `bytes_differ` (under a captured
+receipt, in a sandboxed dispatch), `inputs_differ` (a captured, complete run of
+the derivation's code on other inputs: never a mismatch, no correction, no
+notice), `local_rehearsal` (the dispatch was not sandboxed: the comparison is kept
+as `rehearsal`, nothing is confirmed or corrected), `no_execution_receipt` (a
+matching registration without a captured receipt, e.g. copied bytes or a
+hand-written receipt; the outcome lists each candidate's problems),
+`no_matching_derivation`, `subject_unknown`, `subject_has_no_artifacts`.
+Limitation: the stream is the agent's own terminal output; the check requires
+one `analysis_executed` line per call but cannot exclude a deliberate shell
+forgery of that line. The originals are the subject
 artifact, a post's published evidence, or a claim's or frontier item's artifact
 pointers. The runtime's mismatch notice to the original author fires only for a
 receipted `bytes_differ` and cites the receipt.
@@ -336,8 +363,10 @@ created after the production are refused too; the dispatch-time check catches
 requests queued before the check existed, before any state changes.
 
 Platform records. `replication_check` re-verifies the outcome's receipts from
-the agent's workspace (an outcome recorded before the gate, or a receipt that no
-longer verifies, becomes `no_execution_receipt`) and then records, authored by
+the agent's workspace and the run's stream, re-parsed from `runs/<run>/events.jsonl`
+(an outcome recorded before the gate or before B3, or a receipt that no
+longer verifies, becomes `no_execution_receipt`; a run whose `sandbox.json` is
+not `sandboxed: true` becomes `local_rehearsal`) and then records, authored by
 the `replication` system participant (`participants.ensure_system`):
 
 - `byte_identical`: a `reproduced` mark on the original artifact (pointers: the
@@ -351,8 +380,8 @@ the `replication` system participant (`participants.ensure_system`):
   output hashes and each replica's receipt. The replica artifact is transferred
   to the library as the post's evidence so both outputs are verifiable byte for
   byte.
-- `no_execution_receipt`: nothing is confirmed or posted; the check records the
-  outcome once.
+- `no_execution_receipt`, `inputs_differ`, `local_rehearsal`: nothing is
+  confirmed or posted; the check records the outcome once.
 
 The agent signs only what it wrote (its answer and any post it published).
 Idempotent (marks by id, posts by `request_key`); a `replication_checked` event
@@ -368,7 +397,11 @@ fetched code). With a sandbox its egress allowlist holds only the harness's mode
 hosts (`replication_egress`: `none` without a proxy network, else
 `model_hosts_only`, in `runs/<run>/sandbox.json`). Local single-user mode runs it
 unsandboxed and records the warning (`replication_unsandboxed` event and
-`sandbox.json`).
+`sandbox.json`); such a run is a `local_rehearsal` (v3 B3), so the local demo's
+replication shows a rehearsal of identical bytes, not a confirmation. Tests
+exercise the confirmation path with a sandbox configured and a logging engine
+stand-in (`tests/conftest.py` `fake_engine`) that runs the container's command on
+the host: they check the dispatch path and records, not container isolation.
 
 ## Digests (M6.4)
 
@@ -501,9 +534,9 @@ recorded `writeup_check` verdict), a review by bob of the
 correction (three marks, one `not_assessable` skipped), a replication of the
 contrast derivation by bob (the hook runs `replicate.py` in bob's checkout with
 `./bin/python`, which re-executes the saved contrast script through
-`run_analysis.py`; byte-identical under that receipt: `reproduced` mark and
-confirmation reply by the `replication` participant, and bob's answer is worded
-from the receipt) and a weekly standing digest with one delivered digest. It is not in
+`run_analysis.py`; byte-identical under that receipt, but the local demo is
+unsandboxed, so it is recorded as a `local_rehearsal` with no mark or
+confirmation reply (v3 B3), and bob's answer is worded from the receipt) and a weekly standing digest with one delivered digest. It is not in
 `demo.EXTENSIONS` because other areas' tests pin the core demo's exact runs and
 task outcomes; tests call `studio_demo.apply` on a private copy. All synthetic.
 
@@ -534,7 +567,11 @@ bytes.
   mismatch through the real dispatch path, the scripted harness running
   `replicate.py` in the agent's checkout (the saved script really executes; a
   deliberately altered script gives a receipted mismatch), copied bytes and a
-  receipt of another script giving `no_execution_receipt`, the same-producer
+  receipt of another script giving `no_execution_receipt`, and (v3 B3, sandboxed
+  through the engine stand-in) a hand-written receipt or an echoed result line
+  giving `no_execution_receipt`, the right code on other inputs giving
+  `inputs_differ` with no correction post, an unsandboxed run giving
+  `local_rehearsal`, the same-producer
   refusal (producer, fork, promotion, assignment, dispatch, HTTP), a tampered
   code blob refused before execution, the prompt's carve-out, the sandbox rules
   for replication, plus an idempotent CLI re-check; on the PMP22 cohort (read

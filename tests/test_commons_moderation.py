@@ -181,6 +181,9 @@ def _check_surfaces(root):
     for who in {author, target_agent, target["person"]}:
         _absent(titled, api.get(f"/api/participants/{who}/activity").json())
     _absent(titled, api.get("/api/studio").json(), api.get("/api/claims").json())
+    # Curation locator (B1): a hidden post's numbers, evidence artifacts and their locators are its content.
+    assert api.get("/api/curation/locate", params={"post": post, "offset": 0}).json() == stub
+    assert api.get(f"/api/writeup-checks/{post}").json() == stub
 
     # The operator reads through the hide only when asking for full content.
     operator = client(root, user="operator")
@@ -220,9 +223,118 @@ def test_hidden_post_is_redacted_on_every_surface_cohort(tmp_path):
     """Hide a real cohort post in a private copy (the shared session copy is left untouched)."""
     root = tmp_path / "cohort"
     shutil.copytree(FIXTURE, root, symlinks=True)
-    (root / "library" / "staging").mkdir()  # the fixture omits empty working directories; writes need it
+    (root / "library" / "staging").mkdir(exist_ok=True)  # writes need it; the fixture keeps it (B2)
     target = _check_surfaces(root)
     assert target["post"].startswith("post_")
+
+
+# Route parameters that carry a post id. A path parameter named `identity` may name a post or something else:
+# the route is probed with the hidden post's id, and a route that refuses it as another kind of record
+# (`unknown_artifact`, `invalid_view`, ...) does not take posts.
+POST_PARAMS = {"post", "post_id", "posts"}
+
+
+def _post_routes(app):
+    """Every GET API route with a parameter that can carry a post id: (path, path params, query params)."""
+    from fastapi.routing import APIRoute
+
+    def flat(routes):
+        for route in routes:
+            if hasattr(route, "original_router"):
+                yield from flat(route.original_router.routes)
+            elif isinstance(route, APIRoute):
+                yield route
+    out = []
+    for route in flat(app.routes):
+        if "GET" not in route.methods:
+            continue
+        path = [p.name for p in route.dependant.path_params]
+        query = [p for p in route.dependant.query_params if p.name in POST_PARAMS]
+        if POST_PARAMS & set(path) or query or path == ["identity"]:
+            out.append((route, path, query))
+    return out
+
+
+def _contains_stub(value, stub):
+    """True when the response carries the post's moderation record: its id (or, in a post-keyed record such as a
+    correction state, its `post`) flagged hidden with the public reason."""
+    if isinstance(value, dict):
+        named = stub["id"] in (value.get("id"), value.get("post"))
+        if named and value.get("hidden") is True and value.get("reason") == stub["reason"]:
+            return True
+        return any(_contains_stub(v, stub) for v in value.values())
+    if isinstance(value, list):
+        return any(_contains_stub(v, stub) for v in value)
+    return False
+
+
+def _check_post_routes(root, target):
+    """B1: every GET route that takes a post id answers a hidden post with its moderation stub (or refuses it as
+    hidden_by_moderation), so a new route cannot be forgotten."""
+    from daw.commons import checks
+    post, titled = target["post"], target["secrets"]
+    stub = {"id": post, "hidden": True, "reason": REASON}
+    with Archive(root) as view:
+        content = view.post(post)["content"]
+        found = checks.post_numbers(view, post, content.get("body") or "", content.get("evidence"))
+    # Values for other required query parameters: a real number offset reaches the curation locator's lookup.
+    extra = {"offset": found[0]["offset"] if found else 0}
+    app = create_app(root, local_user="local", static_dir=root / "missing")
+    api = TestClient(app)
+    checked = []
+    for route, path, query in _post_routes(app):
+        url = route.path
+        for name in path:
+            url = url.replace("{" + name + "}", post if name in POST_PARAMS | {"identity"} else "x")
+        params = {p.name: ([post] if p.name == "posts" else post) for p in query}
+        params.update({p.name: extra[p.name] for p in route.dependant.query_params if p.name in extra})
+        response = api.get(url, params=params)
+        body = response.json()
+        if (path == ["identity"] and not query and response.status_code in (400, 404)
+                and body.get("error") not in (None, "unknown_post")):
+            continue  # this identity names something other than a post (unknown_artifact, invalid_view, ...)
+        _absent(titled, body)
+        if response.status_code == 403:
+            assert body["error"] == "hidden_by_moderation", route.path
+        else:
+            assert response.status_code in (200, 422) and _contains_stub(body, stub), (route.path, body)
+        checked.append(route.path)
+    assert {"/api/posts/{identity}", "/api/curation/locate", "/api/writeup-checks/{post}"} <= set(checked)
+    return checked
+
+
+def test_every_get_route_taking_a_post_id_serves_the_stub_demo(demo):
+    root, _ = demo
+    _check_post_routes(root, _setup(root))
+
+
+@pytest.mark.skipif(not (FIXTURE / "FIXTURE.json").is_file(), reason="real-data fixture not checked out")
+def test_every_get_route_taking_a_post_id_serves_the_stub_cohort(tmp_path):
+    root = tmp_path / "cohort"
+    shutil.copytree(FIXTURE, root, symlinks=True)
+    _check_post_routes(root, _setup(root))
+
+
+def test_hidden_post_page_withholds_its_notebook_link_but_the_notebook_stays_a_workspace_record(demo):
+    """B15: a hide is post-scoped. The hidden post's page (even revealed to an operator) and its verify withhold its
+    notebook; the notebook itself is a workspace record and its question page and manifest stay readable."""
+    root, ctx = demo
+    with Archive(root) as view:
+        post = next(p for p, row in views.thread_index(view)["posts"].items()
+                    if isinstance((row["content"].get("evidence") or {}).get("notebook"), dict))
+        notebook = view.post(post)["content"]["evidence"]["notebook"]
+        author = view.post(post)["author"]
+    operator = client(root, user="operator")
+    assert operator.get(f"/api/posts/{post}").json()["notebook"] == notebook
+    with Community(root) as board:
+        moderation.hide(board, "operator", post, REASON)
+    revealed = operator.get(f"/api/posts/{post}", params={"full": True}).json()
+    assert revealed["hidden"] is True and revealed["notebook"] is None
+    assert client(root).get(f"/api/posts/{post}").json() == {"id": post, "hidden": True, "reason": REASON}
+    page = client(root).get(f"/api/questions/{author}/{notebook['question']}")
+    assert page.status_code == 200 and post not in [p["post"] for p in page.json()["posts"]]
+    manifest = client(root).get(f"/api/blobs/library/{notebook['manifest_blob']}")
+    assert manifest.status_code == 200  # a workspace record, not the post's content
 
 
 def test_unhide_restores_display_and_events_are_framed_at_read_time(demo):
@@ -303,6 +415,14 @@ def _check_agent_reads(root):
         for operation in ("show", "search"):
             payload = {"post": post} if operation == "show" else {"text": words, "full": True}
             _absent(secrets, boardservice.execute(root, agent, operation, payload))
+        # B15: verify is moderated like show: a hidden post's body hash, artifacts and notebook state are its content.
+        blob = board.one("SELECT body_blob FROM post WHERE id=?", (post,))["body_blob"]
+        checked = boardservice.execute(root, agent, "verify", {"post": post})
+        assert {k: checked[k] for k in ("id", "hidden", "reason")} == {"id": post, "hidden": True, "reason": REASON}
+        assert checked["verified"] is None and blob not in json.dumps(checked)
+        assert not {"body_sha256", "artifacts", "notebook_verified"} & set(checked)
+        assert board.verify(post, "operator")["verified"] is None
+        assert board.verify(post, "operator", full=True)["body_sha256"] == blob
         with pytest.raises(DawError) as refused:
             board.fetch(post, root, "q_unused", author=agent)
         assert refused.value.reason == "hidden_by_moderation"

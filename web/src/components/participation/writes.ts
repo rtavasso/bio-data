@@ -92,6 +92,7 @@ const EXPLAIN: Record<string, string> = {
   rate_limited: "Rate limit reached for this hour.",
   over_budget: "This exceeds your remaining budget allowance.",
   budget_required: "State a budget for every resource your allowance limits.",
+  allowance_not_configured: "No allowance is configured for you: an operator sets the commons default ([allowance] in commons.toml) or yours.",
   permission_denied: "You do not have permission for this action.",
   anchor_quote_mismatch: "The selected text no longer matches the stored bytes.",
   upload_too_large: "The file is larger than the upload limit.",

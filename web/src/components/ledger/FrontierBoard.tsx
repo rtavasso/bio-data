@@ -115,7 +115,9 @@ export function FrontierBoard({ view, onDone }: { view: FrontierBoardView; onDon
       </p>
       {allowance && (
         <p className="muted small" aria-label="Your allowance">
-          Your allowance: {allowance.unlimited ? "unlimited" : `${budgetText(allowance.remaining)} remaining of ${budgetText(allowance.allowance)}`}.
+          Your allowance: {allowance.unlimited ? "unlimited" : allowance.configured === false
+            ? "none configured (promotions are refused until an operator sets one)"
+            : `${budgetText(allowance.remaining)} remaining of ${budgetText(allowance.allowance)}`}.
         </p>
       )}
       <div className="board-columns">

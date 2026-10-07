@@ -652,3 +652,101 @@ def test_final_answer_claims_block_becomes_ledger_claims_or_is_refused(board, so
         two = "```claims\n[]\n```\n\n```claims\n[]\n```\nprose"
         assert final_claims(board, two)[2]["reason"] == "multiple_claims_blocks"
         assert final_claims(board, "plain prose") == ("plain prose", {}, None)
+
+
+# ---- spec v3 G5, G6, V11: the agent's own view of the commons ------------------------------------------------
+
+def test_agent_reads_of_frontier_acts_and_overview_on_the_cohort(cohort_copy, monkeypatch):
+    """G5/G6/V11 acceptance on a private copy of the real cohort: one `community overview` call lists an agent's
+    open requests, the human acts on its work, the frontier items it owns and its budget; `community frontier`
+    lists the cohort's items with state; `community show` returns marks and anchored comments as attributed
+    records; `inbox --acts` lists a mark on the agent's post. Reads write no record; hidden posts are stubs."""
+    from daw.commons import agentview
+    from daw.commons.boardservice import execute
+    from daw.commons.moderation import hide
+    from daw.commons.participation import ask, comment, mark, promote
+    from daw.community_runtime import _acts_section
+    for name in ("BIO_AGENT", "BIO_BOARD_URL", "BIO_COMMUNITY"):
+        monkeypatch.delenv(name, raising=False)
+    root, runner = cohort_copy, CliRunner()
+    (root / "commons.toml").write_text("[allowance]\nminutes = 120\n")  # B13: a person's ask needs an allowance
+
+    def cli(*args):
+        result = runner.invoke(app, ["community", "--root", str(root), *args])
+        assert result.exit_code == 0, result.output
+        return json.loads(result.stdout)
+
+    with Community(root) as board:
+        agent = board.agent("pmp22-cis-promoters")
+        person = board.one("SELECT id FROM agent WHERE kind='human'")["id"]
+        post = board.rows("SELECT id FROM post WHERE author=? ORDER BY seq", (agent["id"],))[-1]["id"]
+        shown = board.show(post)
+        quote = shown["content"]["body"][:24]
+        item = board.one("SELECT id FROM frontier_item WHERE author=? AND status='open'", (agent["id"],))["id"]
+        start = board.one("SELECT max(seq) AS n FROM event")["n"]
+        marked = mark(board, person, "post", post, "disputed", "The cited source is a different background.")
+        commented = comment(board, person, "post", post, "Which promoter does this quote refer to?",
+                            anchor={"kind": "paragraph", "blob": shown["body_blob"], "offset": 0,
+                                    "length": len(quote), "quote": quote})
+        asked = ask(board, person, agent["id"], "Could you state the next computable step for the cis question?")
+        promoted = promote(board, person, "frontier_item", item, "scouting", agent["id"], {"minutes": 15})
+        written = board.one("SELECT max(seq) AS n FROM event")["n"]
+        projection = board.rows("SELECT * FROM frontier_item ORDER BY id")
+
+    overview = cli("overview", "--agent", "pmp22-cis-promoters")
+    kinds = {r["record"] for r in overview["records"]}
+    assert {"request", "act", "frontier_item", "promotion", "budget"} <= kinds
+    assert asked["id"] in {r["id"] for r in overview["records"] if r["record"] == "request"}
+    acts = {r["act"]: r for r in overview["records"] if r["record"] == "act"}
+    assert acts["mark"]["id"] == marked["id"] and acts["mark"]["kind"] == "disputed"
+    assert acts["mark"]["participant"] == person and acts["mark"]["participant_kind"] == "human"
+    assert acts["comment"]["id"] == commented["post"] and acts["comment"]["anchor"]["quote"] == quote
+    assert acts["promotion"]["id"] == promoted["id"] and acts["promotion"]["target_id"] == item
+    owned = {r["id"]: r for r in overview["records"] if r["record"] == "frontier_item"}
+    assert owned[item]["status"] == "promoted" and owned[item]["request"]["id"] == promoted["id"]
+    assert overview["label"] == agentview.LABEL and overview["acts_after_source"] == "last_turn"
+    assert overview["acts_after"] < start  # acts since the agent's last delivered turn
+
+    listed = cli("frontier")
+    assert listed["total"] >= 59 and all(i["status"] and i["column"] for i in listed["items"])
+    assert listed["by_kind"]["gap"] == listed["total"]
+    mine = cli("frontier", "--mine", "--kind", "gap")  # --mine is BIO_AGENT's (unset here: the operator's)
+    assert mine["total"] == 0
+    assert cli("experiments")["total"] == 0
+
+    shown = cli("show", post)
+    by_act = {a["act"]: a for a in shown["acts"]}
+    assert by_act["mark"]["note"] == "The cited source is a different background."
+    assert by_act["comment"]["note"] == "Which promoter does this quote refer to?" and by_act["comment"]["anchor"]
+    assert shown["acts_label"] == agentview.LABEL
+
+    inbox = cli("inbox", "--acts", "--agent", "pmp22-cis-promoters", "--after", str(start))
+    assert [a["act"] for a in inbox["acts"]] == ["mark", "comment", "promotion"]
+    assert inbox["acts"][0]["id"] == marked["id"] and inbox["latest"] == promoted_seq(root, promoted["id"])
+    assert cli("inbox", "--acts", "--agent", "pmp22-cis-promoters", "--after", str(inbox["latest"]))["acts"] == []
+
+    # The board service answers the same reads for the agent itself (sandboxed checkouts).
+    served = execute(root, agent["id"], "overview", {"after": start})
+    assert {r["record"] for r in served["records"]} >= {"request", "act", "frontier_item", "budget"}
+    assert execute(root, agent["id"], "frontier", {"mine": True})["total"] >= 1
+    assert len(execute(root, agent["id"], "inbox", {"acts": True, "after": start})["acts"]) == 3
+
+    with Community(root) as board:
+        # Reads wrote nothing: no board event, the frontier projection unchanged.
+        assert board.one("SELECT max(seq) AS n FROM event")["n"] == written
+        assert board.rows("SELECT * FROM frontier_item ORDER BY id") == projection
+        # The dispatch prompt lists the acts since the last turn by identity and kind, with the label, no notes.
+        section = _acts_section(board, agent)
+        assert agentview.LABEL in section and marked["id"] in section and "different background" not in section
+        hide(board, "operator", post, "test: withheld")
+    hidden = cli("show", post)
+    assert hidden["hidden"] is True and "acts" not in hidden
+    stubs = cli("inbox", "--acts", "--agent", "pmp22-cis-promoters", "--after", str(start))["acts"]
+    assert [a.get("hidden") for a in stubs[:2]] == [True, True]
+    assert all("note" not in a and "anchor" not in a for a in stubs[:2])
+
+
+def promoted_seq(root, request):
+    with Community(root) as board:
+        return next(r["seq"] for r in board.rows("SELECT seq,body FROM event WHERE kind='promotion_created'")
+                    if json.loads(r["body"])["request"] == request)

@@ -27,7 +27,12 @@ const overview: StudioOverview = {
       followup: [{ original: artifact, outcome: "byte_identical", mark: "mark_2", post: "post_conf", author: "system_1" }] } }),
       item({ request: "request_5", task_type: "replication", replication: {
         results: [{ original: artifact, outcome: "no_execution_receipt", unreceipted: [{ artifact, output_blob: "b".repeat(64) }] }],
-        followup: [{ original: artifact, outcome: "no_execution_receipt" }] } })],
+        followup: [{ original: artifact, outcome: "no_execution_receipt" }] } }),
+      item({ request: "request_6", task_type: "replication", replication: {
+        results: [{ original: artifact, outcome: "local_rehearsal", rehearsal: "byte_identical", sandboxed: false }],
+        followup: [{ original: artifact, outcome: "local_rehearsal", rehearsal: "byte_identical" }] } }),
+      item({ request: "request_7", task_type: "replication", replication: {
+        results: [{ original: artifact, outcome: "inputs_differ" }], followup: [{ original: artifact, outcome: "inputs_differ" }] } })],
     digests: [],
   },
   states: {
@@ -68,6 +73,11 @@ test("outputs are grouped by type with state, flags and links to the rendered wr
   expect(screen.getByText("(platform record by the replication participant)")).toBeTruthy();
   expect(screen.getByText("eeeeeeeeeeee")).toBeTruthy();
   expect(screen.getByText("no execution receipt").className).toContain("warn");
+  // v3 B3: an unsandboxed run is a rehearsal and a run on other inputs is inputs_differ; neither confirms.
+  expect(screen.getByText("local rehearsal").className).toContain("warn");
+  expect(screen.getByText(/unsandboxed: a rehearsal \(byte identical\), never a confirmation/)).toBeTruthy();
+  expect(screen.getByText("inputs differ").className).toContain("warn");
+  expect(screen.getAllByRole("link", { name: "confirmation" })).toHaveLength(1);
   fireEvent.click(screen.getByRole("tab", { name: /Reviews/ }));
   expect(screen.getByText("limitations_stated: checked source")).toBeTruthy();
   expect(screen.getByText("foreign")).toBeTruthy();

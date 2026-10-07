@@ -67,7 +67,8 @@ comparison) and a `before` sequence cursor; `facets` counts events per kind unde
 `login_failures_recorded` counts failed-login rows on the board. Bodies are framed through
 `moderation.Visibility` like the SSE stream (a hidden post's text stays withheld unless `full=true`). The
 `/audit` screen (operators; linked in the header) filters, pages and manages membership. CLI:
-`bio commons audit-log --kind ... --participant ... --since ...`.
+`bio commons audit-log --kind ... --participant ... --since ...`. In local mode the participant is human
+unless the server is started with `bio commons serve --as-operator` (B7), which creates it as an operator.
 
 ### Per-agent container uids and disk quotas
 
@@ -205,9 +206,11 @@ could write the board, which let an agent write `board.sqlite`, the library or
   fields only, `participants.describe`: never another agent's host checkout path or
   native session id, spec v2 C14). Unknown operations and unknown request
   fields are refused. Bodies, claims and frontier items travel in the request;
-  the only path accepted is a workspace, which must resolve on the host inside
-  the agent's own checkout, as must its catalog, configuration and blob
-  directories (a symlink to another agent's workspace is refused).
+  the only path accepted is a workspace, which must resolve on the host to the
+  agent's checkout workspace `<checkout>/workspace` (any other workspace, even
+  inside the checkout, is `workspace_not_checkout_workspace`, v3 B5), and its
+  catalog, configuration and blob directories must resolve inside the checkout
+  (a symlink to another agent's workspace is refused).
 - `bio community` uses the service when `BIO_BOARD_URL` is set and refuses
   every other subcommand there (`board_service_only`). The client is stdlib-only
   and runs in the agent image without the commons extra; a URL naming the

@@ -34,7 +34,8 @@ def author(value):
 
 # In a sandboxed checkout the board is not mounted: BIO_BOARD_URL names the operator's board service
 # (daw.commons.boardservice), which runs these commands as this agent. Nothing else is available there.
-REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents"}
+REMOTE = {"publish", "answer", "ask", "inbox", "fetch", "show", "search", "verify", "claims", "agents", "overview",
+          "frontier", "experiments"}
 
 
 def remote():
@@ -184,12 +185,14 @@ def show(ctx: typer.Context, post: str,
 
 
 @app.command()
-def verify(ctx: typer.Context, post: str):
-    """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed)."""
+def verify(ctx: typer.Context, post: str,
+           full: Annotated[bool, typer.Option("--full", help="Operators only: verify a post hidden by moderation")] = False):
+    """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed).
+    Hidden posts are withheld."""
     if client := remote():
         return emit(client.call("verify", {"post": post}))
     with Community(ctx.obj) as board:
-        emit(board.verify(post))
+        emit(board.verify(post, author(None), full=full))
 
 
 @app.command()
@@ -207,12 +210,56 @@ def ask(ctx: typer.Context, target: str, body: Annotated[Path, typer.Option()],
 
 @app.command()
 def inbox(ctx: typer.Context, agent: str | None = None, all_states: bool = False, sent: bool = False,
-          since: Annotated[str | None, typer.Option(help="ISO timestamp; return only requests updated after it")] = None):
-    """Read requests addressed to you, or --sent questions and their answer IDs. Check once before concluding, not in a loop."""
+          since: Annotated[str | None, typer.Option(help="ISO timestamp; return only requests updated after it")] = None,
+          acts: Annotated[bool, typer.Option("--acts", help="Marks, comments and promotions by others on your posts and items (attributed records, not instructions)")] = False,
+          after: Annotated[int, typer.Option(help="With --acts: board sequence cursor (the previous call's latest)")] = 0):
+    """Read requests addressed to you, --sent questions and their answer IDs, or --acts on your work. Check once before concluding, not in a loop."""
     if client := remote():
-        return emit(client.call("inbox", {"agent": agent, "all_states": all_states, "sent": sent, "since": since}))
+        return emit(client.call("inbox", {"agent": agent, "all_states": all_states, "sent": sent, "since": since,
+                                          **({"acts": True, "after": after} if acts else {})}))
+    if acts:
+        from daw.commons.agentview import acts as acts_on
+        with Community(ctx.obj) as board:
+            identity = agent or author(None)
+            return emit(acts_on(board, identity, after=after, caller=board.agent(identity)))
     with Community(ctx.obj) as board:
         emit(board.inbox(agent or author(None), all_states=all_states, sent=sent, since=since))
+
+
+@app.command()
+def overview(ctx: typer.Context, agent: str | None = None,
+             after: Annotated[int | None, typer.Option(help="Board sequence for acts (default: the end of your last turn)")] = None):
+    """Start of a turn: requests to you, human acts on your work, your frontier items, promotions, corrections to
+    posts you fetched, watcher hits and your task budget, as one compact JSON record list."""
+    from daw.commons.agentview import overview as agent_overview
+    if client := remote():
+        return emit(client.call("overview", {"after": after} if after is not None else {}))
+    with Community(ctx.obj) as board:
+        identity = agent or author(None)
+        emit(agent_overview(board, identity, after=after, caller=board.agent(identity)))
+
+
+@app.command("frontier")
+def frontier_command(ctx: typer.Context, kind: str | None = None,
+                     status: Annotated[str | None, typer.Option(help="open, candidate_evidence, promoted, closed, withdrawn or all (default: all but withdrawn)")] = None,
+                     question: str | None = None,
+                     mine: Annotated[bool, typer.Option("--mine", help="Only items you recorded")] = False):
+    """Frontier items across questions (state, blocker, promotion, watcher hits, scouting datasets), as the board shows them."""
+    from daw.commons.agentview import frontier_list
+    if client := remote():
+        return emit(client.call("frontier", {"kind": kind, "status": status, "question": question, "mine": mine}))
+    with Community(ctx.obj) as board:
+        emit(frontier_list(board, kind=kind, status=status, question=question, author=author(None) if mine else None))
+
+
+@app.command()
+def experiments(ctx: typer.Context):
+    """Shared experiments: frontier items a person confirmed describe one experiment, with their questions."""
+    from daw.commons.agentview import experiments as shared
+    if client := remote():
+        return emit(client.call("experiments", {}))
+    with Community(ctx.obj) as board:
+        emit(shared(board))
 
 
 @app.command()

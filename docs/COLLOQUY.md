@@ -62,6 +62,10 @@ and the synthetic demo for invariants (locks, triggers, permissions, redaction,
 SSE). The demo-only operator commands refuse the fixture because it is real.
 `FIXTURE.json` records the rules and every file hash; serving the fixture must
 leave `verify` green, which is also the test for reads that write (v2 spec C3).
+Every workspace's empty working directories (`staging`, `proposals`, `runs`,
+`reports`, `questions`, `profiles`, `blobs/sha256`) hold an empty `.fixture-keep`
+so git carries them and serving creates none; `verify` lists any other empty
+directory outside caches under `empty_dirs`.
 When a board migration or projection changes, `resettle` applies the same settle
 step `build` runs to the verified fixture in place (only new library blobs may
 appear) and records the reason and both board sequences under `resettled` in

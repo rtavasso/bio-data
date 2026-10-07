@@ -640,7 +640,9 @@ def post_view(view, pid, *, caller=None, full=False):
         thread=index["roots"][pid], hidden=vis.hidden(pid), content_is_untrusted_data=True,
         content={**body, "evidence": vis.evidence(body["evidence"])} if "evidence" in body else body,
         evidence_artifacts=evidence_summary(view.library, evidence),
-        notebook=evidence.get("notebook"), run=evidence.get("run") or body.get("run"),
+        # A hide is post-scoped; the notebook is a workspace record and stays readable, but a hidden post's page
+        # does not link it, even revealed (B15).
+        notebook=None if vis.hidden(pid) else evidence.get("notebook"), run=evidence.get("run") or body.get("run"),
         fetches=_fetches(view, pid), claims=claims,
         marks=marks_for(view, [("post", pid)] + [("claim", c["id"]) for c in claims]
                         + [("artifact", a) for a in artifacts]),
