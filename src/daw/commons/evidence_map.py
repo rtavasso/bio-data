@@ -20,9 +20,12 @@ items. Edges come only from rows and events that already exist:
 Nothing is inferred: a record named by another record but absent from every store
 becomes a node with `present: false` (missing is not the same as unindexed or
 selected out). Every edge lists the records it came from so a reader can open them.
-The force layout is deterministic and disposable; it is cached under
-`<commons>/cache/map/` keyed by the board event sequence, a fingerprint of the
-workspace catalogs (which change without board events) and the filters.
+The graph is replayed from recorded segments (spec v2 V6), kept on disk by
+`daw.commons.graphstore` and keyed by event sequence and catalog fingerprints, so
+a request no longer re-reads every store. The force layout is deterministic and
+disposable; it is cached under `<commons>/cache/map/` keyed by the board event
+sequence, a fingerprint of the workspace catalogs (which change without board
+events) and the filters.
 """
 import hashlib
 import json
@@ -110,6 +113,79 @@ class Graph:
         return edge
 
 
+# ---------------------------------------------------------------------------- recorded segments (spec v2 V6)
+#
+# The graph is built from segments, each a list of operations (node, placeholder, edge) derived from one
+# source: board agents, the library catalog, each workspace catalog, posts, notebook links, answered requests,
+# board events, claims, marks and frontier items. Replaying every segment's operations in this order into a
+# `Graph` is the map build; `daw.commons.graphstore` keeps the operations on disk, keyed by event sequence and
+# catalog fingerprints, so a request replays stored operations instead of re-reading every store. What a
+# reader may see is applied at replay (`vis`): operations derived from a post's body carry that post as their
+# guard and are withheld, or replaced by the hidden stub, while the post is hidden.
+
+class Recorder:
+    """Records Graph operations for one segment: (kind, a, b, relation, guard, payload)."""
+
+    def __init__(self):
+        self.ops, self.nodes = [], {}
+
+    def node(self, identity, kind, *, store=None, present=True, guard=None, on_hidden=None, **attrs):
+        payload = {"kind": kind, "store": store, "present": present, "attrs": attrs}
+        if on_hidden:
+            payload["on_hidden"] = on_hidden
+        self.ops.append(("node", identity, None, None, guard, payload))
+        node = self.nodes.setdefault(identity, {})
+        for key, value in attrs.items():
+            if value is not None and node.get(key) is None:
+                node[key] = value
+        return node
+
+    def placeholder(self, identity, kind, *, guard=None):
+        payload = {"kind": kind}
+        if guard:
+            payload["on_hidden"] = "skip"
+        self.ops.append(("placeholder", identity, None, None, guard, payload))
+
+    def edge(self, source, target, relation, record, *, style=None, created=None, guard=None, on_hidden=None,
+             meta=None, **attrs):
+        payload = {"record": record, "style": style, "created": created, "attrs": attrs}
+        if guard:
+            payload["on_hidden"] = on_hidden or "skip"
+        if meta:
+            payload["meta"] = meta  # kept in the store for read models, never drawn
+        self.ops.append(("edge", source, target, relation, guard, payload))
+
+
+def replay(ops, vis, graph=None):
+    """Apply recorded operations to a Graph as `vis` lets the caller see them."""
+    graph = graph if graph is not None else Graph()
+    for kind, a, b, relation, guard, payload in ops:
+        withheld = bool(guard) and vis.withheld(guard)
+        action = payload.get("on_hidden")
+        if withheld and action == "skip":
+            continue
+        if kind == "node":
+            attrs = payload.get("attrs") or {}
+            if action == "post":
+                if withheld:
+                    # A hidden post is its identity and the moderation reason: no title, author, time or body relations.
+                    graph.node(a, "post", store="board", label="hidden post", hidden=True, reason=vis.reason(a))
+                    continue
+                attrs = {**attrs, "hidden": vis.hidden(a), "reason": vis.reason(a)}
+            elif action == "claim" and withheld:
+                graph.node(a, "claim", store="board", label="claim of a hidden post", hidden=True,
+                           reason=vis.reason(guard))
+                continue
+            graph.node(a, payload["kind"], store=payload.get("store"), present=payload.get("present", True), **attrs)
+        elif kind == "placeholder":
+            graph.placeholder(a, payload["kind"])
+        else:
+            created = None if withheld and action == "nocreated" else payload.get("created")
+            graph.edge(a, b, relation, payload["record"], style=payload.get("style"), created=created,
+                       **(payload.get("attrs") or {}))
+    return graph
+
+
 def _title(ws, manifest_blob):
     try:
         manifest = ws.json_blob(manifest_blob)
@@ -192,7 +268,8 @@ def _add_catalog(graph, ws, store, *, agent=None):
         graph.edge(question_node(agent["id"], link["question"]), link["artifact"], link["relationship"],
                    {"store": store, "table": "question_artifact", "question_id": link["question"],
                     "artifact_id": link["artifact"], "relationship": link["relationship"], "event": event},
-                   style=style, created=created.get(event), **extra)
+                   style=style, created=created.get(event), **extra,
+                   **({"meta": {"link": link}} if isinstance(graph, Recorder) else {}))
 
 
 def question_node(agent, qid):
@@ -204,10 +281,8 @@ def _evidence(content):
     return evidence if isinstance(evidence, dict) else {}
 
 
-def build(view, vis=None):
-    """The full recorded graph of one commons (unfiltered), as `vis` lets the caller see it (default: a reader)."""
-    vis = vis if vis is not None else Visibility.of(view)
-    graph = Graph()
+def segment_agents(view, graph):
+    """Participants and recorded forks (board `agent` rows)."""
     agents = view.rows("SELECT id,name,kind,parent,trial,created FROM agent ORDER BY created,id")
     for agent in agents:
         graph.node(agent["id"], "participant", store="board", label=agent["name"], name=agent["name"],
@@ -216,79 +291,109 @@ def build(view, vis=None):
         if agent["parent"]:
             graph.edge(agent["id"], agent["parent"], "fork_of",
                        {"store": "board", "table": "agent", "id": agent["id"], "field": "parent"}, created=agent["created"])
-    _add_catalog(graph, view.library, "library")
-    workspaces = {}
-    for agent in agents:
-        if not agent["trial"]:
-            continue
-        try:
-            ws = view.workspace(agent["id"])
-        except DawError:
-            continue  # A participant whose checkout is missing contributes no workspace records.
-        workspaces[agent["id"]] = ws
-        _add_catalog(graph, ws, "workspace:" + agent["id"], agent=agent)
-    for post in view.rows("SELECT id,author,channel,parent,supersedes,body_blob,created FROM post ORDER BY seq"):
-        record = {"store": "board", "table": "post", "id": post["id"]}
-        if vis.withheld(post["id"]):
-            # A hidden post is its identity and the moderation reason: no title, author, time or body relations.
-            graph.node(post["id"], "post", store="board", label="hidden post", hidden=True,
-                       reason=vis.reason(post["id"]))
-            if post["parent"]:
-                graph.edge(post["id"], post["parent"], "reply_to", {**record, "field": "parent"})
-            if post["supersedes"]:
-                graph.edge(post["id"], post["supersedes"], "supersedes", {**record, "field": "supersedes"})
-            continue
+
+
+def workspace_agents(view):
+    """Participants with a research workspace, in map order (created, id)."""
+    return view.rows("SELECT id,name,kind,parent,trial,created FROM agent WHERE trial IS NOT NULL ORDER BY created,id")
+
+
+def segment_posts(view, graph, *, after=0):
+    """Posts with seq > `after` (posts are immutable, so this segment grows by sequence). Returns the notebook
+    references their bodies carry, for `segment_notebooks`."""
+    notebooks = []
+    for post in view.rows("SELECT id,seq,author,channel,parent,supersedes,body_blob,created FROM post WHERE seq>? "
+                          "ORDER BY seq", (after,)):
+        pid = post["id"]
+        record = {"store": "board", "table": "post", "id": pid}
         try:
             content = view.library.json_blob(post["body_blob"])
         except (DawError, OSError, ValueError):
             content = {}
         evidence = _evidence(content)
-        graph.node(post["id"], "post", store="board", label=content.get("title") or post["id"],
+        graph.node(pid, "post", store="board", guard=pid, on_hidden="post", label=content.get("title") or pid,
                    title=content.get("title"), post_kind=content.get("kind"), author=post["author"],
-                   channel=post["channel"], created=post["created"], hidden=vis.hidden(post["id"]),
-                   reason=vis.reason(post["id"]), run=evidence.get("run"))
-        graph.edge(post["author"], post["id"], "authored", {**record, "field": "author"}, created=post["created"])
+                   channel=post["channel"], created=post["created"], run=evidence.get("run"))
+        graph.edge(post["author"], pid, "authored", {**record, "field": "author"}, created=post["created"], guard=pid)
         if post["parent"]:
-            graph.edge(post["id"], post["parent"], "reply_to", {**record, "field": "parent"}, created=post["created"])
+            graph.edge(pid, post["parent"], "reply_to", {**record, "field": "parent"}, created=post["created"],
+                       guard=pid, on_hidden="nocreated")
         if post["supersedes"]:
-            graph.edge(post["id"], post["supersedes"], "supersedes", {**record, "field": "supersedes"},
-                       created=post["created"])
+            graph.edge(pid, post["supersedes"], "supersedes", {**record, "field": "supersedes"},
+                       created=post["created"], guard=pid, on_hidden="nocreated")
         for artifact in evidence.get("artifacts") or []:
             if isinstance(artifact, str):
-                graph.placeholder(artifact, "artifact")
-                graph.edge(post["id"], artifact, "evidence",
-                           {**record, "field": "evidence.artifacts", "blob": post["body_blob"]}, created=post["created"])
+                graph.placeholder(artifact, "artifact", guard=pid)
+                graph.edge(pid, artifact, "evidence", {**record, "field": "evidence.artifacts", "blob": post["body_blob"]},
+                           created=post["created"], guard=pid)
         notebook = evidence.get("notebook")
-        ws = workspaces.get(post["author"])
-        if isinstance(notebook, dict) and ws and isinstance(notebook.get("snapshot"), str) and ws.one(
-                "SELECT id FROM work_snapshot WHERE id=? AND question_id=?", (notebook["snapshot"], notebook.get("question"))):
-            graph.edge(post["id"], question_node(post["author"], notebook["question"]), "notebook",
-                       {**record, "field": "evidence.notebook", "blob": post["body_blob"],
-                        "snapshot": notebook["snapshot"]}, created=post["created"])
+        if isinstance(notebook, dict) and isinstance(notebook.get("snapshot"), str):
+            notebooks.append({"post": pid, "seq": post["seq"], "author": post["author"],
+                              "question": notebook.get("question"), "snapshot": notebook["snapshot"],
+                              "created": post["created"], "body_blob": post["body_blob"]})
         target = _comment_target(content, evidence)
         if target:
-            graph.placeholder(*target)
-            graph.edge(post["id"], target[0], "comments_on", {**record, "field": "evidence.target"},
-                       created=post["created"])
+            graph.placeholder(*target, guard=pid)
+            graph.edge(pid, target[0], "comments_on", {**record, "field": "evidence.target"},
+                       created=post["created"], guard=pid)
+    return notebooks
+
+
+def segment_notebooks(view, graph, notebooks, workspaces):
+    """post -> question `notebook` edges whose snapshot exists in the author's workspace (cross-store, so a
+    segment of its own: it changes when a post or any workspace changes)."""
+    for ref in notebooks:
+        ws = workspaces.get(ref["author"])
+        if ws and isinstance(ref["question"], str) and ws.one(
+                "SELECT id FROM work_snapshot WHERE id=? AND question_id=?", (ref["snapshot"], ref["question"])):
+            graph.edge(ref["post"], question_node(ref["author"], ref["question"]), "notebook",
+                       {"store": "board", "table": "post", "id": ref["post"], "field": "evidence.notebook",
+                        "blob": ref["body_blob"], "snapshot": ref["snapshot"]}, created=ref["created"], guard=ref["post"])
+
+
+def segment_requests(view, graph):
     for request in view.rows("SELECT id,post,answer,updated FROM request WHERE answer IS NOT NULL ORDER BY created,id"):
         graph.edge(request["post"], request["answer"], "answered_by",
                    {"store": "board", "table": "request", "id": request["id"]}, created=request["updated"])
-    for event in view.rows("SELECT seq,body,created FROM event WHERE kind='evidence_fetched' ORDER BY seq"):
+
+
+def segment_events(view, graph, *, after=0):
+    """`evidence_fetched` edges from events with seq > `after` (events are immutable, so this segment grows by
+    sequence). Returns index rows for read models: artifacts named by `published` events and fetched by
+    `evidence_fetched` events, with their sequence."""
+    named, fetched = [], []
+    for event in view.rows("SELECT seq,kind,body,created FROM event WHERE seq>? AND kind IN ('evidence_fetched',"
+                           "'published') ORDER BY seq", (after,)):
         body = json.loads(event["body"])
+        if not isinstance(body, dict):
+            continue
+        if event["kind"] == "published":
+            for artifact in (body.get("evidence") or {}).get("artifacts", []) if isinstance(
+                    body.get("evidence"), dict) else []:
+                if isinstance(artifact, str) and isinstance(body.get("post"), str):
+                    named.append((artifact, body["post"], event["seq"]))
+            continue
+        for artifact in body.get("artifacts") or []:
+            if isinstance(artifact, str):
+                fetched.append((artifact, event["seq"]))
         if isinstance(body.get("reader"), str) and isinstance(body.get("post"), str):
             graph.placeholder(body["reader"], "participant")
             graph.edge(body["reader"], body["post"], "fetched",
                        {"store": "board", "table": "event", "seq": event["seq"], "question": body.get("question")},
                        created=event["created"])
+    return named, fetched
+
+
+def segment_claims(view, graph):
     for claim in view.rows("SELECT id,post,author,ordinal,status,created FROM claim ORDER BY created,id"):
-        if vis.withheld(claim["post"]):
-            graph.node(claim["id"], "claim", store="board", label="claim of a hidden post", hidden=True,
-                       reason=vis.reason(claim["post"]))
-        else:
-            graph.node(claim["id"], "claim", store="board", label=f"claim {claim['ordinal']} · {claim['status']}",
-                       status=claim["status"], author=claim["author"], created=claim["created"])
+        graph.node(claim["id"], "claim", store="board", guard=claim["post"], on_hidden="claim",
+                   label=f"claim {claim['ordinal']} · {claim['status']}", status=claim["status"],
+                   author=claim["author"], created=claim["created"])
         graph.edge(claim["id"], claim["post"], "claim_of", {"store": "board", "table": "claim", "id": claim["id"]},
                    created=claim["created"])
+
+
+def segment_marks(view, graph):
     for mark in view.rows("SELECT id,participant,target_kind,target_id,kind,created FROM mark ORDER BY created,id"):
         record = {"store": "board", "table": "mark", "id": mark["id"]}
         graph.node(mark["id"], "mark", store="board", label=mark["kind"].replace("_", " "), mark_kind=mark["kind"],
@@ -298,6 +403,9 @@ def build(view, vis=None):
         if kind:
             graph.placeholder(mark["target_id"], kind)
             graph.edge(mark["id"], mark["target_id"], "mark_on", record, created=mark["created"])
+
+
+def segment_frontier(view, graph):
     for item in view.rows("SELECT id,question,author,kind,status,text,promoted_to,created FROM frontier_item "
                           "ORDER BY created,id"):
         graph.node(item["id"], "frontier_item", store="board", label=item["text"][:80], frontier_kind=item["kind"],
@@ -306,6 +414,89 @@ def build(view, vis=None):
         graph.placeholder(question, "question")
         graph.edge(question, item["id"], "frontier", {"store": "board", "table": "frontier_item", "id": item["id"]},
                    created=item["created"])
+
+
+BOARD_SEGMENTS = ("board:posts", "board:notebooks", "board:requests", "board:events", "board:claims", "board:marks",
+                  "board:frontier")
+
+
+def segment_order(view):
+    """Segment names in replay order: agents, library, each workspace (agent created, id), then the board."""
+    return (["board:agents", "library"] + ["workspace:" + a["id"] for a in workspace_agents(view)]
+            + list(BOARD_SEGMENTS))
+
+
+def open_workspaces(view):
+    """{agent id: read-only workspace} for participants whose checkout opens (others contribute nothing)."""
+    workspaces = {}
+    for agent in workspace_agents(view):
+        try:
+            ws = view.workspace(agent["id"])
+        except DawError:
+            continue  # A participant whose checkout is missing contributes no workspace records.
+        if ws is not None:
+            workspaces[agent["id"]] = ws
+    return workspaces
+
+
+def record_segment(view, name, *, workspaces=None, after=0, notebooks=None):
+    """(ops, extra) for one segment computed from the archive; `extra` holds index rows for some segments."""
+    graph, extra = Recorder(), None
+    if name == "board:agents":
+        segment_agents(view, graph)
+    elif name == "library":
+        _add_catalog(graph, view.library, "library")
+    elif name.startswith("workspace:"):
+        agent_id = name.split(":", 1)[1]
+        ws = (workspaces if workspaces is not None else open_workspaces(view)).get(agent_id)
+        if ws is not None:
+            agent = view.one("SELECT id,name FROM agent WHERE id=?", (agent_id,))
+            _add_catalog(graph, ws, name, agent=agent)
+    elif name == "board:posts":
+        extra = segment_posts(view, graph, after=after)
+    elif name == "board:notebooks":
+        if notebooks is None:
+            notebooks = segment_posts(view, Recorder())
+        segment_notebooks(view, graph, notebooks, workspaces if workspaces is not None else open_workspaces(view))
+    elif name == "board:requests":
+        segment_requests(view, graph)
+    elif name == "board:events":
+        extra = segment_events(view, graph, after=after)
+    elif name == "board:claims":
+        segment_claims(view, graph)
+    elif name == "board:marks":
+        segment_marks(view, graph)
+    elif name == "board:frontier":
+        segment_frontier(view, graph)
+    else:
+        raise DawError("unknown_graph_segment", name)
+    return graph.ops, extra
+
+
+def record_all(view):
+    """Every segment's operations, in replay order: {name: ops}."""
+    workspaces = open_workspaces(view)
+    out, notebooks = {}, None
+    for name in segment_order(view):
+        ops, extra = record_segment(view, name, workspaces=workspaces, notebooks=notebooks)
+        if name == "board:posts":
+            notebooks = extra
+        out[name] = ops
+    return out
+
+
+def build(view, vis=None):
+    """The full recorded graph of one commons (unfiltered), as `vis` lets the caller see it (default: a reader).
+
+    Uses the persistent graph store when one exists (`daw.commons.graphstore`; segments behind the archive are
+    computed in memory, never written by a read), else records every segment in memory."""
+    from daw.commons import graphstore
+    vis = vis if vis is not None else Visibility.of(view)
+    reader = graphstore.reader(view)
+    graph = reader.graph(vis) if reader is not None else None
+    if graph is None:
+        ops = reader.all_ops() if reader is not None else [op for seg in record_all(view).values() for op in seg]
+        graph = replay(ops, vis)
     for node in graph.nodes.values():
         node["stores"].sort()
     _label_superseded(graph)
@@ -637,9 +828,22 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
 
 
 def node_record(view, identity, *, caller=None, full=False):
-    """GET /api/map/node/{id}: the underlying record of one map node, as the caller may see it (C2)."""
-    from daw.commons.participants import describe
+    """GET /api/map/node/{id}: the underlying record of one map node, as the caller may see it (C2).
+
+    With a graph store (spec v2 V6) the response also carries `map`: the node and every edge touching it as the
+    full map draws them for this caller, replayed from the operations recorded for this identity, and catalog
+    records are read only from the stores that hold the identity (no scan of every workspace)."""
+    from daw.commons import graphstore
     vis = Visibility.of(view, caller, full)
+    value = _node_record(view, identity, vis)
+    if graphstore.reader(view) is not None:
+        value["map"] = graphstore.neighbourhood(view, identity, vis)
+    return value
+
+
+def _node_record(view, identity, vis):
+    from daw.commons import graphstore
+    from daw.commons.participants import describe
     if identity.startswith("question:"):
         from daw.commons.questions import question_summary
         _, agent, qid = identity.split(":", 2)
@@ -684,12 +888,21 @@ def node_record(view, identity, *, caller=None, full=False):
                     except ValueError:
                         pass
             return {"kind": kind, "id": identity, "record": row, "content_is_untrusted_data": True}
-    stores = [("library", view.library)]
-    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
-        try:
-            stores.append(("workspace:" + agent["id"], view.workspace(agent["id"])))
-        except DawError:
-            continue
+    store = graphstore.reader(view)
+    holders = store.holders(identity) if store is not None else []
+    if holders:
+        stores = [(name, graphstore.catalog_store(view, name)) for name in holders]
+        stores = [(name, ws) for name, ws in stores if ws is not None]
+    elif store is not None and identity.startswith("artifact_"):
+        raise DawError("unknown_map_node", identity)  # every catalog's artifacts are recorded in the graph
+    else:
+        # Assets, receipts and objects that are not derivation inputs are not map nodes: look in every store.
+        stores = [("library", view.library)]
+        for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
+            try:
+                stores.append(("workspace:" + agent["id"], view.workspace(agent["id"])))
+            except DawError:
+                continue
     found = []
     for name, ws in stores:
         if identity.startswith("artifact_"):

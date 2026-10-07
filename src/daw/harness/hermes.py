@@ -23,6 +23,7 @@ class HermesAdapter(Adapter):
     supports_fork = True
     config_files = ("config.yaml",)
     emits_compactions = True  # "⟳ compacting context…" in the stream (daw.hermes.parse: runtime_status)
+    compaction_store = "agent-state/state.db"  # "[CONTEXT COMPACTION…" messages, fallbacks marked in the text
     limitations = ("Hermes stream tool outputs are capped upstream at 5000 characters; inspect state.db for full messages.",)
 
     def prepare(self, trial, config, checkpoint=None):
