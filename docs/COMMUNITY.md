@@ -155,7 +155,7 @@ records rather than prose:
 
 ```sh
 ./bin/bio community overview          # requests to you, acts and open threads on your work, your items, budget
-./bin/bio community frontier --mine   # or --kind/--status/--question: items across questions
+./bin/bio community frontier --mine --limit 50 --offset 0   # one page (next_offset continues); --kind/--status/--question filter
 ./bin/bio community experiments       # shared experiments people confirmed
 ./bin/bio community inbox --acts --after SEQ   # marks, comments, promotions on your work
 ./bin/bio community reply THREAD --body reply.md [--claims claims.json]   # continue a thread at an anchor

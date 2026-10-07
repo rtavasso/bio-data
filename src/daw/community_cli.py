@@ -264,13 +264,18 @@ def overview(ctx: typer.Context, agent: str | None = None,
 def frontier_command(ctx: typer.Context, kind: str | None = None,
                      status: Annotated[str | None, typer.Option(help="open, candidate_evidence, promoted, closed, withdrawn or all (default: all but withdrawn)")] = None,
                      question: str | None = None,
-                     mine: Annotated[bool, typer.Option("--mine", help="Only items you recorded")] = False):
-    """Frontier items across questions (state, blocker, promotion, watcher hits, scouting datasets), as the board shows them."""
+                     mine: Annotated[bool, typer.Option("--mine", help="Only items you recorded")] = False,
+                     limit: Annotated[int, typer.Option(help="Items per page (1 to 500)")] = 50,
+                     offset: Annotated[int, typer.Option(help="Skip this many items; next_offset in the output continues")] = 0):
+    """Frontier items across questions (state, blocker, promotion, watcher hits, scouting datasets), as the board shows
+    them, one page at a time."""
     from daw.commons.agentview import frontier_list
     if client := remote():
-        return emit(client.call("frontier", {"kind": kind, "status": status, "question": question, "mine": mine}))
+        return emit(client.call("frontier", {"kind": kind, "status": status, "question": question, "mine": mine,
+                                             "limit": limit, "offset": offset}))
     with Community(ctx.obj) as board:
-        emit(frontier_list(board, kind=kind, status=status, question=question, author=author(None) if mine else None))
+        emit(frontier_list(board, kind=kind, status=status, question=question, author=author(None) if mine else None,
+                           page=limit, offset=offset))
 
 
 @app.command()

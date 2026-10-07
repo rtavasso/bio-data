@@ -178,8 +178,20 @@ def create_mark(body: MarkIn, who: Actor, config: Config):
 
 @router.get("/marks")
 def list_marks(view: View, target_kind: str, target_id: str):
-    return {"items": participation.marks(view, target_kind, target_id),
-            "note": "Marks are attribution by the named participant; they change no platform status."}
+    """Marks on one target. A hidden post's marks are stubs (kind and participant kind only), as the agent read
+    `inbox --acts` returns them: one moderation rule for every surface (v3.1)."""
+    from daw.commons.moderation import Visibility
+    items = participation.marks(view, target_kind, target_id)
+    result = {"items": items, "note": "Marks are attribution by the named participant; they change no platform status."}
+    if target_kind == "post":
+        vis = Visibility.of(view)
+        if vis.withheld(target_id):
+            result["items"] = [{"id": m["id"], "kind": m["kind"], "participant_kind": m.get("participant_kind"),
+                                "target_kind": "post", "target_id": target_id, "created": m["created"],
+                                "hidden": True, "reason": vis.reason(target_id), "note": None, "pointers": [],
+                                "attribution_not_status": True} for m in items]
+            result["target"] = vis.stub(target_id)
+    return result
 
 
 @router.post("/promotions")

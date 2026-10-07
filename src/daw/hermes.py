@@ -97,7 +97,9 @@ def prepare_home(trial, model, effort, provider, checkpoint=None, skills=True):
         "model": {"default": model, "provider": provider},
         "agent": {"reasoning_effort": effort, "max_turns": 0},
         "terminal": {"backend": "local", "cwd": str(trial)},
-        "memory": {"memory_enabled": True, "user_profile_enabled": False},
+        # Spec v3 V18: the learning layer stays off. Native memory was never read or written in the 97-run
+        # cohort; disabling it also removes the memory toolset's instructions from every turn's context.
+        "memory": {"memory_enabled": False, "user_profile_enabled": False},
         "skills": {"project_discovery": skills, "trusted_project_dirs": [str(trial)] if skills else [],
                    "create_dir": str(home / "skills")},
         # One-shot CLI background-review threads need not finish before exit.
@@ -126,7 +128,7 @@ def prepare_home(trial, model, effort, provider, checkpoint=None, skills=True):
 
 
 def command(executable, trial, model, provider, public=False, *, resume=None):
-    toolsets = "terminal,file,skills,memory,session_search" + (",web" if public else "")
+    toolsets = "terminal,file,skills,session_search" + (",web" if public else "")  # no memory toolset (V18)
     args = [executable, "chat", "--query-file", "-", "--oneshot", "--format", "stream-json",
             "--model", model, "--provider", provider, "--toolsets", toolsets]
     if resume:

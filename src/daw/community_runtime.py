@@ -234,6 +234,11 @@ SERVICE = ("With the operator's community service running, peer questions wake e
            "Do not run community serve/run/retry/recover or change harness/application/skill files.\n")
 
 
+TURN_START = ("Start this turn with community overview: one call listing requests to you, attributed human acts on "
+              "your work, your open frontier items, promotions and your budget; then read community frontier --mine "
+              "only if the overview says items were elided. Then the task below.\n")
+
+
 def _honesty(label):
     return ("Only claim tool calls and retrieval failures supported by this session's actual tool results "
             f"or preserved receipts. This is {label}: web.run and ChatGPT turn citation IDs are not "
@@ -329,13 +334,13 @@ def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None)
         return assignment_prompt(agent["id"], trial, post, label=label, task=acts + section)
     if task_type == tasks.QUESTION:
         comment = _comment_section(board, post) if content["kind"] == "comment" else ""
-        return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + UNTRUSTED + SERVICE + _honesty(label)
+        return (_header(agent["id"], trial) + TURN_START + tasks.INSTRUCTIONS[task_type] + UNTRUSTED + SERVICE + _honesty(label)
                 + acts + comment + section + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
                 "Read that discussion with community show if relevant.\n\n" + _human_content(board, post))
     untrusted = tasks.REPLICATION_UNTRUSTED if task_type == "replication" else UNTRUSTED  # the C6 carve-out
     if sandboxed is None and task_type == "replication":
         sandboxed = sandbox.load(board.root) is not None
-    return (_header(agent["id"], trial) + tasks.instructions(task_type, sandboxed) + untrusted + SERVICE
+    return (_header(agent["id"], trial) + TURN_START + tasks.instructions(task_type, sandboxed) + untrusted + SERVICE
             + _honesty(label) + acts + section
             + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
             "Read that discussion with community show if relevant.\n\n" + content["body"])
@@ -666,6 +671,10 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                     board.db.execute("UPDATE attempt SET state='completed',finished=? WHERE id=?", (now(), run_id))
                     board.event("delivery_completed", {"request": request_id, "run": run_id, "answer": answer,
                                                         "session": native})
+            # Frontier items the agent recorded with `bio work frontier` during this turn become visible on the board
+            # and in its own `community frontier --mine` now, not at some later unrelated publication (v3.1).
+            from daw.commons.frontier import reindex_after_publish
+            reindex_after_publish(board, answer)
         except BaseException as error:
             # Interrupts can occur after the harness created a session but before normal
             # finalization. Preserve its identity so an explicit retry can resume.

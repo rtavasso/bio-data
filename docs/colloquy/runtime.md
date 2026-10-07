@@ -309,7 +309,7 @@ the harness's model hosts (no source hosts, no `allow_hosts`). `replicate.py`
 also runs the code with proxy variables, board token and credentials removed
 from its environment. Local single-user mode runs replications unsandboxed with
 a recorded warning: a `replication_unsandboxed` event and `runs/<run>/sandbox.json`
-(`sandboxed: false`, `warning`); its prompt says so, and its outcome is `local_rehearsal`, never a confirmation (v3 B3). The proxy enforces the replication's
+(`sandboxed: false`, `warning`); its prompt says so, and its outcome is `local_rehearsal`, never a confirmation (v3 B3). Since v3.1 that path is refused (`replication_requires_sandbox`) unless the operator wrote `[replication] allow_rehearsal = true` in `commons.toml` (the synthetic demo does); the capturing terminal command must also invoke the helper itself, so an echoed receipt line is no capture. The proxy enforces the replication's
 model-hosts-only allowlist: it is the token-scoped policy its credential opens
 (C7, `test_replication_egress_is_enforced_by_its_token_scoped_proxy_policy`), so
 source hosts and `allow_hosts` are refused for it. Offline only; no container

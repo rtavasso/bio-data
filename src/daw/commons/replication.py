@@ -26,7 +26,7 @@ This module holds the platform side of that carve-out; it never executes anythin
   confirms nothing and never becomes a correction against the original. Receipts are read from the
   agent's workspace through `Archive` (read-only); the gate is structural, not a scientific verdict.
   Limitation: the stream is the agent's own terminal output; one `analysis_executed` line per call is
-  required, but a deliberate shell forgery of that line is not excluded here.
+  required, and the printing command must invoke the helper itself (`helper_segment`): an echoed line is no capture.
 - Sandbox: only a sandboxed dispatch confirms or corrects. A replication delivered without a sandbox
   (local single-user mode, `replication_unsandboxed`) is `local_rehearsal`: its byte comparison is kept as
   `rehearsal` and nothing is posted (`dispatch_sandboxed`).
@@ -35,6 +35,8 @@ This module holds the platform side of that carve-out; it never executes anythin
 """
 import json
 import os
+import re
+import shlex
 from pathlib import Path, PurePosixPath
 
 from daw.commons.archive import Archive
@@ -164,18 +166,53 @@ def _same_file(printed, named):
     return bool(parts) and ".." not in parts and path.parts[-len(parts):] == parts
 
 
+HELPERS = ("run_analysis.py", "replicate.py")
+SHELL_BREAKS = (";", "&&", "||", "|", "\n")
+INTERPRETER = re.compile(r"^(?:\./bin/)?(?:python(?:[23](?:\.\d+)?)?|uv|run|Rscript|env|time|nice)$")
+
+
+def helper_segment(command):
+    """The shell segment that invokes a helper, or None: the helper's path must be the first command word of
+    its segment after an interpreter (`./bin/python .../run_analysis.py ...`, `uv run python .../replicate.py`),
+    so an `echo` that merely mentions the helper in a comment or an argument is not an invocation (v3.1 B3)."""
+    if not isinstance(command, str):
+        return None
+    text = command
+    for mark in SHELL_BREAKS:
+        text = text.replace(mark, "\x00")
+    for segment in text.split("\x00"):
+        segment = segment.split("#", 1)[0].strip()
+        if not any(h in segment for h in HELPERS):
+            continue
+        try:
+            words = shlex.split(segment)
+        except ValueError:
+            return None
+        words = [w for w in words if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", w)]  # env assignments
+        for n, word in enumerate(words):
+            if PurePosixPath(word).name in HELPERS:
+                before = words[:n]
+                if before and all(INTERPRETER.match(PurePosixPath(w).name) for w in before):
+                    return {"helper": PurePosixPath(word).name, "segment": segment}
+                return None
+    return None
+
+
 def stream_executions(parsed):
     """`analysis_executed` result lines of the delivery's captured terminal calls to run_analysis.py (directly,
     whose `--receipt` argument must name the printed receipt, or through replicate.py, which echoes the line).
-    A call whose output carries more than one such line is ambiguous and not counted."""
+    The helper must be invoked as the command of its shell segment (`helper_segment`): a line echoed by another
+    command, or a helper named in a comment, is not a capture. A call whose output carries more than one such
+    line is ambiguous and not counted."""
     from daw.commons.records import _printed, _receipt_argument
     found = []
     for item in (parsed or {}).get("items", []):
         command = item.get("command") if isinstance(item.get("command"), str) else ""
-        direct = "run_analysis.py" in command
-        if item.get("name") != "terminal" or not (direct or "replicate.py" in command):
+        invoked = helper_segment(command) if item.get("name") == "terminal" else None
+        if not invoked:
             continue
-        named = _receipt_argument(command) if direct else None
+        direct = invoked["helper"] == "run_analysis.py"
+        named = _receipt_argument(invoked["segment"]) if direct else None
         lines = [p for text in _tool_texts(item.get("aggregated_output") or item.get("output")) for p in _printed(text)]
         lines = list({json.dumps(p, sort_keys=True): p for p in lines}.values())  # wrapper and inner text agree
         if (direct and not named) or len(lines) != 1:
@@ -284,8 +321,9 @@ DEFAULT_BUDGET = {"minutes": 60}
 
 def settings(root):
     """The commons' replication policy (`commons.toml [replication]`): `default_budget` of a person's replication
-    request (default DEFAULT_BUDGET) and `accept_outside` (whether people from outside this commons may request
-    replications; listed in directory entries). Reads the file only."""
+    request (default DEFAULT_BUDGET), `accept_outside` (whether people from outside this commons may request
+    replications; listed in directory entries) and `allow_rehearsal` (v3.1: whether an unsandboxed dispatch may
+    execute the fetched code as a rehearsal that confirms nothing; refused otherwise). Reads the file only."""
     import tomllib
 
     from daw.commons.tasks import normalize_budget
@@ -294,13 +332,14 @@ def settings(root):
         configured = tomllib.loads(path.read_text()).get("replication", {}) if path.is_file() else {}
     except tomllib.TOMLDecodeError as error:
         raise DawError("invalid_commons_config", str(error)) from error
-    if not isinstance(configured, dict) or set(configured) - {"default_budget", "accept_outside"}:
-        raise DawError("invalid_commons_config", "[replication] takes default_budget and accept_outside")
+    if not isinstance(configured, dict) or set(configured) - {"default_budget", "accept_outside", "allow_rehearsal"}:
+        raise DawError("invalid_commons_config", "[replication] takes default_budget, accept_outside and allow_rehearsal")
     accept = configured.get("accept_outside", False)
-    if not isinstance(accept, bool):
-        raise DawError("invalid_commons_config", "[replication] accept_outside is true or false")
+    rehearsal = configured.get("allow_rehearsal", False)
+    if not isinstance(accept, bool) or not isinstance(rehearsal, bool):
+        raise DawError("invalid_commons_config", "[replication] accept_outside and allow_rehearsal are true or false")
     return {"default_budget": normalize_budget(configured.get("default_budget")) or dict(DEFAULT_BUDGET),
-            "accept_outside": accept}
+            "accept_outside": accept, "allow_rehearsal": rehearsal}
 
 
 def _system_id(view):

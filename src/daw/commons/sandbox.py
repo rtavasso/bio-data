@@ -199,8 +199,30 @@ def policy(root, override=None, task_type=None):
         decision["replication_egress"] = ("unsandboxed" if config is None else "model_hosts_only" if config.network
                                           else "none")
         if config is None:
+            # AGENTS.md: fetched code runs only in a sandbox. A local rehearsal (no sandbox, nothing confirmed) is
+            # the operator's explicit decision in commons.toml, never a default (v3.1).
+            if not rehearsal_allowed(root):
+                raise DawError("replication_requires_sandbox",
+                               "a replication executes fetched code: configure sandbox.toml, or allow an unsandboxed "
+                               f"rehearsal explicitly with {REHEARSAL_SETTING} (it confirms nothing)")
             decision["warning"] = REPLICATION_WARNING
+            decision["rehearsal_allowed_by"] = REHEARSAL_SETTING
     return decision
+
+
+REHEARSAL_SETTING = "[replication] allow_rehearsal = true in commons.toml"
+
+
+def rehearsal_allowed(root):
+    """True when the operator wrote `[replication] allow_rehearsal = true` in `<commons>/commons.toml`."""
+    path = Path(root) / "commons.toml"
+    if not path.is_file():
+        return False
+    try:
+        value = tomllib.loads(path.read_text()).get("replication", {})
+    except (OSError, ValueError):
+        return False
+    return isinstance(value, dict) and value.get("allow_rehearsal") is True
 
 
 def hosts(config, harness_hosts=()):

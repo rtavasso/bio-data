@@ -1091,7 +1091,8 @@ def test_compaction_hygiene_detects_summaries_that_lost_the_assignment(tmp_path)
     value = hygiene.run_hygiene(run, "claude")
     assert value["compaction_summaries"] == 3 and value["compaction_fallbacks"] == 1
     assert value["summaries_missing_assignment"] == 1 and value["assignment_markers"] == 2
-    assert value["context_per_call"] == {"unit": "call", "records": 2, "mean_input_tokens": 1200.0, "max_input_tokens": 1200}
+    assert value["context_per_call"] == {"unit": "call", "records": 2, "mean_input_tokens": 1200.0, "max_input_tokens": 1200,
+                                         "meaning": "input tokens per model call"}
     # Unavailable stays None: no session database, no prompt markers, no reported usage.
     bare = tmp_path / "bare"
     bare.mkdir()

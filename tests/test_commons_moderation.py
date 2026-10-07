@@ -231,7 +231,7 @@ def test_hidden_post_is_redacted_on_every_surface_cohort(tmp_path):
 # Route parameters that carry a post id. A path parameter named `identity` may name a post or something else:
 # the route is probed with the hidden post's id, and a route that refuses it as another kind of record
 # (`unknown_artifact`, `invalid_view`, ...) does not take posts.
-POST_PARAMS = {"post", "post_id", "posts"}
+POST_PARAMS = {"post", "post_id", "posts", "target_id"}  # target_id with target_kind=post (/api/marks)
 
 
 def _post_routes(app):
@@ -268,6 +268,23 @@ def _contains_stub(value, stub):
     return False
 
 
+def _bare_stub(value, post):
+    """Every record that names the hidden post (by `id` or `post`) carries no text field (title, body, excerpt,
+    note...): a structural check that does not depend on the fixture offering a unique title (v3.1, after a title
+    leak through `Visibility.card` passed the secret-string check on both fixtures)."""
+    from daw.commons.moderation import TEXT_FIELDS
+    allowed = {"label", "reason", "context"}  # a stub's own placeholder label and public reason are not the post's text
+    if isinstance(value, dict):
+        if post in (value.get("id"), value.get("post")) and value.get("hidden") is True:
+            leaked = {k: v for k, v in value.items() if k in TEXT_FIELDS - allowed and isinstance(v, str) and v}
+            assert not leaked, (post, leaked)
+        for v in value.values():
+            _bare_stub(v, post)
+    elif isinstance(value, list):
+        for v in value:
+            _bare_stub(v, post)
+
+
 def _check_post_routes(root, target):
     """B1: every GET route that takes a post id answers a hidden post with its moderation stub (or refuses it as
     hidden_by_moderation), so a new route cannot be forgotten."""
@@ -278,7 +295,7 @@ def _check_post_routes(root, target):
         content = view.post(post)["content"]
         found = checks.post_numbers(view, post, content.get("body") or "", content.get("evidence"))
     # Values for other required query parameters: a real number offset reaches the curation locator's lookup.
-    extra = {"offset": found[0]["offset"] if found else 0}
+    extra = {"offset": found[0]["offset"] if found else 0, "target_kind": "post"}
     app = create_app(root, local_user="local", static_dir=root / "missing")
     api = TestClient(app)
     checked = []
@@ -290,17 +307,18 @@ def _check_post_routes(root, target):
         params.update({p.name: extra[p.name] for p in route.dependant.query_params if p.name in extra})
         response = api.get(url, params=params)
         body = response.json()
+        _absent(titled, body)  # before any skip: an error body may not carry the secret either (v3.1)
+        _bare_stub(body, post)
         if (path == ["identity"] and not query and response.status_code in (400, 404)
                 and body.get("error") not in (None, "unknown_post")):
             continue  # this identity names something other than a post (unknown_artifact, invalid_view, ...)
-        _absent(titled, body)
         if response.status_code == 403:
             assert body["error"] == "hidden_by_moderation", route.path
         else:
             assert response.status_code in (200, 422) and _contains_stub(body, stub), (route.path, body)
         checked.append(route.path)
     assert {"/api/posts/{identity}", "/api/curation/locate", "/api/curation/pointers",
-            "/api/writeup-checks/{post}"} <= set(checked)
+            "/api/writeup-checks/{post}", "/api/marks"} <= set(checked)
     return checked
 
 

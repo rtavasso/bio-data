@@ -94,7 +94,9 @@ def context_per_call(path):
     if not values:
         return None
     return {"unit": unit, "records": len(values), "mean_input_tokens": round(sum(values) / len(values), 1),
-            "max_input_tokens": max(values)}
+            "max_input_tokens": max(values),
+            "meaning": ("input tokens per model call" if unit == "call" else
+                        "input tokens summed over the turn's calls, cache reads included; not a context-window size")}
 
 
 def run_hygiene(folder, harness=None):
