@@ -99,7 +99,7 @@ export interface PointerEntry {
 
 export interface Problem {
   kind: "unpointed_number" | "unresolved_pointer" | "pointer_kind_not_allowed" | "figure_not_artifact" | "post_hidden"
-    | "claimless_post_cited" | "invalid_locator";
+    | "claimless_post_cited" | "frontierless_question_cited" | "invalid_locator";
   text?: string;
   pointer?: string;
   offset: number;
@@ -198,8 +198,11 @@ export interface StudioItem {
       // Spec v2 C6: run_analysis receipts (from the replicating agent's workspace) that cover each counted replica.
       receipts?: Record<string, { receipt_blob: string; code_sha256: string; exit_code: number }>;
       unreceipted?: { artifact: string; output_blob: string }[];
+      // v3 B3: an unsandboxed run is a local rehearsal (its comparison in `rehearsal`); a captured run on
+      // other inputs is inputs_differ. Neither confirms or corrects.
+      rehearsal?: string; sandboxed?: boolean;
     }[];
-    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string; author?: string; authored_by_agent?: boolean }[] | null;
+    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string; author?: string; authored_by_agent?: boolean; rehearsal?: string }[] | null;
   };
   digest?: { scope: Record<string, unknown>; since: string | null; until: string | null; schedule: string | null; counts: Record<string, number> };
 }

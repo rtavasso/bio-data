@@ -7,7 +7,7 @@ agent-permitted board operations as that agent, through the same `Community`
 functions the local CLI calls:
 
     publish  answer  ask  fetch                   (writes: permission publish, answer, ask, fetch)
-    inbox  show  search  verify  claims  agents  (reads)
+    inbox  show  search  verify  claims  agents  overview  frontier  experiments  (reads)
 
 Identity is bound twice. Each agent's socket lives in its own short directory
 `$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/` (see "provisioning" below; the
@@ -19,8 +19,9 @@ environment name, never in argv). A socket answers only its own agent's token,
 and an `author` in a request must name that agent. The service never takes a
 file path for content: bodies, claims and frontier items travel in the request.
 The only path accepted is a workspace, which must resolve (on the host, after
-symlinks) inside the agent's own checkout, as must its catalog, configuration
-and object directories. Publishing reads that workspace from the host; fetching
+symlinks) to the agent's checkout workspace `<checkout>/workspace` (no other
+workspace, even inside the checkout), and its catalog, configuration and object
+directories must resolve inside the checkout. Publishing reads that workspace from the host; fetching
 writes into it under its own writer lock.
 
 Protocol: HTTP/1.1 over the Unix socket, `POST /v1/<operation>` with a JSON
@@ -62,7 +63,10 @@ OPERATIONS = {
                           "workspace", "author"}),
     "ask": ("ask", {"target", "body", "reply_to", "key", "notify", "author"}),
     "fetch": ("fetch", {"post", "question", "artifact", "workspace", "author"}),
-    "inbox": ("read", {"agent", "all_states", "sent", "since"}),
+    "inbox": ("read", {"agent", "all_states", "sent", "since", "acts", "after"}),
+    "overview": ("read", {"after"}),
+    "frontier": ("read", {"kind", "status", "question", "mine"}),
+    "experiments": ("read", set()),
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
@@ -294,7 +298,9 @@ def _int(payload, key, default):
 
 
 def checkout_workspace(trial, value):
-    """A workspace inside the agent's own checkout (default `<trial>/workspace`), checked after symlinks."""
+    """The agent's checkout workspace, `<trial>/workspace`, checked after symlinks. Another workspace, even one
+    inside the checkout (`bio init sub/ws`), is refused (v3 B5): the board reads and writes only the workspace
+    the runtime gave the agent."""
     trial = Path(trial).resolve()
     path = Path(value) if value else trial / "workspace"
     if not path.is_absolute():
@@ -308,6 +314,8 @@ def checkout_workspace(trial, value):
     for entry in entries:
         if (entry.exists() or entry.is_symlink()) and not entry.resolve().is_relative_to(trial):
             raise DawError("workspace_outside_checkout", f"{entry.name} links outside the checkout")
+    if resolved != (trial / "workspace").resolve():
+        raise DawError("workspace_not_checkout_workspace", f"{path}: use {trial / 'workspace'}")
     return resolved
 
 
@@ -381,6 +389,20 @@ def execute(root, agent_id, operation, payload):
         if operation == "fetch":
             return board.fetch(_text(payload, "post", True), workspace(), _text(payload, "question", True),
                                artifact=_text(payload, "artifact"), author=agent["id"])
+        if operation in {"overview", "frontier", "experiments"} or (operation == "inbox" and payload.get("acts")):
+            from daw.commons import agentview
+            if operation == "frontier":
+                return agentview.frontier_list(board, kind=_text(payload, "kind"), status=_text(payload, "status"),
+                                               question=_text(payload, "question"),
+                                               author=agent["id"] if payload.get("mine") else None)
+            if operation == "experiments":
+                return agentview.experiments(board)
+            after = payload.get("after")
+            if after is not None and (type(after) is not int or after < 0):
+                raise DawError("invalid_cursor", "after is a board event sequence (an integer >= 0)")
+            if operation == "overview":
+                return agentview.overview(board, agent, after=after, caller=agent)
+            return agentview.acts(board, agent, after=after or 0, caller=agent)
         if operation == "inbox":
             return board.inbox(agent["id"], all_states=bool(payload.get("all_states")), sent=bool(payload.get("sent")),
                                since=_text(payload, "since"))

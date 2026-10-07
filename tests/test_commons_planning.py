@@ -1,5 +1,8 @@
 """Spec v2 V5: the frontier as the planning surface (board view, shared experiments, wishlist proposal, scouting)."""
 import json
+import re
+import runpy
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,11 +12,12 @@ from daw.bio_cli import app as bio
 from daw.catalog import Workspace
 from daw.commons import frontier, planning
 from daw.commons.app import create_app
-from daw.commons.archive import Archive
+from daw.commons.archive import Archive, ReadOnlyWorkspace
 from daw.commons.participants import add_participant
 from daw.commons.participation import promote
 from daw.community import Community
 from daw.util import DawError
+from daw.work import create_question, record_event, sync_work
 
 WRITE = {"X-Colloquy-Request": "1"}
 
@@ -267,3 +271,204 @@ def test_frontier_board_and_wishlist_export_on_the_cohort(cohort):
             + board["by_column"]["open"] == total
         text, _ = planning.export_wishlist(view, "md")
         assert text.count("\n## ") == frontier.wishlist(view)["total"] > 0
+
+
+# ---- v3 B4: every frontier kind named to an agent is one the validator accepts ---------------------------
+
+REPO = Path(__file__).resolve().parents[1]
+# A kind as agents are told to write it: `--kind a|b`, `kind a or b` / `kinds a, b and c` (parentheticals
+# skipped), `kind: a` and JSON `"kind": "a"`. `kind:id` (a pointer) and `kind of` are not kind names.
+_PROSE = frozenset("of is are the a an and or to in with that for when if by as at on from its your".split())
+_WORD = r"`?[a-z][a-z_]*`?(?:\s*\([^()]*\))?"
+_MENTION = re.compile(r"(?:--kind[ =]|\bkinds?:?\s+(?!(?:" + "|".join(_PROSE) + r")\b)|"
+                      r"\"kind\"\s*:\s*\")(" + _WORD + r"(?:\s*(?:,|\bor\b|\band\b|\||/)\s*" + _WORD + r")*)")
+
+
+def kinds_named(text):
+    """Frontier kinds named in `text`: kind mentions on lines that mention the frontier."""
+    found = []
+    for line in text.splitlines():
+        if "frontier" not in line.lower():
+            continue
+        for span in _MENTION.findall(line):
+            words = re.findall(r"[a-z][a-z_]*", re.sub(r"\([^()]*\)", " ", span))
+            found += [w for w in words if w not in _PROSE]
+    return found
+
+
+def _strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _strings(item)
+
+
+def test_every_frontier_kind_named_in_presets_and_skills_is_a_kind():
+    # The detector finds the v2 round-two wording that the validator rejected.
+    assert kinds_named("record a frontier item of kind blocked or wishlist with the exact missing measurement.") \
+        == ["blocked", "wishlist"]
+    assert kinds_named("frontier: `--kind open_question|gap`, `--pointer kind:id`; a kind of evidence") \
+        == ["open_question", "gap"]
+    texts = {}
+    for path in sorted((REPO / "docs" / "colloquy" / "presets").glob("*.json")):
+        texts[path] = "\n".join(_strings(json.loads(path.read_text())))
+    for path in sorted((REPO / ".agents" / "skills").rglob("*")):
+        if path.is_file() and path.suffix in {".md", ".py", ".yaml", ".json", ".txt"}:
+            texts[path] = path.read_text()
+    named = {(str(path.relative_to(REPO)), kind) for path, text in texts.items() for kind in kinds_named(text)}
+    assert {kind for _, kind in named} >= {"untestable", "proposed_experiment", "open_question", "next_step", "gap"}
+    assert [entry for entry in sorted(named) if entry[1] not in frontier.KINDS] == []
+
+
+def test_a_kind_alias_is_refused_with_the_kind_to_use_and_the_vocabulary(ws):
+    from daw.work import create_question
+    with ws.writer():
+        question = create_question(ws, "Aliases")["question"]
+        for alias, use in (("blocked", "use untestable"), ("wishlist", "use proposed_experiment"),
+                           ("Question", "use open_question")):
+            with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
+                frontier.record_item(ws, question, kind=alias, text="An item.")
+            assert use in refused.value.detail and "is not a frontier kind" in refused.value.detail
+            assert all(kind in refused.value.detail for kind in frontier.KINDS)
+        with pytest.raises(DawError, match="invalid_frontier_kind") as refused:
+            frontier.record_item(ws, question, kind="hunch", text="An item.")
+        assert refused.value.detail == "unknown kind 'hunch'; frontier kinds are " + ", ".join(frontier.KINDS)
+        assert not ws.rows("SELECT id FROM work_event WHERE kind='frontier_item'")  # nothing remapped or recorded
+        assert frontier.record_item(ws, question, kind="untestable", text="An item.", blocked_by="No data.")["id"]
+
+
+# ---- spec v3 G1: frontier-first closure (producer side) ------------------------------------------------------
+
+DRAFT = Path(__file__).parents[1] / ".agents/skills/bio-research/scripts/frontier_draft.py"
+FIRST_ROUND = ("pmp22-cis-promoters", "pmp22-regulator-turnover", "pmp22-rna-fate", "pmp22-translation-stress",
+               "pmp22-proteostasis", "pmp22-state-compartments", "pmp22-redox-causality", "pmp22-human-dosage",
+               "pmp22-axon-mechanics", "pmp22-lipid-hormones")
+
+
+def helper():
+    return runpy.run_path(str(DRAFT))
+
+
+def test_frontier_draft_proposes_non_gap_items_for_every_first_round_cohort_question(cohort):
+    """Acceptance (G1): run over the ten first-round question folders of the real cohort, the agent-side helper
+    proposes at least one non-gap item for each, from that agent's own records only; nothing is confirmed until
+    the author sets the kind and rewrites the text, and the confirmed list validates as `publish --frontier`."""
+    draft = helper()
+    with Archive(cohort) as view:
+        agents = {a["name"]: a for a in view.rows("SELECT * FROM agent WHERE name IN (%s)" % ",".join("?" * 10),
+                                                  FIRST_ROUND)}
+    assert sorted(agents) == sorted(FIRST_ROUND)
+    for name in FIRST_ROUND:
+        root = cohort / agents[name]["trial"] / "workspace"
+        [question] = [p.name for p in (root / "questions").iterdir()]
+        document = draft["draft"](root, question)
+        assert document["status"] == "completed" and document["already_recorded"] == []
+        suggested = [i["draft"]["suggested_kind"] for i in document["items"]]
+        assert any(k != "gap" for k in suggested), name
+        assert set(suggested) <= set(draft["KINDS"]) and all(i["kind"] == "EDIT" for i in document["items"])
+        assert all(i["text"].startswith("EDIT:") for i in document["items"])
+        assert {i["draft"]["source"] for i in document["items"]} <= {"retrieval_gap", "labbook_section", "labbook_line",
+                                                                      "sealed_prediction", "proposal_post"}
+        _, problems = draft["confirm"](document)
+        assert len(problems) == 2 * len(document["items"])  # kind and text, per row
+        row = next(i for i in document["items"] if i["draft"]["suggested_kind"] != "gap")
+        edited = {**row, "kind": row["draft"]["suggested_kind"], "text": "Author's own wording of the open item."}
+        items, problems = draft["confirm"]({"items": [edited]})
+        assert problems == [] and "draft" not in items[0]
+        ws = ReadOnlyWorkspace(root)
+        try:
+            assert frontier.parse_items(ws, question, items)[0]["kind"] == row["draft"]["suggested_kind"]
+        finally:
+            ws.close()
+
+
+def test_frontier_draft_reads_gaps_predictions_proposals_and_labbook_sections(tmp_path):
+    """Each source the spec names, and only open records: a withdrawn gap, an unsealed or testable prediction
+    and a section without a frontier heading propose nothing."""
+    draft = helper()
+    root = tmp_path / "ws"
+    Workspace.create(root).close()
+    (root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0\n")
+    ws = Workspace(root)
+    try:
+        with ws.writer():
+            question = create_question(ws, "Closure sources")["question"]
+            folder = root / "questions" / question
+            (folder / "LABBOOK.md").write_text(
+                "# Notebook\n\n## Findings\n\nA finding, not an open item.\n\n## Discriminating test\n\n"
+                "- Knock down X and measure Y.\n- Repeat in donors.\n\n## Notes\n\nNext step: rerun the contrast.\n")
+            (folder / "PROPOSAL.md").write_text("# Proposal: matched assay\n\nMeasure total RNA in matched cultures.\n")
+            (folder / "outputs" / "discoveries.json").write_text(json.dumps({"revision": 1, "candidates": [
+                {"id": "sealed-untestable", "prediction_lock": "outputs/p.json", "prediction_sha256": "0" * 64,
+                 "status": "unresolved", "validation_result": "untestable: no matched arm", "next_test": "Matched arm"},
+                {"id": "unsealed", "prediction_lock": None, "status": "unresolved", "validation_result": "untestable"},
+                {"id": "tested", "prediction_lock": "outputs/q.json", "status": "supported_in_scope",
+                 "validation_result": "passed"}]}))
+            kept = record_event(ws, question, "retrieval_gap", {"desired_information": "Donor table",
+                                                                "why_current_tools_failed": "not indexed"})
+            gone = record_event(ws, question, "retrieval_gap", {"desired_information": "Old table",
+                                                                "why_current_tools_failed": "typo"})
+            record_event(ws, question, "retrieval_gap_withdrawal", {"event": gone["id"], "reason": "my error"})
+            sync_work(ws, question)
+    finally:
+        ws.close()
+    document = draft["draft"](root, question)
+    rows = [(i["draft"]["source"], i["draft"]["suggested_kind"], i["text"]) for i in document["items"]]
+    assert rows == [
+        ("retrieval_gap", "next_step", "EDIT: What becomes computable once this is retrieved: Donor table"),
+        ("sealed_prediction", "untestable", "EDIT: sealed-untestable: Matched arm"),
+        ("proposal_post", "proposed_experiment", "EDIT: Proposal: matched assay: Measure total RNA in matched cultures."),
+        ("labbook_section", "proposed_experiment", "EDIT: Knock down X and measure Y."),
+        ("labbook_section", "proposed_experiment", "EDIT: Repeat in donors."),
+        ("labbook_line", "next_step", "EDIT: rerun the contrast.")]
+    gap = document["items"][0]
+    assert gap["draft"]["event"] == kept["id"] and gap["missing_measurement"] == "Donor table"
+    # The synced LABBOOK's bytes are in the workspace, so its rows point at their lines.
+    assert document["items"][3]["pointers"][0]["locator"] == "line=9" and document["notes"] == []
+
+
+def test_sync_to_completed_without_a_non_gap_item_warns(tmp_path):
+    """G1: `bio work sync --status completed` warns (stderr and JSON) when only gaps are recorded, as publishing
+    evidence without claims does; a recorded non-gap item (not withdrawn) clears it."""
+    root = tmp_path / "ws"
+    Workspace.create(root).close()
+    (root / "config.toml").write_text("[budgets]\nreserve_bytes=0\nreserve_fraction=0\n")
+    ws = Workspace(root)
+    try:
+        with ws.writer():
+            question = create_question(ws, "Closure")["question"]
+            record_event(ws, question, "retrieval_gap", {"desired_information": "A table",
+                                                         "why_current_tools_failed": "not indexed"})
+    finally:
+        ws.close()
+    runner = CliRunner()
+    result = runner.invoke(bio, ["--workspace", str(root), "work", "sync", question, "--status", "completed"])
+    assert result.exit_code == 0, result.output
+    assert "warning: completion_without_frontier" in result.stderr
+    assert json.loads(result.stdout)["warnings"][0]["evidence"] == {"question": question, "open_gaps": 1}
+    assert "warnings" not in json.loads(runner.invoke(bio, ["--workspace", str(root), "work", "sync", question]).stdout)
+    item = json.loads(runner.invoke(bio, ["--workspace", str(root), "work", "frontier", question, "--kind",
+                                          "next_step", "--text", "Rerun with the table."]).stdout)
+    result = runner.invoke(bio, ["--workspace", str(root), "work", "sync", question, "--status", "completed"])
+    assert "warnings" not in json.loads(result.stdout) and "completion_without_frontier" not in result.stderr
+    runner.invoke(bio, ["--workspace", str(root), "work", "frontier-status", question, item["id"], "--status",
+                        "withdrawn", "--reason", "wrong"])
+    result = runner.invoke(bio, ["--workspace", str(root), "work", "sync", question, "--status", "completed"])
+    assert json.loads(result.stdout)["warnings"][0]["code"] == "completion_without_frontier"
+
+
+def test_dashboard_frontier_closure_on_the_cohort(cohort):
+    """G1 dashboard: items per completed question by kind and finals whose stated next step has a matching item.
+    The cohort recorded gaps only, so the measured share is zero (not unavailable)."""
+    from daw.commons import metrics
+    with Archive(cohort) as view:
+        closure = metrics.frontier_closure(view)
+    assert closure["completed_questions"] >= 10 and closure["completed_with_non_gap_item"] == 0
+    assert closure["completed_with_non_gap_share"] == 0.0
+    assert set(closure["items_by_kind"]) == set(frontier.KINDS) and closure["items_by_kind"]["gap"] > 0
+    assert all(v == 0 for k, v in closure["items_by_kind"].items() if k != "gap")
+    assert closure["finals_stating_next_step"] > 0 and closure["finals_next_step_matched"] == 0

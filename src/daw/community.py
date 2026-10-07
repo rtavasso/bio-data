@@ -275,7 +275,10 @@ class Community:
         if identity in vis.records:
             shown = {**shown, "hidden": True, "reason": vis.reason(identity), "revealed": True}
         replies = [vis.stub(r["id"]) if vis.withheld(r["id"]) else r for r in shown["replies"]]
-        return {**shown, "content": content, "replies": replies}
+        # Spec v3 G6: marks and anchored comments on the post, its claims and artifacts, as attributed records.
+        from daw.commons.agentview import LABEL, post_acts
+        return {**shown, "content": content, "replies": replies,
+                "acts": post_acts(self, identity, caller=caller), "acts_label": LABEL}
 
     def verify(self, identity, reader=None, *, full=False):
         """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts.

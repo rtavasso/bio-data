@@ -13,7 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from daw import agent_capture
-from daw.commons import evidence_map, graphstore, records, views
+from daw.commons import evidence_map, graphstore, metrics, records, views
 from daw.commons.app import create_app
 from daw.commons.archive import Archive
 from daw.commons.demo import deliver_scripted
@@ -168,10 +168,124 @@ def test_harnesses_without_session_compactions_record_unavailable(tmp_path):
     from daw import harness
     folder = tmp_path / "run"
     folder.mkdir()
-    lines = records.compaction_records(harness.get("claude"), folder, {"started": None}, "claude")
+    lines = records.compaction_records(harness.get("codex"), folder, {"started": None}, "codex")
     assert lines == [{**lines[0], "available": False}] and "does not expose" in lines[0]["reason"]
     hermes = records.compaction_records(harness.get("hermes"), folder, {}, "hermes")
     assert hermes[0]["available"] is False and hermes[0]["reason"] == "no session database in this run folder"
+    claude = records.compaction_records(harness.get("claude"), folder, {}, "claude")
+    assert claude[0]["available"] is False and claude[0]["reason"] == "no session transcripts in this run folder"
+    assert records.observed_events(claude, request="r", run="x", agent="a", harness="claude") == []
+
+
+# ---- v3 B10: compactions are events at capture time ---------------------------------------------------------
+
+SECOND_SUMMARY_HOOK = r'''
+import os, pathlib, sqlite3, time
+trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+db = sqlite3.connect(pathlib.Path(os.environ["HERMES_HOME"]) / "state.db")
+db.execute("INSERT INTO messages VALUES(?,?,?)", ("s-early", "[CONTEXT COMPACTION] summary: counted three rows", time.time()))
+db.commit()
+db.close()
+(trial / "scripted-compaction").write_text("fallback")
+'''
+
+
+def test_a_delivery_with_compactions_emits_one_compaction_observed_event_per_summary(demo, monkeypatch):
+    root, ctx = demo
+    monkeypatch.delenv("BIO_AGENT", raising=False)
+    with Community(root) as board:
+        request = board.ask(ctx["agents"]["dana"], "operator", "Summarise twice.", request_key="b10-compactions")
+    before = len(_events(root, "compaction_observed"))
+    assert deliver_scripted(root, request["id"], "Done.", hook=SECOND_SUMMARY_HOOK)["state"] == "completed"
+    with Archive(root) as view:
+        attempt = view.one("SELECT * FROM attempt WHERE request=?", (request["id"],))
+        folder = root / attempt["path"]
+    header, items = records.read_compactions(folder)
+    assert header["count"] == 2 and header["fallbacks"] == 1
+    assert header["fallback_detection"]["method"] == "marker_match"
+    assert all(i["fallback_detection"] == "marker_match" for i in items)
+    events = [e for e in _events(root, "compaction_observed") if e["run"] == attempt["id"]]
+    assert len(_events(root, "compaction_observed")) == before + 2 and len(events) == 2
+    # One event per summary: its source row id and its length as captured, the fallback labelled a marker match.
+    assert [(e["source_row_id"], e["bytes"], e["sha256"]) for e in events] == [
+        (i["message_id"], i["bytes"], i["sha256"]) for i in items]
+    assert [e["fallback"] for e in events] == [False, True]
+    assert {e["fallback_detection"] for e in events} == {"marker_match"}
+    assert {e["source"] for e in events} == {"agent-state/state.db"} and events[0]["request"] == request["id"]
+    assert all(e["agent"] == ctx["agents"]["dana"] for e in events)
+    with Archive(root) as view:
+        timeline = run_timeline(view, attempt["id"])
+    assert [s["fallback_detection"] for s in timeline["compaction_summaries"]] == ["marker_match", "marker_match"]
+
+
+def test_claude_stream_marks_compaction_boundaries_and_its_transcript_holds_the_summary(demo_only):
+    """B16/B10: Claude Code emits compact_boundary in stream-json and records the summary in its session
+    transcript (isCompactSummary); both are read offline from the stand-in and the run's snapshot."""
+    from daw.commons.demo import scripted_runtime
+    from daw.community_runtime import add_agent, dispatch
+    root, _ = demo_only()
+    with Community(root) as board, scripted_runtime(root) as (executable, _answers):
+        agent = add_agent(board, "claudia", harness="claude")
+        (board.trial(board.agent(agent["id"])) / "scripted-compaction").write_text("summary")
+        request = board.ask("claudia", "operator", "One turn")
+        dispatch(board, request["id"], executable)
+        attempt = board.one("SELECT * FROM attempt WHERE request=?", (request["id"],))
+    folder = root / attempt["path"]
+    header, items = records.read_compactions(folder)
+    assert header["available"] is True and header["source"] == "agent-state/projects" and header["count"] == 1
+    assert header["fallbacks"] is None and items[0]["fallback"] is None  # no fallback marker: unavailable, not 0
+    (event,) = [e for e in _events(root, "compaction_observed") if e["run"] == attempt["id"]]
+    assert event["source_row_id"] == items[0]["message_id"] and event["bytes"] == items[0]["bytes"] > 0
+    with Archive(root) as view:
+        timeline = run_timeline(view, attempt["id"])
+    assert [c["text"] for c in timeline["compactions"]] == ["compact_boundary (trigger auto, pre_tokens 1200)"]
+    assert timeline["metrics"]["compactions"] == 1
+
+
+# ---- v3 V13: turn economics per delivery --------------------------------------------------------------------
+
+def test_a_delivery_records_turn_economics(demo, monkeypatch):
+    root, ctx = demo
+    monkeypatch.delenv("BIO_AGENT", raising=False)
+    with Community(root) as board:
+        request = board.ask(ctx["agents"]["dana"], "operator", "Count again.", request_key="v13-economics")
+        trial = board.trial(board.agent(ctx["agents"]["dana"]))
+    assert deliver_scripted(root, request["id"], "Counted.", hook=SECOND_SUMMARY_HOOK)["state"] == "completed"
+    with Archive(root) as view:
+        attempt = view.one("SELECT * FROM attempt WHERE request=?", (request["id"],))
+        folder = root / attempt["path"]
+    record = read_json(folder / "turn_economics.json")
+    assert record["kind"] == "turn_economics" and record["run"] == attempt["id"] and record["harness"] == "hermes"
+    assert record["tokens"] == {"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}
+    # The stand-in reports turn totals only: context per turn, model calls unavailable (not zero).
+    assert record["context"]["unit"] == "turn" and record["model_calls"] is None
+    assert record["compactions"] == {"stream_markers": 1, "summaries": 2, "fallbacks": 1,
+                                     "fallback_detection": "marker_match"}
+    composition = record["composition"]
+    # The stand-in's session database has no roles: composition from the stream, the system prompt unmeasured.
+    assert composition["basis"] == "stream" and composition["bytes"]["system_prompt"] is None
+    assert composition["complete"] is False and composition["shares"] is None
+    assert composition["bytes"]["tool_outputs"] > 0 and composition["bytes"]["summaries"] == sum(
+        i["bytes"] for i in records.read_compactions(folder)[1])
+    assert composition["bytes"]["delivery_prompt"] == (folder / "prompt.txt").stat().st_size
+    time_split = record["time"]
+    assert time_split["tool_wait_minutes"] > 0 and time_split["generation_minutes"] >= 0
+    assert record["orientation"]["by_kind"]["inbox"] == 1 and record["orientation"]["by_kind"]["forum_search"] == 1
+    assert record["orientation"]["by_kind"]["labbook_reads"] == 1 and record["orientation"]["help_calls"] == 0
+    assert record["ceremony_tail_minutes"] is not None
+    staged = sorted(p.name for p in (trial / ".agents" / "skills").iterdir() if (p / "SKILL.md").is_file())
+    assert sorted(record["skills"]["versions"] or {}) == staged
+    assert record["skills"]["reads"] == {}
+    # The dashboard charts it per harness and per skill version.
+    with Archive(root) as view:
+        dashboard = metrics.dashboard(view)
+    hermes = next(g for g in dashboard["panels"]["harness"] if g["key"] == "hermes")
+    assert hermes["turn_economics"]["recorded_runs"] >= 1
+    assert hermes["turn_economics"]["compactions"]["summaries"] >= 2
+    versions = {p["key"]: p for p in dashboard["economics"]["skill_versions"]}
+    assert (record["skills"]["version"] or "unrecorded") in versions
+    skills = {s["skill"]: s for s in dashboard["economics"]["skills"]["items"]}
+    assert skills["bio-research"]["bytes"] > 0 and skills["bio-research"]["budget"] >= skills["bio-research"]["bytes"]
 
 
 def test_receipts_outside_the_window_or_from_another_checkout_are_not_indexed(tmp_path):
@@ -249,52 +363,99 @@ def test_timeline_places_a_suspension_by_clock_record(demo):
 @pytest.fixture(scope="module")
 def cohort_rw(cohort, tmp_path_factory):
     """One writable copy of the cohort for this module's tests (each copy is about 300 MB), used in file order:
-    reindex one run, reindex every run, then build the graph store and add a comment."""
+    rebuild one run's records, reindex every run, then build the graph store and add a comment."""
     copy = tmp_path_factory.mktemp("records-cohort") / "commons"
     shutil.copytree(cohort, copy, symlinks=True, ignore=shutil.ignore_patterns("cache"))
     (copy / "library" / "staging").mkdir(exist_ok=True)  # the fixture keeps no operational directories
     return copy
 
 
-def test_cohort_runs_keep_the_attributed_style_until_reindexed(cohort, cohort_rw):
+def test_reindexed_clock_samples_come_from_the_stream_only_where_one_gap_can_hold_the_suspension():
+    """G3: execution.json, heartbeat.json and the stream's own timestamps; one gap long enough to hold the
+    suspension is bracketed by event samples; ambiguous windows get none (nothing is interpolated)."""
+    start = datetime(2026, 10, 5, 18, 0, 0).astimezone()
+    execution = {"started": start.isoformat(), "wall_seconds": 1300.0, "monotonic_seconds": 300.0}
+    heartbeat = {"observed": (start + timedelta(seconds=1290)).isoformat(), "elapsed_seconds": 290.0}
+    t0 = start.timestamp()
+    stamps = [(t0 + 1, 1), (t0 + 50, 2), (t0 + 100, 3), (t0 + 1150, 4), (t0 + 1200, 5)]  # slept between 3 and 4
+    clock = records.reindex_clock(execution, heartbeat, stamps)
+    assert [r["source"] for r in clock] == ["execution.json:started", "events.jsonl:3", "events.jsonl:4",
+                                            "heartbeat.json", "execution.json:wall_seconds,monotonic_seconds"]
+    assert all(r["reindexed"] for r in clock) and [r["n"] for r in clock] == list(range(5))
+    before, after = clock[1], clock[2]
+    assert before["wall"] == round(t0 + 100, 3) and before["monotonic"] == 100.0  # awake since launch
+    assert after["wall"] == round(t0 + 1150, 3) and after["monotonic"] == 150.0  # awake until the heartbeat
+    assert "one contiguous suspension assumed" in before["derived"]
+    (window,) = records.clock_windows(clock)
+    assert window["seconds"] == 1000.0 and window["reindexed"] and window["bracketed_by_events"]
+    assert window["sources"] == ["events.jsonl:3", "events.jsonl:4"]
+    # Two gaps that could each hold it (or none): no event samples, the window stays as wide as the anchors.
+    split = [(t0 + 1, 1), (t0 + 1050, 2), (t0 + 1100, 3), (t0 + 1150, 4)]
+    wide = records.reindex_clock({**execution, "wall_seconds": 2400.0, "monotonic_seconds": 1400.0}, None, split)
+    assert [r["source"] for r in wide] == ["execution.json:started", "execution.json:wall_seconds,monotonic_seconds"]
+    assert records.reindex_clock({"started": start.isoformat()}, heartbeat, stamps) == []
+
+
+SPLIT_SLEEP = "run_7edb0f52ff1c4feda01bff2f09e9d7c7"  # 4562 s suspended: two host sleeps of 3139 s and 1423 s
+ONE_SLEEP = "run_129da0ce09ae4a3a970b603427be0ad1"  # 1423 s, between stream lines 58 and 59
+
+
+def test_committed_cohort_carries_reindexed_records_and_places_suspensions_between_samples(cohort, cohort_rw):
+    """G3: the committed fixture was resettled with `--reindex-runs`; readers see suspensions placed between
+    reindexed samples wherever the samples narrow them, and attributed only where they cannot."""
     with Archive(cohort) as view:
         runs = view.rows("SELECT a.id,a.path FROM attempt a ORDER BY a.created")
-        suspended = [r for r in runs if run_timeline(view, r["id"])["suspensions"]]
-        old = run_timeline(view, suspended[0]["id"])
-    assert all(not (cohort / r["path"] / name).exists() for r in runs for name in records.RECORD_FILES)
-    assert old["suspensions"][0]["attributed"] is True and old["records"]["clock"] is None
-    assert all(r["attributed"] for r in old["receipts"])
+        timelines = {r["id"]: run_timeline(view, r["id"]) for r in runs}
+    assert all((cohort / r["path"] / name).is_file() for r in runs for name in records.RECORD_FILES)
+    placed = [s for t in timelines.values() for s in t["suspensions"]]
+    between = [s for s in placed if s["placement"] == "reindexed_samples"]
+    assert len(between) >= 14 and all(s["attributed"] is False and s["reindexed"] is True for s in between)
+    assert all(s["basis"].startswith("placed between reindexed samples") and s["unplaced_seconds"] == 0
+               for s in between)
+    one = timelines[ONE_SLEEP]
+    (suspension,) = one["suspensions"]
+    assert suspension["window"]["sources"] == ["events.jsonl:58", "events.jsonl:59"]
+    assert "suspension" not in one["attributed"] and one["records"]["clock"]["reindexed"] is True
+    assert any("placed between reindexed samples" in line for line in one["limitations"])
+    # A window holding two sleeps cannot be narrowed: the position stays attributed, with its rule.
+    (split,) = timelines[SPLIT_SLEEP]["suspensions"]
+    assert split["attributed"] is True and split["placement"] == "largest_event_gap_within_clock_window"
+    # Event samples carry the stream's own timestamps, unchanged.
+    path = next(r["path"] for r in runs if r["id"] == ONE_SLEEP)
+    lines = (cohort / path / "events.jsonl").read_text().splitlines()
+    for sample in records.read_clock(cohort / path):
+        assert sample["reindexed"] is True
+        if sample["kind"] == "event":
+            line = int(sample["source"].split(":")[1])
+            assert sample["wall"] == round(json.loads(lines[line - 1])["timestamp"] / 1000, 3)
+    # Receipts are the indexed receipt files; compactions are unavailable (the fixture keeps no session databases).
+    assert all(r["source"] == "receipt" and r["attributed"] is False for t in timelines.values() for r in t["receipts"])
+    assert all(t["records"]["compactions"]["available"] is False for t in timelines.values())
+    assert all(read_json(cohort / r["path"] / "turn_economics.json")["reindexed"]["by"] == "operator" for r in runs)
+    indexed = _events(cohort, "receipts_indexed")
+    assert sorted(e["run"] for e in indexed) == sorted(r["id"] for r in runs)
+    assert all(e["reindexed"] is True and e["actor"] == "operator" for e in indexed)
+    # The records are derived from the run folder alone: rebuilt from scratch they say the same.
     copy = cohort_rw
+    folder = copy / path
+    committed = (folder / "clock.jsonl").read_text()
+    for name in records.RECORD_FILES:
+        (folder / name).unlink()
+    shutil.rmtree(folder / "receipts", ignore_errors=True)
     with Community(copy) as board:
-        result = records.reindex_run(board, "operator", suspended[0]["id"])
-        assert set(result["written"]) == {"clock.jsonl", "compactions.jsonl", "receipts.json"}
+        result = records.reindex_run(board, "operator", ONE_SLEEP)
+        assert set(result["written"]) == set(records.RECORD_FILES)
         assert result["unavailable"]["compactions.jsonl"] == "no session database in this run folder"
-        again = records.reindex_run(board, "operator", suspended[0]["id"])
+        again = records.reindex_run(board, "operator", ONE_SLEEP)
         assert again["written"] == [] and set(again["kept"]) == set(records.RECORD_FILES)
         with pytest.raises(DawError, match="permission_denied"):
             records.reindex_run(board, board.rows("SELECT id FROM agent WHERE kind='agent' LIMIT 1")[0]["id"],
-                                suspended[0]["id"])
-    folder = copy / suspended[0]["path"]
-    clock = records.read_clock(folder)
-    # Only recorded samples: launch (execution.json), last heartbeat, finish; nothing interpolated.
-    assert [r["source"] for r in clock][0] == "execution.json:started" and len(clock) <= 3
-    assert all(r["reindexed"] for r in clock)
-    header, items = records.read_compactions(folder)
-    assert header["available"] is False and items == []
-    with Archive(copy) as view:
-        timeline = run_timeline(view, suspended[0]["id"])
-    (suspension,) = timeline["suspensions"]
-    # A window as wide as the run only bounds the suspension: its position stays attributed.
-    assert suspension["attributed"] is True and suspension["placement"] in (
-        "largest_event_gap_within_clock_window", "before_first_event", "after_last_event")
-    assert timeline["records"]["clock"]["reindexed"] is True
-    assert all(r["attributed"] is False and r["source"] == "receipt" for r in timeline["receipts"])
-    assert timeline["compaction_summaries"] is None and timeline["records"]["compactions"]["available"] is False
-    (event,) = [e for e in _events(copy, "receipts_indexed") if e["run"] == suspended[0]["id"]]
-    assert event["reindexed"] is True and event["run"] == suspended[0]["id"] and event["actor"] == "operator"
+                                ONE_SLEEP)
+    assert (folder / "clock.jsonl").read_text() == committed
 
 
 def test_cohort_reindex_indexes_receipts_from_checkouts(cohort_rw):
+    """Reindexing every run keeps the committed records and indexes each receipt into at most one delivery."""
     copy = cohort_rw
     with Community(copy) as board:
         runs = [r["id"] for r in board.rows("SELECT id FROM attempt WHERE state!='running' ORDER BY created")]

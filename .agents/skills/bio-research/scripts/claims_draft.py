@@ -2,7 +2,7 @@
 
 Example:
   ./bin/python .agents/skills/bio-research/scripts/claims_draft.py --question Q --out claims.draft.json
-  # edit claims.draft.json: rewrite every "EDIT:" text, set status and scope, delete rows you do not claim
+  # edit claims.draft.json: rewrite every "EDIT:" text, status and scope field, delete rows you do not claim
   ./bin/python .agents/skills/bio-research/scripts/claims_draft.py confirm claims.draft.json --out claims.json
   ./bin/bio community publish "Finding" --body finding.md --question Q --artifact ARTIFACT --claims claims.json
 
@@ -11,8 +11,9 @@ The draft proposes one entry per named row of each artifact you produced in the 
 `locator` pointer per numeric cell (`row=KEY;col=NAME`, the cell grammar the write-up checker resolves;
 a repeated key is addressed as `row=#N`); JSON outputs give one entry per top-level key (or per record
 of a top-level list) with `key=PATH` pointers to its numeric values. Each entry's text starts `EDIT:` and
-lists the cells verbatim; `confirm` refuses entries whose text was not rewritten and strips the `draft`
-notes. The helper reads this workspace's catalog and blobs read-only, never the board, and never
+lists the cells verbatim; its status and every scope field are `EDIT:` placeholders too. `confirm`
+refuses an entry whose text, status or any scope field the author did not set (delete a scope field you
+do not state), and strips the `draft` notes. The helper reads this workspace's catalog and blobs read-only, never the board, and never
 decides what a row means: status, scope and wording are the author's.
 """
 import argparse
@@ -31,6 +32,7 @@ from urllib.parse import quote
 FORMAT = "daw.claims_draft/1"
 MARKER = "EDIT:"
 STATUSES = ("supported", "descriptive", "untestable", "withdrawn")
+SCOPE_FIELDS = ("species", "context", "endpoint", "direction")  # daw.commons.claims.Scope
 NEEDS_POINTER = ("supported", "descriptive")
 TABLE_SUFFIXES = (".tsv", ".tab", ".csv", ".txt")  # what daw.commons.locators.read_table accepts
 READ_LIMIT = 8 * 1024 * 1024
@@ -113,7 +115,9 @@ def table(data, name):
 
 def entry(aid, title, label, cells, where):
     shown = "; ".join(f"{name} = {value}" for name, _, value in cells)
-    return {"text": f"{MARKER} {title}: {label}: {shown}", "status": "supported", "scope": {},
+    # Status and scope are the author's: placeholders that `confirm` refuses until set (a scope field may be deleted).
+    return {"text": f"{MARKER} {title}: {label}: {shown}", "status": f"{MARKER} " + "|".join(STATUSES),
+            "scope": {field: f"{MARKER} set or delete" for field in SCOPE_FIELDS},
             "pointers": [{"kind": "locator", "id": aid, "locator": locator} for _, locator, _ in cells],
             "draft": {"artifact": aid, "row": label, **where,
                       "cells": [{"name": name, "locator": locator, "value": value} for name, locator, value in cells],
@@ -235,7 +239,8 @@ def draft(workspace, question=None, artifacts=(), *, columns=(), max_rows=50, ma
         if reason:
             skipped.append({"artifact": row["id"], "output": name or None, "reason": reason})
     return {"format": FORMAT, "workspace": str(catalog.root), "question": question,
-            "note": "A draft from your own registered outputs. Rewrite every EDIT: text, set status and scope, delete "
+            "note": "A draft from your own registered outputs. Rewrite every EDIT: text, set every EDIT: status and scope "
+                    "field (delete scope fields you do not state), delete "
                     "entries you do not claim, then run `claims_draft.py confirm`. Artifact pointers must be in the "
                     "post's --artifact list or already published. Nothing here was published.",
             "claims": proposed, "skipped": skipped}
@@ -255,7 +260,12 @@ def confirm(document):
         if not isinstance(text, str) or not text.strip() or MARKER in text:
             problems.append(f"claim {n}: rewrite the {MARKER} text as your finding (or delete the entry)")
         if item.get("status") not in STATUSES:
-            problems.append(f"claim {n}: status must be one of {', '.join(STATUSES)}")
+            problems.append(f"claim {n}: set status to one of {', '.join(STATUSES)}")
+        scope = item.get("scope", {})
+        unset = ([k for k, v in scope.items() if v is not None and (not isinstance(v, str) or MARKER in v or not v.strip())]
+                 if isinstance(scope, dict) else ["(not an object)"])
+        if unset:
+            problems.append(f"claim {n}: set or delete scope {', '.join(unset)}")
         pointers = item.get("pointers") or []
         if item.get("status") in NEEDS_POINTER and not pointers:
             problems.append(f"claim {n}: a {item.get('status')} claim needs at least one pointer")

@@ -1,0 +1,4 @@
+{"n":0,"kind":"start","wall":1791242590.173,"monotonic":0.0,"source":"execution.json:started","reindexed":true}
+{"n":1,"kind":"event","wall":1791242609.188,"monotonic":19.015,"source":"events.jsonl:11","side":"before_gap","derived":"wall: the event's timestamp; monotonic: execution.json:started plus the wall advance (no suspension before the gap). Gap: the only gap between stamped events in [execution.json:started, heartbeat.json] long enough to hold the 593.968 s suspended there; one contiguous suspension assumed","reindexed":true}
+{"n":2,"kind":"tick","wall":1791243244.191,"monotonic":60.05,"stdout_bytes":24523,"source":"heartbeat.json","reindexed":true}
+{"n":3,"kind":"finish","wall":1791243246.873,"monotonic":62.736,"source":"execution.json:wall_seconds,monotonic_seconds","reindexed":true}

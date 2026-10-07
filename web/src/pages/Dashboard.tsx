@@ -4,8 +4,9 @@ import { query } from "../api";
 import { Status } from "../components/Status";
 import CohortCompare, { CostCell } from "../components/dashboard/CohortCompare";
 import { ReuseBars, Sparkline, Value, ratioText } from "../components/dashboard/Charts";
-import type { CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
+import type { FrontierClosure, CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
 import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Publishing";
+import { EconomicsTable, SkillsTable, UsefulDataTable, economicsRows } from "../components/dashboard/Economics";
 import { useApi } from "../useApi";
 import "./Dashboard.css";
 
@@ -46,6 +47,11 @@ function Summary({ g }: { g: Group }) {
       <Stat label="Minutes per executed analysis"><Value value={g.minutes_per_executed_analysis} /></Stat>
       <Stat label="Analyses (failed)"><Value value={g.analysis_receipts} /> (<Value value={g.analysis_failures} />)</Stat>
       <Stat label="Tool / inbox calls"><Value value={g.tool_calls} /> / <Value value={g.inbox_calls} /></Stat>
+      {g.agent_reads && (
+        <Stat label="Inbox / search / overview per turn" hint="Community reads per delivery, from captured commands (V11)">
+          <Value value={g.agent_reads.inbox_calls_per_turn} /> / <Value value={g.agent_reads.forum_searches_per_turn} /> / <Value value={g.agent_reads.overview_calls_per_turn} />
+        </Stat>
+      )}
       <Stat label="Plumbing share">{ratioText(g.plumbing_share)}</Stat>
       <Stat label="Compactions (fallbacks)" hint="Harnesses whose stream does not mark compactions are unavailable, not zero">
         <Value value={g.compactions} /> (<Value value={g.compaction_fallbacks} />)
@@ -201,6 +207,33 @@ function ClaimsAuthoringTable({ groups }: { groups: Group[] }) {
   );
 }
 
+// V3 G1: frontier-first closure. Non-withdrawn items per completed question by kind, and finals that state a next
+// step whose author recorded a matching (non-gap) item.
+function FrontierClosurePanel({ f }: { f: FrontierClosure }) {
+  return (
+    <div className="compare-scroll">
+      <table className="coverage-table" aria-label="Frontier closure">
+        <thead>
+          <tr><th scope="col">Kind</th><th scope="col">Items</th><th scope="col">Per completed question</th></tr>
+        </thead>
+        <tbody>
+          {Object.entries(f.items_by_kind).map(([kind, n]) => (
+            <tr key={kind}>
+              <th scope="row">{kind.replace(/_/g, " ")}</th><td>{n}</td>
+              <td><Value value={f.items_per_completed_question[kind] ?? null} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="muted small">
+        {f.completed_with_non_gap_item} of {f.completed_questions} completed questions record an item beyond gaps
+        ({ratioText(f.completed_with_non_gap_share)}); {f.finals_next_step_matched} of {f.finals_stating_next_step} finals
+        stating a next step have a matching item ({ratioText(f.finals_next_step_matched_share)}).
+      </p>
+    </div>
+  );
+}
+
 function CostTable({ groups, currency }: { groups: Group[]; currency: string | null }) {
   return (
     <div className="compare-scroll">
@@ -294,6 +327,29 @@ export default function Dashboard() {
             request post nor the assignment key, and the input context the stream reports per call (or per turn).
           </p>
           <HygieneTable groups={[data.summary, ...data.panels.harness]} />
+          <h2>Turn economics</h2>
+          <p className="muted small">
+            Per delivery (turn_economics records): context tokens per call or per turn, where the context came from
+            (bytes by source), compactions and fallbacks (a marker match), minutes of model generation against tool
+            wait, help and re-orientation calls, and the ceremony tail after the last successful analysis.
+          </p>
+          <h3>By harness</h3>
+          <EconomicsTable label="Harness" rows={economicsRows([data.summary, ...data.panels.harness])} />
+          {data.economics && (
+            <>
+              <h3>By skill version</h3>
+              <p className="muted small">A skill version is the digest of the skill text staged for the turn; turns captured
+                before it was recorded are "unrecorded".</p>
+              <EconomicsTable label="Skill version" rows={data.economics.skill_versions.map((p) => ({
+                key: p.key, label: `${p.label}${p.harnesses.length ? ` (${p.harnesses.join(", ")})` : ""}`, e: p.turn_economics }))} />
+              <h3>Skills</h3>
+              <p className="muted small">Skill text (SKILL.md and references) against its byte budget; a skill that grows must
+                show a metric it moves.</p>
+              <SkillsTable economics={data.economics} />
+            </>
+          )}
+          <h3>Cost per useful datum</h3>
+          <UsefulDataTable rows={economicsRows([data.summary, ...data.panels.harness])} />
           <h2>Claims authoring</h2>
           <p className="muted small">
             Ledger claims written by authors (the platform never writes one): per post, on posts that publish evidence,
@@ -301,6 +357,16 @@ export default function Dashboard() {
             than half of numbers in finals point at a claim, cell or line.
           </p>
           <ClaimsAuthoringTable groups={[data.summary, ...data.panels.cohort]} />
+          {data.frontier && (
+            <>
+              <h2>Frontier closure</h2>
+              <p className="muted small">
+                Open items authors recorded (the platform never writes one), per completed question. Target for the
+                next cohort: at least one item beyond retrieval gaps per completed question.
+              </p>
+              <FrontierClosurePanel f={data.frontier} />
+            </>
+          )}
           <h2>Cost</h2>
           <p className="muted small">
             Tokens from harness telemetry where reported; currency only from an operator price table.
