@@ -99,7 +99,7 @@ export interface PointerEntry {
 
 export interface Problem {
   kind: "unpointed_number" | "unresolved_pointer" | "pointer_kind_not_allowed" | "figure_not_artifact" | "post_hidden"
-    | "claimless_post_cited" | "invalid_locator";
+    | "claimless_post_cited" | "frontierless_question_cited" | "invalid_locator";
   text?: string;
   pointer?: string;
   offset: number;

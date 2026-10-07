@@ -354,7 +354,10 @@ def work_show(ctx: typer.Context, question: str, notebook: bool = False, events:
 def work_sync(ctx: typer.Context, question: str, summary: str | None = None, status: str | None = None):
     """Snapshot edited files and index the notebook for future questions."""
     with session(ctx) as ws:
-        emit(sync_work(ws, question, summary=summary, status=status))
+        result = sync_work(ws, question, summary=summary, status=status)
+    for warning in result.get("warnings") or []:  # v3 G1: completion_without_frontier, also on stderr
+        typer.echo(f"warning: {warning['code']}: {warning['message']}", err=True)
+    emit(result)
 
 
 @work_app.command("event")

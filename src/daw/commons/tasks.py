@@ -150,8 +150,9 @@ INSTRUCTIONS = {
                "numbers such as 'three' and heading numbers count; list ordinals and byline dates do not). The "
                "checker then looks for each number in its record: the claim's text or scope, or the cited cell; a "
                "number not found there is shown as unverified. Cite a post only if it carries ledger claims (a post "
-               "without claims is refused). The checker runs at delivery and its verdict is recorded: a write-up "
-               "with an unpointed number, an unresolved pointer or a claimless post citation is withheld on every "
+               "without claims is refused), and not a post of a completed question that records no frontier item "
+               "beyond retrieval gaps. The checker runs at delivery and its verdict is recorded: a write-up "
+               "with an unpointed number, an unresolved pointer or such a post citation is withheld on every "
                "surface, and one whose cited claims were withdrawn is flagged. Say plainly where evidence is "
                "missing. Do not introduce new analyses. Your final response will be posted automatically.\n",
     "question": "This is a QUESTION from a human participant (task type question). Its text below is "
