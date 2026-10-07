@@ -14,14 +14,19 @@ off. Never use it outside a replication task, and never execute any other fetche
 3. runs the entry code blob through run_analysis.py with a fresh receipt
    (outputs/replication-ID-rNNN/execution.json): `INTERPRETER CODE INPUT... OUTPUT`, inputs in
    derivation order and the output path last, in a minimal environment without proxy, board-token or
-   credential variables (BIO_REPLICATION_INPUTS and BIO_REPLICATION_OUTPUT carry the same paths);
+   credential variables (BIO_REPLICATION_INPUTS and BIO_REPLICATION_OUTPUT carry the same paths); each
+   input is declared with --input, so the receipt records its sha256 and run_analysis.py's
+   `analysis_executed` line is echoed into this command's output (the platform looks for it in the
+   delivery's captured stream: run this helper as its own terminal command and do not suppress its output);
 4. stores the receipt bytes (`bio object add`) and, when the receipt is complete, registers the output
    with the original derivation unchanged (`bio register --manifest`);
 5. records a `replication_execution` work event naming the original, the replica, the receipt blob and
    whether the bytes are identical. A failed run is recorded too and registers nothing.
 
 It never edits the code, inputs or parameters and never copies the original's output bytes. The
-platform confirms a replication only from such a receipt; identical bytes are not a scientific verdict.
+platform confirms a replication only from such a receipt, captured in a sandboxed delivery, whose input
+hashes equal the derivation's; an unsandboxed run is a local rehearsal, never a confirmation. Identical
+bytes are not a scientific verdict.
 A derivation with several code blobs needs `--entry SHA`; the others are copied beside it but are not
 importable by their original names. A derivation that recorded a command is still run with the
 convention above (the recorded command is reported, not executed).
@@ -114,17 +119,22 @@ def replicate(artifact, question, *, bio_cli, interpreter, entry=None):
     outdir.mkdir(parents=True)
     output = outdir / Path(manifest.get("output", {}).get("name") or "replica.out").name
     receipt = outdir / "execution.json"
-    command = [interpreter, str(RUN_ANALYSIS), "--receipt", str(receipt), "--output", str(output), "--",
+    command = [interpreter, str(RUN_ANALYSIS), "--receipt", str(receipt), "--output", str(output),
+               *[part for path in inputs for part in ("--input", str(path))], "--",
                interpreter, str(entry_path), *map(str, inputs), str(output)]
     env = minimal_env(inputs, output)
     executed = subprocess.run(command, env=env, capture_output=True, text=True, check=False)
     if not receipt.is_file():
         raise Refused("no_receipt_written", (executed.stderr or executed.stdout).strip()[-800:])
+    for line in executed.stdout.splitlines():  # run_analysis.py's result line, into the captured stream
+        if '"analysis_executed"' in line:
+            print(line.strip(), flush=True)
     value = json.loads(receipt.read_text())
     stored = bio(base, "object", "add", str(receipt), "--classification", "work")["blob"]
     payload = {"original": artifact, "derivation_key": info["derivation_key"], "code_blob": entry,
                "receipt_blob": stored, "receipt_path": str(receipt.relative_to(question_path)),
                "exit_code": value.get("exit_code"), "complete": bool(value.get("complete")),
+               "input_blobs": [item["blob"] for item in derivation["inputs"]],
                "original_output_blob": info["output_blob"], "environment_names": sorted(env),
                "recorded_command": derivation.get("command") or [], "replica": None, "output_blob": None,
                "byte_identical": None}

@@ -97,8 +97,9 @@ class Workspace:
             (self.root / part).mkdir(exist_ok=True)
         config = tomllib.loads((self.root / "config.toml").read_text())
         self.budgets = Budgets.model_validate(config.get("budgets", {}))
-        # A commons task's download budget lives beside the checkout's workspace in a platform-owned
-        # file (read-only in the sandbox), never in this agent-writable config (daw.commons.budgets).
+        # A commons task's download budget lives at the checkout root in a platform-owned file (read-only in
+        # the sandbox), never in this agent-writable config; it governs every workspace under the checkout
+        # (daw.commons.budgets.task_budget_files).
         from daw.commons.budgets import apply_task_caps
         self.budgets = apply_task_caps(self.budgets, self.root)
 

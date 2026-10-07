@@ -7,7 +7,9 @@ Code (`-p --output-format stream-json`), Codex (`exec --json`), or, for the
 session state where the real harness would, so resume and fork go through the
 real adapters. Answers come from `$COLLOQUY_DEMO_ANSWERS/<post>.md`; an
 optional `<post>.hook.py` written by a test runs inside the checkout first
-(fixture code, never downloaded content). A `scripted-sleep` file in the
+(fixture code, never downloaded content); a `CALLS` list it defines
+(`{command, exit_code, output}`) is emitted as terminal calls after the fixed ones,
+so the commands a hook ran are in the captured stream as an agent's would be. A `scripted-sleep` file in the
 checkout makes the harness pause without output for that many seconds (stall
 tests); `fail-next` makes one turn fail; `scripted-compaction` (text `summary` or `fallback`)
 writes a compaction summary message into the session database mid-turn, as Hermes does.
@@ -75,8 +77,7 @@ found = re.search(r"(?:Question|Request) post: (post_[0-9a-f]+)", prompt)
 post = found.group(1) if found else ""
 answers = Path(os.environ.get("COLLOQUY_DEMO_ANSWERS", "/nonexistent"))
 hook = answers / (post + ".hook.py")
-if post and hook.is_file():
-    runpy.run_path(str(hook), run_name="__main__")
+hooked = runpy.run_path(str(hook), run_name="__main__") if post and hook.is_file() else {}
 answer = (answers / (post + ".md")).read_text() if post and (answers / (post + ".md")).is_file() else "No change to my conclusions."
 answer = answer.replace("{turns}", str(turns))
 pause = trial / "scripted-sleep"
@@ -99,7 +100,10 @@ calls = [("terminal", {"command": "./bin/bio community search --text PMP22"}, {"
           {"exit_code": 1, "output": "assertion failed: column missing"}),
          ("terminal", {"command": "./bin/bio register outputs/contrast.tsv --output-role contrast-table"},
           {"exit_code": 0, "output": "registered"})]
-usage = {"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}
+# Terminal calls the hook made (its CALLS list), emitted as the agent's own captured tool calls.
+calls += [("terminal", {"command": c["command"]}, {"exit_code": c.get("exit_code", 0), "output": c.get("output", "")})
+          for c in hooked.get("CALLS", [])]
+usage ={"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}
 if fmt == "hermes":
     emit({"type": "system", "session_id": sid})
 elif fmt == "claude":

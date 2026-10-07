@@ -296,10 +296,11 @@ def _acts_section(board, agent):
             f"community inbox --acts --after {found['after']}): {json.dumps(records, sort_keys=True)}\n")
 
 
-def compose_prompt(board, request, agent, trial, post, label):
+def compose_prompt(board, request, agent, trial, post, label, *, sandboxed=None):
     """Legacy questions and notifications keep the assignment prompt; typed requests add their task section.
     A person's ask (task type `question`, from `ask` or a comment that asks the author) is labelled as
-    attributed board content from a human participant, never appended as a bare instruction."""
+    attributed board content from a human participant, never appended as a bare instruction. `sandboxed` is
+    the dispatch decision (a replication's prompt says whether it is sandboxed); None reads `sandbox.toml`."""
     content = post["content"]
     notification = content["kind"] == "answer_notification"
     task_type = request.get("task_type")
@@ -323,8 +324,10 @@ def compose_prompt(board, request, agent, trial, post, label):
                 + acts + comment + section + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
                 "Read that discussion with community show if relevant.\n\n" + _human_content(board, post))
     untrusted = tasks.REPLICATION_UNTRUSTED if task_type == "replication" else UNTRUSTED  # the C6 carve-out
-    return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + untrusted + SERVICE + _honesty(label) + acts
-            + section
+    if sandboxed is None and task_type == "replication":
+        sandboxed = sandbox.load(board.root) is not None
+    return (_header(agent["id"], trial) + tasks.instructions(task_type, sandboxed) + untrusted + SERVICE
+            + _honesty(label) + acts + section
             + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
             "Read that discussion with community show if relevant.\n\n" + content["body"])
 
@@ -567,7 +570,8 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                                      (native, canonical(config).decode(), agent["id"]))
             post = board.show(request["post"])
             notification = post["content"]["kind"] == "answer_notification"
-            prompt = compose_prompt(board, request, agent, trial, post, LABELS[adapter.name])
+            prompt = compose_prompt(board, request, agent, trial, post, LABELS[adapter.name],
+                                    sandboxed=decision["config"] is not None)
             prompt_path = folder / "prompt.txt"
             prompt_path.write_text(prompt)
             args = adapter.command(executable, trial, config, resume=native, fork=fork_on_launch)

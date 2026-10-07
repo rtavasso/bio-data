@@ -16,7 +16,9 @@ writer lock (and the library writer lock when it stores bytes or posts) and reco
   `replication` system participant and citing the agent's receipt; different bytes under a receipt -> a
   correction post of kind `replication_mismatch` by the same participant (the agent's registered output
   published as evidence) unless the agent already published one naming both artifacts; a registration
-  without a receipt -> `no_execution_receipt`, nothing confirmed.
+  without a receipt captured in the delivery's stream -> `no_execution_receipt`, nothing confirmed; a
+  captured run on other inputs -> `inputs_differ`, nothing confirmed and no correction (v3 B3); an
+  unsandboxed dispatch -> `local_rehearsal`, nothing confirmed or corrected.
 - Digests (M6.4): a person commissions a digest of a scope (search query, questions, posts) and
   period. The request post carries a deterministic skeleton (new posts, corrections, claims, open
   items, with links) as the writer's input context; the agent writes the narrative. A standing
@@ -336,15 +338,20 @@ def _mismatch(board, system, agent, request, run, result, parent):
     return {"post": post, "created": True}
 
 
-def _gated(board, agent, result):
-    """Re-verify the outcome's receipts from the agent's workspace (read-only) before anything is posted.
+def _gated(board, agent, run, result):
+    """Re-verify the outcome's receipts from the agent's workspace and the run's captured stream (read-only)
+    before anything is posted.
 
-    An outcome recorded before the receipt gate, or a receipt that no longer verifies, becomes
-    `no_execution_receipt`: nothing is confirmed or corrected without an execution receipt."""
-    from daw.commons.replication import reverify
+    An outcome recorded before the receipt gate (or before v3 B3's input and stream checks), or a receipt
+    that no longer verifies, becomes `no_execution_receipt`: nothing is confirmed or corrected without a
+    captured execution on the recorded inputs. A run whose dispatch was not sandboxed is `local_rehearsal`."""
+    from daw.commons.replication import dispatch_sandboxed, reverify
     if result.get("outcome") not in ("byte_identical", "bytes_differ"):
         return result
+    if not dispatch_sandboxed(board.root, run):
+        return {**result, "outcome": "local_rehearsal", "rehearsal": result["outcome"], "correction_required": False}
     receipts, codes = result.get("receipts") or {}, result.get("code_blobs") or []
+    inputs = result.get("input_blobs")
     held = {}
     for replica in result.get("identical", []) + result.get("different", []):
         row = board.library.one("SELECT output_blob FROM artifact WHERE id=?", (replica,))
@@ -357,7 +364,8 @@ def _gated(board, agent, result):
                 ws = view.workspace(agent["id"])
                 found = ws.one("SELECT output_blob FROM artifact WHERE id=?", (replica,)) if ws else None
             held[replica] = found["output_blob"] if found else None
-    valid = {a for a, blob in held.items() if blob and reverify(board, agent["id"], receipts.get(a), codes, blob)}
+    valid = {a for a, blob in held.items() if blob and isinstance(inputs, list)
+             and reverify(board, agent, run, receipts.get(a), codes, inputs, blob)}
     same = [a for a in result.get("identical", []) if a in valid]
     differ = [a for a in result.get("different", []) if a in valid]
     outcome = "bytes_differ" if differ else "byte_identical" if same else "no_execution_receipt"
@@ -389,7 +397,7 @@ def replication_check(board, request_id, *, actor=None):
     run = outcome["run"]
     results, created = [], False
     for result in outcome["criteria"].get("replication", []):
-        result = _gated(board, agent, result)
+        result = _gated(board, agent, run, result)
         original = result.get("original")
         entry = {"original": original, "outcome": result["outcome"]}
         parent = (_original_post(board, original) if original else None) or request["post"]
@@ -404,8 +412,15 @@ def replication_check(board, request_id, *, actor=None):
             entry.update(post=done["post"], author=system["id"])
             created |= done["created"]
         elif result["outcome"] == "no_execution_receipt":
-            entry["note"] = ("a same-derivation registration without a run_analysis receipt showing the derivation's "
-                             "code writing its bytes; nothing is confirmed")
+            entry["note"] = ("a same-derivation registration without a run_analysis receipt, captured in the "
+                             "delivery's stream, showing the derivation's code writing its bytes; nothing is confirmed")
+        elif result["outcome"] == "inputs_differ":
+            entry["note"] = ("the derivation's code ran on inputs other than its recorded ones; nothing is confirmed "
+                             "and no correction is made against the original")
+        elif result["outcome"] == "local_rehearsal":
+            entry.update(rehearsal=result.get("rehearsal"),
+                         note="an unsandboxed local run is a rehearsal, never a confirmation; nothing is confirmed "
+                              "or corrected")
         else:
             entry["note"] = "nothing to confirm or correct"
         results.append(entry)

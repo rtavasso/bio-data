@@ -75,6 +75,10 @@ no catalog migration:
   object), missing_measurement?, pointers?, key?, post?}`; `kind` in
   `open_question|untestable|gap|proposed_experiment|next_step`. Validated in
   `work.record_event`, so `bio work event --kind frontier_item` is checked too.
+  A common alias (`blocked`, `wishlist`, `question`, `experiment`, `todo`, …;
+  `frontier.KIND_ALIASES`) is refused, never remapped: `invalid_frontier_kind`
+  names the kind to use and lists the vocabulary (v3 B4). A test checks that
+  every kind named in a preset or skill text is in `frontier.KINDS`.
   Pointers resolve in the author's workspace (artifact, receipt blob,
   accession form, locator); a post pointer is checked for form only because a
   workspace cannot see the board. With `key`, a retry returns the same event
@@ -230,8 +234,11 @@ never writes, completes or infers a claim.
   index-like key becomes `row=#N`) with one `locator` pointer per numeric cell
   (`row=KEY;col=NAME`, percent-encoded, V2 grammar), and one entry per named key
   or record of a JSON output (`key=PATH`). Every text starts `EDIT:` and lists
-  the cells verbatim; `claims_draft.py confirm DRAFT --out claims.json` refuses
-  entries whose text was not rewritten and strips the draft notes. Binary
+  the cells verbatim; status and each scope field are `EDIT:` placeholders (v3
+  B12: the helper never pre-sets a scientific status).
+  `claims_draft.py confirm DRAFT --out claims.json` refuses any entry whose
+  text, status or a scope field the author did not set (a scope field may be
+  deleted) and strips the draft notes. Binary
   outputs, outputs without a table file name and absent bytes are listed as
   skipped with the reason.
 - **Dashboard.** `metrics.claims_authoring` per group (summary and every cohort

@@ -15,6 +15,62 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.skip(reason="set DAW_LIVE=1 to enable live source integration"))
 
 
+FAKE_ENGINE = r'''
+import json, os, sys
+from pathlib import Path
+argv = sys.argv[1:]
+with open(LOG, "a") as log:
+    log.write(json.dumps(argv) + "\n")
+if argv[:1] != ["run"]:
+    sys.exit(0)
+VALUED = {"--name", "--label", "--network", "--cap-drop", "--security-opt", "--pids-limit", "--user", "--workdir",
+          "--tmpfs", "--memory", "--cpus", "--mount", "--env"}
+env, workdir, i = {"PATH": os.environ.get("PATH", "")}, None, 1
+while argv[i].startswith("-"):
+    flag = argv[i]
+    if flag in VALUED:
+        value = argv[i + 1]
+        if flag == "--env":
+            key, sep, given = value.partition("=")
+            if sep:
+                env[key] = given
+            elif key in os.environ:
+                env[key] = os.environ[key]
+        elif flag == "--workdir":
+            workdir = value
+        i += 2
+    else:
+        i += 1
+image, command = argv[i], argv[i + 1:]
+if any(part.endswith("hermes_session_bridge.py") for part in command):
+    # Stand-in for Hermes's SessionDB inside the image (the demo's bridge substitute on the scripted state.db).
+    from daw.commons.demo import _fake_native_session
+    at = command.index("--session")
+    print(json.dumps(_fake_native_session(None, Path(env["HERMES_HOME"]), command[at + 1], env["HERMES_CWD"],
+                                          fork="--fork" in command)))
+    sys.exit(0)
+os.chdir(workdir)
+os.execvpe(command[0], command, env)
+'''
+
+
+@pytest.fixture
+def fake_engine(tmp_path, monkeypatch):
+    """A `docker` stand-in on PATH (`tmp_path/engine/docker`) that logs its argv and runs the containerized
+    command on the host (no isolation: it checks the dispatch path and receipts, never the container boundary).
+    Returns a function listing the logged engine calls."""
+    import json
+    import sys
+    folder = tmp_path / "engine"
+    folder.mkdir(parents=True, exist_ok=True)
+    log = folder / "engine.jsonl"
+    engine = folder / "docker"
+    engine.write_text(f"#!{sys.executable}\nLOG = {str(log)!r}\n" + FAKE_ENGINE)
+    engine.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{folder}:{os.environ.get('PATH', '')}")
+    return lambda: [json.loads(line) for line in log.read_text().splitlines()] if log.is_file() else []
+
+
 @pytest.fixture
 def ws(tmp_path):
     workspace = Workspace.create(tmp_path / "workspace")

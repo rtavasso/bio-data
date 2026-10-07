@@ -448,33 +448,55 @@ def test_person_submits_a_structured_review_from_the_ui(demo):
 # ---- M6.3 replications (spec v2 C6: replication that executes, under an explicit carve-out) ----------
 
 # A copied-bytes replication: the hook registers the original's output bytes under the same derivation
-# without executing anything (what every v1 test and demo did). With `forge`, it also runs run_analysis.py
-# on a different saved script that copies the bytes, so a receipt exists but its producer is not the
-# derivation's code.
-COPY_BYTES = '''import os, pathlib, subprocess, sys
+# without executing anything (what every v1 test and demo did). Modes: `copied` records no receipt;
+# `forged_run` runs run_analysis.py (captured in the stream) on a different saved script that copies the
+# bytes, so a receipt exists but its producer is not the derivation's code; `handwritten` stores a receipt
+# written by hand that claims everything the gate checks (derivation code, inputs, output bytes) with no
+# run_analysis.py call in the stream; `printed` adds a terminal call that merely echoes a matching
+# analysis_executed line.
+COPY_BYTES = '''import hashlib, json, os, pathlib, shlex, subprocess, sys
 from daw.artifacts import artifact_info, register_artifact
 from daw.catalog import Workspace
 from daw.substrate_models import ArtifactRegistration, Derivation
 from daw.work import create_question, record_event
 trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+mode = {mode!r}
+CALLS = []
 ws = Workspace(os.environ["BIO_WORKSPACE"])
 with ws.writer():
     info = artifact_info(ws, {original!r})
+    derivation = info["manifest"]["derivation"]
     question = create_question(ws, "Replicate")
     out = pathlib.Path(question["path"]) / "outputs" / "replicated.tsv"
-    if {forge!r}:
+    receipt = pathlib.Path(question["path"]) / "outputs" / "execution.json"
+    if mode == "forged_run":
         script = pathlib.Path(question["path"]) / "scripts" / "copy.py"
         script.write_text("import shutil, sys\\nshutil.copyfile(sys.argv[1], sys.argv[2])\\n")
-        receipt = pathlib.Path(question["path"]) / "outputs" / "execution.json"
-        subprocess.run([sys.executable, str(trial / ".agents/skills/bio-research/scripts/run_analysis.py"),
-                        "--receipt", str(receipt), "--output", str(out), "--", sys.executable, str(script),
-                        str(ws.blob_path(info["output_blob"])), str(out)], check=True, capture_output=True)
-        record_event(ws, question["question"], "replication_execution",
-                     {{"receipt_blob": ws.put_file(receipt, "work"), "original": {original!r}}})
+        argv = [sys.executable, str(trial / ".agents/skills/bio-research/scripts/run_analysis.py"),
+                "--receipt", str(receipt), "--output", str(out), "--", sys.executable, str(script),
+                str(ws.blob_path(info["output_blob"])), str(out)]
+        done = subprocess.run(argv, check=True, capture_output=True, text=True)
+        CALLS.append({{"command": shlex.join(argv), "exit_code": 0, "output": done.stdout}})
     else:
         out.write_bytes(ws.blob_path(info["output_blob"]).read_bytes())
+    if mode in ("handwritten", "printed"):
+        receipt.write_text(json.dumps({{
+            "version": 1, "argv": ["python", "scripts/contrast.py"], "producer": str(question["path"]) + "/scripts/x.py",
+            "code_sha256": derivation["code"][0], "started": "2026-01-01T00:00:00+00:00",
+            "finished": "2026-01-01T00:00:01+00:00", "exit_code": 0, "code_unchanged": True,
+            "inputs": [{{"path": "in", "sha256": item["blob"]}} for item in derivation["inputs"]],
+            "inputs_unchanged": True, "complete": True,
+            "outputs": [{{"path": str(out), "sha256": info["output_blob"], "written": True}}]}}))
+    if mode == "printed":
+        line = json.dumps({{"event": "analysis_executed", "receipt": str(receipt),
+                           "sha256": hashlib.sha256(receipt.read_bytes()).hexdigest()}})
+        CALLS.append({{"command": "echo " + shlex.quote(line), "exit_code": 0, "output": line + "\\n"}})
+    if mode != "copied":
+        record_event(ws, question["question"], "replication_execution",
+                     {{"receipt_blob": ws.put_file(receipt, "work"), "receipt_path": "outputs/execution.json",
+                       "original": {original!r}}})
     register_artifact(ws, out, ArtifactRegistration(title="Replication", summary="copied bytes",
-        output_role=info["manifest"]["output_role"], derivation=Derivation(**info["manifest"]["derivation"])),
+        output_role=info["manifest"]["output_role"], derivation=Derivation(**derivation)),
         question=question["question"])
 ws.close()
 '''
@@ -485,21 +507,43 @@ def replication_system(board):
     return row["id"]
 
 
-@pytest.mark.parametrize("forge", [False, True])
-def test_copied_bytes_registration_without_receipt_is_no_execution_receipt(demo, forge):
-    """Spec v2 §5 C6: a same-derivation registration of copied bytes confirms nothing."""
+@pytest.fixture
+def sandboxed(demo, fake_engine):
+    """The demo commons with a configured sandbox (a logging engine stand-in that runs the container's command
+    on the host, `conftest.fake_engine`) and the operator's board service, so replications are dispatched as
+    sandboxed. It checks the dispatch path and records, never container isolation."""
+    from daw.commons.boardservice import BoardService
     root, ctx = demo
+    # The scripted harness reads its answers and hooks from COLLOQUY_DEMO_ANSWERS, passed by name.
+    (root / "sandbox.toml").write_text('engine = "docker"\nimage = "agent:1"\nenv = ["COLLOQUY_DEMO_ANSWERS"]\n')
+    service = BoardService(root)
+    service.refresh()
+    yield root, ctx
+    service.close()
+
+
+@pytest.mark.parametrize("mode", ["copied", "forged_run", "handwritten", "printed"])
+def test_copied_bytes_registration_without_receipt_is_no_execution_receipt(sandboxed, mode):
+    """Spec v2 §5 C6, v3 B3: a same-derivation registration of copied bytes confirms nothing, even in a sandboxed
+    dispatch and with a hand-written receipt that claims the derivation's code, inputs and output: only a
+    run_analysis.py call captured in the delivery's stream, printing the cited receipt's path and sha256, counts."""
+    from daw.commons.replication import NOT_CAPTURED
+    root, ctx = sandboxed
     original = ctx["artifacts"]["contrast"]
     with Community(root) as board, scripted_runtime(root) as (_, answers):
         request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
                              subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
-        deliver(board, answers, request, "Replicated.", COPY_BYTES.format(original=original, forge=forge))
+        done = deliver(board, answers, request, "Replicated.", COPY_BYTES.format(original=original, mode=mode))
+        assert json.loads((root / "runs" / done["active_run"] / "sandbox.json").read_text())["sandboxed"] is True
         [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
         assert result["outcome"] == "no_execution_receipt" and not result["identical"] and not result["different"]
+        assert result["sandboxed"] is True
         [unreceipted] = result["unreceipted"]
         assert unreceipted["artifact"] == original  # byte-identical copy: the same artifact identity
         problems = [p for c in unreceipted["candidates"] for p in c["problems"]]
-        assert problems == (["producer_not_a_derivation_code_blob"] if forge else ["no_replication_execution_recorded"])
+        assert problems == {"copied": ["no_replication_execution_recorded"],
+                            "forged_run": ["producer_not_a_derivation_code_blob", "inputs_differ"],
+                            "handwritten": [NOT_CAPTURED], "printed": [NOT_CAPTURED]}[mode]
         [check] = events(board, "replication_checked")
         assert check["results"][0]["outcome"] == "no_execution_receipt" and "post" not in check["results"][0]
         assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
@@ -512,6 +556,14 @@ def test_copied_bytes_registration_without_receipt_is_no_execution_receipt(demo,
             board.event("task_outcome", {**events(board, "task_outcome")[-1], "criteria": {"replication": [legacy]}})
         assert studio.replication_check(board, request["id"])["results"][0]["outcome"] == "no_execution_receipt"
         assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+        if mode in ("handwritten", "printed"):
+            # An outcome naming the hand-written receipt is re-checked against the run's stream at check time too.
+            [candidate] = unreceipted["candidates"]
+            forged = {**legacy, "receipts": {original: {k: candidate[k] for k in ("event", "receipt_blob")}}}
+            with board.writer(), board.db:
+                board.event("task_outcome", {**events(board, "task_outcome")[-1], "criteria": {"replication": [forged]}})
+            assert studio.replication_check(board, request["id"])["results"][0]["outcome"] == "no_execution_receipt"
+            assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
 
 
 def test_replication_target_that_produced_the_original_is_refused(demo, monkeypatch):
@@ -562,12 +614,13 @@ def _receipt(root, agent, blob):
 
 
 @pytest.mark.parametrize("altered", [False, True])
-def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches(demo, altered, monkeypatch):
+def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches(sandboxed, altered, monkeypatch):
     """Spec v2 C6: the scripted harness runs replicate.py in bob's checkout with ./bin/python; it hash-checks the
-    saved script and inputs, executes the script through run_analysis.py and registers the output. The
-    confirmation (or mismatch) is a platform record by the `replication` participant citing bob's receipt."""
+    saved script and inputs, executes the script through run_analysis.py and registers the output. In a sandboxed
+    dispatch, the confirmation (or mismatch) is a platform record by the `replication` participant citing bob's
+    receipt, its input hashes and the captured call (v3 B3)."""
     from daw.commons.demo import CODE
-    root, ctx = demo
+    root, ctx = sandboxed
     original, post = ctx["artifacts"]["contrast"], ctx["posts"]["finding"]
     with Community(root) as board, scripted_runtime(root) as (_, answers):
         if altered:
@@ -586,15 +639,22 @@ def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches
                              subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
         done = deliver(board, answers, request, "No answer recorded.", studio_demo.replication_hook(post, original))
         run = done["active_run"]
-        assert "replication_unsandboxed" in (root / "runs" / run / "sandbox.json").read_text()
-        assert events(board, "replication_unsandboxed")[-1]["request"] == request["id"]
+        sandbox_receipt = json.loads((root / "runs" / run / "sandbox.json").read_text())
+        assert sandbox_receipt["sandboxed"] is True and sandbox_receipt["replication_egress"] == "none"
+        assert "This dispatch is that sandbox." in (root / "runs" / run / "prompt.txt").read_text()
+        assert not events(board, "replication_unsandboxed")
         [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        assert result["sandboxed"] is True
         replica = (result["identical"] + result["different"])[0]
         receipt = result["receipts"][replica]
         stored = _receipt(root, ctx["agents"]["bob"], receipt["receipt_blob"])
-        code = artifact_info(board.library, original)["manifest"]["derivation"]["code"]
+        derivation = artifact_info(board.library, original)["manifest"]["derivation"]
+        code, inputs = derivation["code"], [i["blob"] for i in derivation["inputs"]]
         assert stored["code_sha256"] == receipt["code_sha256"] == code[0] and stored["exit_code"] == 0
         assert stored["complete"] and receipt["producer"].startswith("questions/") and "/scripts/" in receipt["producer"]
+        # v3 B3: the receipt records the inputs the run read, and the call is in the delivery's captured stream.
+        assert [i["sha256"] for i in stored["inputs"]] == receipt["inputs"] == inputs and stored["inputs_unchanged"]
+        assert receipt["stream"]["helper"] == "replicate.py" and receipt["stream"]["line"]
         written = [o["sha256"] for o in stored["outputs"] if o["written"]]
         answer = board.show(done["answer"])["content"]["body"]
         assert receipt["receipt_blob"] in answer and "through run_analysis.py" in answer  # worded from the receipt
@@ -611,6 +671,7 @@ def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches
             assert reply["author"] == system and reply["parent"] == ctx["posts"]["finding"]
             assert reply["content"]["kind"] == "replication_confirmed"
             assert receipt["receipt_blob"] in reply["content"]["body"] and code[0] in reply["content"]["body"]
+            assert inputs[0] in reply["content"]["body"]
             assert reply["content"]["evidence"]["replication"]["receipts"][0]["receipt_blob"] == receipt["receipt_blob"]
         else:
             assert result["outcome"] == "bytes_differ" and result["different"] == [replica] and written != [blob]
@@ -643,6 +704,94 @@ def test_reexecution_through_the_helper_confirms_or_an_altered_script_mismatches
             studio.replication_check(board, ctx["requests"]["brief"])
         with pytest.raises(DawError, match="permission_denied"):
             studio.replication_check(board, request["id"], actor=human(ctx))
+
+
+def test_unsandboxed_replication_is_a_local_rehearsal_never_a_confirmation(demo):
+    """v3 B3: local single-user mode executes the derivation's code without a sandbox. The prompt says so, the
+    byte comparison is kept as a rehearsal, and nothing is confirmed, marked or corrected."""
+    root, ctx = demo
+    original, post = ctx["artifacts"]["contrast"], ctx["posts"]["finding"]
+    with Community(root) as board, scripted_runtime(root) as (_, answers):
+        request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
+                             subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
+        done = deliver(board, answers, request, "No answer recorded.", studio_demo.replication_hook(post, original))
+        run = done["active_run"]
+        assert "replication_unsandboxed" in (root / "runs" / run / "sandbox.json").read_text()
+        assert events(board, "replication_unsandboxed")[-1]["request"] == request["id"]
+        prompt = (root / "runs" / run / "prompt.txt").read_text()
+        assert "NOT sandboxed" in prompt and "local rehearsal, never a confirmation" in prompt
+        assert "This dispatch is that sandbox." not in prompt
+        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        assert result["outcome"] == "local_rehearsal" and result["rehearsal"] == "byte_identical"
+        assert result["identical"] == [original] and result["receipts"][original]["stream"]["helper"] == "replicate.py"
+        assert result["sandboxed"] is False and not result["correction_required"]
+        [entry] = events(board, "replication_checked")[-1]["results"]
+        assert entry["outcome"] == "local_rehearsal" and "post" not in entry and "mark" not in entry
+        assert not board.rows("SELECT * FROM mark WHERE target_id=? AND kind='reproduced'", (original,))
+        assert not board.rows("SELECT id FROM post WHERE request_key LIKE 'replication-%'")
+
+
+# The right code on the wrong inputs: the hook copies the derivation's own (hash-checked) code blob into a saved
+# script, runs it through run_analysis.py on a different means table it declares with --input, and registers
+# the output under the original derivation. Fixture code (the demo's own saved script), never downloaded code.
+WRONG_INPUTS = '''import hashlib, os, pathlib, shlex, subprocess, sys
+from daw.artifacts import artifact_info, register_artifact
+from daw.catalog import Workspace
+from daw.substrate_models import ArtifactRegistration, Derivation
+from daw.work import create_question, record_event
+trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+CALLS = []
+ws = Workspace(os.environ["BIO_WORKSPACE"])
+with ws.writer():
+    info = artifact_info(ws, {original!r})
+    derivation = info["manifest"]["derivation"]
+    question = pathlib.Path(create_question(ws, "Replicate")["path"])
+    code = ws.blob_path(derivation["code"][0]).read_bytes()
+    assert hashlib.sha256(code).hexdigest() == derivation["code"][0]
+    (question / "scripts" / "contrast.py").write_bytes(code)
+    wrong = question / "inputs" / "means.tsv"
+    wrong.parent.mkdir(exist_ok=True)
+    wrong.write_text("condition\\tmean\\nA\\t2.0\\nB\\t8.0\\n")
+    out, receipt = question / "outputs" / "contrast.tsv", question / "outputs" / "execution.json"
+    argv = [sys.executable, str(trial / ".agents/skills/bio-research/scripts/run_analysis.py"), "--receipt",
+            "workspace/questions/" + question.name + "/outputs/execution.json", "--output", str(out), "--input",
+            str(wrong), "--", sys.executable, str(question / "scripts" / "contrast.py"), str(wrong), str(out)]
+    done = subprocess.run(argv, cwd=trial, check=True, capture_output=True, text=True)
+    CALLS.append({{"command": shlex.join(argv), "exit_code": 0, "output": done.stdout}})
+    record_event(ws, question.name, "replication_execution",
+                 {{"receipt_blob": ws.put_file(receipt, "work"), "receipt_path": "outputs/execution.json",
+                   "original": {original!r}}})
+    register_artifact(ws, out, ArtifactRegistration(title="Replication", summary="the code on other inputs",
+        output_role=info["manifest"]["output_role"], derivation=Derivation(**derivation)), question=question.name)
+ws.close()
+'''
+
+
+def test_right_code_on_wrong_inputs_is_inputs_differ_and_never_a_correction(sandboxed):
+    """v3 B3: run_analysis.py records the inputs a run read; a captured run of the derivation's own code on other
+    inputs is `inputs_differ`, not a mismatch: no platform correction against the innocent original, no notice."""
+    root, ctx = sandboxed
+    original = ctx["artifacts"]["contrast"]
+    with Community(root) as board, scripted_runtime(root) as (_, answers):
+        notices = len(events(board, "notice_queued"))
+        request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
+                             subject_kind="artifact", subject_id=original, note="Re-execute the contrast.")
+        deliver(board, answers, request, "Replicated.", WRONG_INPUTS.format(original=original))
+        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
+        assert result["outcome"] == "inputs_differ" and not result["identical"] and not result["different"]
+        assert not result["correction_required"]
+        [(replica, receipt)] = result["inputs_differ"].items()
+        assert replica != original and receipt["stream"]["helper"] == "run_analysis.py"
+        assert receipt["inputs"] != result["input_blobs"] and receipt["code_sha256"] == result["code_blobs"][0]
+        [unreceipted] = result["unreceipted"]
+        assert [p for c in unreceipted["candidates"] for p in c["problems"]] == ["inputs_differ"]
+        [entry] = events(board, "replication_checked")[-1]["results"]
+        assert entry["outcome"] == "inputs_differ" and "post" not in entry
+        assert not board.rows("SELECT id FROM post WHERE request_key LIKE 'replication-%'")
+        assert not [r for r in board.rows("SELECT id FROM post")
+                    if board.show(r["id"])["content"].get("kind") in ("replication_mismatch", "replication_confirmed")]
+        assert not board.rows("SELECT * FROM mark WHERE target_id=?", (original,))
+        assert len(events(board, "notice_queued")) == notices  # no "different bytes" notice to the author
 
 
 def test_replicate_helper_refuses_a_code_blob_that_fails_its_hash(demo):
@@ -710,8 +859,10 @@ def test_demo_deliver_replicate_runs_the_helper_on_the_request_subject(demo, mon
     assert done.exit_code == 0, done.output
     with Community(root) as board:
         [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
-        assert result["outcome"] == "byte_identical" and result["identical"] == [ctx["artifacts"]["measurement"]]
-        assert events(board, "replication_checked")[-1]["results"][0]["post"]
+        # Local single-user demo: unsandboxed, so a rehearsal (v3 B3); its byte comparison and receipt are kept.
+        assert result["outcome"] == "local_rehearsal" and result["rehearsal"] == "byte_identical"
+        assert result["identical"] == [ctx["artifacts"]["measurement"]]
+        assert "post" not in events(board, "replication_checked")[-1]["results"][0]
         assert "through run_analysis.py" in board.show(json.loads(done.output)["answer"])["content"]["body"]
 
 
@@ -722,12 +873,24 @@ def test_replication_prompt_states_the_carve_out_without_contradiction(demo):
         request = commission(board, human(ctx), "replication", ctx["agents"]["bob"], {"minutes": 10},
                              subject_kind="artifact", subject_id=ctx["artifacts"]["contrast"], note="Re-execute.")
         agent, request = board.agent(ctx["agents"]["bob"]), board.one("SELECT * FROM request WHERE id=?", (request["id"],))
-        prompt = compose_prompt(board, request, agent, board.trial(agent), board.show(request["post"]), "a test")
-    assert "only the code blobs named in the fetched derivation, after hash verification, through run_analysis.py" in prompt
-    assert "egress off" in prompt and "replicate.py" in prompt and "remains forbidden" in prompt
-    assert UNTRUSTED not in prompt and "permission to execute downloaded code" not in prompt
+        post = board.show(request["post"])
+        prompts = {flag: compose_prompt(board, request, agent, board.trial(agent), post, "a test", sandboxed=flag)
+                   for flag in (True, False)}
+        # Without a decision, the sentence follows sandbox.toml (absent here: unsandboxed).
+        assert compose_prompt(board, request, agent, board.trial(agent), post, "a test") == prompts[False]
+    for prompt in prompts.values():
+        assert "only the code blobs named in the fetched derivation, after hash verification, through run_analysis.py" in prompt
+        assert "egress off" in prompt and "replicate.py" in prompt and "remains forbidden" in prompt
+        assert UNTRUSTED not in prompt and "permission to execute downloaded code" not in prompt
+        assert "{sandbox}" not in prompt and "{platform}" not in prompt
+    # v3 B3: the sandbox sentence is conditioned on the dispatch.
+    assert "This dispatch is that sandbox." in prompts[True] and "NOT sandboxed" not in prompts[True]
+    assert "posts the confirmation or mismatch" in prompts[True]
+    assert "NOT sandboxed" in prompts[False] and "local rehearsal, never a confirmation" in prompts[False]
+    assert "posts no confirmation or mismatch" in prompts[False]
     agents_md = (Path(__file__).resolve().parents[1] / "AGENTS.md").read_text()
     assert "only the code blobs named in the fetched derivation" in agents_md
+    assert "an unsandboxed replication is a local rehearsal, never a confirmation" in agents_md
 
 
 def test_replication_dispatch_needs_a_sandbox_with_egress_off_on_a_multi_tenant_commons(demo):
@@ -975,7 +1138,9 @@ def test_studio_demo_overview_groups_outputs_by_type(demo):
     assert statuses == {made["writeup"]: "rendered", made["flagged"]: "rendered", made["refused"]: "refused"}
     assert [f["post"] for f in overview["regeneration_flags"]] == [made["flagged"]]
     assert [m["kind"] for m in groups["reviews"][0]["review"]["marks"]] == ["checked_source", "disputed", "checked_source"]
-    assert groups["replications"][0]["replication"]["followup"][0]["outcome"] == "byte_identical"
+    # The local demo replication is unsandboxed: a rehearsal of identical bytes, never a confirmation (v3 B3).
+    assert groups["replications"][0]["replication"]["followup"][0]["outcome"] == "local_rehearsal"
+    assert groups["replications"][0]["replication"]["followup"][0]["rehearsal"] == "byte_identical"
     assert groups["digests"][0]["digest"]["schedule"] == made["digest_schedule"]
     assert overview["digest_schedules"][0]["person_name"] == "mira"
     assert all(g["completed"] == len(groups[name]) for name, g in overview["states"].items())
