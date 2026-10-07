@@ -75,13 +75,21 @@ function Item({ item }: { item: StudioItem }) {
           <ul className="st-outputs">
             {item.replication.results.map((r, i) => {
               const follow = item.replication?.followup?.find((f) => f.original === r.original);
+              // The check re-verifies receipts, so its outcome (when recorded) is the one shown.
+              const outcome = follow?.outcome ?? r.outcome;
+              const receipts = Object.values(r.receipts ?? {});
               return (
                 <li key={i}>
                   {r.original && <Link to={`/artifact/${r.original}`}>{shortId(r.original)}</Link>}{" "}
-                  <span className={`obs-chip ${r.outcome === "byte_identical" ? "good" : r.outcome === "bytes_differ" ? "bad" : ""}`}>
-                    {r.outcome.replace(/_/g, " ")}
+                  <span className={`obs-chip ${outcome === "byte_identical" ? "good" : outcome === "bytes_differ" ? "bad" : outcome === "no_execution_receipt" ? "warn" : ""}`}>
+                    {outcome.replace(/_/g, " ")}
                   </span>
-                  {follow?.post && <> <Link to={`/post/${follow.post}`}>{r.outcome === "bytes_differ" ? "correction post" : "confirmation"}</Link></>}
+                  {outcome === "no_execution_receipt" && <span className="muted"> · registered without a run_analysis receipt of the derivation's code; nothing confirmed</span>}
+                  {receipts.length > 0 && outcome !== "no_execution_receipt" && (
+                    <span className="muted"> · executed under receipt <span className="mono">{receipts[0].receipt_blob.slice(0, 12)}</span></span>
+                  )}
+                  {follow?.post && <> <Link to={`/post/${follow.post}`}>{outcome === "bytes_differ" ? "correction post" : "confirmation"}</Link></>}
+                  {follow?.post && !follow.authored_by_agent && <span className="muted"> (platform record by the replication participant)</span>}
                   {follow?.mark && <span className="muted"> · reproduced mark recorded</span>}
                 </li>
               );

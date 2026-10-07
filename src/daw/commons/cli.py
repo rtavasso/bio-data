@@ -110,11 +110,13 @@ def demo(directory: Path):
 @app.command("demo-deliver")
 def demo_deliver(ctx: typer.Context, request: str,
                  answer: Annotated[Path, typer.Option(help="Markdown file: the scripted agent's answer")],
-                 hook: Annotated[Path | None, typer.Option(help="Fixture Python run in the agent's checkout before it answers")] = None):
+                 hook: Annotated[Path | None, typer.Option(help="Fixture Python run in the agent's checkout before it answers")] = None,
+                 replicate: Annotated[bool, typer.Option(help="Replication request: the hook runs the research skill's replicate.py on its subject")] = False):
     """Deliver one pending request on a synthetic demo commons with the scripted harness (operator; demo only)."""
     acting("operator")
     from daw.commons.demo import deliver_scripted
-    emit(deliver_scripted(ctx.obj, request, answer.read_text(), hook=hook.read_text() if hook else None))
+    emit(deliver_scripted(ctx.obj, request, answer.read_text(), hook=hook.read_text() if hook else None,
+                          replicate=replicate))
 
 
 @app.command("demo-watch-tick")

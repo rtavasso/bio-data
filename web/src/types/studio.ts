@@ -167,8 +167,13 @@ export interface StudioItem {
   outputs?: OutputStatus[];
   review?: { valid: boolean | null; criteria_missing: string[] | null; marks: { mark: string; kind: string; criterion: string; verdict: string; target_kind: string; target_id: string }[] };
   replication?: {
-    results: { original?: string; outcome: string; identical?: string[]; different?: string[]; original_blob?: string; correction_post?: string | null }[];
-    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string }[] | null;
+    results: {
+      original?: string; outcome: string; identical?: string[]; different?: string[]; original_blob?: string; correction_post?: string | null;
+      // Spec v2 C6: run_analysis receipts (from the replicating agent's workspace) that cover each counted replica.
+      receipts?: Record<string, { receipt_blob: string; code_sha256: string; exit_code: number }>;
+      unreceipted?: { artifact: string; output_blob: string }[];
+    }[];
+    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string; author?: string; authored_by_agent?: boolean }[] | null;
   };
   digest?: { scope: Record<string, unknown>; since: string | null; until: string | null; schedule: string | null; counts: Record<string, number> };
 }
