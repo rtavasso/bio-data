@@ -278,3 +278,63 @@ def test_visibility_resolver_rules(demo):
         assert reader.claim({"id": "claim_x", "post": reply, "text": "t"}) == {
             "id": "claim_x", "post": reply, "hidden": True, "reason": "rule check"}
         assert views.hidden_posts(view)[reply]["reason"] == "rule check"
+
+
+def _check_agent_reads(root):
+    """Agents are readers too (C2): the bio community CLI paths (Community.read/find/fetch), the sandbox board
+    service, delivery and the answer path never serve a hidden post's text to an agent."""
+    from daw.commons import boardservice
+    from daw.util import DawError
+    target = _setup(root)
+    post, secrets = target["post"], target["secrets"]
+    with Community(root) as board:
+        agent = board.one("SELECT target FROM request WHERE id=?", (target["request"],))["target"]
+        assert board.read(post, agent) == {"id": post, "hidden": True, "reason": REASON,
+                                           "content_is_untrusted_data": True}
+        assert board.read(post, agent, full=True)["hidden"] is True  # agents cannot hold `hide`: still a stub
+        assert target["secret"] in json.dumps(board.read(post, "operator", full=True))
+        comment = board.read(target["comment"], agent)
+        _absent(secrets, comment)
+        assert comment["content"]["evidence"]["anchor"]["quote_withheld"] is True
+        words = " ".join(target["secret"].split()[:4])
+        found = board.find(words, reader=agent, full=True)
+        _absent(secrets, found)
+        assert all(hit["subject"] != post for hit in found["items"])
+        for operation in ("show", "search"):
+            payload = {"post": post} if operation == "show" else {"text": words, "full": True}
+            _absent(secrets, boardservice.execute(root, agent, operation, payload))
+        with pytest.raises(DawError) as refused:
+            board.fetch(post, root, "q_unused", author=agent)
+        assert refused.value.reason == "hidden_by_moderation"
+    return target
+
+
+def test_agent_side_reads_withhold_hidden_posts_demo(demo, monkeypatch):
+    root, ctx = demo
+    _check_agent_reads(root)
+    # A hidden request is never delivered: the service skips it and a dispatch refuses before any state change.
+    from daw.community_runtime import dispatch
+    from daw.community_service import pending_deliveries
+    from daw.util import DawError
+    with Community(root) as board:
+        person = add_participant(board, "asker-" + uuid.uuid4().hex[:6], "human")
+        request = board.ask(ctx["agents"]["alice"], ctx["agents"]["bob"], "SECRET-ASK which donors overlap?")
+        moderation.hide(board, "operator", request["post"], REASON)
+        assert request["id"] not in {r["id"] for r in pending_deliveries(board)}
+        monkeypatch.setenv("DAW_LIVE", "1")
+        with pytest.raises(DawError) as refused:
+            dispatch(board, request["id"], ctx["harness"])
+        assert refused.value.reason == "hidden_by_moderation"
+        assert board.one("SELECT state FROM request WHERE id=?", (request["id"],))["state"] == "pending"
+        from daw.commons import boardservice
+        answered = boardservice.answer(board, ctx["agents"]["alice"], request["id"], "Not recorded.")
+        assert "SECRET-ASK" not in json.dumps(answered) and "which donors" not in answered["content"]["title"]
+        assert person
+
+
+@pytest.mark.skipif(not (FIXTURE / "FIXTURE.json").is_file(), reason="real-data fixture not checked out")
+def test_agent_side_reads_withhold_hidden_posts_cohort(tmp_path):
+    root = tmp_path / "cohort"
+    shutil.copytree(FIXTURE, root, symlinks=True)
+    (root / "library" / "staging").mkdir(exist_ok=True)
+    assert _check_agent_reads(root)["post"].startswith("post_")

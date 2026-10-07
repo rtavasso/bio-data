@@ -32,6 +32,8 @@ def pending_deliveries(board, agents=()):
     allowed = {board.agent(a)["id"] for a in agents}
     busy = {r["target"] for r in board.rows("SELECT target FROM request WHERE state='running'")}
     selected = []
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(board)
     for request in board.rows("SELECT r.*,p.author,a.kind AS author_kind FROM request r JOIN post p ON p.id=r.post "
                               "JOIN agent a ON a.id=p.author WHERE r.state='pending' ORDER BY r.created,r.id"):
         target = request["target"]
@@ -40,6 +42,8 @@ def pending_deliveries(board, agents=()):
         agent = board.agent(target)
         if agent["kind"] != "agent" or not agent["trial"] or request["task_type"] == NOTICE:
             continue
+        if vis.withheld(request["post"]):
+            continue  # hidden content is never delivered as a model turn (spec v2 C2)
         if request["task_type"]:
             if request["author_kind"] not in PEOPLE or deadline_passed(request["deadline"]):
                 continue
