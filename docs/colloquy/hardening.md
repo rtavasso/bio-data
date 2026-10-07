@@ -67,7 +67,8 @@ comparison) and a `before` sequence cursor; `facets` counts events per kind unde
 `login_failures_recorded` counts failed-login rows on the board. Bodies are framed through
 `moderation.Visibility` like the SSE stream (a hidden post's text stays withheld unless `full=true`). The
 `/audit` screen (operators; linked in the header) filters, pages and manages membership. CLI:
-`bio commons audit-log --kind ... --participant ... --since ...`.
+`bio commons audit-log --kind ... --participant ... --since ...`. In local mode the participant is human
+unless the server is started with `bio commons serve --as-operator` (B7), which creates it as an operator.
 
 ### Per-agent container uids and disk quotas
 
