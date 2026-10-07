@@ -26,6 +26,14 @@ def fixture_build(source: Path, out: Path, name: str | None = None):
     emit(build_fixture(source, out, name=name))
 
 
+@fixture_app.command("resettle")
+def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why the fixture is resettled (recorded)")]):
+    """Apply the current schema and projection rebuilds to a verified fixture in place and re-record its hashes,
+    so that serving it writes nothing (C0). Records the reason and the previous board sequence."""
+    from daw.commons.fixture import resettle_fixture
+    emit(resettle_fixture(root, reason=reason))
+
+
 @fixture_app.command("verify")
 def fixture_verify(root: Path):
     """Check every file in FIXTURE.json against its recorded sha256."""

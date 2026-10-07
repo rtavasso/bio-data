@@ -256,21 +256,10 @@ def test_serving_the_cohort_and_every_get_route_leaves_the_fixture_verified(coho
     """v2 C3 on real data: start the server on a copy of the committed cohort fixture and request every GET
     route; `fixture verify` stays green on that copy (reads never write).
 
-    Starting a server applies pending additive schema (new tables, indexes or triggers) once, as the first
-    read-write open of any board does; the fixture is a snapshot built with an earlier schema, so that one
-    migration is settled first and its board.sqlite hash recorded in the copy's FIXTURE.json. Nothing else may
-    change: startup and every GET afterwards must leave every file as recorded."""
+    The committed fixture is resettled to the current schema and projections (`bio commons fixture
+    resettle`), so server startup and every GET must leave every file exactly as recorded."""
     from daw.commons.fixture import verify_fixture
-    from daw.util import file_hash
-    manifest_path = cohort_copy / "FIXTURE.json"
     assert verify_fixture(cohort_copy)["verified"]
-    with Community(cohort_copy):
-        pass  # the additive migration a first serve would apply
-    migrated = verify_fixture(cohort_copy)
-    assert migrated["changed"] in ([], ["board.sqlite"]) and not migrated["missing"], migrated
-    manifest = json.loads(manifest_path.read_text())
-    manifest["files"]["board.sqlite"] = file_hash(cohort_copy / "board.sqlite")
-    manifest_path.write_text(json.dumps(manifest))
     app = create_app(cohort_copy, local_user="local", static_dir=cohort_copy / "missing")
     assert verify_fixture(cohort_copy)["verified"], "server startup wrote to the board"
     http = TestClient(app)

@@ -263,7 +263,45 @@ def _settle(root):
     for leftover in Path(root).rglob("*.lock"):
         leftover.unlink(missing_ok=True)
     shutil.rmtree(Path(root) / "cache", ignore_errors=True)
+    # Empty working directories (staging) are not content and git does not carry them.
+    for staging in Path(root).rglob("staging"):
+        if staging.is_dir() and not any(staging.iterdir()):
+            staging.rmdir()
     return outcomes
+
+
+def resettle_fixture(root, *, reason):
+    """Bring a committed fixture to the current schema and projections in place, then re-record its hashes.
+
+    Schema additions (new tables, indexes, triggers) and projection rebuilds would otherwise be applied by the
+    first read-write open of a served copy, so serving would change board.sqlite and `verify` would fail (C0).
+    Only verified fixtures are resettled; the settle step is the same one `build` runs, so no record a
+    participant wrote changes. The previous board sequence, the settle outcomes and the reason are kept."""
+    from daw.community import Community
+    root = Path(root).expanduser().resolve()
+    before = verify_fixture(root)
+    if not before["verified"] or before["untracked"]:
+        raise DawError("fixture_not_verified", "resettle only an unchanged fixture; rebuild it from its source otherwise")
+    manifest = json.loads((root / "FIXTURE.json").read_text())
+    outcomes = _settle(root)
+    with Community(root) as board:
+        sequence = board.one("SELECT coalesce(max(seq),0) AS n FROM event")["n"]
+    files = {str(p.relative_to(root)): file_hash(p) for p in sorted(root.rglob("*"))
+             if p.is_file() and p.name != "FIXTURE.json" and not _operational(p.relative_to(root))}
+    changed = sorted(rel for rel, digest in files.items() if manifest["files"].get(rel) != digest)
+    # Settling may add content-addressed library blobs (projection documents); nothing else may appear.
+    added = sorted(set(files) - set(manifest["files"]))
+    unexpected = [rel for rel in added if not rel.startswith("library/blobs/sha256/")]
+    if unexpected:
+        raise DawError("fixture_resettle_added_files", ", ".join(unexpected))
+    entry = {"at": now(), "reason": reason, "board_sequence_before": manifest["board_sequence"],
+             "board_sequence": sequence, "settle": outcomes, "changed": [rel for rel in changed if rel not in added],
+             "added_library_blobs": len(added)}
+    manifest.update(files=files, board_sequence=sequence, resettled=[*manifest.get("resettled", []), entry])
+    manifest["counts"]["files"] = len(files)
+    manifest["counts"]["bytes"] = sum((root / p).stat().st_size for p in files)
+    write_json(root / "FIXTURE.json", manifest)
+    return entry
 
 
 def _operational(rel):
