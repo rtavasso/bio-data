@@ -924,15 +924,45 @@ def _chain(replaced, post):
     return seen
 
 
+def _producing_questions(view, artifacts):
+    """{artifact: {(agent, question): registered at}}: the questions that registered each artifact (`produced`
+    links in the agents' own catalogs, timed by their work event; recorded only)."""
+    found = {}
+    if not artifacts:
+        return found
+    marks = ",".join("?" * len(artifacts))
+    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY id"):
+        try:
+            ws = view.workspace(agent["id"])
+            links = ws.rows(f"SELECT qa.artifact_id,qa.question_id,e.created FROM question_artifact qa JOIN work_event e "
+                            f"ON e.id=qa.event_id WHERE qa.relationship='produced' AND qa.artifact_id IN ({marks})",
+                            list(artifacts)) if ws else []
+        except DawError:
+            continue  # no catalog: this participant produced nothing readable here
+        for link in links:
+            found.setdefault(link["artifact_id"], {})[(agent["id"], link["question_id"])] = link["created"]
+    return found
+
+
 def _artifact_backing(view, replaced, artifacts):
-    """For each artifact: the posts naming it in their evidence, split into superseded and current, and whether
-    a current ledger claim points at it. Read from `published` events and the claim projection (recorded only)."""
-    backing = {a: {"superseded": [], "current": [], "claims": False} for a in artifacts}
-    for row in view.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
+    """For each artifact: the posts naming it in their evidence, split into superseded and current; the superseded
+    publications of the question that produced it; and whether a current ledger claim points at it. Read from
+    `published` events, the agents' catalogs and the claim projection (recorded only)."""
+    backing = {a: {"superseded": [], "current": [], "producer_superseded": [], "claims": False} for a in artifacts}
+    producing = _producing_questions(view, sorted(backing))
+    for row in view.rows("SELECT body,created FROM event WHERE kind='published' ORDER BY seq"):
         body = json.loads(row["body"])
-        named = (body.get("evidence") or {}).get("artifacts") or []
+        evidence = body.get("evidence") or {}
+        named = evidence.get("artifacts") or []
         for artifact in set(named) & set(backing):
             backing[artifact]["superseded" if body.get("post") in replaced else "current"].append(body.get("post"))
+        notebook = evidence.get("notebook") if isinstance(evidence.get("notebook"), dict) else {}
+        if body.get("post") in replaced and notebook.get("question"):
+            # A superseded publication of the producing question, published once the artifact existed.
+            source = (body.get("author"), notebook["question"])
+            for artifact, questions in producing.items():
+                if source in questions and questions[source] <= row["created"]:
+                    backing[artifact]["producer_superseded"].append(body.get("post"))
     for row in view.rows("SELECT pointers FROM claim WHERE status!='withdrawn' AND withdrawn_by IS NULL"):
         for pointer in json.loads(row["pointers"] or "[]"):
             if isinstance(pointer, dict) and pointer.get("id") in backing:
@@ -945,8 +975,10 @@ def regeneration(view, post_id, pointers):
 
     - it cites a withdrawn ledger claim (with the replacement post and its current claims);
     - it cites a post that has been superseded, and cites no later version of it;
-    - it cites an artifact named by a superseded publication that no current publication or current ledger
-      claim names any longer.
+    - it cites an artifact named by a superseded publication, or produced by a question that published, once the
+      artifact existed, a post that was later superseded (B14). A current publication or claim that re-lists the
+      artifact does not clear the flag (a correction may re-list what it corrects); the flag names the
+      publications that re-listed it.
 
     Supersession is read from `post.supersedes`, evidence from `published` events; nothing is matched by meaning."""
     withdrawn = []
@@ -981,14 +1013,18 @@ def regeneration(view, post_id, pointers):
     present = sorted(i for i, e in pointers.items() if e["kind"] == "artifact" and e["present"])
     if present and replaced:
         for artifact, found in _artifact_backing(view, replaced, present).items():
-            if found["superseded"] and not found["current"] and not found["claims"]:
-                artifacts.append({"artifact": artifact, "superseded_posts": found["superseded"],
-                                  "replacements": sorted({r for p in found["superseded"] for r in _chain(replaced, p)})})
+            superseded = sorted(set(found["superseded"]) | set(found["producer_superseded"]))
+            if superseded:
+                artifacts.append({"artifact": artifact, "superseded_posts": superseded,
+                                  "producer_superseded": sorted(set(found["producer_superseded"])),
+                                  "replacements": sorted({r for p in superseded for r in _chain(replaced, p)}),
+                                  "relisted_by": found["current"], "current_claims": found["claims"]})
     if not (withdrawn or posts or artifacts):
         return None
     lines = ([f"{w['claim']} (withdrawn by {w['withdrawn_by'] or 'its author'})" for w in withdrawn]
              + [f"{p['post']} (superseded by {p['superseded_by']})" for p in posts]
-             + [f"{a['artifact']} (named only by superseded {', '.join(a['superseded_posts'])})" for a in artifacts])
+             + [f"{a['artifact']} (from superseded {', '.join(a['superseded_posts'])}"
+                + (f"; re-listed by {', '.join(a['relisted_by'])})" if a["relisted_by"] else ")") for a in artifacts])
     reasons = (["cites withdrawn claims"] if withdrawn else []) + (["cites superseded posts"] if posts else []) \
         + (["cites artifacts of superseded publications"] if artifacts else [])
     return {"claims": withdrawn, "posts": posts, "artifacts": artifacts,

@@ -65,6 +65,7 @@ class Settings:
     login: dict = field(default_factory=dict)   # {attempts, window_seconds} (daw.commons.ratelimit)
     forwarded_allow_ips: tuple = ()            # trusted reverse proxies (addresses, networks or literals)
     access: str = "public"                     # read policy (daw.commons.access): public | members | private
+    local_operator: bool = False               # local mode: the local participant is created as an operator (B7)
 
 
 def status_for(error: DawError):
@@ -99,11 +100,12 @@ def trusted_proxies(value):
 
 
 def create_app(root, *, mode="local", local_user="local", static_dir=None, base="/", login=None,
-               forwarded_allow_ips=None, read_policy=None):
+               forwarded_allow_ips=None, read_policy=None, local_operator=False):
     """One commons' API and web app. `login` overrides its `[login]` attempt limits (multi-tenant host);
     `forwarded_allow_ips` names trusted reverse proxies (see the module docstring); `read_policy` overrides the
     commons' `[access] read` (a tenant's setting). In accounts mode the read policy is enforced for every /api
-    request by `daw.commons.access.ReadPolicy` (spec v2 V9)."""
+    request by `daw.commons.access.ReadPolicy` (spec v2 V9). `local_operator` (local mode) acts as an operator
+    participant, created as one on first start, so a single-user commons can read its own audit log."""
     from fastapi import FastAPI, Request
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
@@ -116,8 +118,10 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
     if not BASE.fullmatch(base):
         raise DawError("invalid_base_path", "a path such as / or /c/lab/ (letters, digits, '.', '_', '~', '-')")
     root = Path(root).expanduser().resolve()
+    if local_operator and mode != "local":
+        raise DawError("local_operator_needs_local_mode", "accounts mode authenticates operators by token")
     settings = Settings(root, mode, local_user, static_dir or default_static_dir(), base, login_limits(root, login),
-                        trusted_proxies(forwarded_allow_ips), access.policy(root, read_policy))
+                        trusted_proxies(forwarded_allow_ips), access.policy(root, read_policy), local_operator)
     # Opening the board read-write once applies the additive schema; views then use mode=ro.
     with Community(settings.root) as board:
         auth.prepare(board, settings)

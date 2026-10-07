@@ -56,7 +56,8 @@ def test_board_view_columns_budgets_targets_and_promotion_from_a_card(demo):
     assert card["request"]["id"] == request["id"] and card["request"]["target"] == ctx["agents"]["bob"]
     assert card["request"]["budget"] == {"minutes": 20, "tokens": 5000} and card["request"]["task_type"] == "scouting"
     assert promoted["budget"] == {"minutes": 20, "tokens": 5000} and promoted["targets"][0]["requests"] == 1
-    assert view["allowance"]["unlimited"] is True  # the reader's own allowance (a local human, unlimited)
+    # The reader's own allowance: a local human without one spends the demo's commons default (B13).
+    assert view["allowance"]["allowance"] == {"minutes": 600} and view["allowance"]["remaining"]["minutes"] == 580
     # Filters narrow the board; reads never write.
     with Archive(root) as before:
         sequence = before.sequence()

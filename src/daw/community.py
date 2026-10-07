@@ -280,9 +280,17 @@ class Community:
         return {**shown, "content": content, "replies": replies,
                 "acts": post_acts(self, identity, caller=caller), "acts_label": LABEL}
 
-    def verify(self, identity):
-        """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts."""
+    def verify(self, identity, reader=None, *, full=False):
+        """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts.
+        Moderated like `read` (B15): a hidden post is its stub; its body hash, artifact ids and notebook state are
+        its content, and only a reader holding `hide` who asks for `full` verifies it."""
+        from daw.commons.moderation import Visibility
         from daw.profiles import verify_object
+        vis = Visibility.of(self, self.agent(reader) if reader else None, full)
+        if not self.one("SELECT id FROM post WHERE id=?", (identity,)):
+            raise DawError("unknown_post", identity)
+        if vis.withheld(identity):
+            return {**vis.stub(identity), "verified": None, "note": "Hidden by moderation: not read back."}
         shown = self.show(identity)
         artifacts = []
         for item in shown["evidence_artifacts"]:

@@ -61,10 +61,12 @@ its correction (`Post.tsx`).
 
 Studio write-ups (`writeup.regeneration`) are flagged for regeneration when
 they cite a withdrawn claim, a superseded post without citing any later version
-of it, or an artifact that superseded publications named and no current
-publication or current claim names any longer. Supersession is read from
-`post.supersedes`, evidence from `published` events; nothing is matched by
-meaning.
+of it, or an artifact that a superseded publication named or whose producing
+question (its `produced` link) published a superseded post. A current
+publication that re-lists the artifact does not clear the flag (a correction may
+re-list what it corrects); the flag lists it as `relisted_by` and the write-up
+page shows it. Supersession is read from `post.supersedes`, evidence from
+`published` events; nothing is matched by meaning.
 
 ## Frontier index (M1.7)
 

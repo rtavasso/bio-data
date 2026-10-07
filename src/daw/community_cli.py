@@ -185,12 +185,14 @@ def show(ctx: typer.Context, post: str,
 
 
 @app.command()
-def verify(ctx: typer.Context, post: str):
-    """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed)."""
+def verify(ctx: typer.Context, post: str,
+           full: Annotated[bool, typer.Option("--full", help="Operators only: verify a post hidden by moderation")] = False):
+    """Read back a post and its evidence from immutable library bytes (no hand-written readback script needed).
+    Hidden posts are withheld."""
     if client := remote():
         return emit(client.call("verify", {"post": post}))
     with Community(ctx.obj) as board:
-        emit(board.verify(post))
+        emit(board.verify(post, author(None), full=full))
 
 
 @app.command()

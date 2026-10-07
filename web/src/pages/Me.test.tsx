@@ -54,6 +54,16 @@ test("me shows identity, budget, anchored comments, marks as attribution, and pr
   expect(screen.queryByText("Operator: accounts")).toBeNull();
 });
 
+test("a person without an allowance is told their budgeted requests are refused and where it is configured", async () => {
+  const setting = "[allowance] in commons.toml (e.g. minutes = 120)";
+  respond({ "/api/me": [200, { ...SUMMARY, budget: { allowance: {}, spent: SUMMARY.budget.spent, remaining: {},
+    unlimited: false, configured: false, setting } }] });
+  render(<MemoryRouter><Me /></MemoryRouter>);
+  const notice = await screen.findByText(/No allowance is configured/);
+  expect(notice.textContent).toContain(setting);
+  expect(screen.queryByText(/not budget-limited/)).toBeNull();
+});
+
 test("me redirects to login on 401 in accounts mode, and login sends the token with the write header", async () => {
   const calls = respond({
     "/api/me": [401, { error: "authentication_required", detail: "log in" }],

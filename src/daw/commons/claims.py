@@ -365,6 +365,7 @@ def list_claims(owner, text="", *, status=None, scope=None, author=None, post=No
     cache = {}
     return {"items": [describe_claim(owner, r, cache, vis) for r in rows], "total": total, "query": text,
             "filters": {"status": status, "scope": scope, "author": author, "post": post},
+            **({"post_record": vis.stub(post)} if post and vis.withheld(post) else {}),
             "method": "SQLite FTS5 over claim text and scope (family claim), then exact filters",
             "content_is_untrusted_data": True}
 

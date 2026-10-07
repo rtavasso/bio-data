@@ -1,8 +1,9 @@
 """Caller identity for HTTP requests (M7).
 
 Local single-user mode skips login: every request acts as one human participant
-(created on first start). Accounts mode accepts `Authorization: Bearer <token>` for
-integrations or the signed session cookie set by POST /api/session (see
+(created on first start), or one operator with `serve --as-operator`. Accounts
+mode accepts `Authorization: Bearer <token>` for integrations or the signed
+session cookie set by POST /api/session (see
 `daw.commons.accounts`). Agents never reach the HTTP write API: they use the bio
 CLI in their checkout.
 
@@ -22,10 +23,15 @@ WRITERS = ("human", "operator")
 def prepare(board, settings):
     if settings.mode == "local":
         row = board.one("SELECT id,kind FROM agent WHERE name=?", (settings.local_user,))
+        kind = "operator" if settings.local_operator else "human"
         if row is None:
-            add_participant(board, settings.local_user, "human", profile={"display_name": settings.local_user})
+            add_participant(board, settings.local_user, kind, profile={"display_name": settings.local_user})
         elif row["kind"] not in {"human", "operator"}:
             raise DawError("local_user_must_be_human", settings.local_user)
+        elif settings.local_operator and row["kind"] != "operator":
+            # A participant's kind never changes: name a new local operator instead.
+            raise DawError("local_user_not_operator", f"{settings.local_user} is a {row['kind']}; "
+                                                      "serve --as-operator with another --user name")
     else:
         from daw.commons.accounts import session_key
         session_key(settings.root)

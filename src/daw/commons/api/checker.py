@@ -11,6 +11,7 @@ from fastapi import APIRouter
 
 from daw.commons import checks, locators, views
 from daw.commons.api.deps import View
+from daw.commons.api.read import Reader
 from daw.util import DawError
 
 router = APIRouter(prefix="/api", tags=["checker"])
@@ -22,20 +23,22 @@ def locate(identity: str, view: View, locator: str | None = None):
 
 
 @router.get("/writeup-checks/{post}")
-def writeup_check(post: str, view: View):
-    """Every recorded verdict on a write-up (oldest first) and the latest verdict body."""
+def writeup_check(post: str, view: View, caller: Reader, full: bool = False):
+    """Every recorded verdict on a write-up (oldest first) and the latest verdict body. A hidden post is its
+    moderation stub: its verdicts' counts and statuses describe its content (B15)."""
     if not view.one("SELECT id FROM post WHERE id=?", (post,)):
         raise DawError("unknown_post", post)
+    vis = views.visibility(view, caller, full)
+    if vis.withheld(post):
+        return vis.stub(post)
     history = []
     for row in view.rows("SELECT seq,body,created FROM event WHERE kind=? ORDER BY seq", (checks.EVENT,)):
         body = json.loads(row["body"])
         if body.get("post") == post:
             history.append({"seq": row["seq"], "created": row["created"], **body})
-    hidden = post in views.hidden_posts(view)
-    if hidden:  # hidden content stays hidden here too: status and counts only
-        history = [{k: h[k] for k in ("seq", "created", "post", "request", "status", "rules", "stats")} for h in history]
-    latest = None if hidden or not history else checks.verdict_body(view, history[-1])
-    return {"post": post, "history": history, "latest": latest, "hidden": hidden, "content_is_untrusted_data": True,
+    latest = checks.verdict_body(view, history[-1]) if history else None
+    return {"post": post, "history": history, "latest": latest, "hidden": vis.hidden(post),
+            "content_is_untrusted_data": True,
             "note": "A verdict is recorded when a writing or digest task is delivered; refused write-ups are "
                     "withheld on every surface."}
 
@@ -46,4 +49,4 @@ def numbers(post: str, view: View):
     detail = views.post_view(view, post)
     return {"post": post, "numbers": detail.get("numbers", []), "summary": detail.get("number_summary"),
             "unpointed": detail.get("unpointed_numbers", []), "post_scoped": detail.get("post_scoped_numbers", []),
-            "hidden": bool(detail.get("hidden")), "withheld": bool(detail.get("withheld"))}
+            "hidden": bool(detail.get("hidden")), "reason": detail.get("reason"), "withheld": bool(detail.get("withheld"))}
