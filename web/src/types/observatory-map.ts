@@ -241,17 +241,21 @@ export interface RunTimeline {
     hidden?: boolean; reason?: string | null; answer_hidden?: boolean };
   agent: { id: string; name: string; model?: string | null; effort?: string | null; harness?: string };
   execution: { state?: string; started?: string; finished?: string; returncode?: number | null; wall_seconds?: number | null;
-    monotonic_seconds?: number | null; suspended_seconds: number; suspension_floor_seconds: number; bounded: boolean };
+    monotonic_seconds?: number | null; suspended_seconds: number | null; suspension_floor_seconds: number; bounded: boolean };
   axis: { unit: "seconds" | "events"; duration: number; clock: string };
-  suspensions: { at: number; seconds: number; gap_seconds: number; placement: string; unplaced_seconds: number }[];
+  // Heuristically placed items carry attributed: true and the rule in basis (spec v2 C10).
+  suspensions: { at: number; seconds: number; gap_seconds: number; placement: string; unplaced_seconds: number;
+    attributed?: boolean; basis?: string }[];
   lanes: { id: string; label: string; count: number }[];
   calls: Call[];
   receipts: Receipt[];
-  compactions: { line: number; t: number | null; source: string; text: string }[];
+  // null: this harness's stream does not mark compactions (unavailable, not zero).
+  compactions: { line: number; t: number | null; source: string; text: string }[] | null;
   compaction_summaries: { timestamp: number | null; fallback: boolean; excerpt: string; t: number | null }[] | null;
   inbox_reads: (Call & { sent: boolean })[];
-  answers_consumed: (Call & { posts: string[]; requests: string[] })[];
-  headline: (Call & { basis: string }) | null;
+  answers_consumed: (Call & { posts: string[]; requests: string[]; attributed?: boolean; basis?: string })[];
+  headline: (Call & { basis: string; attributed?: boolean }) | null;
+  attributed?: string[];
   final: { text: string | null; source: string | null; hidden?: boolean; reason?: string | null };
   tokens: Record<string, TokenValue | string>;
   metrics: Record<string, unknown>;

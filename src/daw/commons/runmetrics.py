@@ -41,37 +41,73 @@ def compaction_summaries(folder, execution):
     return len(chosen), sum("deterministic fallback" in content for content in chosen)
 
 
-def run_metrics(folder, parsed):
-    """Behavioural counts from one delivery. Wall time includes host sleep; monotonic does not."""
+def compactions_reported(harness_name, config=None):
+    """The adapter's capability flag: does this harness's stream mark context compactions?"""
+    from daw import harness
+    from daw.util import DawError
+    try:
+        return harness.get(harness_name).reports_compactions(config or {})
+    except DawError:
+        return False
+
+
+def _number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def suspension_seconds(wall, mono):
+    """Wall minus monotonic beyond the floor; 0 when both clocks were recorded and the gap is under the
+    floor (measured, none); None when either clock is unavailable (C10: never a defaulted zero)."""
+    if not (_number(wall) and _number(mono)):
+        return None
+    return round(wall - mono, 1) if wall - mono > SUSPENSION_FLOOR_SECONDS else 0
+
+
+def run_metrics(folder, parsed, *, compactions_reported=True):
+    """Behavioural counts from one delivery. Wall time includes host sleep; monotonic does not.
+
+    A value whose source was not recorded is None ("unavailable"), never 0 (spec v2 C10): clocks missing
+    from execution.json, every stream count when the run has no events.jsonl, compactions for a harness
+    whose stream does not mark them (`compactions_reported`, the adapter's capability flag), analysis
+    failures when no analysis reported an exit code, and the provider-citation check without a final."""
     execution = read_json(folder / "execution.json") if (folder / "execution.json").exists() else {}
     wall, mono = execution.get("wall_seconds"), execution.get("monotonic_seconds")
-    suspended = round(wall - mono, 1) if isinstance(wall, (int, float)) and isinstance(mono, (int, float)) and wall - mono > SUSPENSION_FLOOR_SECONDS else 0
+    stream = (folder / "events.jsonl").is_file()
     tools = [i for i in parsed["items"] if i.get("type") != "agent_message"]
     commands = [i["command"] for i in tools if i.get("name") == "terminal"]
     analyses = [i for i in tools if i.get("name") == "terminal" and "run_analysis.py" in i["command"]]
     writes = [i["input"].get("path", "") for i in tools if i.get("name") == "write_file"]
     scripts = [p for p in writes if p.endswith(".py")]
-    stamps = [e["event"].get("timestamp") for e in parsed["events"] if isinstance(e["event"].get("timestamp"), (int, float))]
+    stamps = [e["event"].get("timestamp") for e in parsed["events"] if _number(e["event"].get("timestamp"))]
     last_ok = [e for e in parsed["events"] if e["event"].get("type") == "tool_result"
                and any(a.get("result_line") == e["line"] and a.get("exit_code") == 0 for a in analyses)]
     tail = None
     if last_ok and stamps:
         tail = round((max(stamps) - last_ok[-1]["event"].get("timestamp", max(stamps))) / 60000, 1)
     final = folder / "final.md"
-    final_text = final.read_text() if final.exists() else ""
     summaries, fallbacks = compaction_summaries(folder, execution)
-    return {"wall_seconds": wall, "monotonic_seconds": mono, "suspended_seconds": suspended,
+    known_exit = [a for a in analyses if a.get("exit_code") is not None]
+
+    def count(value):
+        return value if stream else None
+    return {"wall_seconds": wall if _number(wall) else None, "monotonic_seconds": mono if _number(mono) else None,
+            "suspended_seconds": suspension_seconds(wall, mono),
             "compaction_summaries": summaries, "compaction_fallbacks": fallbacks,
-            "tool_calls": len(tools), "terminal_commands": len(commands),
-            "help_calls": sum("--help" in c for c in commands),
-            "inbox_calls": sum("community inbox" in c for c in commands),
-            "forum_searches": sum("community search" in c for c in commands),
-            "library_family_searches": sum("--family" in c and "community search" in c for c in commands),
-            "analysis_receipts": len(analyses), "analysis_failures": sum(1 for a in analyses if a.get("exit_code") not in (0, None)),
-            "registrations": sum(bool(re.search(r"\bbio\s+register\b", c)) for c in commands),
-            "scripts_written": len(scripts), "plumbing_scripts": sum(bool(PLUMBING.search(Path(p).name)) for p in scripts),
-            "compactions": sum(1 for e in parsed["events"] if e["event"].get("type") == "runtime_status"),
+            "tool_calls": count(len(tools)), "terminal_commands": count(len(commands)),
+            "help_calls": count(sum("--help" in c for c in commands)),
+            "inbox_calls": count(sum("community inbox" in c for c in commands)),
+            "forum_searches": count(sum("community search" in c for c in commands)),
+            "library_family_searches": count(sum("--family" in c and "community search" in c for c in commands)),
+            "analysis_receipts": count(len(analyses)),
+            "analysis_failures": count(sum(1 for a in known_exit if a["exit_code"] != 0)) if known_exit or not analyses else None,
+            "analysis_exit_codes_unknown": count(len(analyses) - len(known_exit)),
+            "registrations": count(sum(bool(re.search(r"\bbio\s+register\b", c)) for c in commands)),
+            "scripts_written": count(len(scripts)),
+            "plumbing_scripts": count(sum(bool(PLUMBING.search(Path(p).name)) for p in scripts)),
+            "compactions": count(sum(1 for e in parsed["events"] if e["event"].get("type") == "runtime_status"))
+            if compactions_reported else None,
             "minutes_after_last_successful_analysis": tail,
-            "provider_citation_in_final": bool(PROVIDER_CITATION.search(final_text)),
+            "provider_citation_in_final": bool(PROVIDER_CITATION.search(final.read_text())) if final.exists() else None,
             "limitations": ["events.jsonl truncates tool outputs at 5000 chars; model-facing bodies are in agent-state/state.db",
-                            "no assistant reasoning is streamed between tool calls; gaps are generation or suspension"]}
+                            "no assistant reasoning is streamed between tool calls; gaps are generation or suspension",
+                            "None means unavailable (not recorded or not emitted by this harness), never zero"]}

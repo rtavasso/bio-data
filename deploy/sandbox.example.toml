@@ -2,9 +2,9 @@
 engine = "docker"                    # or "podman"
 image = "colloquy-agent:latest"      # deploy/agent.Dockerfile
 network = "colloquy-egress"          # internal network: docker network create --internal colloquy-egress
-proxy = "http://egress:3128"         # `bio commons egress` attached to that network and the outside
+proxy = "http://egress:3128"         # `bio commons egress` on that network; each dispatch adds its own credential
 allow_hosts = []                     # extra data hosts (source adapter hosts are built in)
-model_hosts = []                     # extra model hosts (each harness adds its provider's)
+model_hosts = []                     # extra model hosts (each dispatch adds its own harness provider hosts)
 scratch_bytes = 2147483648
 memory = "8g"
 cpus = "4"

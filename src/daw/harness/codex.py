@@ -69,6 +69,9 @@ class CodexAdapter(Adapter):
     provider_hosts = ("api.openai.com", "chatgpt.com", "auth.openai.com")
     auth = ("BIO_CODEX_AUTH_FILE", "auth.json")
     state_globs = ("sessions/**/*.jsonl",)
+    # Codex reads config.toml from CODEX_HOME; none is staged (settings travel as -c flags), so the sealed
+    # copy is an empty file: an agent-written config.toml cannot change the next turn.
+    config_files = ("config.toml",)
 
     def stage(self, trial, home, config):
         (home / "sessions").mkdir(exist_ok=True)
