@@ -151,7 +151,9 @@ for n, (name, args, result) in enumerate(calls):
         elif compaction.is_file():
             # Like Hermes: the summary (or its deterministic fallback) is a message in the session database.
             kind = compaction.read_text().strip() or "summary"
-            text = ("[CONTEXT COMPACTION] deterministic fallback: the summarizer did not answer" if kind == "fallback"
+            text = ("[CONTEXT COMPACTION] deterministic fallback: the summarizer did not answer\n\n## Goal\n"
+                    "Recovered from a deterministic fallback because the LLM context summarizer was unavailable."
+                    if kind == "fallback"
                     else "[CONTEXT COMPACTION] summary of the work so far")
             db = sqlite3.connect(home / "state.db")
             db.execute("INSERT INTO messages VALUES(?,?,?)", (sid + "-compaction", text, time.time()))

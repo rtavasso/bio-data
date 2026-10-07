@@ -84,6 +84,187 @@ def restore_state(checkpoint, home):
     return file_hash(checkpoint / "checkpoint.json")
 
 
+# Platform-owned Hermes settings (dotted paths). They are written at agent creation and merged into every
+# agent's sealed config before each turn (`refresh_config`), so agents created earlier receive later platform
+# changes; every other key is agent-owned and kept.
+PLATFORM_KEYS = ("model.default", "model.provider", "agent.reasoning_effort", "auxiliary.background_review",
+                 "auxiliary.compression", "compression", "memory", "curator", "approvals", "security")
+# Keys Hermes's own config migration adds on first launch (`_config_version` 12 -> 49 adds an empty plugin
+# allow-list); a rewrite that only bumps the version and adds these is benign, not an agent change.
+MIGRATION_ADDITIONS = {("plugins", "enabled"): []}
+
+
+def platform_settings(model, effort, provider):
+    return {
+        "model.default": model, "model.provider": provider, "agent.reasoning_effort": effort,
+        # One-shot CLI background-review threads need not finish before exit.
+        # Foreground consolidation uses stock memory/skill tools before final answer.
+        "auxiliary.background_review": {"enabled": False},
+        # The compaction summarizer runs the main reasoning model on the Codex route; its
+        # first token can take minutes, and the stock 60 s no-progress window killed 14 of
+        # 42 summaries in the PMP22 cohort, leaving deterministic placeholders. Widen the
+        # window (upstream auxiliary.<task>.no_progress_timeout, #108104) and the request
+        # timeout; keep the model and effort unchanged so summaries are not degraded.
+        "auxiliary.compression": {"no_progress_timeout": 600, "timeout": 900},
+        # Keep the live delivery prompt verbatim through compaction: 14 cohort summaries
+        # reported the original assignment as not reproduced. The trigger threshold is
+        # left at the stock value; lowering it shortens the verbatim horizon.
+        "compression": {"min_tail_user_messages": 2},
+        # Spec v3 V18: the learning layer stays off. Native memory was never read or written in the 97-run
+        # cohort; disabling it also removes the memory toolset's instructions from every turn's context.
+        "memory": {"memory_enabled": False, "user_profile_enabled": False},
+        "curator": {"enabled": False},
+        # One-shot turns have nobody to answer an approval prompt: the stock guard blocked `python -c`,
+        # `rm -r`, heredocs and `docker run --rm` in round one. The agent runs in its own checkout (and the
+        # sandbox when configured); writes to instruction files still need approval (protected_instruction_files).
+        "approvals": {"mode": "off", "single_query_mode": "approve"},
+        "security": {"tirith_enabled": False, "protected_instruction_files": True},
+    }
+
+
+def _get(config, dotted):
+    value = config
+    for part in dotted.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return None
+        value = value[part]
+    return value
+
+
+def _set(config, dotted, value):
+    *parents, last = dotted.split(".")
+    for part in parents:
+        if not isinstance(config.get(part), dict):
+            config[part] = {}
+        config = config[part]
+    config[last] = value
+
+
+def _quote_bare_keys(text):
+    """Flow-style YAML (`{"a": 1, plugins: {enabled: []}}`, as Hermes rewrites our JSON) to JSON: quote bare
+    mapping keys outside strings. Anything else is left for json to reject."""
+    out, i, n, in_string, last = [], 0, len(text), False, ""
+    while i < n:
+        c = text[i]
+        if in_string:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(text[i + 1])
+                i += 1
+            elif c == '"':
+                in_string = False
+        elif c == '"':
+            in_string = True
+            out.append(c)
+        elif (c.isalpha() or c == "_") and last in "{,":
+            j = i
+            while j < n and (text[j].isalnum() or text[j] in "_-."):
+                j += 1
+            k = j
+            while k < n and text[k] in " \t":
+                k += 1
+            if k < n and text[k] == ":":
+                out.append('"' + text[i:j] + '"')
+                i = j
+                last = ""
+                continue
+            out.append(c)
+        else:
+            out.append(c)
+        if not in_string and not c.isspace():
+            last = c
+        i += 1
+    return "".join(out)
+
+
+def load_config(data):
+    """Parse a Hermes config.yaml we wrote as JSON, or that Hermes rewrote (flow YAML, or block YAML when PyYAML
+    is importable); None when it cannot be parsed as a mapping."""
+    if data is None:
+        return None
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    for parse in (json.loads, lambda t: json.loads(_quote_bare_keys(t))):
+        try:
+            value = parse(text)
+            return value if isinstance(value, dict) else None
+        except ValueError:
+            continue
+    try:
+        import yaml
+        value = yaml.safe_load(text)
+    except Exception:  # noqa: BLE001 - optional parser; absent or failing means unparsed
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _version(config):
+    value = config.get("_config_version")
+    return value if type(value) is int else None
+
+
+def is_migration(sealed, observed):
+    """Is `observed` Hermes's own config migration of `sealed` (version raised; only MIGRATION_ADDITIONS added)?"""
+    if not isinstance(sealed, dict) or not isinstance(observed, dict):
+        return False
+    before, after = _version(sealed), _version(observed)
+    if before is None or after is None or after <= before:
+        return False
+    observed = json.loads(json.dumps(observed))
+    sealed = {k: v for k, v in sealed.items() if k != "_config_version"}
+    observed.pop("_config_version")
+    for path, value in MIGRATION_ADDITIONS.items():
+        parent = observed
+        for part in path[:-1]:
+            parent = parent.get(part) if isinstance(parent, dict) else None
+        if isinstance(parent, dict) and path[-1] in parent and _get(sealed, ".".join(path)) is None:
+            if parent[path[-1]] != value:
+                return False
+            del parent[path[-1]]
+            if path[0] not in sealed and observed.get(path[0]) == {}:
+                del observed[path[0]]
+    return observed == sealed
+
+
+def config_migration(name, sealed_bytes, observed_bytes):
+    return name == "config.yaml" and is_migration(load_config(sealed_bytes), load_config(observed_bytes))
+
+
+def refresh_config(name, sealed_bytes, current_bytes, agent_config=None):
+    """Merge the current platform-owned keys into a sealed config.yaml; adopt Hermes's own migration of it.
+
+    Returns {"bytes": new bytes or None (unchanged), "updated_keys": [...], "migration_adopted": bool} or None
+    when the file is not Hermes's config or cannot be parsed (left as sealed). Model, provider and effort come
+    from the agent's recorded configuration when given, else from the sealed file itself."""
+    if name != "config.yaml":
+        return None
+    config = load_config(sealed_bytes)
+    if config is None:
+        return None
+    observed = load_config(current_bytes)
+    adopted = is_migration(config, observed)
+    if adopted:
+        config = observed
+    agent_config = agent_config or {}
+    settings = platform_settings(agent_config.get("model") or _get(config, "model.default"),
+                                 agent_config.get("effort") or _get(config, "agent.reasoning_effort"),
+                                 agent_config.get("provider") or _get(config, "model.provider"))
+    updated = []
+    for key in PLATFORM_KEYS:
+        value = settings[key]
+        if value is None:
+            continue
+        if _get(config, key) != value:
+            _set(config, key, value)
+            updated.append(key)
+    if not updated and not adopted:
+        return {"bytes": None, "updated_keys": [], "migration_adopted": False}
+    from daw.util import canonical
+    return {"bytes": canonical(config) + b"\n", "updated_keys": updated, "migration_adopted": adopted}
+
+
 def prepare_home(trial, model, effort, provider, checkpoint=None, skills=True):
     home = trial / ".hermes"
     home.mkdir(mode=0o700)
@@ -94,30 +275,14 @@ def prepare_home(trial, model, effort, provider, checkpoint=None, skills=True):
     # JSON is also valid YAML. No additional dependency in the offline evaluator.
     config = {
         "_config_version": 12,
-        "model": {"default": model, "provider": provider},
-        "agent": {"reasoning_effort": effort, "max_turns": 0},
+        "agent": {"max_turns": 0},
         "terminal": {"backend": "local", "cwd": str(trial)},
-        # Spec v3 V18: the learning layer stays off. Native memory was never read or written in the 97-run
-        # cohort; disabling it also removes the memory toolset's instructions from every turn's context.
-        "memory": {"memory_enabled": False, "user_profile_enabled": False},
         "skills": {"project_discovery": skills, "trusted_project_dirs": [str(trial)] if skills else [],
                    "create_dir": str(home / "skills")},
-        # One-shot CLI background-review threads need not finish before exit.
-        # Foreground consolidation uses stock memory/skill tools before final answer.
-        # The compaction summarizer runs the main reasoning model on the Codex route; its
-        # first token can take minutes, and the stock 60 s no-progress window killed 14 of
-        # 42 summaries in the PMP22 cohort, leaving deterministic placeholders. Widen the
-        # window (upstream auxiliary.<task>.no_progress_timeout, #108104) and the request
-        # timeout; keep the model and effort unchanged so summaries are not degraded.
-        "auxiliary": {"background_review": {"enabled": False},
-                      "compression": {"no_progress_timeout": 600, "timeout": 900}},
-        # Keep the live delivery prompt verbatim through compaction: 14 cohort summaries
-        # reported the original assignment as not reproduced. The trigger threshold is
-        # left at the stock value; lowering it shortens the verbatim horizon.
-        "compression": {"min_tail_user_messages": 2},
-        "curator": {"enabled": False},
         "display": {"interface": "cli"},
     }
+    for key, value in platform_settings(model, effort, provider).items():
+        _set(config, key, value)
     write_json(home / "config.yaml", config)
     hashes = snapshot_state(home, trial.parent / "learning-before")
     write_json(trial.parent / "learning-baseline.json", {"files": hashes, "parent_checkpoint": parent,

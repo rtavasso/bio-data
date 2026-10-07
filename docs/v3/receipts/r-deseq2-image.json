@@ -1,0 +1,34 @@
+{
+  "format": 1,
+  "image": "colloquy-r-deseq2:bioc3.23",
+  "image_id": "sha256:1c0d16056ddfb9c00635420291e1e5f33fb58b9737299bfaaa773fbad45b051c",
+  "repo_digests": [
+    "colloquy-r-deseq2@sha256:1c0d16056ddfb9c00635420291e1e5f33fb58b9737299bfaaa773fbad45b051c"
+  ],
+  "platform": "linux/arm64",
+  "size_bytes": 7133614943,
+  "built": "2026-10-07T23:21:28.900747504Z",
+  "base": "bioconductor/bioconductor_docker:RELEASE_3_23-R-4.6.1@sha256:821dbf9ac119eac41f177531c7ca8fc7084c99c04eb218a1aa7f52cb63bad5d9",
+  "dockerfile": "containers/r-deseq2/Dockerfile",
+  "dockerfile_sha256": "317421600525db8e6b5b106a287ba9d59ced84557e2e3a19715046569bab93e7",
+  "build_command": "docker build -t colloquy-r-deseq2:bioc3.23 containers/r-deseq2",
+  "versions": {
+    "R": "4.6.1",
+    "Bioconductor": "3.23",
+    "CRAN_snapshot": "https://p3m.dev/cran/__linux__/noble/2026-10-06",
+    "DESeq2": "1.52.0",
+    "edgeR": "4.10.5",
+    "limma": "3.68.5",
+    "apeglm": "1.34.0",
+    "jsonlite": "2.0.0",
+    "readr": "2.2.0",
+    "BiocManager": "1.30.27"
+  },
+  "smoke_check": {
+    "helper": ".agents/skills/bio-research/scripts/r_analysis.py",
+    "network": "none",
+    "script": "DESeq2 + apeglm lfcShrink + readr::write_tsv on a simulated 200-gene, 3-vs-3 count matrix with 10 genes at 4x",
+    "result": "exit 0, receipt complete, 11 genes padj<0.05, planted genes log2FoldChange about 2"
+  },
+  "note": "Image layers are local only and never committed; a rebuild on another host or architecture gets a different image id. The id differs by host; the versions and pins are what reproduce."
+}

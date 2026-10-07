@@ -166,7 +166,8 @@ def _same_file(printed, named):
     return bool(parts) and ".." not in parts and path.parts[-len(parts):] == parts
 
 
-HELPERS = ("run_analysis.py", "replicate.py")
+HELPERS = ("run_analysis.py", "r_analysis.py", "replicate.py")
+DIRECT = ("run_analysis.py", "r_analysis.py")  # print their own receipt line; replicate.py echoes one
 SHELL_BREAKS = (";", "&&", "||", "|", "\n")
 INTERPRETER = re.compile(r"^(?:\./bin/)?(?:python(?:[23](?:\.\d+)?)?|uv|run|Rscript|env|time|nice)$")
 
@@ -211,7 +212,7 @@ def stream_executions(parsed):
         invoked = helper_segment(command) if item.get("name") == "terminal" else None
         if not invoked:
             continue
-        direct = invoked["helper"] == "run_analysis.py"
+        direct = invoked["helper"] in DIRECT
         named = _receipt_argument(invoked["segment"]) if direct else None
         lines = [p for text in _tool_texts(item.get("aggregated_output") or item.get("output")) for p in _printed(text)]
         lines = list({json.dumps(p, sort_keys=True): p for p in lines}.values())  # wrapper and inner text agree
@@ -221,7 +222,7 @@ def stream_executions(parsed):
         if not isinstance(receipt, str) or not isinstance(sha, str) or (named and not _same_file(receipt, named)):
             continue
         found.append({"receipt": receipt, "sha256": sha, "line": item.get("line"),
-                      "helper": "run_analysis.py" if direct else "replicate.py"})
+                      "helper": invoked["helper"]})
     return found
 
 
