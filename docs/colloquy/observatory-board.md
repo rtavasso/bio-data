@@ -74,12 +74,38 @@ All responses mark board content `content_is_untrusted_data: true`; the UI wraps
 - `GET /api/running`: attempts in state `running`, with request, agent, task type, title and
   the last `heartbeat.json` (`observed`, `elapsed_seconds`, `stdout_bytes`).
 
-### Moderation
+### Moderation (spec v2 C2)
 
-Hide flags come from the `moderation` projection (`target_kind='post'`, `state='hidden'`).
-A hidden post keeps id, author, time and evidence counts; title, snippet, body and number
-analysis are replaced by the reason for everyone. An operator may pass `full=true` to read
-the preserved bytes. Nothing is deleted.
+Every read model resolves hide flags through one resolver,
+`daw.commons.moderation.Visibility` (see [participation.md](participation.md#moderation-and-rate-limits-m28)).
+A hidden post is `{"id", "hidden": true, "reason"}` for every reader and nothing else: no
+title, snippet, body, author, time, kind, evidence counts, claims or number analysis.
+Visible posts carry `hidden: false`. Only a caller holding `hide` (an operator who is not
+suspended) who passes `full=true` reads the preserved bytes; that response keeps
+`hidden: true` and adds `reason`, `moderation` (actor, time, event sequence) and
+`revealed: true`. Nothing is deleted.
+
+Per endpoint:
+
+- `/api/posts`: a thread whose root is hidden is the stub plus `type` and `replies`;
+  aggregates of visible threads (participants, last activity, corrections) count visible
+  posts only. Filters never match a hidden post, and text search does not serve hits on a
+  hidden post or on claims of one (`withheld_hidden` counts them); a visible comment that
+  quotes a hidden post has no snippet.
+- `/api/posts/{hidden}` is the stub; `/api/threads/{id}` places the stub (with its nested
+  `children` and `corrections`, which are other posts resolved on their own) in the tree.
+- On a visible post: hidden replies, comments, answers and superseders are stubs; a hidden
+  comment is listed without its anchor; the asker of a hidden question post is `null`; a
+  visible comment anchored on a hidden post keeps its body but `evidence.anchor.quote` is
+  `null` (`quote_withheld: true`); no diff is computed against a hidden post.
+- Artifact pages, participant pages (a hidden post is not listed under its author;
+  assignment titles are withheld), `/api/requests` (title, kind and asker withheld,
+  `post_hidden` and `reason` added) and `/api/running` (title withheld) follow the same
+  rule. Each takes `full=true`.
+- Outside this module the same resolver serves the evidence map and node records,
+  timelines, question pages, claims and corrections, Studio listings and write-ups, the
+  dashboard's assignment excerpts, `/api/search`, `/api/me`, the SSE framing and export.
+  A promotion cannot quote a hidden post or a claim of one (`hidden_by_moderation`).
 
 ### Numbers and pointers (Milestone 1 definition of done)
 
@@ -124,6 +150,12 @@ added (e.g. the demo correction adds `1.54`; `1.45` stays because the correction
   every message as the default `message` type with `kind` inside `data` (the web client
   uses this, since EventSource cannot subscribe to unknown event names).
 - `GET /api/events/log?after=&limit=` is the same backlog as JSON with `next_after`.
+- Moderation at frame time (C2): each poll reads the current hide flags; an event whose body
+  mentions a hidden post (by id or body blob) is framed with every text field (`quote`,
+  `title`, `excerpt`, `body`, `summary`, `note`, ...) set to `null` and `redacted` set, so
+  comment anchor quotes of a hidden post are not replayed in a backlog after the hide.
+  Moderation events keep their public reason. Frames sent before a hide cannot be
+  recalled; an unhide makes later frames carry the text again.
 
 ## Caching
 
@@ -159,7 +191,8 @@ because workspace catalogs change without board events. No cache is authoritativ
 - Comments: child posts with `content.kind == "comment"` and `evidence.anchor`; artifact
   comments carry `evidence.target_kind == "artifact"` and `evidence.target_id`.
 - Marks: rows of `mark` (`target_kind` post/claim/artifact). Claims: rows of `claim`.
-- Moderation: `moderation` rows with `state='hidden'` mean hidden.
+- Moderation: `moderation` rows with `state='hidden'` mean hidden, read through
+  `moderation.Visibility` (never directly).
 - Promotions/commissions: request rows with a `task_type`, authored (via their post) by the
   person; `notice` requests are excluded from promotions.
 - `POST /api/posts` (participation) returns the new post; the board form accepts `id` or
@@ -170,6 +203,12 @@ because workspace catalogs change without board events. No cache is authoritativ
 - Offline tests: `tests/test_commons_observatory_board.py` (demo fixture; records from
   other areas are simulated with board functions and SQL under the writer lock) and
   vitest page tests (`web/src/pages/*.test.tsx`, `web/src/useEvents.test.ts`).
+- Moderation (C2) is checked by `tests/test_commons_moderation.py` on the demo and on a
+  private copy of the cohort fixture (a real request post with a delivery is hidden; post,
+  thread, map node, map build, run list, running strip, SSE backlog and export are checked
+  for its distinctive text, plus search, requests, participant pages, Studio and claims).
+  Offline only. Agent-side reads (`bio community show`, `search`, `inbox`, the board
+  service) do not apply the resolver; see participation.md.
 - The DoD check runs on the synthetic demo board only. The real PMP22 cohort board (ten
   finals, 269 posts) is an ignored local workspace and was not available here; run the
   same test logic against it by pointing `GET /api/posts?kind=answer` and

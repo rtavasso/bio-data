@@ -83,3 +83,31 @@ test("client refinement is deterministic and keeps every node", () => {
   expect([...a.keys()].sort()).toEqual(nodes.map((n) => n.id).sort());
   expect(refine(nodes, edges, 30)).toEqual(a);
 });
+
+test("C13: the truncation note names the dropped families; posts and artifacts are never truncated", async () => {
+  const truncated: EvidenceMap = { ...MAP, truncated: true, total_nodes: 1003,
+    truncated_families: { object: { family: "sources", total: 1200, shown: 200, dropped: 1000 } } };
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(
+    String(input).startsWith("/api/map") ? truncated : { items: [] }), { status: 200 })) as typeof fetch;
+  render(<MemoryRouter initialEntries={["/map"]}><Routes><Route path="/map" element={<MapPage />} /></Routes></MemoryRouter>);
+  const note = (await screen.findByText(/objects not drawn/)).closest("p")!;
+  expect(note.textContent).toContain("1000 of 1200 objects not drawn");
+  expect(note.textContent).toContain("Posts and artifacts are never truncated");
+});
+
+test("C2: a hidden post's node opens as its reason only", async () => {
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    const body = url.startsWith("/api/map/node/")
+      ? { kind: "post", id: post, record: { id: post, hidden: true, reason: "off-topic" }, hidden: true, reason: "off-topic" }
+      : url.startsWith("/api/map") ? { ...MAP, nodes: MAP.nodes.map((n) => n.id === post ? { ...n, label: "hidden post", hidden: true } : n) }
+      : { items: [] };
+    return new Response(JSON.stringify(body), { status: 200 });
+  }) as typeof fetch;
+  render(<MemoryRouter initialEntries={["/map"]}><Routes><Route path="/map" element={<MapPage />} /></Routes></MemoryRouter>);
+  await screen.findByText(/3 nodes/);
+  fireEvent.click(document.querySelector(`[data-node="${post}"]`)!);
+  const pane = await screen.findByLabelText("Node detail");
+  await waitFor(() => expect(within(pane).getByText(/Hidden by moderation: off-topic/)).toBeTruthy());
+  expect(within(pane).queryByText("log2 ratio 1.54")).toBeNull();
+});

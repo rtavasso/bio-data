@@ -1,22 +1,48 @@
 import { Link } from "react-router-dom";
-import type { LibraryHit, PostCard, ThreadCard as Thread } from "../../types/board";
+import { isWithheld, type LibraryHit, type ThreadCard as Thread, type VisiblePostCard } from "../../types/board";
 import { Untrusted } from "../Untrusted";
 import { Badge, HiddenNotice, KindBadge } from "./Badges";
 import { ParticipantLink } from "./People";
 import { short, when } from "./format";
 
-function authorName(card: PostCard) {
+function authorName(card: VisiblePostCard) {
   return "name" in card.author ? card.author.name : undefined;
 }
 
-// One board thread: root post, correction status, activity and evidence counts. Snippets are untrusted.
-export function ThreadCard({ thread, fresh = false }: { thread: Thread; fresh?: boolean }) {
+function Hits({ thread }: { thread: Thread }) {
+  if (!thread.hits || thread.hits.length === 0) return null;
   return (
-    <article className={`thread-card${fresh ? " fresh" : ""}`} aria-label={thread.title ?? "hidden post"}>
+    <ul className="hits" aria-label="Matching posts">
+      {thread.hits.map((hit) => (
+        <li key={hit.post}>
+          <Link to={`/post/${hit.post}`}>{short(hit.post)}</Link>
+          {hit.snippet && <span className="muted"> — {hit.snippet.slice(0, 160)}</span>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// One board thread: root post, correction status, activity and evidence counts. Snippets are untrusted.
+// A thread whose root is hidden shows only the placeholder, the reason and the reply count.
+export function ThreadCard({ thread, fresh = false }: { thread: Thread; fresh?: boolean }) {
+  if (isWithheld(thread)) {
+    return (
+      <article className={`thread-card hidden-card${fresh ? " fresh" : ""}`} aria-label="hidden post">
+        <header>
+          <Link to={`/post/${thread.id}`} className="thread-title"><em>Hidden post</em></Link>
+        </header>
+        <p className="meta">{thread.replies} repl{thread.replies === 1 ? "y" : "ies"}</p>
+        <HiddenNotice reason={thread.reason} />
+        <Hits thread={thread} />
+      </article>
+    );
+  }
+  return (
+    <article className={`thread-card${fresh ? " fresh" : ""}`} aria-label={thread.title ?? "post"}>
       <header>
-        <Link to={`/post/${thread.id}`} className="thread-title">
-          {thread.hidden ? <em>Hidden post</em> : thread.title}
-        </Link>
+        <Link to={`/post/${thread.id}`} className="thread-title">{thread.title}</Link>
+        {thread.hidden && <Badge tone="bad">hidden</Badge>}
         <KindBadge kind={thread.kind} />
         {thread.correction_status === "superseded" && <Badge tone="warn">corrected</Badge>}
         {thread.correction_status === "superseding" && <Badge tone="accent">correction</Badge>}
@@ -30,25 +56,13 @@ export function ThreadCard({ thread, fresh = false }: { thread: Thread; fresh?: 
         {thread.evidence.notebook && <> · notebook</>}
         {thread.corrections > 0 && <> · {thread.corrections} correction{thread.corrections > 1 ? "s" : ""}</>}
       </p>
-      {thread.hidden ? (
-        <HiddenNotice hidden={thread.hidden} />
-      ) : (
-        thread.snippet && (
-          <Untrusted author={authorName(thread)}>
-            <p className="snippet">{thread.snippet}</p>
-          </Untrusted>
-        )
+      {thread.hidden && <HiddenNotice reason={thread.reason} revealed />}
+      {thread.snippet && (
+        <Untrusted author={authorName(thread)}>
+          <p className="snippet">{thread.snippet}</p>
+        </Untrusted>
       )}
-      {thread.hits && thread.hits.length > 0 && (
-        <ul className="hits" aria-label="Matching posts">
-          {thread.hits.map((hit) => (
-            <li key={hit.post}>
-              <Link to={`/post/${hit.post}`}>{short(hit.post)}</Link>
-              {hit.snippet && <span className="muted"> — {hit.snippet.slice(0, 160)}</span>}
-            </li>
-          ))}
-        </ul>
-      )}
+      <Hits thread={thread} />
     </article>
   );
 }

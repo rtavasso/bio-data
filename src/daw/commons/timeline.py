@@ -13,6 +13,7 @@ import sqlite3
 from datetime import datetime
 
 from daw import hermes
+from daw.commons.moderation import Visibility
 from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, run_metrics
 from daw.util import DawError, read_json
 
@@ -174,8 +175,9 @@ def _answer_posts(view, agent):
         (agent,))}
 
 
-def run_list(view, *, agent=None, state=None, limit=100, offset=0):
-    """GET /api/runs: deliveries newest first, with request, task type and agent name."""
+def run_list(view, *, agent=None, state=None, limit=100, offset=0, caller=None, full=False):
+    """GET /api/runs: deliveries newest first, with request, task type and agent name. A request post hidden by
+    moderation keeps its identity and reason; its title and kind are withheld (C2)."""
     if not 1 <= limit <= 500 or offset < 0:
         raise DawError("invalid_run_page")
     conditions, params = [], []
@@ -190,8 +192,13 @@ def run_list(view, *, agent=None, state=None, limit=100, offset=0):
     rows = view.rows("SELECT a.*,r.task_type,r.post AS request_post,r.state AS request_state,g.name AS agent_name "
                      "FROM attempt a JOIN request r ON r.id=a.request JOIN agent g ON g.id=a.target" + where
                      + " ORDER BY a.created DESC,a.id LIMIT ? OFFSET ?", [*params, limit, offset])
+    vis = Visibility.of(view, caller, full)
     for row in rows:
         row.pop("path", None)
+        row.update(request_hidden=vis.hidden(row["request_post"]), reason=vis.reason(row["request_post"]))
+        if vis.withheld(row["request_post"]):
+            row.update(request_title=None, request_kind=None)
+            continue
         try:
             content = view.post(row["request_post"])["content"]
             row.update(request_title=content.get("title"), request_kind=content.get("kind"))
@@ -200,11 +207,29 @@ def run_list(view, *, agent=None, state=None, limit=100, offset=0):
     return {"items": rows, "total": total, "limit": limit, "offset": offset}
 
 
-def run_timeline(view, run):
-    """GET /api/runs/{id}: the delivery timeline, its receipts, clocks and final answer."""
+def _withheld_posts(view, request, vis):
+    """The run's request post and answer post that this caller may not read."""
+    return [p for p in (request.get("post"), request.get("answer")) if p and vis.withheld(p)]
+
+
+def _guard(view, run, caller, full):
+    """Raw streams and model messages carry the request's text and the answer verbatim: when either post is
+    hidden, they are withheld like the post itself (an operator may read them with full=true)."""
+    attempt, _ = view.run_folder(run)
+    request = view.one("SELECT post,answer FROM request WHERE id=?", (attempt["request"],)) or {}
+    vis = Visibility.of(view, caller, full)
+    withheld = _withheld_posts(view, request, vis)
+    if withheld:
+        raise DawError("hidden_by_moderation", ", ".join(f"{p}: {vis.reason(p)}" for p in withheld))
+
+
+def run_timeline(view, run, *, caller=None, full=False):
+    """GET /api/runs/{id}: the delivery timeline, its receipts, clocks and final answer.
+    A hidden request post loses its title and kind; a hidden answer post withholds the final text (C2)."""
     from daw.commons.participants import describe
     attempt, folder = view.run_folder(run)
     request = view.one("SELECT * FROM request WHERE id=?", (attempt["request"],)) or {}
+    vis = Visibility.of(view, caller, full)
     agent = view.participant(attempt["target"])
     execution = read_json(folder / "execution.json") if (folder / "execution.json").is_file() else {}
     parsed = hermes.parse(folder / "events.jsonl")
@@ -263,8 +288,10 @@ def run_timeline(view, run):
     else:
         final = {"text": None, "source": None}
     duration = max(positions.values(), default=0.0)
+    if request.get("answer") and vis.withheld(request["answer"]):
+        final = {"text": None, "source": final["source"], "hidden": True, "reason": vis.reason(request["answer"])}
     content = None
-    if request.get("post"):
+    if request.get("post") and not vis.withheld(request["post"]):
         try:
             content = view.post(request["post"])["content"]
         except DawError:
@@ -272,7 +299,9 @@ def run_timeline(view, run):
     started, finished = _bounds(execution)
     return {"run": {k: v for k, v in attempt.items() if k != "path"},
             "request": {**request, "title": content.get("title") if content else None,
-                        "kind": content.get("kind") if content else None},
+                        "kind": content.get("kind") if content else None,
+                        "hidden": vis.hidden(request.get("post")), "reason": vis.reason(request.get("post")),
+                        "answer_hidden": vis.hidden(request.get("answer"))},
             "agent": describe(agent),
             "execution": {"state": execution.get("state"), "started": execution.get("started"),
                           "finished": execution.get("finished"), "returncode": execution.get("returncode"),
@@ -298,7 +327,8 @@ def run_timeline(view, run):
                 "Headline: first successful bio register or community publish, else first successful analysis."]}
 
 
-def raw_stream(view, run):
+def raw_stream(view, run, *, caller=None, full=False):
+    _guard(view, run, caller, full)
     _, folder = view.run_folder(run)
     path = folder / "events.jsonl"
     if not path.is_file() or path.is_symlink():
@@ -306,10 +336,11 @@ def raw_stream(view, run):
     return path
 
 
-def run_messages(view, run, *, offset=0, limit=50):
+def run_messages(view, run, *, offset=0, limit=50, caller=None, full=False):
     """GET /api/runs/{id}/messages: model-facing message bodies for this delivery (untrusted, paginated)."""
     if not 1 <= limit <= MAX_MESSAGES or offset < 0:
         raise DawError("invalid_message_page", f"limit 1..{MAX_MESSAGES}")
+    _guard(view, run, caller, full)
     _, folder = view.run_folder(run)
     execution = read_json(folder / "execution.json") if (folder / "execution.json").is_file() else {}
     items, total, columns = state_messages(folder, execution, offset=offset, limit=limit)
