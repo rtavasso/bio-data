@@ -11,3 +11,6 @@ workspaces/
 dist/
 *.egg-info/
 web/e2e/.out/
+
+# Derived caches a served fixture may create (map layouts, the V6 graph store); never fixture content.
+fixtures/**/cache/

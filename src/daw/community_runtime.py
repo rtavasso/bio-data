@@ -383,6 +383,27 @@ def _token_budget_exceeded(board, request_id, run_id, agent, tokens):
         f"token-budget:{run_id}")
 
 
+def _capture_records(board, request_id, run_id, agent, adapter, folder, trial, execution, parsed):
+    """compactions.jsonl, receipts.json and a `receipts_indexed` event (spec v2 V6); never fails a delivery."""
+    from daw.commons.records import record_delivery
+    try:
+        return record_delivery(board, request_id, run_id, agent, adapter, folder, trial, execution, parsed,
+                               harness=adapter.name)
+    except Exception as error:  # a record that cannot be written is reported, never fatal
+        write_json(folder / "records-error.json", {"observed": now(), "error": repr(error)})
+        return None
+
+
+def _refresh_graph(board):
+    """The derived graph store follows the board after a delivery (spec v2 V6); it is a cache, so a failure
+    only leaves it behind, and readers then compute the stale parts in memory."""
+    from daw.commons import graphstore
+    try:
+        graphstore.refresh(board.root)
+    except Exception:  # never authoritative: the next refresh or `bio commons graph refresh` catches up
+        pass
+
+
 def _record_outcome(board, request, content, agent, run_id, started, answer, parsed, budget_receipt, folder):
     try:
         outcome = tasks.evaluate(board, request, content, agent, run_id, started, answer, parsed)
@@ -568,6 +589,8 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             write_json(folder / "state-receipt.json", {"session": native, "files": hashes,
                                                         "model": config["model"], "effort": config["effort"],
                                                         **adapter.receipt_fields(config)})
+            # V6: compactions and analysis receipts become run records (before completion is judged).
+            _capture_records(board, request_id, run_id, agent, adapter, folder, trial, execution, parsed)
             complete = (execution["state"] == "exited" and parsed["turns_completed"] > 0 and answers
                         and not parsed["errors"] and not parsed["malformed_lines"] and (native or not resumable))
             if not complete:
@@ -609,6 +632,9 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                     with board.writer(), board.db:
                         board.db.execute("UPDATE agent SET native_session=? WHERE id=?", (saved, agent["id"]))
             (folder / "transcript.md").write_text(transcript_text(failed_trace))
+            if isinstance(error, Exception) and (folder / "execution.json").is_file():
+                _capture_records(board, request_id, run_id, agent, adapter, folder, trial,
+                                 read_json(folder / "execution.json"), failed_trace)
             with board.writer(), board.db:
                 board.db.execute("UPDATE attempt SET state='failed',finished=? WHERE id=?", (now(), run_id))
                 board.db.execute("UPDATE request SET state='failed',updated=? WHERE id=?", (now(), request_id))
@@ -622,6 +648,7 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             except (DawError, sqlite3.Error, OSError) as e:
                 write_json(folder / "task-outcome-error.json", {"error": getattr(e, "reason", type(e).__name__),
                                                                  "observed": now()})
+        _refresh_graph(board)
         return board.one("SELECT * FROM request WHERE id=?", (request_id,))
 
 

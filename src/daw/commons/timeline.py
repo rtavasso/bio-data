@@ -8,20 +8,30 @@ suspension is wall − monotonic beyond the audit floor; it is drawn where the g
 between event timestamps is largest, because the stream records no sleep marker.
 Token counts the provider did not report are "unavailable", never zero.
 
-Recorded versus attributed (spec v2 C10). Tool calls, exit codes and stream
-compactions are recorded in the stream. Three things are placed by a heuristic
-and carry `attributed: true` with the rule in `basis`: the suspension (largest
-timestamp gap), the headline result (first successful registration, publication
-or analysis) and peer answers consumed (a post id seen in a show, inbox or
-verify call). The web app draws them in a distinct style under the legend
-"attributed, not recorded"; the response's `attributed` lists their kinds.
+Recorded versus attributed (spec v2 C10, V6). Tool calls, exit codes and stream
+compactions are recorded in the stream. Since V6 the runtime also writes run
+records (`daw.commons.records`): `clock.jsonl` (heartbeats with both clocks),
+`compactions.jsonl` and `receipts.json`. When they exist, suspensions are placed
+between the clock records whose wall clock advanced more than their monotonic
+clock, receipts are the indexed run_analysis.py receipt files, and compaction
+summaries are the recorded ones: all `attributed: false`. Runs captured before
+the records existed (the cohort fixture) keep the heuristics, each carrying
+`attributed: true` with its rule in `basis`: the suspension (largest timestamp
+gap), receipts (the exit code of the run_analysis.py call). The headline result
+(first successful registration, publication or analysis) and peer answers
+consumed (a post id seen in a show, inbox or verify call) are always attributed.
+The web app draws attributed items in a distinct style under the legend
+"attributed, not recorded"; the response's `attributed` lists their kinds and
+`records` says which records the run has.
 """
+import hashlib
 import re
 import sqlite3
 from datetime import datetime
 
 from daw import harness as harnesses
 from daw import hermes
+from daw.commons import records
 from daw.commons.moderation import Visibility
 from daw.commons.runmetrics import SUSPENSION_FLOOR_SECONDS, compactions_reported, run_metrics
 from daw.util import DawError, read_json
@@ -165,6 +175,67 @@ def _suspension(positions, unit, suspended):
                                           "records no sleep marker"}, monotonic)
 
 
+def _recorded_suspensions(positions, unit, origin, clock):
+    """Place suspensions between consecutive clock records whose wall clock advanced more than their monotonic
+    clock (spec v2 V6). Inside the recorded window the break goes at the largest gap between event timestamps
+    (no event can be emitted while the host sleeps). A window no wider than RECORDED_PRECISION_SECONDS of
+    monotonic time is placed by record (`attributed: false`); a wider one (reindexed runs, whose only samples are
+    the launch, the last heartbeat and the finish) only bounds it, so its position stays attributed.
+    Returns (suspensions, mapper to the monotonic axis)."""
+    windows = records.clock_windows(clock)
+    if unit != "seconds" or origin is None or not windows:
+        return [], (lambda t: t)
+    ordered = sorted(set(positions.values()))
+    first, last = (ordered[0], ordered[-1]) if ordered else (0.0, 0.0)
+    placed = []
+    for w in windows:
+        low, high = (w["wall_from"] * 1000 - origin) / 1000, (w["wall_to"] * 1000 - origin) / 1000
+        points = [low] + [p for p in ordered if low < p < high] + [high]
+        gap, before, after = max((b - a, a, b) for a, b in zip(points, points[1:], strict=False))
+        width = w["monotonic_to"] - w["monotonic_from"]
+        entry = {"seconds": w["seconds"], "gap_seconds": round(gap, 3), "records": w["records"],
+                 "window": {"from": round(low, 3), "to": round(high, 3), "monotonic_seconds": round(width, 3),
+                            "sources": w["sources"]}, "precision_seconds": round(width, 3)}
+        if after <= first or high <= first:
+            entry.update(placement="before_first_event", at_raw=first, removed=0.0)
+        elif before >= last or low >= last:
+            entry.update(placement="after_last_event", at_raw=last, removed=0.0)
+        else:
+            entry.update(placement="clock_records" if w["precise"] else "largest_event_gap_within_clock_window",
+                         at_raw=before, after_raw=after, removed=min(w["seconds"], gap))
+        if w["precise"]:
+            entry.update(attributed=False, basis=f"recorded: clock records {w['records'][0]} and {w['records'][1]} "
+                                                 f"({round(width, 1)} s of monotonic time apart) show wall time "
+                                                 f"advancing {w['seconds']} s more than monotonic time")
+        else:
+            entry.update(attributed=True, basis=f"the clock samples ({', '.join(w['sources'])}) only bound the "
+                                                f"suspension to {round(width, 1)} s of monotonic time; inside that "
+                                                "window it is placed at the largest gap between event timestamps")
+        placed.append(entry)
+    shifts = sorted((e["after_raw"], e["removed"]) for e in placed if e.get("removed"))
+
+    def monotonic(t):
+        return t - sum(removed for after, removed in shifts if t >= after)
+    out = []
+    for entry in placed:
+        at = monotonic(entry.pop("at_raw"))
+        entry.pop("after_raw", None)
+        removed = entry.pop("removed")
+        unplaced = 0.0 if entry["placement"] in ("before_first_event", "after_last_event") else entry["seconds"] - removed
+        out.append({"at": round(at, 3), **entry, "unplaced_seconds": round(max(0.0, unplaced), 3)})
+    return out, monotonic
+
+
+def _wall_position(epoch, origin, positions, monotonic):
+    """A recorded wall-clock instant (epoch seconds) on the timeline axis, or None outside the stream."""
+    if origin is None or epoch is None or not positions:
+        return None
+    offset = epoch - origin / 1000
+    if 0 <= offset <= max(positions.values()):
+        return round(monotonic(offset), 3)
+    return None
+
+
 def _tokens(usage, answered):
     """Provider token telemetry. Missing fields are unavailable; a zero beside a real answer is unreported, not zero."""
     names = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
@@ -257,7 +328,14 @@ def run_timeline(view, run, *, caller=None, full=False):
     reported = compactions_reported(name, agent.get("config") if isinstance(agent.get("config"), dict) else None)
     metrics = run_metrics(folder, parsed, compactions_reported=reported)
     positions, unit, origin = _clock(parsed)
-    suspension, monotonic = _suspension(positions, unit, metrics["suspended_seconds"])
+    clock = records.read_clock(folder)
+    indexed = records.read_receipts(folder)
+    recorded_compactions = records.read_compactions(folder)
+    if clock is not None and len(clock) >= 2:
+        suspensions, monotonic = _recorded_suspensions(positions, unit, origin, clock)
+    else:
+        suspension, monotonic = _suspension(positions, unit, metrics["suspended_seconds"])
+        suspensions = [suspension] if suspension else []
 
     def at(line):
         return round(monotonic(positions[line]), 3) if line in positions else None
@@ -277,7 +355,10 @@ def run_timeline(view, run, *, caller=None, full=False):
         if kind == "terminal:analysis":
             code = item.get("exit_code")
             receipts.append({**call, "script": _script(command),
-                             "outcome": "pass" if code == 0 else "unknown" if code is None else "fail"})
+                             "outcome": "pass" if code == 0 else "unknown" if code is None else "fail",
+                             "source": "exit_code", "attributed": True,
+                             "basis": "exit code of the run_analysis.py call in the stream; no receipt record was "
+                                      "indexed for this run"})
         if kind == "terminal:inbox":
             inbox.append({**call, "sent": "--sent" in command})
         if item.get("name") == "terminal" and re.search(r"\bcommunity\s+(show|inbox|verify)\b", command):
@@ -287,24 +368,62 @@ def run_timeline(view, run, *, caller=None, full=False):
                                  "attributed": True,
                                  "basis": "a post id answering this agent's question appears in a show, inbox or "
                                           "verify call or its output; reading is inferred, not recorded"})
+    unreceipted = []
+    if indexed is not None:
+        # V6: receipts are the run_analysis.py receipt files indexed for this delivery, not exit codes.
+        stream_receipts, receipts = {r["line"]: r for r in receipts}, []
+        for record in indexed["receipts"]:
+            call = stream_receipts.get(record.get("line"))
+            base = {k: v for k, v in call.items() if k not in ("outcome", "source", "attributed", "basis")} if call else {
+                "line": None, "result_line": None, "lane": "terminal:analysis", "name": "run_analysis.py",
+                "summary": record.get("path") or "", "exit_code": record.get("exit_code"), "status": None,
+                "t": _wall_position(records.epoch(record.get("started")), origin, positions, monotonic),
+                "t_end": _wall_position(records.epoch(record.get("finished")), origin, positions, monotonic)}
+            receipts.append({**base, "script": record.get("producer") or base.get("script"), "outcome": record["outcome"],
+                             "source": "receipt", "attributed": False,
+                             "receipt": {k: record.get(k) for k in ("path", "sha256", "copy", "started", "finished",
+                                                                     "exit_code", "complete", "code_unchanged",
+                                                                     "verified", "found_by")}
+                             | {"outputs": len(record.get("outputs") or [])}})
+        matched = {r["line"] for r in receipts if r["line"] is not None}
+        unreceipted = [{k: v for k, v in r.items() if k not in ("outcome", "source", "attributed", "basis")}
+                       for r in stream_receipts.values() if r["line"] not in matched]
     compactions = [{"line": e["line"], "t": at(e["line"]), "source": "stream", "text": e["event"].get("text", "").strip()}
                    for e in parsed["events"] if e["event"].get("type") == "runtime_status"]
     summaries, _, _ = state_messages(folder, execution, where="content LIKE ?", params=("[CONTEXT COMPACTION%",),
                                      limit=MAX_MESSAGES)
+    header, recorded_items = recorded_compactions
     compaction_summaries = []
-    for row in summaries or []:
-        entry = {"timestamp": row.get("timestamp"), "fallback": "deterministic fallback" in (row["content"] or ""),
-                 "excerpt": (row["content"] or "")[:400], "t": None}
-        if unit == "seconds" and isinstance(row.get("timestamp"), (int, float)):
-            offset = row["timestamp"] - origin / 1000
+
+    def place(stamp):
+        if unit == "seconds" and isinstance(stamp, (int, float)) and positions:
+            offset = stamp - origin / 1000
             if 0 <= offset <= max(positions.values()):
-                entry["t"] = round(monotonic(offset), 3)
-        compaction_summaries.append(entry)
+                return round(monotonic(offset), 3)
+        return None
+    if header is not None:
+        # V6: summaries recorded at capture time (they survive without the session database); excerpts only
+        # while the database is still in the run folder.
+        excerpts = {hashlib.sha256((row["content"] or "").encode("utf-8", errors="replace")).hexdigest():
+                    (row["content"] or "")[:400] for row in summaries or []}
+        if header.get("available"):
+            compaction_summaries = [{"timestamp": item.get("timestamp"), "fallback": bool(item.get("fallback")),
+                                     "excerpt": excerpts.get(item.get("sha256")), "t": place(item.get("timestamp")),
+                                     "message_id": item.get("message_id"), "sha256": item.get("sha256"),
+                                     "source": records.COMPACTIONS_FILE} for item in recorded_items]
+        summaries = recorded_items if header.get("available") else None
+    else:
+        for row in summaries or []:
+            compaction_summaries.append({"timestamp": row.get("timestamp"),
+                                         "fallback": "deterministic fallback" in (row["content"] or ""),
+                                         "excerpt": (row["content"] or "")[:400], "t": place(row.get("timestamp")),
+                                         "source": "state.db"})
     headline = next(({**c, "basis": "first successful " + c["lane"].split(":")[1], "attributed": True} for c in calls
                      if c["lane"] in ("terminal:register", "terminal:publish") and c["exit_code"] == 0), None)
     if headline is None:
-        headline = next(({**r, "basis": "first successful analysis", "attributed": True} for r in receipts
-                         if r["outcome"] == "pass"), None)
+        headline = next(({**{k: v for k, v in r.items() if k not in ("source", "receipt")},
+                          "basis": "first successful analysis", "attributed": True} for r in receipts
+                         if r["outcome"] == "pass" and r["t"] is not None), None)
     final_path = folder / "final.md"
     answers_text = [i["text"] for i in parsed["items"] if i.get("type") == "agent_message"]
     if final_path.is_file():
@@ -342,21 +461,34 @@ def run_timeline(view, run, *, caller=None, full=False):
             "axis": {"unit": unit, "duration": round(monotonic(duration), 3), "origin_timestamp_ms": origin,
                      "clock": "monotonic (event timestamps minus the placed suspension)" if unit == "seconds"
                      else "event order (the stream carries no timestamps)"},
-            "suspensions": [suspension] if suspension else [],
+            "suspensions": suspensions,
             "lanes": [{"id": key, "label": label, "count": lanes.get(key, 0)} for key, label in LANES],
-            "calls": calls, "receipts": receipts,
+            "calls": calls, "receipts": receipts, "unreceipted_analysis_calls": unreceipted,
             # None: this harness's stream does not mark compactions (unavailable, not zero).
             "compactions": compactions if reported else None,
-            "attributed": [kind for kind, present in (("suspension", suspension), ("headline", headline),
-                                                      ("answers_consumed", consumed)) if present],
+            "attributed": [kind for kind, present in (
+                ("suspension", any(s.get("attributed") for s in suspensions)),
+                ("receipts", any(r.get("attributed") for r in receipts)),
+                ("headline", headline), ("answers_consumed", consumed)) if present],
             "compaction_summaries": compaction_summaries if summaries is not None else None,
+            "records": {"clock": records.clock_summary(clock, execution),
+                        "receipts": {k: indexed.get(k) for k in ("indexed", "counts", "scanned", "window", "reindexed")}
+                        if indexed is not None else None,
+                        "compactions": {k: header.get(k) for k in ("available", "source", "reason", "count", "fallbacks",
+                                                                   "reindexed")} if header is not None else None},
             "inbox_reads": inbox, "answers_consumed": consumed, "headline": headline,
             "final": {**final, "content_is_untrusted_data": True},
             "tokens": _tokens(parsed["usage"], bool(answers_text)),
             "metrics": metrics, "malformed_lines": parsed["malformed_lines"], "errors": len(parsed["errors"]),
             "links": {"raw": f"/api/runs/{run}/raw", "messages": f"/api/runs/{run}/messages"},
             "limitations": metrics["limitations"] + [
-                "The suspension is placed at the largest event-timestamp gap; the stream records no sleep marker.",
+                ("Suspensions are placed between clock records (clock.jsonl) whose wall clock advanced more than "
+                 "their monotonic clock; inside such a window, at the largest event-timestamp gap."
+                 if clock is not None and len(clock) >= 2 else
+                 "The suspension is placed at the largest event-timestamp gap; this run has no clock records."),
+                ("Receipts are the run_analysis.py receipt files indexed for this delivery (receipts.json)."
+                 if indexed is not None else
+                 "Receipts are read from exit codes of run_analysis.py calls; this run has no receipt index."),
                 "Headline: first successful bio register or community publish, else first successful analysis."]}
 
 

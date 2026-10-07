@@ -5,7 +5,8 @@ import type { Call, RunTimeline } from "../../types/observatory-map";
 // suspension drawn as a fixed-width grey break (its wall duration is labelled, not drawn to scale),
 // receipt pass/fail glyphs, compactions (C), compaction fallbacks (F) and the headline moment.
 // Recorded items are solid; items placed by a heuristic (attributed: the suspension's position, the
-// headline, peer answers read) are dotted and hatched, so they never look recorded (spec v2 C10).
+// headline, peer answers read) are dotted and hatched, so they never look recorded (spec v2 C10). Since V6 a
+// suspension placed between clock records and receipts from indexed receipt files are drawn solid (recorded).
 
 export const ATTRIBUTED_DASH = [1, 3];
 
@@ -31,11 +32,12 @@ function ticks(duration: number, count: number): number[] {
 }
 
 export function scaleFor(timeline: RunTimeline, width: number) {
-  const suspension = timeline.suspensions[0];
-  const plot = Math.max(80, width - GUTTER - 16 - (suspension ? BREAK : 0));
+  // One fixed-width break per suspension (V6 runs can record several between clock records).
+  const breaks = timeline.suspensions.map((s) => s.at);
+  const plot = Math.max(80, width - GUTTER - 16 - breaks.length * BREAK);
   const duration = Math.max(timeline.axis.duration, 1e-6);
   const k = plot / duration;
-  return (t: number) => GUTTER + t * k + (suspension && t > suspension.at ? BREAK : 0);
+  return (t: number) => GUTTER + t * k + breaks.filter((at) => t > at).length * BREAK;
 }
 
 export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) {
@@ -46,7 +48,8 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
   const lanes = useMemo(() => timeline.lanes.filter((l) => l.count > 0), [timeline]);
   const height = TOP + lanes.length * LANE + 12;
   const x = useMemo(() => scaleFor(timeline, width), [timeline, width]);
-  const outcome = useMemo(() => new Map(timeline.receipts.map((r) => [r.line, r.outcome])), [timeline]);
+  const outcome = useMemo(() => new Map(timeline.receipts.filter((r) => r.line !== null).map((r) => [r.line, r.outcome])),
+    [timeline]);
 
   useEffect(() => {
     const element = box.current;
@@ -142,6 +145,13 @@ export default function TimelineCanvas({ timeline }: { timeline: RunTimeline }) 
         context.fillStyle = token(verdict === "pass" ? "good" : "critical");
         context.fillText(verdict === "pass" ? "✓" : "✗", Math.max(3, right - left) + left + 3, y + (LANE - 12) / 2);
       }
+    }
+    // Indexed receipts with no matching stream call (V6): a glyph at the receipt's recorded start time.
+    const analysisRow = laneIndex.get("terminal:analysis");
+    for (const r of timeline.receipts) {
+      if (r.line !== null || r.t === null || analysisRow === undefined || r.outcome === "unknown") continue;
+      context.fillStyle = token(r.outcome === "pass" ? "good" : "critical");
+      context.fillText(r.outcome === "pass" ? "✓" : "✗", x(r.t), TOP + analysisRow * LANE + LANE / 2);
     }
     // Markers across all lanes: compactions (C), fallback summaries (F), headline (★).
     const marker = (t: number, label: string, color: string, dash: number[]) => {
