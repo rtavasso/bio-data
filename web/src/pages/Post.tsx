@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Markdown, type TextAnchor } from "../components/Markdown";
 import { Status } from "../components/Status";
 import { Untrusted } from "../components/Untrusted";
@@ -11,7 +11,8 @@ import { ThreadTree } from "../components/board/ThreadTree";
 import { short, when } from "../components/board/format";
 import { AskForm, CommentBox, MarkForm, PromoteForm } from "../components/participation/Actions";
 import { ModeratePost } from "../components/participation/Moderation";
-import type { CommentGroup, PostDetail, ThreadView } from "../types/board";
+import { isWithheld, type CommentGroup, type HiddenStub, type PostCard, type PostDetail, type PostResponse,
+  type ThreadView } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -65,46 +66,88 @@ function Comments({ post }: { post: PostDetail }) {
           <li key={i}>
             {group.anchor ? (
               <blockquote className="anchor-quote">
-                {group.anchor.quote ?? `${group.anchor.kind} at ${group.anchor.offset ?? group.anchor.row_key ?? group.anchor.node_id}`}
+                {group.anchor.quote ?? (group.anchor.quote_withheld ? "(quote withheld: the anchored post is hidden)"
+                  : `${group.anchor.kind} at ${group.anchor.offset ?? group.anchor.row_key ?? group.anchor.node_id}`)}
                 {problem && <span className="error"> ({problem})</span>}
               </blockquote>
             ) : (
               <p className="meta">On the whole post</p>
             )}
-            {group.comments.map((c) => (
+            {group.comments.map((c) => isWithheld(c) ? (
+              <div key={c.id} className="comment">
+                <HiddenNotice reason={c.reason} />
+                {(c.answers ?? []).map((a) => <AnswerCard key={a.id} answer={a} />)}
+              </div>
+            ) : (
               <div key={c.id} className="comment">
                 <p className="meta">
                   <ParticipantLink id={c.author.id} /> · <Link to={`/post/${c.id}`}>{when(c.created)}</Link>
                 </p>
-                {c.hidden ? <HiddenNotice hidden={c.hidden} /> : (
-                  <Untrusted author={"name" in c.author ? c.author.name : undefined}>
-                    <Markdown source={c.snippet ?? ""} />
-                  </Untrusted>
-                )}
+                {c.hidden && <HiddenNotice reason={c.reason} revealed />}
+                <Untrusted author={"name" in c.author ? c.author.name : undefined}>
+                  <Markdown source={c.snippet ?? ""} />
+                </Untrusted>
                 {c.request && (
                   <p className="meta">
                     Asked <ParticipantLink id={c.request.target} />{" "}
                     <Badge tone={c.request.state === "completed" ? "good" : "warn"}>{c.request.state}</Badge>
                   </p>
                 )}
-                {(c.answers ?? []).map((a) => (
-                  <div key={a.id} className="comment comment-answer" aria-label="Answer to this comment">
-                    <p className="meta">
-                      <ParticipantLink id={a.author.id} /> answered · <Link to={`/post/${a.id}`}>{when(a.created)}</Link>
-                    </p>
-                    {a.hidden ? <HiddenNotice hidden={a.hidden} /> : (
-                      <Untrusted author={"name" in a.author ? a.author.name : undefined}>
-                        <Markdown source={a.snippet ?? ""} />
-                      </Untrusted>
-                    )}
-                  </div>
-                ))}
+                {(c.answers ?? []).map((a) => <AnswerCard key={a.id} answer={a} />)}
               </div>
             ))}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+function AnswerCard({ answer: a }: { answer: PostCard }) {
+  if (isWithheld(a)) {
+    return (
+      <div className="comment comment-answer" aria-label="Answer to this comment"><HiddenNotice reason={a.reason} /></div>
+    );
+  }
+  return (
+    <div className="comment comment-answer" aria-label="Answer to this comment">
+      <p className="meta">
+        <ParticipantLink id={a.author.id} /> answered · <Link to={`/post/${a.id}`}>{when(a.created)}</Link>
+      </p>
+      {a.hidden && <HiddenNotice reason={a.reason} revealed />}
+      <Untrusted author={"name" in a.author ? a.author.name : undefined}>
+        <Markdown source={a.snippet ?? ""} />
+      </Untrusted>
+    </div>
+  );
+}
+
+// A post hidden by moderation: every reader gets its identity and the reason (spec v2 C2). Operators can
+// read it with ?full=1 (the API serves content only to a caller holding `hide` who asks for it).
+function HiddenPost({ stub, thread, reload }: { stub: HiddenStub; thread: ReturnType<typeof useApi<ThreadView>>;
+  reload: () => void }) {
+  return (
+    <article className="post-page">
+      <header>
+        <h1>Hidden post</h1>
+        <p className="meta mono">{stub.id}</p>
+      </header>
+      <div className="post-layout">
+        <div className="post-main">
+          <HiddenNotice reason={stub.reason} />
+          <p className="meta">Operators: <Link to={`/post/${stub.id}?full=1`}>read the hidden record</Link>.</p>
+        </div>
+        <aside className="post-aside">
+          <section className="panel">
+            <h2>Thread</h2>
+            {thread.data ? <ul className="tree"><ThreadTree node={thread.data.tree} focus={stub.id} /></ul> : <Status state={thread} />}
+          </section>
+          <section className="panel">
+            <ModeratePost post={stub.id} hidden onDone={reload} />
+          </section>
+        </aside>
+      </div>
+    </article>
   );
 }
 
@@ -142,8 +185,10 @@ function Fetches({ post }: { post: PostDetail }) {
 // fetches with backed/unbacked reuse, and the human actions (comment, mark, promote, ask the author).
 export default function Post() {
   const { id = "" } = useParams();
-  const state = useApi<PostDetail>(`/api/posts/${id}`);
-  const thread = useApi<ThreadView>(`/api/threads/${id}`);
+  const [params] = useSearchParams();
+  const full = params.get("full") === "1" ? "?full=true" : "";
+  const state = useApi<PostResponse>(`/api/posts/${id}${full}`);
+  const thread = useApi<ThreadView>(`/api/threads/${id}${full}`);
   const [anchor, setAnchor] = useState<TextAnchor | null>(null);
   const [commented, setCommented] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
@@ -154,16 +199,18 @@ export default function Post() {
     setShowDiff(false);
     setCommented(false);
   }, [id]);
-  useQuoteHighlights(bodyNode, (post?.comments ?? []).map((g) => g.anchor?.quote ?? "").filter(Boolean));
+  const detail = post && !isWithheld(post) ? post : undefined;
+  useQuoteHighlights(bodyNode, (detail?.comments ?? []).map((g) => g.anchor?.quote ?? "").filter(Boolean));
 
   if (!post) return <Status state={state} />;
-  const author = post.author_participant;
-  const content = post.content;
-  const latest = post.superseded_by[post.superseded_by.length - 1];
   const reload = () => {
     state.reload();
     thread.reload();
   };
+  if (isWithheld(post)) return <HiddenPost stub={post} thread={thread} reload={reload} />;
+  const author = post.author_participant;
+  const content = post.content;
+  const latest = post.superseded_by[post.superseded_by.length - 1];
   return (
     <article className="post-page">
       <header>
@@ -179,7 +226,9 @@ export default function Post() {
 
       {latest && (
         <div className="band band-warn" role="note">
-          Superseded by <Link to={`/post/${latest.id}`}>{latest.title ?? short(latest.id)}</Link> ({when(latest.created)}).{" "}
+          Superseded by{" "}
+          {isWithheld(latest) ? <Link to={`/post/${latest.id}`}>a hidden post</Link>
+            : <><Link to={`/post/${latest.id}`}>{latest.title ?? short(latest.id)}</Link> ({when(latest.created)})</>}.{" "}
           {post.diff && <button type="button" onClick={() => setShowDiff(!showDiff)} aria-expanded={showDiff}>{showDiff ? "Hide" : "Show"} diff</button>}
         </div>
       )}
@@ -194,7 +243,7 @@ export default function Post() {
 
       <div className="post-layout">
         <div className="post-main">
-          {post.hidden && <HiddenNotice hidden={post.hidden} />}
+          {post.hidden && <HiddenNotice reason={post.reason} revealed />}
           {content && (
             <div ref={setBodyNode}>
               <Untrusted author={author.name}>
@@ -275,9 +324,11 @@ export default function Post() {
             <section className="panel">
               <h2>Replies</h2>
               <ul className="replies">
-                {post.replies.map((r) => (
+                {post.replies.map((r) => isWithheld(r) ? (
+                  <li key={r.id}><Link to={`/post/${r.id}`}>Hidden post</Link> <span className="meta">hidden by moderation</span></li>
+                ) : (
                   <li key={r.id}>
-                    <Link to={`/post/${r.id}`}>{r.hidden ? "Hidden post" : r.title}</Link> <KindBadge kind={r.kind} />{" "}
+                    <Link to={`/post/${r.id}`}>{r.title}</Link> <KindBadge kind={r.kind} />{" "}
                     <span className="meta"><ParticipantLink id={r.author.id} /> · {when(r.created)}</span>
                   </li>
                 ))}
@@ -322,7 +373,7 @@ export default function Post() {
             {(author.kind === "agent" || author.kind === "human") && (
               <details><summary>Ask the author</summary><AskForm target={author.id} parent={post.id} onDone={reload} /></details>
             )}
-            <ModeratePost post={post.id} hidden={Boolean(post.hidden)} onDone={reload} />
+            <ModeratePost post={post.id} hidden={post.hidden} onDone={reload} />
           </section>
         </aside>
       </div>

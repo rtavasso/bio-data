@@ -435,7 +435,7 @@ def digest_skeleton(view, scope, since, until):
     if since and until and since >= until:
         raise DawError("invalid_digest_period", "since must precede until")
     index = views.thread_index(view)
-    hidden = views.hidden_posts(view)
+    vis = views.visibility(view)  # a digest writer is a reader: hidden posts are ids and reasons only
     in_scope = _scoped_posts(view, index, scope)
 
     def within(stamp):
@@ -443,17 +443,19 @@ def digest_skeleton(view, scope, since, until):
 
     def brief(pid):
         row = index["posts"][pid]
+        if vis.withheld(pid):
+            return {**vis.stub(pid), "created": row["created"], "supersedes": row["supersedes"]}
         author = index["people"].get(row["author"], {})
-        return {"id": pid, "title": None if pid in hidden else row["content"].get("title"),
+        return {"id": pid, "title": row["content"].get("title"),
                 "author": row["author"], "author_name": author.get("name"), "kind": row["content"].get("kind"),
                 "created": row["created"], "parent": row["parent"], "supersedes": row["supersedes"],
-                "hidden": pid in hidden}
+                "hidden": False}
 
     posts = [brief(pid) for pid, row in index["posts"].items()
              if pid in in_scope and within(row["created"]) and row["content"].get("kind") != "notice"]
     corrections = [p for p in posts if p["supersedes"]]
     claims = [dict(r) for r in view.rows("SELECT id,post,author,ordinal,text,status,withdrawn_by,created FROM claim "
-                                         "ORDER BY created,id")]
+                                         "ORDER BY created,id") if not vis.withheld(r["post"])]
     new_claims = [c for c in claims if c["post"] in in_scope and within(c["created"])]
     withdrawn = [c for c in claims if c["withdrawn_by"] in in_scope
                  and within(index["posts"].get(c["withdrawn_by"], {}).get("created"))]
@@ -487,8 +489,8 @@ def digest_skeleton(view, scope, since, until):
     def section(title, values, render):
         lines.extend([f"## {title}", ""] + ([render(v) for v in values] or ["- none in this period"]) + [""])
 
-    section("New posts", sections["posts"], lambda p: f"- [{p['id']}] {p['kind']} by {p['author_name']}: "
-            + (json.dumps(p["title"]) if p["title"] else "(hidden by moderation)"))
+    section("New posts", sections["posts"], lambda p: f"- [{p['id']}] (hidden by moderation)" if p["hidden"]
+            else f"- [{p['id']}] {p['kind']} by {p['author_name']}: " + json.dumps(p["title"]))
     section("Corrections", sections["corrections"], lambda p: f"- [{p['id']}] supersedes [{p['supersedes']}]")
     section("Claims stated", sections["claims"], lambda c: f"- [{c['id']}] ({c['status']}) in [{c['post']}]: "
             + json.dumps(c["text"][:300]))
@@ -610,8 +612,10 @@ def digest_tick(board, actor="operator", *, at=None):
 
 # ---------------------------------------------------------------------------- overview (/studio)
 
-def _display(view, index, pid):
+def _display(view, index, pid, vis):
     row = index["posts"].get(pid)
+    if vis.withheld(pid):
+        return vis.stub(pid)
     return {"id": pid, "title": row["content"].get("title") if row else None,
             "author": row["author"] if row else None, "kind": row["content"].get("kind") if row else None}
 
@@ -622,7 +626,7 @@ def _writeup_status(view, pid):
     except DawError as error:
         return {"post": pid, "status": "error", "error": error.reason}
     flag = rendered.get("regeneration_required")
-    return {"post": pid, "title": rendered["post"]["title"], "status": rendered["status"],
+    return {"post": pid, "title": rendered["post"].get("title"), "status": rendered["status"],
             "problems": len(rendered.get("problems") or []), "flagged": flag is not None,
             "withdrawn_claims": [c["claim"] for c in flag["claims"]] if flag else [],
             "regeneration": flag["commission"] if flag else None}
@@ -634,9 +638,11 @@ def overview_exports(view):
             for e in reversed(_events(view, "snapshot_exported"))]
 
 
-def overview(view):
-    """Commissioned outputs grouped by type with state, deliverables, marks, follow-ups and regeneration flags."""
+def overview(view, *, caller=None, full=False):
+    """Commissioned outputs grouped by type with state, deliverables, marks, follow-ups and regeneration flags.
+    A commission whose post is hidden by moderation keeps its request row; its title, note and subject are withheld."""
     index = views.thread_index(view)
+    vis = views.visibility(view, caller, full)
     people = index["people"]
     outcomes, checks, review_marks = {}, {}, {}
     for event in _events(view, "task_outcome"):
@@ -655,7 +661,8 @@ def overview(view):
     for row in view.rows(f"SELECT * FROM request WHERE task_type IN ({placeholders}) ORDER BY created DESC,id",
                          tuple(GROUPS)):
         post = index["posts"].get(row["post"])
-        content = post["content"] if post else {}
+        withheld = vis.withheld(row["post"])
+        content = post["content"] if post and not withheld else {}
         evidence = content.get("evidence") or {}
         outcome = outcomes.get(row["id"])
         item = {"request": row["id"], "task_type": row["task_type"], "state": row["state"], "post": row["post"],
@@ -663,9 +670,10 @@ def overview(view):
                 "updated": row["updated"], "deadline": row["deadline"],
                 "budget": json.loads(row["budget"]) if row["budget"] else None,
                 "target": people.get(row["target"], {"id": row["target"]}),
-                "commissioner": people.get(post["author"], {"id": post["author"]}) if post else None,
+                "commissioner": people.get(post["author"], {"id": post["author"]}) if post and not withheld else None,
+                "hidden": vis.hidden(row["post"]), "reason": vis.reason(row["post"]),
                 "subject": tasks.subject_of(content) if content else None, "note": evidence.get("note"),
-                "answer": _display(view, index, row["answer"]) if row["answer"] else None,
+                "answer": _display(view, index, row["answer"], vis) if row["answer"] else None,
                 "deliverables": outcome["deliverables_found"] if outcome else None,
                 "outcome_run": outcome["run"] if outcome else None}
         if row["task_type"] in ("writing", "digest"):

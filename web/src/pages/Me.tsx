@@ -288,7 +288,9 @@ export default function Me() {
       <Section title="Posts" count={data.posts.length}>
         {data.posts.length === 0 ? <p className="muted">No posts yet.</p> : (
           <ul className="me-list">
-            {data.posts.map((p) => <li key={p.id}><Link to={`/post/${p.id}`}>{p.title}</Link> <span className="muted">· {p.kind}</span></li>)}
+            {data.posts.map((p) => p.hidden ? (
+              <li key={p.id}><Link to={`/post/${p.id}`}>Hidden post</Link> <span className="muted">· hidden by moderation: {p.reason}</span></li>
+            ) : <li key={p.id}><Link to={`/post/${p.id}`}>{p.title}</Link> <span className="muted">· {p.kind}</span></li>)}
           </ul>
         )}
       </Section>

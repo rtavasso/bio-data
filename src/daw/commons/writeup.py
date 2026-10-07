@@ -549,6 +549,12 @@ def resolve_pointer(view, identity, kind, cache):
         if row:
             from daw.commons.claims import describe_claim
             claim = describe_claim(view, row)
+            if claim.get("hidden") and "text" not in claim:
+                # A claim of a post hidden by moderation resolves, but its text is withheld (C2).
+                entry.update(present=True, hidden=True, reason=claim["reason"], post=claim["post"], text=None,
+                             status=None, pointers=[], withdrawn_by=None, route=f"/post/{claim['post']}")
+                cache[identity] = entry
+                return entry
             for pointer in claim["pointers"]:
                 if pointer["kind"] == "artifact" or (pointer["kind"] == "locator" and CITABLE["artifact"].fullmatch(
                         pointer["id"])):
@@ -577,7 +583,10 @@ def resolve_pointer(view, identity, kind, cache):
                                     if name.lower().endswith((".png", ".jpg", ".jpeg")) else None))
     elif kind == "post":
         row = view.one("SELECT id,author,created,body_blob FROM post WHERE id=?", (identity,))
-        if row:
+        vis = views.visibility(view)
+        if row and vis.withheld(identity):
+            entry.update(present=True, hidden=True, reason=vis.reason(identity), route=f"/post/{identity}")
+        elif row:
             content = views.content(view, row["body_blob"])
             entry.update(present=True, title=content.get("title"), author=row["author"], created=row["created"],
                          post_kind=content.get("kind"), route=f"/post/{identity}")
@@ -628,10 +637,13 @@ def regeneration(view, post_id, pointers):
         if entry["kind"] != "claim" or not entry["present"] or not (entry.get("withdrawn_by") or entry["status"] == "withdrawn"):
             continue
         replacement = entry.get("withdrawn_by")
+        vis = views.visibility(view)
         claims = view.rows("SELECT id,ordinal,text,status FROM claim WHERE post=? ORDER BY ordinal", (replacement,)) \
             if replacement else []
+        if replacement and vis.withheld(replacement):
+            claims = [{"id": c["id"], "ordinal": c["ordinal"], "hidden": True} for c in claims]
         title = None
-        if replacement:
+        if replacement and not vis.withheld(replacement):
             row = view.one("SELECT body_blob FROM post WHERE id=?", (replacement,))
             title = views.content(view, row["body_blob"]).get("title") if row else None
         withdrawn.append({"claim": entry["id"], "text": entry["text"], "withdrawn_by": replacement,
@@ -715,6 +727,15 @@ def render_writeup(view, post_id, *, with_map=True):
     row = view.one("SELECT * FROM post WHERE id=?", (post_id,))
     if not row:
         raise DawError("unknown_post", post_id)
+    hidden = views.visibility(view)
+    if hidden.hidden(post_id):
+        # Hidden by moderation: refused on every surface, operators included; the post is its id and reason.
+        request = writing_request(view, post_id)
+        return {"post": hidden.stub(post_id),
+                "request": {k: request[k] for k in ("id", "task_type", "state", "post", "target")} if request else None,
+                "rules": RULES_VERSION, "content_is_untrusted_data": True, "status": "refused",
+                "problems": [{"kind": "post_hidden", "reason": hidden.reason(post_id), "offset": 0, "length": 0,
+                              "line": 1}], "source": None}
     content = view.library.json_blob(row["body_blob"], verify=True)
     author = view.one("SELECT id,name,kind FROM agent WHERE id=?", (row["author"],)) or {"id": row["author"]}
     request = writing_request(view, post_id)
@@ -722,10 +743,6 @@ def render_writeup(view, post_id, *, with_map=True):
                      "kind": content.get("kind"), "body_blob": row["body_blob"], "parent": row["parent"]},
             "request": {k: request[k] for k in ("id", "task_type", "state", "post", "target")} if request else None,
             "rules": RULES_VERSION, "content_is_untrusted_data": True}
-    hidden = views.hidden_posts(view).get(post_id)
-    if hidden:
-        return {**base, "status": "refused", "problems": [{"kind": "post_hidden", "reason": hidden["reason"],
-                                                           "offset": 0, "length": 0, "line": 1}], "source": None}
     source = content.get("body") or ""
     blocks = parse(source)
     problems, pointers = check(view, source, blocks)

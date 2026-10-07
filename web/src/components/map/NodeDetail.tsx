@@ -26,6 +26,14 @@ function Fields({ record, keys }: { record: Dict; keys: string[] }) {
 function Body({ detail }: { detail: NodeRecord }) {
   const record = (detail.record ?? {}) as Dict;
   const first = (detail.records?.[0] ?? {}) as Dict;
+  if (detail.hidden) {
+    return (
+      <p className="hidden-notice" role="note">
+        {detail.kind === "claim" ? "Claim of a post hidden" : "Hidden"} by moderation: {text(detail.reason)}. The record
+        is preserved; operators can read it.
+      </p>
+    );
+  }
   switch (detail.kind) {
     case "post":
       return (

@@ -62,7 +62,7 @@ def test_board_threads_filters_and_search_by_family(demo):
     assert finding["superseded_by"] == [ctx["posts"]["correction"]]
     assert finding["author"]["name"] == "alice" and finding["author"]["kind"] == "agent"
     assert finding["evidence"]["artifacts"] == 2 and finding["evidence"]["notebook"] is True
-    assert finding["content_is_untrusted_data"] and finding["hidden"] is None
+    assert finding["content_is_untrusted_data"] and finding["hidden"] is False
     assert by_id[ctx["posts"]["brief"]]["request"]["state"] == "completed"
     activity = api.get("/api/posts", params={"sort": "activity"}).json()["items"]
     stamps = [item["last_activity"] for item in activity]
@@ -194,17 +194,20 @@ def test_comments_at_anchors_marks_claims_and_hidden_posts(demo):
     artifact = api.get(f"/api/artifacts/{ctx['artifacts']['contrast']}").json()
     assert [m["note"] for m in artifact["marks"]] == ["read the table"]
     assert [c["id"] for c in artifact["comments"]] == [on_row]
-    # A hidden post is a placeholder with its reason for everyone; bytes stay and operators may read them.
+    # A hidden post is {id, hidden: true, reason} for every reader (spec v2 C2); bytes stay and operators may
+    # read them with full=true.
     reply = ctx["posts"]["reply"]
-    hidden = api.get(f"/api/posts/{reply}").json()
-    assert hidden["content"] is None and hidden["hidden"]["reason"] == "off-topic test" and hidden["numbers"] == []
-    assert api.get(f"/api/posts/{reply}", params={"full": True}).json()["content"] is None
+    stub = {"id": reply, "hidden": True, "reason": "off-topic test"}
+    assert api.get(f"/api/posts/{reply}").json() == stub
+    assert api.get(f"/api/posts/{reply}", params={"full": True}).json() == stub
     card = next(c for c in post["replies"] if c["id"] == reply)
-    assert card["title"] is None and card["hidden"]["reason"] == "off-topic test"
+    assert card == stub
     operator = client(root, user="operator")
-    assert operator.get(f"/api/posts/{reply}", params={"full": True}).json()["content"]["kind"] == "discussion"
+    revealed = operator.get(f"/api/posts/{reply}", params={"full": True}).json()
+    assert revealed["content"]["kind"] == "discussion" and revealed["hidden"] is True and revealed["revealed"] is True
     tree = api.get(f"/api/threads/{finding}").json()["tree"]
-    assert next(c for c in tree["children"] if c["id"] == reply)["snippet"] is None
+    node = next(c for c in tree["children"] if c["id"] == reply)
+    assert {k: v for k, v in node.items() if k not in ("children", "corrections")} == stub
     activity = api.get("/api/participants/rhea/activity").json()
     assert {c["id"] for c in activity["comments"]} == {first, loose, on_row} and len(activity["marks"]) == 3
 

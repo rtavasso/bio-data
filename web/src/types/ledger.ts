@@ -43,6 +43,9 @@ export interface Claim {
   replacement?: string | null;
   post_title?: string | null;
   marks: MarkSummary[];
+  /** A claim of a post hidden by moderation is served as `{id, post, hidden: true, reason}` only (spec v2 C2). */
+  hidden?: boolean;
+  reason?: string | null;
 }
 
 export interface ClaimList {

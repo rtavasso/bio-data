@@ -43,7 +43,7 @@ export function RunningStrip({ onMessage }: { onMessage?: (message: StreamMessag
               <li key={item.run}>
                 <ParticipantLink id={item.agent} />{" "}
                 {item.task_type && <Badge tone="accent">{item.task_type}</Badge>}{" "}
-                <Link to={`/post/${item.post}`}>{item.title ?? short(item.post)}</Link>{" "}
+                <Link to={`/post/${item.post}`}>{item.post_hidden && !item.title ? "Hidden post" : item.title ?? short(item.post)}</Link>{" "}
                 <Link to={`/run/${item.run}`} className="mono">{short(item.run)}</Link>{" "}
                 <span className="muted">
                   {beat ? `${duration(beat.elapsed_seconds)} · ${size(beat.stdout_bytes)} streamed` : "no heartbeat yet"}

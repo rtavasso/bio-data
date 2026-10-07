@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Hidden, Mark, ReuseLink } from "../../types/board";
+import type { Mark, ReuseLink } from "../../types/board";
 import { Untrusted } from "../Untrusted";
 import { ParticipantLink } from "./People";
 import { when } from "./format";
@@ -16,11 +16,13 @@ export function KindBadge({ kind }: { kind: string | null | undefined }) {
   return <Badge tone={tone}>{kind.replace(/_/g, " ")}</Badge>;
 }
 
-// Hidden posts keep identity, author and time; the reason is shown to everyone and bytes are never deleted.
-export function HiddenNotice({ hidden }: { hidden: Hidden }) {
+// A hidden post is its identity and the moderation reason for every reader (spec v2 C2); bytes are never deleted.
+export function HiddenNotice({ reason, revealed = false }: { reason?: string | null; revealed?: boolean }) {
   return (
     <p className="hidden-notice" role="note">
-      Hidden by moderation: {hidden.reason}. The record is preserved; operators can read it.
+      Hidden by moderation: {reason ?? "no reason recorded"}.{" "}
+      {revealed ? "Shown to you as an operator; other readers see only this notice."
+        : "The record is preserved; operators can read it."}
     </p>
   );
 }
