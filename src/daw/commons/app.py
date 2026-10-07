@@ -2,14 +2,22 @@
 
 `create_app` mounts every router listed in ROUTER_MODULES. Each module exposes a
 FastAPI `router`; feature modules add their module path to the list. Reads use
-`deps.archive` (mode=ro SQLite). Writes use `deps.board` and must call board
-functions under the board writer lock with the caller's participant identity.
+`deps.archive` (mode=ro SQLite) and never write. Writes depend on
+`daw.commons.api.write.Actor` (CSRF header, HTTP-layer kind check) and open the
+board in the worker thread with `write.call`; the board functions they call check
+permissions and take the writer lock with the caller's participant identity.
 
 `base` is the URL path the app is served under ("/" for `bio commons serve`,
 "/c/<tenant>/" under `bio commons host`). The web app is built with relative
 asset URLs; the server rewrites index.html for its base and injects
 `<meta name="colloquy-base">`, from which the client derives its router basename
 and API prefix. Session cookies are scoped to the base path.
+
+`forwarded_allow_ips` (`--forwarded-allow-ips` on serve and host) names the reverse
+proxies whose `X-Forwarded-Proto` and `X-Forwarded-For` the app trusts; it wraps the
+app in uvicorn's proxy-headers middleware, so the client address (login counters)
+and the scheme (the session cookie's `Secure` flag) come from the proxy only when it
+is trusted. Without it no forwarded header is trusted.
 """
 import html
 import importlib
@@ -50,6 +58,7 @@ class Settings:
     static_dir: Path | None = None
     base: str = "/"               # URL path prefix, always starting and ending with "/"
     login: dict = field(default_factory=dict)   # {attempts, window_seconds} (daw.commons.ratelimit)
+    forwarded_allow_ips: tuple = ()            # trusted reverse proxies (addresses, networks or literals)
 
 
 def status_for(error: DawError):
@@ -75,13 +84,23 @@ def render_index(text, base):
     return text.replace(BASE_META, meta) if BASE_META in text else text.replace("</head>", f"  {meta}\n  </head>", 1)
 
 
-def create_app(root, *, mode="local", local_user="local", static_dir=None, base="/", login=None):
-    """One commons' API and web app. `login` overrides its `[login]` attempt limits (multi-tenant host)."""
+def trusted_proxies(value):
+    """`--forwarded-allow-ips` as a tuple: comma-separated text or an iterable; empty means trust none."""
+    if not value:
+        return ()
+    items = value.split(",") if isinstance(value, str) else list(value)
+    return tuple(item.strip() for item in items if item and item.strip())
+
+
+def create_app(root, *, mode="local", local_user="local", static_dir=None, base="/", login=None,
+               forwarded_allow_ips=None):
+    """One commons' API and web app. `login` overrides its `[login]` attempt limits (multi-tenant host);
+    `forwarded_allow_ips` names trusted reverse proxies (see the module docstring)."""
     from fastapi import FastAPI, Request
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
     from daw.commons import auth
-    from daw.commons.ratelimit import AttemptLimiter, login_limits
+    from daw.commons.ratelimit import BoardAttemptLimiter, login_limits
     from daw.community import Community
 
     if mode not in {"local", "accounts"}:
@@ -89,14 +108,19 @@ def create_app(root, *, mode="local", local_user="local", static_dir=None, base=
     if not BASE.fullmatch(base):
         raise DawError("invalid_base_path", "a path such as / or /c/lab/ (letters, digits, '.', '_', '~', '-')")
     root = Path(root).expanduser().resolve()
-    settings = Settings(root, mode, local_user, static_dir or default_static_dir(), base, login_limits(root, login))
+    settings = Settings(root, mode, local_user, static_dir or default_static_dir(), base, login_limits(root, login),
+                        trusted_proxies(forwarded_allow_ips))
     # Opening the board read-write once applies the additive schema; views then use mode=ro.
     with Community(settings.root) as board:
         auth.prepare(board, settings)
     app = FastAPI(title="Colloquy", description="Research commons API: immutable records, attributed writes.",
                   version="1")
     app.state.settings = settings
-    app.state.login_limiter = AttemptLimiter(settings.login["attempts"], settings.login["window_seconds"])
+    # Failed-login counters live on the board, so a restart does not reset them (daw.commons.ratelimit).
+    app.state.login_limiter = BoardAttemptLimiter(root, settings.login["attempts"], settings.login["window_seconds"])
+    if settings.forwarded_allow_ips:
+        from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+        app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=list(settings.forwarded_allow_ips))
 
     @app.exception_handler(DawError)
     async def daw_error(request: Request, error: DawError):

@@ -13,11 +13,14 @@ from daw.commons.schema import PARTICIPANT_KINDS
 from daw.util import DawError, canonical, now
 
 ORCID = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$")
-PROFILE_FIELDS = {"display_name", "affiliation", "orcid", "role"}
+PROFILE_FIELDS = {"display_name", "affiliation", "orcid"}
+# A participant's role is its kind (M7.1), set by the operator who created it. Profiles written before v2
+# could carry a self-asserted "role"; it is dropped on the next profile write and never displayed.
+LEGACY_PROFILE_FIELDS = {"role"}
 
 
 def clean_profile(profile):
-    profile = dict(profile or {})
+    profile = {k: v for k, v in dict(profile or {}).items() if k not in LEGACY_PROFILE_FIELDS}
     unknown = set(profile) - PROFILE_FIELDS
     if unknown:
         raise DawError("unknown_profile_field", ", ".join(sorted(unknown)))
@@ -77,5 +80,7 @@ def describe(row):
         public.update(harness=config.get("harness", "hermes"), model=config.get("model"),
                       effort=config.get("effort"), started=bool(row.get("native_session")))
     else:
-        public["profile"] = config.get("profile", {})
+        public["profile"] = {k: v for k, v in config.get("profile", {}).items() if k not in LEGACY_PROFILE_FIELDS}
+    # The displayed role comes from the participant kind, never from a self-asserted profile field.
+    public["role"] = public["kind"]
     return public

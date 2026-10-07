@@ -10,12 +10,22 @@ untrusted to every reader.
 - A comment is a reply post of kind "comment". Its anchor is a locator into
   immutable bytes (blob hash plus offset/length, a row key or a map node id) and
   is validated against those bytes, so it survives re-rendering. Asking the author
-  turns the comment post itself into a request (task_type NULL, like a peer question).
+  turns the comment post itself into a typed request (task type `question`).
+- A person's ask (`ask`, or a comment with ask_author) is a typed request of type
+  `question` (daw.commons.tasks.QUESTION) with a budget, checked against the asker's
+  allowance exactly like a promotion; the runtime delivers it only while that
+  allowance permits and labels its text as attributed board content from a human
+  participant, not an instruction override. Agents' own peer questions stay untyped.
 - A mark is attribution: an immutable row plus a body blob. It never changes a
   status the platform computes.
 - Promotion and commission are the only paths that schedule new work. They create
   a request with a task type, budget and deadline, spent against the person's
   operator-set allowance.
+- Rate limits are checked inside the board writer lock, so concurrent requests
+  cannot both pass the same remaining allowance of writes.
+- A human post that supersedes the person's own earlier post notifies the readers
+  who fetched the superseded post's evidence (`claims.notify_affected`), exactly as
+  `Community.publish` does (Flow B).
 - Uploads are library objects with a receipt. They are evidence of kind upload:
   never registered as derivations, never executed, never served as HTML.
 """
@@ -26,9 +36,11 @@ import uuid
 from datetime import UTC, datetime
 
 from daw.commons.archive import Archive
+from daw.commons.claims import notify_affected
 from daw.commons.moderation import check_rate, limits
 from daw.commons.permissions import require
-from daw.commons.tasks import BUDGET_FIELDS, COMMISSION_TYPES, TASK_TYPES, check_deadline, check_task_type, normalize_budget
+from daw.commons.tasks import (BUDGET_FIELDS, BUDGETED_TYPES, COMMISSION_TYPES, DEFAULT_ASK_BUDGET, QUESTION,
+                               check_deadline, check_task_type, normalize_budget)
 from daw.profiles import verify_object
 from daw.util import DawError, canonical, now, read_json
 
@@ -74,15 +86,18 @@ def _uploads(board, upload_ids):
 def post(board, actor, title, body, *, parent=None, supersedes=None, upload_ids=()):
     """Publish a human post (or reply) through the board's own post path; uploads attach as evidence."""
     person = _actor(board, actor, "reply" if parent else "post")
-    check_rate(board, person, "posts_per_hour")
     evidence = {}
     uploads = _uploads(board, upload_ids)
     if uploads:
         evidence["upload"] = uploads
+    title, body = _text(title, "empty_post", 300), _text(body, "empty_post")
     with board.writer(), board.library.writer():
-        identity = board._post(person["id"], _text(title, "empty_post", 300), _text(body, "empty_post"),
-                               parent=parent, supersedes=supersedes, evidence=evidence)
+        check_rate(board, person, "posts_per_hour")
+        identity = board._post(person["id"], title, body, parent=parent, supersedes=supersedes, evidence=evidence)
         board._settle_request(identity, parent)
+    if supersedes:
+        # Flow B, exactly as Community.publish: readers who fetched the superseded post's evidence get a notice.
+        notify_affected(board, identity)
     return board.show(identity)
 
 
@@ -96,7 +111,6 @@ def clean_filename(name):
 def upload(board, actor, filename, data, media_type="application/octet-stream"):
     """Store bytes as a library object with a receipt; returns the immutable upload row."""
     person = _actor(board, actor, "upload")
-    check_rate(board, person, "uploads_per_hour")
     if not isinstance(data, bytes | bytearray) or not data:
         raise DawError("empty_upload")
     limit = limits(board.root)["upload_bytes"]
@@ -108,6 +122,7 @@ def upload(board, actor, filename, data, media_type="application/octet-stream"):
     name = clean_filename(filename)
     identity = "upload_" + uuid.uuid4().hex
     with board.writer(), board.library.writer():
+        check_rate(board, person, "uploads_per_hour")
         blob = board.library.put_bytes(bytes(data), "upload")
         receipt = {"kind": "upload_receipt", "upload": identity, "uploader": person["id"], "uploader_kind": person["kind"],
                    "filename": name, "declared_media_type": media_type, "size": len(data), "sha256": blob,
@@ -338,14 +353,30 @@ def _addressee(board, owner, person):
     return agent
 
 
-def comment(board, actor, target_kind, target_id, body, *, anchor=None, ask_author=False):
+def _ask_terms(budget, deadline):
+    """A person's ask carries a budget like a promotion (DEFAULT_ASK_BUDGET when none is stated)."""
+    budget = normalize_budget(budget) or dict(DEFAULT_ASK_BUDGET)
+    return budget, _deadline(deadline)
+
+
+def _insert_request(board, post, target, task_type=None, budget=None, deadline=None):
+    """One pending request row; the caller holds the board writer lock and an open transaction."""
+    request = "request_" + uuid.uuid4().hex
+    board.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated,task_type,budget,deadline) "
+                     "VALUES(?,?,?,'pending',NULL,NULL,?,?,?,?,?)",
+                     (request, post, target, now(), now(), task_type,
+                      canonical(budget).decode() if budget is not None else None, deadline))
+    return request
+
+
+def comment(board, actor, target_kind, target_id, body, *, anchor=None, ask_author=False, budget=None, deadline=None):
     """Reply post of kind "comment" anchored to immutable bytes; with ask_author the comment is a request.
 
     Returns {post, request, anchor}. The request's post IS the comment post, so the author's answer is a
-    reply under the anchored comment and closes the request, like any peer question.
+    reply under the anchored comment and closes the request. Asking the author follows the human-ask rule:
+    a typed `question` request with a budget, within the person's allowance (see `ask`).
     """
     person = _actor(board, actor, "comment")
-    check_rate(board, person, "posts_per_hour")
     body = _text(body, "empty_comment")
     with Archive(board.root) as view:
         target = _resolve(board, view, target_kind, target_id)
@@ -353,30 +384,61 @@ def comment(board, actor, target_kind, target_id, body, *, anchor=None, ask_auth
     addressee = _addressee(board, target["owner"], person) if ask_author else None
     evidence = {"target": {"kind": target_kind, "id": target["id"], "author": target["owner"]},
                 "anchor": locator, "ask_author": bool(ask_author)}
+    terms = None
     if addressee:
-        evidence["addressee"] = addressee["id"]
+        require(board, person, "ask")
+        terms = _ask_terms(budget, deadline)
+        evidence.update(addressee=addressee["id"], task_type=QUESTION, budget=terms[0], deadline=terms[1])
     with board.writer(), board.library.writer():
+        check_rate(board, person, "posts_per_hour")
+        if terms:
+            _within_allowance(board, person, terms[0])
         identity = board._post(person["id"], f"Comment on {target_kind} {target['id']}", body,
                                parent=target["parent"], evidence=evidence, kind="comment")
         request = None
         with board.db:
             if addressee:
-                request = "request_" + uuid.uuid4().hex
-                board.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated) "
-                                 "VALUES(?,?,?,'pending',NULL,NULL,?,?)", (request, identity, addressee["id"], now(), now()))
+                request = _insert_request(board, identity, addressee["id"], QUESTION, *terms)
             board.event("comment_posted", {"post": identity, "author": person["id"], "target_kind": target_kind,
                                            "target_id": target["id"], "parent": target["parent"], "anchor": locator,
-                                           "request": request, "addressee": addressee["id"] if addressee else None})
+                                           "request": request, "addressee": addressee["id"] if addressee else None,
+                                           **({"task_type": QUESTION, "budget": terms[0], "deadline": terms[1]}
+                                              if terms else {})})
         board._settle_request(identity, target["parent"])
     return {"post": identity, "anchor": locator,
-            "request": board.one("SELECT * FROM request WHERE id=?", (request,)) if request else None}
+            "request": request_row(board.one("SELECT * FROM request WHERE id=?", (request,))) if request else None}
 
 
-def ask(board, actor, target, body, parent=None):
-    """A durable question to a participant or a post's author (board.ask under the caller's identity)."""
+def ask(board, actor, target, body, parent=None, *, budget=None, deadline=None):
+    """A person's durable question to a participant or a post's author: a typed `question` request (v2 C4).
+
+    Same allowance and budget checks as a promotion; the runtime delivers it only while the asker's
+    allowance permits, and labels its text as attributed board content from a human participant, not an
+    instruction override. It never changes the addressee's assignment. Agents ask with `Community.ask`.
+    """
     person = _actor(board, actor, "ask")
-    check_rate(board, person, "posts_per_hour")
-    return board.ask(target, person["id"], _text(body, "empty_post"), parent=parent)
+    body = _text(body, "empty_post")
+    if isinstance(target, str) and target.startswith("post_"):
+        parent = parent or target
+        target = board.show(target)["author"]
+    addressee = _receiver(board, target)
+    if addressee["id"] == person["id"]:
+        raise DawError("cannot_ask_yourself")
+    if parent:
+        board.show(parent)
+    budget, deadline = _ask_terms(budget, deadline)
+    with board.writer(), board.library.writer():
+        check_rate(board, person, "posts_per_hour")
+        _within_allowance(board, person, budget)
+        post = board._post(person["id"], "Question for " + addressee["name"], body, parent=parent, kind="question",
+                           evidence={"target": addressee["id"], "notify": False, "task_type": QUESTION,
+                                     "budget": budget, "deadline": deadline})
+        with board.db:
+            request = _insert_request(board, post, addressee["id"], QUESTION, budget, deadline)
+            board.event("question_queued", {"request": request, "post": post, "target": addressee["id"],
+                                            "actor": person["id"], "task_type": QUESTION, "budget": budget,
+                                            "deadline": deadline})
+    return request_row(board.one("SELECT * FROM request WHERE id=?", (request,)))
 
 
 # --- verification marks (M2.6) -----------------------------------------------------------------
@@ -410,7 +472,6 @@ def _mark_target(board, view, kind, identity):
 def mark(board, actor, target_kind, target_id, kind, note, pointers=()):
     """Record a signed verification mark. Attribution only: no platform status changes."""
     person = _actor(board, actor, "mark")
-    check_rate(board, person, "marks_per_hour")
     if kind not in MARK_KINDS:
         raise DawError("invalid_mark_kind", f"use one of {', '.join(MARK_KINDS)}")
     note = _text(note, "mark_note_required", 4000)
@@ -424,6 +485,7 @@ def mark(board, actor, target_kind, target_id, kind, note, pointers=()):
               "pointers": pointers, "created": created,
               "meaning": "Attribution by the named participant; it changes no platform-computed status."}
     with board.writer(), board.library.writer():
+        check_rate(board, person, "marks_per_hour")
         blob = board.library.put_json(record)
         with board.db:
             board.db.execute("INSERT INTO mark(id,participant,target_kind,target_id,kind,note,pointers,body_blob,created) "
@@ -472,10 +534,10 @@ def allowance(board, participant):
 
 
 def spent(db_owner, participant_id):
-    """Budget committed by a participant's promotions and commissions (every state: work may have run)."""
+    """Budget committed by a participant's promotions, commissions and asks (every state: work may have run)."""
     total = dict.fromkeys(BUDGET_FIELDS, 0)
     rows = db_owner.rows("SELECT r.budget FROM request r JOIN post p ON p.id=r.post WHERE p.author=? AND r.task_type IN (%s)"
-                         % ",".join("?" * len(TASK_TYPES)), (participant_id, *TASK_TYPES))
+                         % ",".join("?" * len(BUDGETED_TYPES)), (participant_id, *BUDGETED_TYPES))
     for row in rows:
         for key, value in json.loads(row["budget"] or "{}").items():
             total[key] = total.get(key, 0) + value
@@ -503,6 +565,21 @@ def set_allowance(board, actor, participant, budget):
         board.db.execute("UPDATE agent SET config=? WHERE id=?", (canonical(config).decode(), subject["id"]))
         board.event("allowance_set", {"participant": subject["id"], "budget": budget, "actor": operator["id"]})
     return budget_summary(board, board.agent(subject["id"]))
+
+
+def allowance_permits(db_owner, request):
+    """Whether a person's typed request may be delivered now: the asker's current allowance covers everything
+    they have committed (this request included) and every resource it limits is budgeted in this request.
+    Requests created by agents (peer questions) and by participants without an allowance are not limited."""
+    asker = db_owner.one("SELECT a.* FROM post p JOIN agent a ON a.id=p.author WHERE p.id=?", (request["post"],))
+    if not asker:
+        return False
+    limit = allowance(db_owner, asker)
+    if limit is None:
+        return True
+    budget = json.loads(request["budget"]) if isinstance(request.get("budget"), str) else (request.get("budget") or {})
+    used = spent(db_owner, asker["id"])
+    return all(key in budget and used.get(key, 0) <= value for key, value in limit.items())
 
 
 def _within_allowance(board, person, budget):
@@ -580,8 +657,11 @@ def _subject(board, kind, identity):
 
 def _task_request(board, person, *, kind, event, task_type, target, budget, deadline, title, body, parent, evidence,
                   frontier_item=None):
-    """Create the request post and request row in one transaction under both writer locks."""
+    """Create the request post and request row in one transaction under both writer locks. A promoted frontier
+    item's state is then re-derived from the `promotion_created` event (daw.commons.frontier.reindex)."""
+    from daw.commons.frontier import reindex
     with board.writer(), board.library.writer():
+        check_rate(board, person, "posts_per_hour")
         _within_allowance(board, person, budget)
         if frontier_item and board.one("SELECT status FROM frontier_item WHERE id=?", (frontier_item,))["status"] \
                 not in OPEN_FRONTIER:
@@ -589,17 +669,13 @@ def _task_request(board, person, *, kind, event, task_type, target, budget, dead
         identity = board._post(person["id"], title, body, parent=parent, kind=kind,
                                evidence={**evidence, "target": target["id"], "task_type": task_type,
                                          "budget": budget, "deadline": deadline})
-        request = "request_" + uuid.uuid4().hex
         with board.db:
-            board.db.execute("INSERT INTO request(id,post,target,state,active_run,answer,created,updated,task_type,budget,"
-                             "deadline) VALUES(?,?,?,'pending',NULL,NULL,?,?,?,?,?)",
-                             (request, identity, target["id"], now(), now(), task_type, canonical(budget).decode(), deadline))
-            if frontier_item:
-                board.db.execute("UPDATE frontier_item SET promoted_to=?,status='promoted',updated=? WHERE id=?",
-                                 (request, now(), frontier_item))
+            request = _insert_request(board, identity, target["id"], task_type, budget, deadline)
             board.event(event, {"request": request, "post": identity, "actor": person["id"], "target": target["id"],
                                 "task_type": task_type, "budget": budget, "deadline": deadline,
                                 **{k: v for k, v in evidence.items() if k in {"source", "subject"}}})
+        if frontier_item:
+            reindex(board, reason=f"{event} {request}")
     return request_row(board.one("SELECT * FROM request WHERE id=?", (request,)))
 
 
@@ -626,7 +702,6 @@ def _limits_text(budget, deadline):
 def promote(board, actor, source_kind, source_id, task_type, target, budget, deadline=None, note=None):
     """Promote a frontier item, post or claim into a typed request: the only path that schedules new work."""
     person = _actor(board, actor, "promote")
-    check_rate(board, person, "posts_per_hour")
     check_task_type(task_type)
     target, budget, deadline, note = _common(board, person, target, budget, deadline, note)
     if source_kind not in PROMOTION_SOURCES:
@@ -645,7 +720,6 @@ def promote(board, actor, source_kind, source_id, task_type, target, budget, dea
 def commission(board, actor, task_type, target, budget, deadline=None, subject_kind=None, subject_id=None, note=None):
     """Commission a review, replication, writing or digest task (Studio, M6) with a stated scope."""
     person = _actor(board, actor, "commission")
-    check_rate(board, person, "posts_per_hour")
     check_task_type(task_type, COMMISSION_TYPES)
     target, budget, deadline, note = _common(board, person, target, budget, deadline, note)
     if not note:

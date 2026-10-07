@@ -71,12 +71,17 @@ class CommentIn(Strict):
     anchor: AnchorIn | None = None
     body: str
     ask_author: bool = False
+    budget: dict[str, Any] | None = None    # asking the author: a budgeted `question` request (C4)
+    deadline: str | None = None
 
 
 class RequestIn(Strict):
+    """A person's ask: a typed `question` request with a budget (default 15 minutes) within their allowance."""
     target: str
     body: str
     parent: str | None = None
+    budget: dict[str, Any] | None = None
+    deadline: str | None = None
 
 
 class PointerIn(Strict):
@@ -148,12 +153,13 @@ def create_reply(identity: str, body: ReplyIn, who: Actor, config: Config):
 @router.post("/comments")
 def create_comment(body: CommentIn, who: Actor, config: Config):
     return call(config, participation.comment, who["id"], body.target_kind, body.target_id, body.body,
-                anchor=_anchor(body.anchor), ask_author=body.ask_author)
+                anchor=_anchor(body.anchor), ask_author=body.ask_author, budget=body.budget, deadline=body.deadline)
 
 
 @router.post("/requests")
 def create_request(body: RequestIn, who: Actor, config: Config):
-    return call(config, participation.ask, who["id"], body.target, body.body, parent=body.parent)
+    return call(config, participation.ask, who["id"], body.target, body.body, parent=body.parent, budget=body.budget,
+                deadline=body.deadline)
 
 
 @router.post("/marks")

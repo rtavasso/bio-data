@@ -4,7 +4,6 @@ from a recorded (synthetic) Europe PMC response, and pinned-model embeddings for
 No network is used: the watcher's transport is an httpx.MockTransport that serves a fixture, labelled
 synthetic in its own payload, for the Europe PMC search URL only.
 """
-import json
 import time
 
 import httpx
@@ -12,7 +11,7 @@ import httpx
 from daw.commons.demo import SYNTHETIC, _no_reserve
 from daw.commons.embeddings import embed_commons
 from daw.commons.watchers import add_watcher, list_watchers, open_workspace, tick
-from daw.util import digest, now
+from daw.util import DawError
 
 RECORDED_SEARCH = {
     "version": "6.9", "hitCount": 1,
@@ -32,23 +31,14 @@ def recorded_transport(payload=RECORDED_SEARCH):
 
 
 def ensure_gap_item(board, ctx):
-    """Index the demo's recorded retrieval gap as a frontier item unless one already points at that event."""
-    event = ctx["gap_event"]
-    pattern = f"%{event}%"
-    existing = board.one("SELECT id FROM frontier_item WHERE source=? OR source LIKE ? OR pointers LIKE ? ORDER BY created LIMIT 1",
-                         (event, pattern, pattern))
-    if existing:
-        return existing["id"]
-    dana = board.agent(ctx["agents"]["dana"])
-    identity = "frontier_" + digest(["work_event", event])[:24]
-    pointers = [{"kind": "receipt", "id": event, "locator": "work_event"}]
-    with board.writer(), board.db:
-        board.db.execute(
-            "INSERT INTO frontier_item(id,question,author,workspace,kind,text,status,blocked_by,watcher_query,pointers,"
-            "source,created,updated,promoted_to) VALUES(?,?,?,?,'gap',?,'open','missing_data',NULL,?,?,?,?,NULL)",
-            (identity, ctx["questions"]["dana"], dana["id"], f"{dana['trial']}/workspace",
-             "Per-sample counts after marker knockdown", json.dumps(pointers), "work_event:" + event, now(), now()))
-        board.event("frontier_item_indexed", {"item": identity, "source": "work_event:" + event, "kind": "gap"})
+    """The frontier item indexed from the demo's recorded retrieval gap (dana's own workspace event). The
+    platform never inserts frontier items: the projection is rebuilt from workspace records and board events."""
+    from daw.commons.frontier import item_id, rebuild_frontier
+    identity = item_id(ctx["agents"]["dana"], ctx["gap_event"])
+    if not board.one("SELECT id FROM frontier_item WHERE id=?", (identity,)):
+        rebuild_frontier(board, reason="discovery demo")
+    if not board.one("SELECT id FROM frontier_item WHERE id=?", (identity,)):
+        raise DawError("unknown_frontier_item", identity)
     return identity
 
 

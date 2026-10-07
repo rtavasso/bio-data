@@ -568,6 +568,9 @@ def export_snapshot(board, actor, kind, identity=None, output=None):
 
     Without `output` the site goes to `<commons>/exports/<snapshot_id>/` (identical exports share it)."""
     person = require(board, board.agent(actor), "export")
+    from daw.commons.moderation import check_rate
+    with board.writer():
+        check_rate(board, person, "exports_per_hour")  # early refusal before the site is built
     with Archive(board.root) as view:
         site, manifest = build_site(view, kind, identity)
     if output is None:
@@ -585,6 +588,9 @@ def export_snapshot(board, actor, kind, identity=None, output=None):
         relative = None
     total = sum(f["bytes"] for f in manifest["files"])
     with board.writer(), board.db:
+        # Authoritative check inside the writer lock (v2 C14): a concurrent export may have used the last slot.
+        # A refused export leaves its content-addressed files unrecorded; nothing names them.
+        check_rate(board, person, "exports_per_hour")
         board.event("snapshot_exported", {"snapshot": snapshot, "scope": manifest["scope"], "actor": person["id"],
                                           "files": len(manifest["files"]), "bytes": total, "counts": manifest["counts"],
                                           "location": relative})

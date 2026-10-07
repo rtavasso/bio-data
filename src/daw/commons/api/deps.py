@@ -23,7 +23,9 @@ def archive(request: Request):
 
 
 def board(request: Request):
-    """Read-write board for write endpoints. Call board functions only; they take the writer lock."""
+    """Read-write board opened by the dependency machinery. Do not use it in endpoints: FastAPI may resolve a
+    dependency and run the endpoint in different threads, and SQLite connections are thread-bound. HTTP writes
+    depend on `daw.commons.api.write.Actor` and open the board with `write.call` (a test enforces this)."""
     from daw.community import Community
     value = Community(request.app.state.settings.root)
     try:

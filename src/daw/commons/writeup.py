@@ -621,8 +621,50 @@ def check(view, source, blocks):
 
 # ---------------------------------------------------------------------------- regeneration and subgraph
 
+def _supersession(view):
+    """{post: [direct replacements]} from the immutable post.supersedes column."""
+    replaced = {}
+    for row in view.rows("SELECT id,supersedes FROM post WHERE supersedes IS NOT NULL ORDER BY seq"):
+        replaced.setdefault(row["supersedes"], []).append(row["id"])
+    return replaced
+
+
+def _chain(replaced, post):
+    """Every later version of a post (replacements of replacements), oldest first."""
+    seen, queue = [], list(replaced.get(post, []))
+    while queue:
+        current = queue.pop(0)
+        if current not in seen:
+            seen.append(current)
+            queue += replaced.get(current, [])
+    return seen
+
+
+def _artifact_backing(view, replaced, artifacts):
+    """For each artifact: the posts naming it in their evidence, split into superseded and current, and whether
+    a current ledger claim points at it. Read from `published` events and the claim projection (recorded only)."""
+    backing = {a: {"superseded": [], "current": [], "claims": False} for a in artifacts}
+    for row in view.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
+        body = json.loads(row["body"])
+        named = (body.get("evidence") or {}).get("artifacts") or []
+        for artifact in set(named) & set(backing):
+            backing[artifact]["superseded" if body.get("post") in replaced else "current"].append(body.get("post"))
+    for row in view.rows("SELECT pointers FROM claim WHERE status!='withdrawn' AND withdrawn_by IS NULL"):
+        for pointer in json.loads(row["pointers"] or "[]"):
+            if isinstance(pointer, dict) and pointer.get("id") in backing:
+                backing[pointer["id"]]["claims"] = True
+    return backing
+
+
 def regeneration(view, post_id, pointers):
-    """Withdrawn claims a write-up cites, with their replacement posts and those posts' current claims."""
+    """Why a write-up should be regenerated (Flow B step 5), or None. Three recorded reasons:
+
+    - it cites a withdrawn ledger claim (with the replacement post and its current claims);
+    - it cites a post that has been superseded, and cites no later version of it;
+    - it cites an artifact named by a superseded publication that no current publication or current ledger
+      claim names any longer.
+
+    Supersession is read from `post.supersedes`, evidence from `published` events; nothing is matched by meaning."""
     withdrawn = []
     for entry in pointers.values():
         if entry["kind"] != "claim" or not entry["present"] or not (entry.get("withdrawn_by") or entry["status"] == "withdrawn"):
@@ -638,14 +680,36 @@ def regeneration(view, post_id, pointers):
                           "replacement_title": title, "replacement_claims": claims,
                           "same_ordinal": next((c["id"] for c in claims if c["ordinal"] == _ordinal(view, entry["id"])),
                                                None)})
-    if not withdrawn:
+    replaced = _supersession(view)
+    cited = {i for i, e in pointers.items() if e["present"]}
+    posts = []
+    for entry in pointers.values():
+        if entry["kind"] != "post" or not entry["present"] or entry["id"] not in replaced:
+            continue
+        later = _chain(replaced, entry["id"])
+        if not set(later) & cited:
+            posts.append({"post": entry["id"], "title": entry.get("title"), "superseded_by": later[-1],
+                          "replacements": later})
+    artifacts = []
+    present = sorted(i for i, e in pointers.items() if e["kind"] == "artifact" and e["present"])
+    if present and replaced:
+        for artifact, found in _artifact_backing(view, replaced, present).items():
+            if found["superseded"] and not found["current"] and not found["claims"]:
+                artifacts.append({"artifact": artifact, "superseded_posts": found["superseded"],
+                                  "replacements": sorted({r for p in found["superseded"] for r in _chain(replaced, p)})})
+    if not (withdrawn or posts or artifacts):
         return None
-    lines = [f"{w['claim']} (withdrawn by {w['withdrawn_by'] or 'its author'})" for w in withdrawn]
-    return {"claims": withdrawn,
-            "note": "This write-up cites withdrawn claims. It is served only with this flag; commission a "
-                    "regeneration from the current ledger. Replacement claims are listed by post, not matched by meaning.",
+    lines = ([f"{w['claim']} (withdrawn by {w['withdrawn_by'] or 'its author'})" for w in withdrawn]
+             + [f"{p['post']} (superseded by {p['superseded_by']})" for p in posts]
+             + [f"{a['artifact']} (named only by superseded {', '.join(a['superseded_posts'])})" for a in artifacts])
+    reasons = (["cites withdrawn claims"] if withdrawn else []) + (["cites superseded posts"] if posts else []) \
+        + (["cites artifacts of superseded publications"] if artifacts else [])
+    return {"claims": withdrawn, "posts": posts, "artifacts": artifacts,
+            "note": "This write-up " + " and ".join(reasons) + ". It is served only with this flag; commission a "
+                    "regeneration from the current ledger. Replacements are listed by recorded supersession, "
+                    "not matched by meaning.",
             "commission": {"task_type": "writing", "subject_kind": "post", "subject_id": post_id,
-                           "note": f"Regenerate write-up {post_id} from the current ledger. Withdrawn claims it "
+                           "note": f"Regenerate write-up {post_id} from the current ledger. Superseded records it "
                                    "cites: " + "; ".join(lines) + "."}}
 
 

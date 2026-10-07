@@ -24,6 +24,9 @@ from daw.util import DawError, digest
 from daw.work import create_question, sync_work
 
 
+WRITE = {"X-Colloquy-Request": "1"}
+
+
 def client(root, user="rhea"):
     return TestClient(create_app(root, local_user=user, static_dir=root / "missing"))
 
@@ -136,11 +139,21 @@ def epmc(results):
 
 
 def frontier_item(board, author, *, status="open", kind="gap", text="Per-sample counts after Nae1 knockdown"):
-    identity = "frontier_test_" + digest([author, text, status])[:12]
-    with board.writer(), board.db:
-        board.db.execute("INSERT INTO frontier_item(id,question,author,workspace,kind,text,status,blocked_by,watcher_query,"
-                         "pointers,source,created,updated,promoted_to) VALUES(?,?,?,NULL,?,?,?,NULL,NULL,'[]','test',?,?,NULL)",
-                         (identity, "question_x", author, kind, text, status, "t", "t"))
+    """An agent-authored item recorded in the author's own workspace and indexed by a rebuild (the projection
+    holds no row a record does not support, v2 C3); "promoted" goes through a person's promotion event."""
+    from daw.commons import frontier, participation
+    agent = board.agent(author)
+    ws = Workspace(board.trial(agent) / "workspace")
+    try:
+        with ws.writer():
+            question = ws.one("SELECT id FROM question ORDER BY created,id LIMIT 1")["id"]
+            event = frontier.record_item(ws, question, kind=kind, text=text, key="test-" + digest([text])[:12])
+    finally:
+        ws.close()
+    frontier.rebuild_frontier(board)
+    identity = frontier.item_id(agent["id"], event["id"])
+    if status == "promoted":
+        participation.promote(board, "operator", "frontier_item", identity, "research", agent["id"], {"minutes": 5})
     return identity
 
 
@@ -249,10 +262,16 @@ def test_demo_watcher_status_and_api(demo):
         item = view.one("SELECT * FROM frontier_item WHERE id=?", (discovery["frontier_item"],))
         assert item["status"] == "candidate_evidence" and item["author"] == ctx["agents"]["dana"]
         assert ctx["gap_event"] in item["source"]
-    created = api.post("/api/watchers", json={"item": discovery["frontier_item"], "query": "marker knockdown RNA-seq",
-                                              "provider": "europepmc", "interval_seconds": WEEK})
+    body = {"item": discovery["frontier_item"], "query": "marker knockdown RNA-seq", "provider": "europepmc",
+            "interval_seconds": WEEK}
+    # Watcher writes follow the Actor discipline: the CSRF header is required in local and cookie mode (v2 C3).
+    assert api.post("/api/watchers", json=body).status_code == 403
+    created = api.post("/api/watchers", headers=WRITE, json=body)
     assert created.status_code == 200 and created.json()["author"] != "operator"
-    assert api.post("/api/watchers", json={"item": "nope", "query": "x", "provider": "europepmc"}).status_code == 404
+    assert api.post("/api/watchers", headers=WRITE,
+                    json={"item": "nope", "query": "x", "provider": "europepmc"}).status_code == 404
+    assert api.post(f"/api/watchers/{created.json()['id']}/disable").status_code == 403
+    assert api.post(f"/api/watchers/{created.json()['id']}/disable", headers=WRITE).json()["enabled"] is False
     assert api.get("/api/watchers/watcher_nope/runs").status_code == 404
     with Archive(root) as view:
         assert len(list_watchers(view, discovery["frontier_item"])) == 2

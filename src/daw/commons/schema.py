@@ -80,6 +80,10 @@ CREATE TABLE IF NOT EXISTS digest_schedule (
  id TEXT PRIMARY KEY, person TEXT NOT NULL REFERENCES agent(id), target TEXT NOT NULL REFERENCES agent(id),
  scope TEXT NOT NULL, interval_days INTEGER NOT NULL, budget TEXT NOT NULL, next_due TEXT NOT NULL,
  last_until TEXT, enabled INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL);
+-- M7 failed-login counters (daw.commons.ratelimit.BoardAttemptLimiter): operational state that survives restarts.
+-- Keys are sha256 digests (never raw addresses or tokens); rows older than the window are pruned on write.
+CREATE TABLE IF NOT EXISTS login_failure (key TEXT NOT NULL, at REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS login_failure_key ON login_failure(key,at);
 """
 
 IMMUTABLE = ("mark", "upload", "watcher_run")
@@ -103,9 +107,19 @@ def upgrade(db):
     db.executescript("BEGIN IMMEDIATE;\n" + script + "\nCOMMIT;")
 
 
-def current(db):
-    """True when a v2 board already has every additive table (new modules add tables here)."""
+def wanted_objects():
+    """{(type, name)} of every additive table, index and immutability trigger the current schema defines."""
     import re
-    wanted = set(re.findall(r"CREATE TABLE IF NOT EXISTS (\w+)", TABLES))
-    present = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    return wanted <= present
+    script = TABLES + triggers()
+    return ({("table", n) for n in re.findall(r"CREATE TABLE IF NOT EXISTS (\w+)", script)}
+            | {("index", n) for n in re.findall(r"CREATE INDEX IF NOT EXISTS (\w+)", script)}
+            | {("trigger", n) for n in re.findall(r"CREATE TRIGGER IF NOT EXISTS (\w+)", script)})
+
+
+def current(db):
+    """True when a v2 board already has every additive table, index and trigger. A board missing an
+    immutability trigger (dropped, or created before the trigger existed) is not current, so the next
+    read-write open re-applies the idempotent script."""
+    present = {(row[0], row[1]) for row in db.execute(
+        "SELECT type,name FROM sqlite_master WHERE type IN ('table','index','trigger')")}
+    return wanted_objects() <= present

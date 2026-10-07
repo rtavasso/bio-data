@@ -10,7 +10,8 @@ writes; agent workspaces are never touched), copies the provider responses into
 the library, and records an immutable `watcher_run` with the receipt and every
 accession found. Accessions not seen in earlier runs of the same watcher produce a
 notice to the item's author ("New evidence may fit <item>") and move an open item
-to `candidate_evidence`. That is all: retrieval only. Whether a hit fits the item
+to `candidate_evidence` (the `watcher_ran` event records the change and its accessions; the frontier
+projection derives the status from that event). That is all: retrieval only. Whether a hit fits the item
 is the author's decision, recorded in their notebook; a watcher never closes an
 item, never schedules work and never reads the hits as evidence.
 
@@ -24,6 +25,7 @@ from pathlib import Path
 
 from daw.adapters import Sources
 from daw.catalog import Workspace
+from daw.commons.frontier import reindex
 from daw.commons.notices import notify
 from daw.commons.permissions import require
 from daw.community import PROVIDER_CITATION
@@ -80,31 +82,34 @@ def add_watcher(board, actor, item, query, provider, interval_seconds=WEEK):
         raise DawError("invalid_watcher_interval", "between one hour and one year, in seconds")
     spec = normalize_query(query, provider)
     identity = "watcher_" + uuid.uuid4().hex
-    with board.writer(), board.db:
+    with board.writer(), board.library.writer():
         target = board.one("SELECT id,status FROM frontier_item WHERE id=?", (item,))
         if not target:
             raise DawError("unknown_frontier_item", item)
-        board.db.execute("INSERT INTO watcher(id,item,author,query,provider,interval_seconds,next_due,enabled,created) "
-                         "VALUES(?,?,?,?,?,?,?,1,?)", (identity, item, participant["id"], canonical(spec).decode(), provider,
-                                                       interval_seconds, time.time(), now()))
-        # watcher_query is a board-owned field of the frontier projection, like promoted_to.
-        board.db.execute("UPDATE frontier_item SET watcher_query=? WHERE id=?",
-                         (canonical({"watcher": identity, "provider": provider, **spec}).decode(), item))
-        board.event("watcher_added", {"watcher": identity, "item": item, "author": participant["id"],
-                                      "provider": provider, "query": spec, "interval_seconds": interval_seconds})
+        with board.db:
+            board.db.execute("INSERT INTO watcher(id,item,author,query,provider,interval_seconds,next_due,enabled,created) "
+                             "VALUES(?,?,?,?,?,?,?,1,?)", (identity, item, participant["id"], canonical(spec).decode(),
+                                                           provider, interval_seconds, time.time(), now()))
+            board.event("watcher_added", {"watcher": identity, "item": item, "author": participant["id"],
+                                          "provider": provider, "query": spec, "interval_seconds": interval_seconds})
+        # The item's watcher_query is board-owned while the watcher is enabled; the projection derives it
+        # from this event (daw.commons.frontier.board_state).
+        reindex(board, reason=f"watcher {identity} added")
     return describe(board, board.one("SELECT * FROM watcher WHERE id=?", (identity,)))
 
 
 def disable_watcher(board, actor, watcher):
     participant = require(board, _participant(board, actor), "watch")
-    with board.writer(), board.db:
+    with board.writer(), board.library.writer():
         row = board.one("SELECT * FROM watcher WHERE id=?", (watcher,))
         if not row:
             raise DawError("unknown_watcher", watcher)
         if participant["id"] != row["author"] and participant.get("kind") != "operator":
             raise DawError("permission_denied", "only the watcher's author or an operator can disable it")
-        board.db.execute("UPDATE watcher SET enabled=0 WHERE id=?", (watcher,))
-        board.event("watcher_disabled", {"watcher": watcher, "item": row["item"], "actor": participant["id"]})
+        with board.db:
+            board.db.execute("UPDATE watcher SET enabled=0 WHERE id=?", (watcher,))
+            board.event("watcher_disabled", {"watcher": watcher, "item": row["item"], "actor": participant["id"]})
+        reindex(board, reason=f"watcher {watcher} disabled")  # unmasks the author's own watcher_query
     return describe(board, board.one("SELECT * FROM watcher WHERE id=?", (watcher,)))
 
 
@@ -204,21 +209,25 @@ def run_watcher(board, ws, watcher, *, transport=None, at=None):
                          evidence={"watcher": watcher["id"], "watcher_run": run_id, "item": item["id"],
                                    "receipt_blob": receipt_blob, "new": [h["accession"] for h in new]},
                          key=f"watcher:{watcher['id']}:{digest(sorted(h['accession'] for h in new))[:32]}")
-    with board.writer(), board.db:
-        board.db.execute("INSERT INTO watcher_run(id,watcher,item,query,provider,receipt_blob,found,post,created) "
-                         "VALUES(?,?,?,?,?,?,?,?,?)", (run_id, watcher["id"], watcher["item"], watcher["query"],
-                                                       watcher["provider"], receipt_blob, canonical(found).decode(),
-                                                       request["post"] if request else None, now()))
-        board.db.execute("UPDATE watcher SET next_due=? WHERE id=?", (at + watcher["interval_seconds"], watcher["id"]))
-        promoted = bool(new and item and item["status"] == "open")
+    with board.writer(), board.library.writer():
+        current = board.one("SELECT status FROM frontier_item WHERE id=?", (watcher["item"],))
+        # The event records whether this run moved an open item to candidate evidence; the projection derives the
+        # status from it (never set here), so a watcher never closes an item or overrides promoted/closed states.
+        promoted = bool(new and current and current["status"] == "open")
+        with board.db:
+            board.db.execute("INSERT INTO watcher_run(id,watcher,item,query,provider,receipt_blob,found,post,created) "
+                             "VALUES(?,?,?,?,?,?,?,?,?)", (run_id, watcher["id"], watcher["item"], watcher["query"],
+                                                           watcher["provider"], receipt_blob, canonical(found).decode(),
+                                                           request["post"] if request else None, now()))
+            board.db.execute("UPDATE watcher SET next_due=? WHERE id=?", (at + watcher["interval_seconds"], watcher["id"]))
+            board.event("watcher_ran", {"watcher": watcher["id"], "run": run_id, "item": watcher["item"],
+                                        "found": len(found), "new": len(new),
+                                        "found_accessions": [h["accession"] for h in found],
+                                        "new_accessions": [h["accession"] for h in new],
+                                        "post": request["post"] if request else None, "receipt_blob": receipt_blob,
+                                        "status_changed": promoted, "exhausted": result["exhausted"]})
         if promoted:
-            # Board-owned projection field; never closes the item and never overrides promoted/closed states.
-            board.db.execute("UPDATE frontier_item SET status='candidate_evidence',updated=? WHERE id=? AND status='open'",
-                             (now(), item["id"]))
-        board.event("watcher_ran", {"watcher": watcher["id"], "run": run_id, "item": watcher["item"], "found": len(found),
-                                    "new": len(new), "post": request["post"] if request else None,
-                                    "receipt_blob": receipt_blob, "status_changed": promoted,
-                                    "exhausted": result["exhausted"]})
+            reindex(board, reason=f"watcher run {run_id}")
     return {"watcher": watcher["id"], "run": run_id, "found": len(found), "new": [h["accession"] for h in new],
             "notice": request, "receipt_blob": receipt_blob, "warnings": result["warnings"], "item_missing": item is None}
 

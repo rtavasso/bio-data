@@ -7,13 +7,16 @@ a hidden post stays in the archive, readable through its identifier, with the
 moderation record shown beside it. Only operators moderate.
 
 Rate limits apply to human accounts and are computed from the board's own records
-(posts, marks and uploads created in the last hour), so they survive restarts and
-hold across processes. Operator-tunable limits live in `<commons>/commons.toml`:
+(posts, marks, uploads and `snapshot_exported` events created in the last hour), so
+they survive restarts and hold across processes. Callers check them inside the board
+writer lock, so two concurrent writes cannot both pass the last remaining slot.
+Operator-tunable limits live in `<commons>/commons.toml`:
 
     [limits]
     posts_per_hour = 30     # posts, comments, questions, promotions and commissions
     marks_per_hour = 60
     uploads_per_hour = 20
+    exports_per_hour = 10   # static snapshots (M6.5), counted from snapshot_exported events
     upload_bytes = 26214400 # 25 MiB per file
 """
 import tomllib
@@ -22,7 +25,8 @@ from datetime import UTC, datetime, timedelta
 from daw.commons.permissions import require
 from daw.util import DawError, now
 
-DEFAULT_LIMITS = {"posts_per_hour": 30, "marks_per_hour": 60, "uploads_per_hour": 20, "upload_bytes": 25 * 1024 * 1024}
+DEFAULT_LIMITS = {"posts_per_hour": 30, "marks_per_hour": 60, "uploads_per_hour": 20, "exports_per_hour": 10,
+                  "upload_bytes": 25 * 1024 * 1024}
 ACTIONS = {
     "hide": ("post", "hidden", "post_hidden", "hide"),
     "unhide": ("post", "visible", "post_unhidden", "hide"),
@@ -30,9 +34,9 @@ ACTIONS = {
     "reinstate": ("participant", "active", "participant_reinstated", "suspend"),
 }
 EVENTS = {event: (kind, state) for kind, state, event, _ in ACTIONS.values()}
-# What each rate limit counts: (table, author column).
+# What each rate limit counts: (table, author column), or ("event", kind, body field naming the participant).
 COUNTED = {"posts_per_hour": ("post", "author"), "marks_per_hour": ("mark", "participant"),
-           "uploads_per_hour": ("upload", "uploader")}
+           "uploads_per_hour": ("upload", "uploader"), "exports_per_hour": ("event", "snapshot_exported", "actor")}
 
 
 def limits(root):
@@ -54,14 +58,20 @@ def limits(root):
 
 
 def check_rate(board, participant, limit):
-    """Raise rate_limited when a human already made `limit` writes of this family in the last hour."""
+    """Raise rate_limited when a human already made `limit` writes of this family in the last hour.
+    Call it while holding `board.writer()`, immediately before the write it limits."""
     if participant.get("kind") != "human":
         return
     allowed = limits(board.root)[limit]
-    table, column = COUNTED[limit]
     since = (datetime.now(UTC) - timedelta(hours=1)).isoformat()
-    count = board.db.execute(f"SELECT count(*) FROM {table} WHERE {column}=? AND created>?",
-                             (participant["id"], since)).fetchone()[0]
+    counted = COUNTED[limit]
+    if counted[0] == "event":
+        count = board.db.execute("SELECT count(*) FROM event WHERE kind=? AND json_extract(body,?)=? AND created>?",
+                                 (counted[1], "$." + counted[2], participant["id"], since)).fetchone()[0]
+    else:
+        table, column = counted
+        count = board.db.execute(f"SELECT count(*) FROM {table} WHERE {column}=? AND created>?",
+                                 (participant["id"], since)).fetchone()[0]
     if count >= allowed:
         raise DawError("rate_limited", f"{limit.replace('_', ' ')} limit is {allowed}; try again later")
 

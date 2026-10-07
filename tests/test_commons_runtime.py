@@ -289,7 +289,8 @@ def test_typed_research_prompt_budget_and_outcome(demo):
         assert receipt["download_bytes"]["restored"] and receipt["download_bytes"]["applied"]["bundle_bytes"] == 4096
         # Harness telemetry (1200 input + 450 output) is checked against the limit after the turn, not enforced.
         assert receipt["tokens"]["used"] == 1650 and receipt["tokens"]["exceeded"] is True
-        [outcome] = events(board, "task_outcome")
+        # The demo board also holds the participation demo's answered ask (a typed `question` request since v2 C4).
+        [outcome] = [e for e in events(board, "task_outcome") if e["request"] == request["id"]]
         assert outcome["task_type"] == "research" and outcome["request"] == request["id"]
         assert outcome["criteria"]["pointers"]["unresolved"] == [f"post_{'0' * 32}"]
         assert ctx["artifacts"]["normalized"] not in outcome["criteria"]["pointers"]["unresolved"]

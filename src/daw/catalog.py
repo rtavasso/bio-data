@@ -138,6 +138,13 @@ class Workspace:
             finally:
                 fcntl.flock(lock, fcntl.LOCK_UN)
 
+    def _staging(self):
+        """Scratch directory for blob writes. Operational, never content: a checkout restored from git (which
+        drops empty directories, e.g. the committed cohort fixture) gets it back on its first write."""
+        staging = self.root / "staging"
+        staging.mkdir(exist_ok=True)
+        return staging
+
     def rows(self, sql, params=()):
         return [dict(r) for r in self.db.execute(sql, params)]
 
@@ -167,7 +174,7 @@ class Workspace:
         destination = self.root / "blobs/sha256" / sha[:2] / sha
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
-            fd, temp = tempfile.mkstemp(dir=self.root / "staging")
+            fd, temp = tempfile.mkstemp(dir=self._staging())
             try:
                 with os.fdopen(fd, "wb") as out, path.open("rb") as source:
                     shutil.copyfileobj(source, out)
@@ -193,7 +200,7 @@ class Workspace:
         return sha
 
     def put_bytes(self, data: bytes, classification="metadata"):
-        fd, temp = tempfile.mkstemp(dir=self.root / "staging")
+        fd, temp = tempfile.mkstemp(dir=self._staging())
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)

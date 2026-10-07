@@ -668,8 +668,8 @@ def participant_activity(view, identity):
             "comments": [p for p in posts if p["kind"] == "comment"],
             "marks": [{**row, "pointers": _jsonish(row["pointers"], [])}
                       for row in view.rows("SELECT * FROM mark WHERE participant=? ORDER BY created DESC,id", (pid,))],
-            "promotions": [r for r in sent if r["task_type"] and r["task_type"] != "notice"],
-            "asked": [r for r in sent if not r["task_type"]],
+            "promotions": [r for r in sent if r["task_type"] and r["task_type"] not in ("notice", "question")],
+            "asked": [r for r in sent if not r["task_type"] or r["task_type"] == "question"],
             "sequence": index["sequence"]}
 
 
@@ -681,10 +681,12 @@ def list_requests(view, *, target=None, state=None, task_type=None, limit=200):
     if state:
         conditions.append("r.state=?")
         params.append(state)
-    if task_type:
-        conditions.append("r.task_type IS NULL" if task_type == "question" else "r.task_type=?")
-        if task_type != "question":
-            params.append(task_type)
+    if task_type == "question":
+        # Questions: agents' untyped peer questions and people's typed asks (task type question).
+        conditions.append("(r.task_type IS NULL OR r.task_type='question')")
+    elif task_type:
+        conditions.append("r.task_type=?")
+        params.append(task_type)
     sql = ("SELECT r.*,p.author AS asker,p.body_blob FROM request r JOIN post p ON p.id=r.post"
            + (" WHERE " + " AND ".join(conditions) if conditions else "") + " ORDER BY r.created DESC,r.id LIMIT ?")
     hidden = hidden_posts(view)
@@ -694,7 +696,8 @@ def list_requests(view, *, target=None, state=None, task_type=None, limit=200):
         items.append({**row, "budget": _jsonish(row.get("budget"), None),
                       "title": None if hidden.get(row["post"]) else body.get("title"),
                       "kind": body.get("kind"), "content_is_untrusted_data": True})
-    return {"items": items, "note": "a request without a task type is a legacy peer question"}
+    return {"items": items, "note": "a request without a task type is an agent's peer question; task type "
+                                    "question is a person's budgeted ask"}
 
 
 def heartbeat(folder):

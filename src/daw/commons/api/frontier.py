@@ -1,16 +1,19 @@
 """Claim ledger, contradiction queue, corrections, frontier browser and wishlist (M1.6, M1.7, M5.1, M5.3, M5.4).
 
-Reads use the read-only archive. The frontier projection is refreshed from the
-participant workspaces before a read when the board sequence or any workspace's
-work-event count changed; that refresh is the only write a GET performs and it
-goes through `rebuild_frontier` under the board writer lock. Cluster confirmation
-is a person's attribution event; nothing here resolves a contradiction or merges items.
+Reads use the read-only archive and never write: the frontier projection is
+refreshed on the write path (publication, promotion, watcher events) and by the
+operator's `bio commons frontier rebuild`, so a GET serves the projection as it
+stands and says whether it is behind the workspaces (`projection_current`).
+Cluster confirmation is a person's attribution event, written through `Actor` and
+`call` like every other HTTP write; nothing here resolves a contradiction or
+merges items.
 """
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from daw.commons import claims, frontier
-from daw.commons.api.deps import Board, Caller, Config, View
+from daw.commons.api.deps import Config, View
+from daw.commons.api.write import Actor, call
 from daw.util import DawError
 
 router = APIRouter(prefix="/api", tags=["ledger"])
@@ -27,9 +30,9 @@ def _cached(view, name, key, compute):
     return value
 
 
-def _fresh(view, config):
-    frontier.ensure_current(config.root, view)
-    return frontier.refresh_key(view)
+def _key(view):
+    """Cache key for projection reads: the board sequence (every projection write appends an event)."""
+    return view.sequence()
 
 
 @router.get("/claims")
@@ -58,16 +61,16 @@ def correction(post: str, view: View):
 
 
 @router.get("/frontier")
-def frontier_items(view: View, config: Config, kind: str | None = None, status: str | None = None,
+def frontier_items(view: View, kind: str | None = None, status: str | None = None,
                    blocked_by: str | None = None, question: str | None = None, author: str | None = None):
-    _fresh(view, config)
-    return frontier.browse(view, kind=kind, status=status, blocked_by=blocked_by, question=question, author=author)
+    result = frontier.browse(view, kind=kind, status=status, blocked_by=blocked_by, question=question, author=author)
+    result["projection_current"] = frontier.is_current(view)
+    return result
 
 
 @router.get("/frontier/clusters")
-def frontier_clusters(view: View, config: Config):
-    key = _fresh(view, config)
-    return _cached(view, "clusters", key, lambda: {"items": frontier.browse(view, status="all")["clusters"]})
+def frontier_clusters(view: View):
+    return _cached(view, "clusters", _key(view), lambda: {"items": frontier.browse(view, status="all")["clusters"]})
 
 
 class ClusterConfirmation(BaseModel):
@@ -76,13 +79,12 @@ class ClusterConfirmation(BaseModel):
 
 
 @router.post("/frontier/clusters/confirm")
-def confirm(body: ClusterConfirmation, board: Board, participant: Caller):
-    return frontier.confirm_cluster(board, participant["id"], body.items, body.note)
+def confirm(body: ClusterConfirmation, who: Actor, config: Config):
+    return call(config, frontier.confirm_cluster, who["id"], body.items, body.note)
 
 
 @router.get("/frontier/{identity}")
-def frontier_item(identity: str, view: View, config: Config):
-    _fresh(view, config)
+def frontier_item(identity: str, view: View):
     row = view.one("SELECT * FROM frontier_item WHERE id=?", (identity,))
     if not row:
         raise DawError("unknown_frontier_item", identity)
@@ -93,6 +95,6 @@ def frontier_item(identity: str, view: View, config: Config):
 
 
 @router.get("/wishlist")
-def dataset_wishlist(view: View, config: Config):
-    key = _fresh(view, config)
-    return _cached(view, "wishlist", key, lambda: frontier.wishlist(view))
+def dataset_wishlist(view: View):
+    # LABBOOK lines are read from workspaces, so the key also covers their work events.
+    return _cached(view, "wishlist", frontier.refresh_key(view), lambda: frontier.wishlist(view))
