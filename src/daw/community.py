@@ -100,12 +100,15 @@ def posts_naming(owner, artifact):
     return named
 
 
-def find(owner, text="", *, limit=20, offset=0, family="forum", full=False):
+def find(owner, text="", *, limit=20, offset=0, family="forum", full=False, moderate=False, reader=None):
     """Search the shared board. family=artifact|work searches the library's published derivations and
     notebooks; all searches every family. Artifact hits are retrievable with community fetch via the
     posts that name them (listed under `posts`). Compact by default: a 20-hit forum search with full
     2000-character excerpts is ~40 KB of model context and most hits are never opened; full=True
-    restores the excerpts and index bookkeeping. `owner` is a Community or a read-only Archive."""
+    restores the excerpts and index bookkeeping. `owner` is a Community or a read-only Archive.
+    With `moderate` (every agent-facing search), hits on hidden posts and their claims are not served and are
+    counted in `withheld_hidden`, and refused write-ups show their placeholder (spec v2 C2, C5); the web read
+    models apply the same resolver themselves."""
     if family not in SEARCH_FAMILIES:
         raise DawError("unknown_search_family", "use forum, artifact, work, claim or all")
     result = search(owner.library, text, family=SEARCH_FAMILIES[family], limit=limit, offset=offset)
@@ -123,9 +126,23 @@ def find(owner, text="", *, limit=20, offset=0, family="forum", full=False):
             claim = owner.one("SELECT post,author,status,withdrawn_by FROM claim WHERE id=?", (item["subject"],))
             if claim:
                 item.update(claim)
+    if moderate:
+        from daw.commons.moderation import Visibility
+        vis, kept, withheld = Visibility.of(owner, reader), [], 0
+        for item in result["items"]:
+            post = item["subject"] if item.get("family") == "forum" else item.get("post")
+            if isinstance(post, str) and vis.withheld(post):
+                withheld += 1  # serving a hit on a hidden post's text would disclose it
+                continue
+            if item.get("family") == "forum" and vis.refused(item["subject"]):
+                info = vis.refused_writeups[item["subject"]]
+                from daw.commons.checks import PLACEHOLDER_TITLE, snippet
+                item = {**item, "title": PLACEHOLDER_TITLE, "summary": snippet(info), "withheld": info}
+            kept.append(item)
+        result["items"], result["withheld_hidden"] = kept, withheld
     if not full:
         keep = ("subject", "family", "title", "author", "created", "kind", "artifacts", "superseded_by", "posts",
-                "post", "status", "withdrawn_by", "score")
+                "post", "status", "withdrawn_by", "score", "withheld")
         result["items"] = [{**{k: i[k] for k in keep if k in i}, "snippet": (i.get("summary") or "")[:300],
                             "content_is_untrusted_data": True} for i in result["items"]]
         result["note"] = "compact listing; community show POST reads a post, --full restores excerpts"
@@ -234,6 +251,30 @@ class Community:
 
     def _evidence_summary(self, evidence):
         return evidence_summary(self.library, evidence)
+
+    def read(self, identity, reader=None, *, full=False):
+        """`show` as a reader sees it, agents included: one moderation rule for every reader (spec v2 C2).
+        A hidden post is `{id, hidden, reason}` (unless the reader holds `hide` and asks for `full`); a refused
+        write-up shows its placeholder (C5); hidden replies are stubs and anchor quotes of hidden posts are dropped.
+        `show` stays the internal, unmoderated record access for board functions."""
+        from daw.commons.moderation import Visibility
+        caller = self.agent(reader) if reader else None
+        vis = Visibility.of(self, caller, full)
+        if not self.one("SELECT id FROM post WHERE id=?", (identity,)):
+            raise DawError("unknown_post", identity)
+        if vis.withheld(identity):
+            return {**vis.stub(identity), "content_is_untrusted_data": True}
+        shown = self.show(identity)
+        content = {**shown["content"], "evidence": vis.evidence(shown["content"].get("evidence") or {})}
+        if vis.refused(identity):
+            from daw.commons.checks import PLACEHOLDER_TITLE, snippet
+            info = vis.refused_writeups[identity]
+            content = {**content, "title": PLACEHOLDER_TITLE, "body": snippet(info)}
+            shown = {**shown, "withheld": info, "claims": []}
+        if identity in vis.records:
+            shown = {**shown, "hidden": True, "reason": vis.reason(identity), "revealed": True}
+        replies = [vis.stub(r["id"]) if vis.withheld(r["id"]) else r for r in shown["replies"]]
+        return {**shown, "content": content, "replies": replies}
 
     def verify(self, identity):
         """Read back a post and its evidence from immutable library bytes; replaces hand-written readback scripts."""
@@ -463,13 +504,18 @@ class Community:
                 queued.append(identity)
         return queued
 
-    def find(self, text="", *, limit=20, offset=0, family="forum", full=False):
-        return find(self, text, limit=limit, offset=offset, family=family, full=full)
+    def find(self, text="", *, limit=20, offset=0, family="forum", full=False, reader=None):
+        """Board search for participants (the agent CLI and board service): always moderated."""
+        return find(self, text, limit=limit, offset=offset, family=family, full=full, moderate=True,
+                    reader=reader)
 
     def _posts_naming(self, artifact):
         return posts_naming(self, artifact)
 
     def fetch(self, post, workspace, question, *, artifact=None, author="operator"):
+        from daw.commons.moderation import Visibility
+        if Visibility.of(self, self.agent(author)).withheld(post):
+            raise DawError("hidden_by_moderation", post)
         published = self.show(post)
         allowed = published["content"]["evidence"].get("artifacts", [])
         selected = [artifact] if artifact else allowed

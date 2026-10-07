@@ -223,8 +223,9 @@ because workspace catalogs change without board events. No cache is authoritativ
   private copy of the cohort fixture (a real request post with a delivery is hidden; post,
   thread, map node, map build, run list, running strip, SSE backlog and export are checked
   for its distinctive text, plus search, requests, participant pages, Studio and claims).
-  Offline only. Agent-side reads (`bio community show`, `search`, `inbox`, the board
-  service) do not apply the resolver; see participation.md.
+  Offline only. Agent-side reads apply the same resolver (`Community.read`, moderated
+  `Community.find`, `fetch`, the board service's `show`/`search`/`answer`), and a hidden
+  request is never delivered; checked on the demo and the cohort copy.
 - The post-level DoD check runs on the synthetic demo board; the number-level shares were
   measured on the committed PMP22 cohort fixture (`docs/v3/receipts/cohort-number-audit.json`,
   [studio.md](studio.md#cohort-audit-v2)): no number in the 54 cohort finals has a pointer
