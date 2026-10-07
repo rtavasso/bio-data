@@ -223,7 +223,7 @@ def import_data(ctx: typer.Context, path: Path, dataset: str = "local"):
 def data_list(ctx: typer.Context, scope: str | None = None, limit: int = 20, offset: int = 0):
     with session(ctx, False) as ws:
         if not 1 <= limit <= 100 or offset < 0:
-            raise DawError("invalid_search_bounds")
+            raise DawError("invalid_search_bounds", f"limit must be 1..100 and offset >= 0 (got limit={limit}, offset={offset})")
         assets = ws.assets([scope] if scope else [])
         emit({"total": len(assets), "offset": offset, "items": [{"asset_revision": a["id"], "name": a["body"]["name"],
               "access": a["access"], "blob": a["blob"], "bytes": a["body"]["size"]} for a in assets[offset:offset + limit]],
@@ -460,18 +460,32 @@ def work_frontier_dataset(ctx: typer.Context, question: str,
                             receipt=receipt))
 
 
+QUESTION_ARGUMENT = typer.Argument(help="Question ID (or pass --question); omit for every question.")
+QUESTION_OPTION = typer.Option("--question", help="Question ID; same as the positional argument.")
+
+
+def _one_question(positional, option):
+    if positional and option and positional != option:
+        raise DawError("conflicting_question", f"positional {positional!r} and --question {option!r} differ; pass one")
+    return positional or option
+
+
 @work_app.command("frontier-items")
-def work_frontier_items(ctx: typer.Context, question: str | None = None):
-    """List this workspace's open items, retrieval gaps and their latest recorded status."""
+def work_frontier_items(ctx: typer.Context, question: Annotated[str | None, QUESTION_ARGUMENT] = None,
+                        question_option: Annotated[str | None, QUESTION_OPTION] = None):
+    """List this workspace's open items, retrieval gaps and their latest recorded status (`frontier-items Q`)."""
     from daw.commons.frontier import workspace_items
+    question = _one_question(question, question_option)
     with session(ctx, False) as ws:
         emit({"items": workspace_items(ws, question), "content_is_untrusted_data": True})
 
 
 @work_app.command("gaps")
-def work_gaps(ctx: typer.Context, question: str | None = None, since: str | None = None,
+def work_gaps(ctx: typer.Context, question: Annotated[str | None, QUESTION_ARGUMENT] = None,
+              question_option: Annotated[str | None, QUESTION_OPTION] = None, since: str | None = None,
               source_or_format: str | None = None, limit: int = 20, max_events: int = 10000):
-    """Aggregate recurring retrieval failures across questions, with source events and coverage."""
+    """Aggregate recurring retrieval failures across questions, with source events and coverage (`gaps [Q]`)."""
+    question = _one_question(question, question_option)
     with session(ctx, False) as ws:
         emit(report_gaps(ws, question=question, since=since, source=source_or_format, limit=limit, max_events=max_events))
 

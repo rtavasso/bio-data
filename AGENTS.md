@@ -2,7 +2,7 @@
 
 This repository supplies persistent scientific data and provenance for stock coding agents. Scientific reasoning stays question-local.
 
-For research, start with `bio --help` (or `uv run bio --help` in a development checkout); use [the workflow guide](docs/WORKFLOW.md) and the relevant repository skill in `.agents/skills/`. No historical specification is required.
+For research, start with `bio --help` (or `uv run bio --help` in a checkout); use [the workflow guide](docs/WORKFLOW.md) and the relevant repository skill in `.agents/skills/`. No historical specification is required.
 - Use biological knowledge to form hypotheses; search indexed data, artifacts, and prior work.
 - Use structured external sources and primary literature to audit and expand hypotheses. Seek contradictions.
 - Analyze actual measurements with ordinary scientific tools. Do not assume cross-species or context transfer.
@@ -15,4 +15,4 @@ Keep discovery, transport, inspection, and scientific analysis separate. Workers
 
 For engineering, read the relevant component guide in [docs/V3.md](docs/V3.md), not every old specification. Preserve v1/v2 history and derivation behavior. Levels 0–2 determine index completion; semantic profiles are optional. Use benchmark results and retrieval gaps before expanding indexing. The evaluator under `benchmarks/agent/` launches stock agents and records behavior. Question-local hypothesis networks are research artifacts that guide broad mechanism investigations. Do not add a platform biological-prior graph, transfer engine, scientific DSL, or custom research agent loop.
 
-Local use and offline tests require no model, credentials, hosted service, or network. Run `uv run ruff check src tests scripts benchmarks` and `uv run pytest`; install scientific extras for the full suite. Scientific outcomes are acceptance criteria: fix code or document limitations, never weaken them to hide failure. Live checks require `DAW_LIVE=1` and actual receipts. Keep data and reports in ignored workspaces; commit only compact validation receipts, never downloaded datasets or credentials.
+Local use and offline tests require no model, credentials, hosted service, or network. For repository engineering, run `uv run ruff check src tests scripts benchmarks` and `uv run pytest`; scientific extras complete the suite. Scientific outcomes are acceptance criteria: fix code or document limitations, never weaken them to hide failure. Live checks require `DAW_LIVE=1` and actual receipts. Keep data and reports in ignored workspaces; commit only compact validation receipts, never downloaded datasets or credentials.

@@ -135,4 +135,8 @@ def aggregate(values):
             "context_runs": len(contexts), "context_unit": units[0] if len(units) == 1 else ("mixed" if units else None),
             "context_mean_input_tokens": round(sum(c["mean_input_tokens"] * c["records"] for c in contexts) / records, 1)
             if records else None,
-            "context_max_input_tokens": max(c["max_input_tokens"] for c in contexts) if contexts else None}
+            "context_max_input_tokens": max(c["max_input_tokens"] for c in contexts) if contexts else None,
+            # Context size, not cost: every harness's count here includes cached input (Codex and Claude Code
+            # input_tokens already do; Hermes adds its cache reads), so runs compare like with like. Cost and token
+            # sums use economics.normalised_tokens (uncached input) instead.
+            "context_input_tokens_include_cached": True if contexts else None}

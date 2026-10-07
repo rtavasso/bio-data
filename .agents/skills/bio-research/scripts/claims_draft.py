@@ -266,6 +266,10 @@ def confirm(document):
                  if isinstance(scope, dict) else ["(not an object)"])
         if unset:
             problems.append(f"claim {n}: set or delete scope {', '.join(unset)}")
+        extra = [k for k in scope if k not in SCOPE_FIELDS] if isinstance(scope, dict) else []
+        if extra:
+            problems.append(f"claim {n}: scope field {', '.join(extra)} is not allowed; scope allows only "
+                            f"{', '.join(SCOPE_FIELDS)} (put dataset or sample names in context)")
         pointers = item.get("pointers") or []
         if item.get("status") in NEEDS_POINTER and not pointers:
             problems.append(f"claim {n}: a {item.get('status')} claim needs at least one pointer")

@@ -8,7 +8,7 @@ Examples:
   ./bin/python .agents/skills/bio-research/scripts/peek.py record.json                   # key tree with types and list lengths
   ./bin/python .agents/skills/bio-research/scripts/peek.py paper.txt --grep "PMP22|Schwann"   # matching lines with numbers
 
-The whole result is capped (--max-chars, default 6000) so one call fits a tool result; it replaces the
+The whole result is capped (--max-chars, default 6000, at most 12000) so one call fits a tool result; it replaces the
 one-off inspect_*.py scripts and whole-file reads that dominated the cohort's context. A saved HTML
 challenge page, a JSON error body or a "No result can be found" stub is reported as such, not as a
 source. Formulas, macros and serialised objects are never evaluated: xlsx cells are read as values only.
@@ -25,6 +25,7 @@ import zipfile
 from pathlib import Path
 
 MAX_CHARS = 6000
+HARD_CAP = 12000  # 95/246 cohort uses raised --max-chars, up to 34,000: narrow instead
 TEXT_SUFFIXES = {".txt", ".md", ".tsv", ".tab", ".csv", ".json", ".xml", ".nxml", ".html", ".htm", ".gtf", ".gff", ".bed",
                  ".soft", ".fa", ".fasta", ".log", ".yaml", ".yml", ".toml"}
 NOT_A_SOURCE = (("recaptcha", "a reCAPTCHA challenge page"), ("preparing to download", "a PMC 'Preparing to download' interstitial"),
@@ -210,7 +211,8 @@ def render(value, limit):
     text = json.dumps(value, indent=1, ensure_ascii=False, allow_nan=False)
     if len(text) <= limit:
         return text
-    return text[: limit - 60] + f'\n… [truncated to {limit} chars; narrow with --rows, --member or --grep]'
+    note = f'\n… [truncated to {limit} chars; narrow with --rows, --member or --grep]'
+    return text[: max(limit - len(note), 0)] + note
 
 
 def main(argv=None):
@@ -221,7 +223,14 @@ def main(argv=None):
     parser.add_argument("--grep", default=None, help="regex; print matching lines instead of a head")
     parser.add_argument("--max-chars", type=int, default=MAX_CHARS)
     args = parser.parse_args(argv)
-    print(render(peek(args.path, rows=args.rows, member=args.member, grep=args.grep, limit=args.max_chars), args.max_chars))
+    limit, capped = min(args.max_chars, HARD_CAP), args.max_chars > HARD_CAP
+    if capped:
+        print(f"peek.py: --max-chars {args.max_chars} capped at {HARD_CAP}; narrow with --rows, --member or --grep "
+              "instead of reading more of the file", file=sys.stderr)
+    result = peek(args.path, rows=args.rows, member=args.member, grep=args.grep, limit=limit)
+    if capped:
+        result = {"max_chars_capped": f"{args.max_chars} -> {HARD_CAP}; narrow with --rows, --member or --grep", **result}
+    print(render(result, limit))
     return 0
 
 
