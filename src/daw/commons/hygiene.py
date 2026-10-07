@@ -20,6 +20,7 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from daw.commons.records import is_fallback
 
 POST_MARKER = re.compile(r"(?:Request|Question) post: (post_[0-9a-f]{32})")
 KEY_MARKER = re.compile(r"Assignment key(?: phrase)?: *([^\s.,;]{6,120})")
@@ -114,7 +115,7 @@ def run_hygiene(folder, harness=None):
     if texts and markers:
         missing = sum(1 for text in texts if not any(marker in text for marker in markers))
     return {"compaction_summaries": None if texts is None else len(texts),
-            "compaction_fallbacks": None if texts is None else sum("deterministic fallback" in t for t in texts),
+            "compaction_fallbacks": None if texts is None else sum(is_fallback(t) for t in texts),
             "summaries_missing_assignment": missing, "assignment_markers": len(markers),
             "context_per_call": context_per_call(folder / "events.jsonl")}
 
@@ -135,4 +136,8 @@ def aggregate(values):
             "context_runs": len(contexts), "context_unit": units[0] if len(units) == 1 else ("mixed" if units else None),
             "context_mean_input_tokens": round(sum(c["mean_input_tokens"] * c["records"] for c in contexts) / records, 1)
             if records else None,
-            "context_max_input_tokens": max(c["max_input_tokens"] for c in contexts) if contexts else None}
+            "context_max_input_tokens": max(c["max_input_tokens"] for c in contexts) if contexts else None,
+            # Context size, not cost: every harness's count here includes cached input (Codex and Claude Code
+            # input_tokens already do; Hermes adds its cache reads), so runs compare like with like. Cost and token
+            # sums use economics.normalised_tokens (uncached input) instead.
+            "context_input_tokens_include_cached": True if contexts else None}

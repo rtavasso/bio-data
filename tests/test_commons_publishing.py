@@ -1079,7 +1079,7 @@ def test_compaction_hygiene_detects_summaries_that_lost_the_assignment(tmp_path)
     db.executemany("INSERT INTO messages VALUES('s',?,?)", [
         (f"[CONTEXT COMPACTION] Working on {post}: contrast registered.", inside),
         ("[CONTEXT COMPACTION] Continue the analysis of the dataset.", inside + 60),
-        ("[CONTEXT COMPACTION] deterministic fallback: last 20 messages kept. Assignment key: round-two-2", inside + 120),
+        ("[CONTEXT COMPACTION] summary\n## Goal\nRecovered from a deterministic fallback because the LLM context summarizer was unavailable. Assignment key: round-two-2", inside + 120),
         ("[CONTEXT COMPACTION] From another delivery.", base),
         ("ordinary message", inside)])
     db.commit()

@@ -4,7 +4,10 @@
 time (`daw.commons.records.record_delivery`; `bio commons runs reindex` writes it for older runs, marked
 `reindexed`). It reads the run folder only:
 
-- `tokens`: provider telemetry (input, cached input, output), None when unreported.
+- `tokens`: provider telemetry (input, cached input, output) as the harness reported it, None when unreported.
+  Harnesses disagree on `input_tokens`: Codex and Claude Code (as daw records it) count cached input inside it,
+  Hermes does not. `tokens_normalised` gives uncached input (input minus cached where the harness includes it),
+  cached input and output, so sums across harnesses add like with like; None for a harness of unknown semantics.
 - `context`: input context per model call, or per turn where the harness reports only turn totals (`unit`),
   from `daw.commons.hygiene.context_per_call`; `model_calls` where the stream marks model calls (Claude Code's
   assistant messages), else None.
@@ -52,14 +55,21 @@ REORIENTATION = (("inbox", re.compile(r"\bcommunity\s+inbox\b")),
                  ("status", re.compile(r"\b(git\s+status|bio\s+work\s+status|bio\s+status)\b")))
 HELP = re.compile(r"(^|\s)(--help|-h)(\s|$)")
 LABBOOK = re.compile(r"LABBOOK\.md")
+# Does this harness's recorded `input_tokens` already contain `cached_input_tokens`? Codex reports OpenAI usage
+# (input includes cached); daw's Claude Code adapter adds cache creation and reads into input; Hermes reports
+# uncached input with cache reads separate. Harnesses not listed (mcp: whatever the configured agent reports)
+# have unknown semantics and are not normalised.
+INPUT_INCLUDES_CACHED = {"codex": True, "claude": True, "hermes": False}
 LIMITATIONS = [
     "Composition is bytes of model-facing content, not provider tokens; shares are given only when every source was "
     "measured (the system prompt is in the session database, never in a stream).",
     "Hermes caps tool outputs in its stream at 5000 characters: stream-measured tool output bytes are lower bounds.",
     "Generation versus tool wait is measured on the stream's own timestamps; it is unavailable for streams without "
     "timestamps (Claude Code, Codex) and for runs with a host suspension inside the stream.",
-    "Cost per useful datum divides the group's reported tokens (input plus output) by registered artifacts, claims "
-    "with a verified pointer, and frontier items later promoted; None when tokens are incomplete or the count is 0.",
+    "Cost per useful datum divides the group's reported tokens (uncached input plus output, normalised per harness: "
+    "Codex and Claude Code count cached input inside input_tokens, Hermes does not) by registered artifacts, claims "
+    "with a verified pointer, and frontier items later promoted; None when tokens are incomplete, a harness's input "
+    "semantics are unknown, or the count is 0.",
 ]
 
 
@@ -219,6 +229,22 @@ def _time(parsed, execution, suspended):
             "basis": "stream timestamps: union of tool-call intervals versus the rest of the span"}
 
 
+def normalised_tokens(tokens, harness):
+    """{uncached_input_tokens, cached_input_tokens, output_tokens, input_includes_cached} from a run's recorded
+    tokens, or None when tokens are unreported, the harness's input semantics are unknown, or the cached count
+    is needed and missing. Uncached input is what cost and cross-harness sums should add."""
+    if not tokens or harness not in INPUT_INCLUDES_CACHED:
+        return None
+    includes, cached = INPUT_INCLUDES_CACHED[harness], tokens.get("cached_input_tokens")
+    if includes and cached is None:
+        return None
+    uncached = tokens["input_tokens"] - cached if includes else tokens["input_tokens"]
+    if uncached < 0:
+        return None
+    return {"uncached_input_tokens": uncached, "cached_input_tokens": cached, "output_tokens": tokens["output_tokens"],
+            "input_includes_cached": includes}
+
+
 def skill_versions(trial):
     """{skill: sha256 of its text} staged in a checkout's .agents/skills, or None when there are none."""
     if trial is None:
@@ -253,6 +279,7 @@ def turn_economics(folder, parsed, execution, *, harness, run=None, agent=None, 
     stream = (folder / "events.jsonl").is_file()
     return {"version": VERSION, "kind": "turn_economics", "run": run, "agent": agent, "harness": harness,
             "recorded": now(), "tokens": tokens, "tokens_note": note,
+            "tokens_normalised": normalised_tokens(tokens, harness),
             "context": hygiene.context_per_call(folder / "events.jsonl"), "model_calls": calls,
             "composition": composition(folder, execution, parsed, compactions),
             "compactions": {"stream_markers": behaviour["compactions"],
@@ -315,9 +342,14 @@ def criteria(runs, data=None):
     for e in read_runs:
         for name, count in e["skills"]["reads"].items():
             reads[name] = reads.get(name, 0) + count
-    # Tokens from the runs' telemetry (the metrics projection), only when every run in the group reported them.
+    # Tokens from the runs' telemetry (the metrics projection), only when every run in the group reported them,
+    # normalised per harness to uncached input plus output: Codex's input_tokens include cached tokens and
+    # Hermes's do not, so a raw sum overstated Codex ~20x beside Hermes.
     token_runs = [r["metrics"].get("tokens") for r in runs]
-    tokens = sum(t["input_tokens"] + t["output_tokens"] for t in token_runs) if runs and all(token_runs) else None
+    normal = [normalised_tokens(t, r.get("harness") or (r["metrics"].get("turn_economics") or {}).get("harness"))
+              for t, r in zip(token_runs, runs, strict=True)]
+    complete_tokens = bool(runs) and all(normal)
+    tokens = sum(n["uncached_input_tokens"] + n["output_tokens"] for n in normal) if complete_tokens else None
     data = data or {}
     return {
         "runs": len(runs), "recorded_runs": len(recorded), "unrecorded_runs": len(runs) - len(recorded),
@@ -347,6 +379,10 @@ def criteria(runs, data=None):
         "skill_reads": {"runs": len(read_runs), "total": sum(reads.values()) if read_runs else None,
                         "per_turn": {k: _per(v, len(read_runs), 2) for k, v in sorted(reads.items())}},
         "tokens": tokens, "tokens_reported_runs": sum(1 for t in token_runs if t),
+        "tokens_normalised_runs": sum(1 for n in normal if n),
+        "token_fields": {k: sum(n[k] for n in normal) if complete_tokens else None
+                         for k in ("uncached_input_tokens", "cached_input_tokens", "output_tokens")},
+        "tokens_meaning": "uncached input plus output tokens, normalised per harness (cached input excluded)",
         "useful_data": {k: data.get(k) for k in ("registered_artifacts", "verified_claims", "promoted_frontier_items")},
         "tokens_per": {"registered_artifact": _per(tokens, data.get("registered_artifacts"), 0),
                        "verified_claim": _per(tokens, data.get("verified_claims"), 0),

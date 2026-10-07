@@ -518,12 +518,52 @@ def seal_harness_config(trial, adapter):
     return files
 
 
-def turn_harness_config(trial, adapter):
-    """Before a turn: write the per-turn copy of every sealed file into the home; returns the receipt."""
+def _refresh_sealed(trial, adapter, agent_config):
+    """Merge the adapter's current platform-owned settings into the sealed files and re-seal (adopting the
+    harness's own benign migration of a file); returns ({name: updated keys}, [names migrated], {name: bytes
+    sealed before})."""
+    refresh = getattr(adapter, "refresh_config", None)
+    folder = harness_config_dir(trial)
+    manifest = read_json(folder / "manifest.json")
+    previous = {name: (folder / name).read_bytes() for name in manifest["files"]}
+    if refresh is None:
+        return {}, [], previous
+    home, updated, adopted = adapter.home(trial), {}, []
+    for name, sealed in previous.items():
+        try:
+            current = _config_bytes(home / name)
+        except DawError:
+            current = None
+        result = refresh(name, sealed, current, agent_config)
+        if not result or result.get("bytes") is None or result["bytes"] == sealed:
+            continue
+        (folder / name).write_bytes(result["bytes"])
+        manifest["files"][name] = {**manifest["files"][name], "sha256": hashlib.sha256(result["bytes"]).hexdigest(),
+                                   "refreshed": now()}
+        updated[name] = result.get("updated_keys", [])
+        if result.get("migration_adopted"):
+            adopted.append(name)
+    if updated:
+        manifest["refreshed"] = now()
+        write_json(folder / "manifest.json", manifest)
+    return updated, adopted, previous
+
+
+def _benign(adapter, name, sealed, observed):
+    check = getattr(adapter, "config_migration", None)
+    return bool(check and observed is not None and check(name, sealed, observed))
+
+
+def turn_harness_config(trial, adapter, agent_config=None):
+    """Before a turn: merge current platform-owned keys into the sealed files (re-sealing them), then write the
+    per-turn copy of every sealed file into the home; returns the receipt. `platform_keys_updated` names the
+    platform keys a re-seal changed; a home file that is the harness's own migration of the sealed copy is not
+    counted as restored (`migration_adopted` says when the migrated form became the sealed copy)."""
     home, folder = adapter.home(trial), harness_config_dir(trial)
     sealed_now = not (folder / "manifest.json").is_file()
     if sealed_now:
         seal_harness_config(trial, adapter)
+    updated, adopted, previous = _refresh_sealed(trial, adapter, agent_config)
     files = read_json(folder / "manifest.json")["files"]
     restored = []
     for name in files:
@@ -532,19 +572,23 @@ def turn_harness_config(trial, adapter):
         if target.is_symlink():
             target.unlink()
             restored.append(name)
-        elif (_config_bytes(target) or b"") != sealed:
-            restored.append(name)
+        else:
+            current = _config_bytes(target) or b""
+            if current != sealed and current != previous.get(name) and not _benign(adapter, name, previous.get(name),
+                                                                                    current):
+                restored.append(name)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(sealed)
     return {"harness": adapter.name, "files": {k: v["sha256"] for k, v in files.items()}, "sealed_at_dispatch": sealed_now,
             "restored_before_turn": restored, "scratch": sorted(set(adapter.scratch_config_files) & set(files)),
-            "observed": now()}
+            "platform_keys_updated": updated, "migration_adopted": adopted, "observed": now()}
 
 
 def check_harness_config(trial, adapter, receipt):
-    """After a turn: which sealed files differ from the per-turn copy (recorded, restored next turn)."""
-    home = adapter.home(trial)
-    changed = []
+    """After a turn: which sealed files differ from the per-turn copy (recorded, restored next turn). A rewrite
+    that is only the harness's own config migration is listed under `migrated_during_turn`, not as a change."""
+    home, folder = adapter.home(trial), harness_config_dir(trial)
+    changed, migrated = [], []
     for name, sha in receipt["files"].items():
         try:
             data = _config_bytes(home / name)
@@ -552,8 +596,9 @@ def check_harness_config(trial, adapter, receipt):
             changed.append(name)
             continue
         if hashlib.sha256(data or b"").hexdigest() != sha:
-            changed.append(name)
-    receipt.update(changed_during_turn=changed, checked=now())
+            sealed = (folder / name).read_bytes() if (folder / name).is_file() else None
+            (migrated if _benign(adapter, name, sealed, data) else changed).append(name)
+    receipt.update(changed_during_turn=changed, migrated_during_turn=migrated, checked=now())
     return receipt
 
 

@@ -57,6 +57,14 @@ class HermesAdapter(Adapter):
         from daw import community_runtime
         return community_runtime.native_session(executable, home, identity, cwd, fork=fork)
 
+    def refresh_config(self, name, sealed, current, agent_config=None):
+        """Platform-owned config.yaml keys merged into the sealed copy before each turn (sandbox.turn_harness_config)."""
+        return hermes.refresh_config(name, sealed, current, agent_config)
+
+    def config_migration(self, name, sealed, observed):
+        """Hermes's own `_config_version` migration of the sealed config.yaml is benign, not an agent change."""
+        return hermes.config_migration(name, sealed, observed)
+
     def receipt_fields(self, config):
         return {}
 

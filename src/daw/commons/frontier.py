@@ -7,7 +7,10 @@ Retrieval gaps (`retrieval_gap`, minus withdrawals) are items of kind gap. The
 platform only indexes them: `rebuild_frontier` scans every participant workspace
 read-only and writes the board's `frontier_item` projection. Board-owned state is
 derived from immutable board events, never stored only in the projection:
-`promotion_created` (status "promoted", `promoted_to`), `watcher_added` and
+`promotion_created`, an operator's `task_assigned` with a frontier_item source and a
+`commission_created` whose subject is an item (status "promoted", `promoted_to`); the
+linked request's `delivery_completed` (status "candidate_evidence", `candidate_source`
+"request", naming the answer post, until the author records a status after it); `watcher_added` and
 `watcher_disabled` (the board watcher's query masks the author's while it is
 enabled) and `watcher_ran` (status "candidate_evidence", `candidate_source`
 "watcher"). An agent's own candidate_evidence status is attributed to the author;
@@ -320,9 +323,11 @@ def _events(ws, kinds, question=None):
 
 
 def record_item(ws, question, *, kind, text, blocked_by=None, watcher_query=None, missing_measurement=None,
-                pointers=(), key=None, post=None):
+                pointers=(), key=None, post=None, existing=None, author=None):
     """Record one open item in the caller's own question. Caller holds the workspace writer lock.
-    With `key`, a retry returns the existing event; different content under the same key is a conflict."""
+    With `key`, a retry returns the existing event; different content under the same key is a conflict.
+    `existing` (board items) and `author` drive the non-fatal duplicate warning; by default an agent process
+    with a board reads it (`board_items`)."""
     from daw.work import record_event
     payload = validate_item(ws, {"kind": kind, "text": text, "blocked_by": blocked_by, "watcher_query": watcher_query,
                                  "missing_measurement": missing_measurement, "pointers": list(pointers), "key": key,
@@ -335,7 +340,17 @@ def record_item(ws, question, *, kind, text, blocked_by=None, watcher_query=None
                     raise DawError("frontier_key_conflict", key)
                 return {"id": event["id"], "question": question, "kind": event["kind"],
                         "body_blob": event["body_blob"], "created": event["created"], "reused": True}
-    return record_event(ws, question, "frontier_item", payload)
+    recorded = record_event(ws, question, "frontier_item", payload)
+    # Non-fatal: possible duplicates by other authors on the board (`existing` None: look the board up when
+    # this process is an agent with a board; no board, no warning).
+    existing = board_items() if existing is None else existing
+    if existing:
+        import os
+        warning = duplicate_warning(similar_items(existing, author or os.environ.get("BIO_AGENT"), payload["text"],
+                                                  payload.get("pointers")))
+        if warning:
+            recorded = {**recorded, "warnings": [warning]}
+    return recorded
 
 
 def record_status(ws, question, item, status, reason):
@@ -451,15 +466,31 @@ def stored_key(owner, name="frontier"):
 
 # Board events that own frontier state. The projection is a pure function of these events and the
 # participants' workspace records, so dropping the table and rebuilding reproduces it byte for byte.
-BOARD_EVENTS = ("promotion_created", "watcher_added", "watcher_disabled", "watcher_ran")
+# An operator's assignment (`task_assigned` with a frontier_item `source`) and a commission whose subject is a
+# frontier item (`commission_created`) schedule the item exactly as a promotion does (round three: launching
+# from an agenda left items "unscheduled" and the same work was dispatched again). A completed delivery of the
+# linked request (`delivery_completed`) shows its outcome: candidate evidence naming the answer post.
+LINK_EVENTS = ("promotion_created", "task_assigned", "commission_created")
+BOARD_EVENTS = LINK_EVENTS + ("watcher_added", "watcher_disabled", "watcher_ran", "delivery_completed")
 # The projection key also covers completed deliveries: a scouting answer's ```datasets block is a source (V5).
-KEY_EVENTS = BOARD_EVENTS + ("delivery_completed",)
+KEY_EVENTS = BOARD_EVENTS
 COLUMNS = ("question", "author", "workspace", "kind", "text", "status", "blocked_by", "watcher_query",
            "pointers", "source", "created", "updated", "promoted_to")
 
 
 def _empty_state():
     return {"promotions": [], "watchers": {}, "candidates": []}
+
+
+def linked_item(kind, body):
+    """The frontier item a request-creating event schedules, or None: a promotion's or an assignment's
+    `source`, a commission's `subject`."""
+    if kind not in LINK_EVENTS or not isinstance(body, dict):
+        return None
+    source = body.get("subject" if kind == "commission_created" else "source")
+    if isinstance(source, dict) and source.get("kind") == "frontier_item" and isinstance(source.get("id"), str):
+        return source["id"]
+    return None
 
 
 def _count(value):
@@ -473,7 +504,7 @@ def board_state(owner):
     promotions (`promotion_created` with a frontier_item source), attached and disabled watchers
     (`watcher_added`, `watcher_disabled`) and watcher runs that moved an item to candidate evidence
     (`watcher_ran`). Works on a Community or a read-only Archive."""
-    state = {}
+    state, completed = {}, {}
     marks = ",".join("?" for _ in BOARD_EVENTS)
     for row in owner.rows(f"SELECT seq,kind,body,created FROM event WHERE kind IN ({marks}) ORDER BY seq", BOARD_EVENTS):
         try:
@@ -483,12 +514,17 @@ def board_state(owner):
         if not isinstance(body, dict):
             continue
         kind = row["kind"]
-        if kind == "promotion_created":
-            source = body.get("source") if isinstance(body.get("source"), dict) else {}
-            if source.get("kind") == "frontier_item" and isinstance(source.get("id"), str):
-                state.setdefault(source["id"], _empty_state())["promotions"].append(
+        if kind in LINK_EVENTS:
+            item = linked_item(kind, body)
+            if item:
+                state.setdefault(item, _empty_state())["promotions"].append(
                     {"request": body.get("request"), "actor": body.get("actor"), "event_seq": row["seq"],
-                     "created": row["created"]})
+                     "created": row["created"], **({"via": kind} if kind != "promotion_created" else {})})
+            continue
+        if kind == "delivery_completed":
+            if isinstance(body.get("request"), str) and isinstance(body.get("answer"), str):
+                completed.setdefault(body["request"], {"request": body["request"], "answer": body["answer"],
+                                                       "event_seq": row["seq"], "created": row["created"]})
             continue
         if not isinstance(body.get("item"), str) or not isinstance(body.get("watcher"), str):
             continue
@@ -520,6 +556,9 @@ def board_state(owner):
                 entry["candidates"].append({"source": "watcher", "watcher": body["watcher"], "run": body.get("run"),
                                             "new": new, "accessions": accessions if isinstance(accessions, list) else None,
                                             "event_seq": row["seq"], "created": row["created"]})
+    for entry in state.values():
+        entry["completed"] = {p["request"]: completed[p["request"]] for p in entry["promotions"]
+                              if p["request"] in completed}
     return state
 
 
@@ -529,7 +568,9 @@ def _status(agent_item, owned, datasets=()):
     eligible dataset makes the item candidate evidence (source `scouting`, so the analysis can be promoted from
     it); none eligible returns the item to the agent's own status. Then a person's promotion; then a watcher's
     candidate evidence recorded at or after the agent's latest status; otherwise the agent's own status (an agent
-    may record candidate_evidence itself, attributed to the author). Without datasets nothing here changes."""
+    may record candidate_evidence itself, attributed to the author). Without datasets nothing here changes.
+    A promotion (or assignment, or commission) whose request completed is candidate evidence (source `request`,
+    naming the answer) unless the agent recorded a status after the completion; then the agent's status stands."""
     status, when = agent_item["status"], agent_item["status_time"]
     if status in ("closed", "withdrawn"):
         return status, when, None
@@ -545,6 +586,14 @@ def _status(agent_item, owned, datasets=()):
                                                       "eligible": len(eligible),
                                                       "records": [d.get("event") or d.get("post") for d in eligible]}
             promoted = False  # scouting found nothing eligible: the promotion is settled, the item is the agent's again
+    if promoted:
+        # The latest linked request completed: its answer is candidate evidence for the item until the author
+        # records a status after it (accepting, reopening or closing). The author's history is never rewritten.
+        done = (owned.get("completed") or {}).get(owned["promotions"][-1]["request"])
+        if done and when <= done["created"]:
+            return "candidate_evidence", done["created"], {"source": "request", "request": done["request"],
+                                                           "answer": done["answer"], "event_seq": done["event_seq"]}
+        promoted = not done
     if promoted:  # with scouting records, the promotion after them (an analysis promoted from candidate evidence)
         return "promoted", owned["promotions"][-1 if datasets else 0]["created"], None
     latest = owned["candidates"][-1] if owned["candidates"] else None
@@ -854,6 +903,9 @@ def annotate(owner, items):
             candidate = source.get("candidate") or {}
             records.append({"by": "scouting", "eligible": candidate.get("eligible"), "inspected": candidate.get("inspected"),
                             "records": candidate.get("records")})
+        if source.get("candidate_source") == "request":  # the linked request completed; its answer is the evidence
+            candidate = source.get("candidate") or {}
+            records.append({"by": "request", "request": candidate.get("request"), "answer": candidate.get("answer")})
         by = sorted({r["by"] for r in records})
         item["candidate_evidence"] = {"set_by": " and ".join(by) if by else "unrecorded", "records": records}
     posts = {p["id"] for i in items for p in i.get("pointers") or [] if isinstance(p, dict) and _is_post_pointer(p)}
@@ -870,12 +922,178 @@ def annotate(owner, items):
     # A dataset listed in a scouting answer hidden by moderation is that post's content (spec v2 C2).
     from daw.commons.moderation import Visibility
     vis = Visibility.of(owner)
+    peers = peer_evidence(owner, [i["id"] for i in items])
+    for item in items:
+        # Another participant's evidence on this item: shown, never applied. The owner's own status stands.
+        item["peer_evidence"] = peers.get(item["id"]) or []
     for item in items:
         if item.get("datasets"):
             item["datasets"] = [{"hidden": True, "post": d["post"], "reason": vis.reason(d["post"])}
                                 if d.get("post") and vis.withheld(d["post"]) else d for d in item["datasets"]]
             item["datasets_summary"] = datasets_summary(item["datasets"])
     return items
+
+
+# ---- Evidence on another participant's item (round three) -------------------------------------------------
+#
+# An agent that finds evidence for someone else's item (a gap it made resolvable) records it on the board,
+# attributed: one `frontier_evidence_recorded` event {item, participant, owner, status, reason, pointers}. It is
+# shown on the item (`community frontier`, the planning board) and in the owner's overview; it never edits the
+# owner's workspace history and never changes the item's state. The owner accepts it, or not, with
+# `bio work frontier-status` in a later turn. Asking each owner to update their own gap costs one research turn
+# per owner; this costs none.
+
+PEER_EVENT = "frontier_evidence_recorded"
+PEER_STATUSES = ("candidate_evidence", "closed")
+MAX_PEER_POINTERS = 20
+
+
+def record_peer_evidence(board, actor, item, status, reason, pointers):
+    """Record evidence on another participant's frontier item. Idempotent for identical content."""
+    from daw.commons.claims import check_pointer
+    participant = board.agent(actor)
+    require(board, participant, "publish" if participant["kind"] == "agent" else "mark")
+    row = board.one("SELECT id,author,question,status FROM frontier_item WHERE id=?", (item,)) \
+        if isinstance(item, str) else None
+    if not row:
+        raise DawError("unknown_frontier_item", f"{item}; list items with community frontier")
+    if row["author"] == participant["id"]:
+        raise DawError("own_frontier_item", "this item is yours: record its status with "
+                                            f"bio work frontier-status {row['question']} EVENT --status ... --reason ...")
+    if status not in PEER_STATUSES:
+        raise DawError("invalid_frontier_status", f"evidence on another's item proposes one of {', '.join(PEER_STATUSES)}")
+    if not isinstance(reason, str) or not reason.strip() or len(reason) > 2000:
+        raise DawError("invalid_frontier_evidence", "reason is nonempty text up to 2000 characters")
+    pointers = list(pointers or [])
+    if not 1 <= len(pointers) <= MAX_PEER_POINTERS:
+        raise DawError("invalid_frontier_evidence", f"name 1 to {MAX_PEER_POINTERS} pointers (kind:id) to the evidence")
+    checked = []
+    for value in pointers:
+        pointer = parse_pointer(value)
+        if pointer.get("kind") not in POINTER_KINDS or not isinstance(pointer.get("id"), str) or not pointer["id"]:
+            raise DawError("invalid_frontier_pointer", f"kind must be one of {', '.join(POINTER_KINDS)}")
+        try:
+            checked.append({k: v for k, v in check_pointer(board, pointer).items() if v})
+        except DawError as error:  # the board resolves pointers: a workspace-only record must be published first
+            raise DawError("frontier_pointer_unresolved", f"{error.detail}; publish the record first, then point at "
+                                                          "the post or artifact") from error
+    body = {"item": row["id"], "participant": participant["id"], "owner": row["author"], "question": row["question"],
+            "status": status, "reason": reason.strip(), "pointers": checked}
+    with board.writer():
+        for event in board.rows("SELECT seq,body,created FROM event WHERE kind=? ORDER BY seq", (PEER_EVENT,)):
+            try:
+                previous = json.loads(event["body"])
+            except ValueError:
+                continue
+            if previous == body:
+                return {"seq": event["seq"], "created": event["created"], **body, "reused": True}
+        with board.db:
+            board.event(PEER_EVENT, body)
+            seq = board.db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    return {"seq": seq, **body, "reused": False,
+            "meaning": "attributed evidence on another participant's item; it changes no status. The owner may accept "
+                       "it with bio work frontier-status in a later turn.", "item_status": row["status"]}
+
+
+def peer_evidence(owner, ids=None):
+    """{item: [records]} of evidence other participants recorded on items, oldest first."""
+    wanted = set(ids) if ids is not None else None
+    found = {}
+    if wanted is not None and not wanted:
+        return found
+    for row in owner.rows("SELECT seq,body,created FROM event WHERE kind=? ORDER BY seq", (PEER_EVENT,)):
+        try:
+            body = json.loads(row["body"])
+        except ValueError:
+            continue
+        if not isinstance(body, dict) or not isinstance(body.get("item"), str):
+            continue
+        if wanted is not None and body["item"] not in wanted:
+            continue
+        found.setdefault(body["item"], []).append(
+            {"seq": row["seq"], "created": row["created"], "participant": body.get("participant"),
+             "status": body.get("status"), "reason": body.get("reason"), "pointers": body.get("pointers") or [],
+             "meaning": "attributed evidence by another participant; the item's status is its owner's"})
+    return found
+
+
+# ---- Possible duplicates when recording an item (round three) ---------------------------------------------
+#
+# `bio work frontier` warns, without refusing, when an open item on the board by another author names the same
+# accession(s) or nearly the same text, so the agent links to it (or records evidence on it) instead of opening
+# a third copy. The board is reached read-only, through the board service in a sandbox or the commons on a host.
+
+ACCESSION_TEXT = re.compile(r"(?<![A-Za-z0-9])(?:GSE|GSM|GDS|GPL|PXD|PMC|PMID:?\s?|SRP|SRR|SRX|ERP|PRJNA|PRJEB|"
+                            r"E-[A-Z]{4}-)\d+(?![0-9])")
+DUPLICATE_TEXT = 0.8
+LIVE = ("open", "candidate_evidence", "promoted")
+
+
+def accessions(text, pointers=()):
+    found = {m.group(0).upper().replace(" ", "").replace("PMID:", "PMID") for m in ACCESSION_TEXT.finditer(text or "")}
+    for pointer in pointers or []:
+        if isinstance(pointer, dict):
+            found |= accessions(" ".join(str(pointer.get(k) or "") for k in ("id", "locator")))
+    return found
+
+
+def similar_items(items, author, text, pointers=()):
+    """Live items by other authors sharing an accession with, or nearly the same text as, a new item."""
+    mine = accessions(text, pointers)
+    terms = tokens(text)
+    out = []
+    for item in items:
+        if item.get("status") not in LIVE or author in {item.get("author"), item.get("author_name")}:
+            continue
+        theirs = item.get("pointers")
+        theirs = json.loads(theirs) if isinstance(theirs, str) else theirs
+        shared = sorted(mine & accessions(item.get("text"), theirs))
+        other = tokens(item.get("text"))
+        overlap = len(terms & other) / len(terms | other) if terms and other else 0.0
+        if shared or overlap >= DUPLICATE_TEXT:
+            out.append({"id": item["id"], "author": item.get("author"), "question": item.get("question"),
+                        "kind": item.get("kind"), "status": item.get("status"), "text": (item.get("text") or "")[:300],
+                        **({"shared_accessions": shared} if shared else {}),
+                        **({"text_overlap": round(overlap, 3)} if overlap >= DUPLICATE_TEXT else {})})
+    return out
+
+
+def board_items():
+    """Frontier items on this agent's board, read-only, or None when no board is reachable (a plain checkout)."""
+    import os
+    if not os.environ.get("BIO_AGENT"):
+        return None
+    try:
+        from daw.commons.boardservice import BoardClient
+        client = BoardClient.from_env()
+        if client:
+            items, offset = [], 0
+            for _ in range(20):
+                page = client.call("frontier", {"status": "all", "limit": 500, "offset": offset})
+                items += page.get("items") or []
+                if page.get("next_offset") is None:
+                    return items
+                offset = page["next_offset"]
+            return items
+        root = os.environ.get("BIO_COMMUNITY")
+        if not root or not (Path(root) / "board.sqlite").is_file():
+            return None
+        from daw.commons.archive import Archive
+        with Archive(root) as view:
+            names = {r["id"]: r["name"] for r in view.rows("SELECT id,name FROM agent")}
+            return [{**r, "author_name": names.get(r["author"])}
+                    for r in view.rows("SELECT id,question,author,kind,text,status,pointers FROM frontier_item")]
+    except (DawError, OSError, sqlite3.Error, ValueError):
+        return None
+
+
+def duplicate_warning(found):
+    if not found:
+        return None
+    return {"code": "possible_duplicate_frontier_items",
+            "message": f"{len(found)} live item(s) by other authors name the same accession(s) or nearly the same "
+                       "text. Link to them (pointer, or community frontier-evidence on theirs) rather than "
+                       "duplicating the work; your item was recorded.", "items": found}
 
 
 def author_watcher_query(owner, row):

@@ -73,8 +73,9 @@ OPERATIONS = {
     "agents": ("read", set()),
     "show": ("read", {"post"}),
     "search": ("read", {"text", "limit", "offset", "family", "full"}),
-    "verify": ("read", {"post", "body", "numbers"}),
+    "verify": ("read", {"post", "body", "numbers", "draft", "question", "workspace"}),
     "claims": ("read", {"q", "post", "status", "author", "limit", "offset"}),
+    "frontier_evidence": ("publish", {"item", "status", "reason", "pointers", "author"}),
 }
 
 
@@ -393,6 +394,10 @@ def execute(root, agent_id, operation, payload):
             return board.ask(_text(payload, "target", True), agent["id"], _text(payload, "body", True),
                              parent=_text(payload, "reply_to"), request_key=_text(payload, "key"),
                              notify=bool(payload.get("notify")))
+        if operation == "frontier_evidence":  # attributed evidence on another participant's item (round three)
+            from daw.commons.frontier import record_peer_evidence
+            return record_peer_evidence(board, agent["id"], _text(payload, "item", True), _text(payload, "status", True),
+                                        _text(payload, "reason", True), _list(payload, "pointers") or [])
         if operation == "fetch":
             return board.fetch(_text(payload, "post", True), workspace(), _text(payload, "question", True),
                                artifact=_text(payload, "artifact"), author=agent["id"])
@@ -421,13 +426,17 @@ def execute(root, agent_id, operation, payload):
             return agents(board)
         if operation == "show":
             return board.read(_text(payload, "post", True), agent["id"])
+        if operation == "verify" and payload.get("draft") is not None:
+            return board.verify_draft(_text(payload, "draft", True), agent["id"], question=_text(payload, "question"),
+                                      workspace=workspace() if payload.get("workspace") or payload.get("question")
+                                      else None)
         if operation == "verify":
             return board.verify(_text(payload, "post", True), agent["id"], body=_text(payload, "body"),
                                 numbers=bool(payload.get("numbers")))
         limit = _int(payload, "limit", 20 if operation == "search" else 50)
         offset = _int(payload, "offset", 0)
         if not 1 <= limit <= 200 or offset < 0:
-            raise DawError("invalid_search_bounds")
+            raise DawError("invalid_search_bounds", f"limit must be 1..200 and offset >= 0 (got limit={limit}, offset={offset})")
         if operation == "search":
             return board.find(_text(payload, "text") or "", limit=limit, offset=offset,
                               family=_text(payload, "family") or "forum", full=bool(payload.get("full")),

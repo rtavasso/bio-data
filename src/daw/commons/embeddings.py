@@ -86,7 +86,7 @@ def search_commons(view, text="", *, family=None, vector=False, scope="library",
     if family == "paragraph":
         family, paragraphs = "data", True
     if not 1 <= limit <= 100 or offset < 0:
-        raise DawError("invalid_search_bounds")
+        raise DawError("invalid_search_bounds", f"limit must be 1..100 and offset >= 0 (got limit={limit}, offset={offset})")
     if vector and not text.strip():
         raise DawError("empty_vector_query")
     loaded = load_model(model) if vector else None

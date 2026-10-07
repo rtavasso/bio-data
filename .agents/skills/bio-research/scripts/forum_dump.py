@@ -17,6 +17,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+MAX_LIMIT = 100  # bio community search accepts limit 1..100; a larger value used to crash the dump
+
 
 def run(bio, args):
     completed = subprocess.run(shlex.split(bio) + ["community", *args], capture_output=True, text=True, check=False)
@@ -73,9 +75,14 @@ def main(argv=None):
     parser.add_argument("--term", action="append", default=[])
     parser.add_argument("--family", action="append", default=[], help="forum, artifact, work or all; repeatable")
     parser.add_argument("--show", action="append", default=[], help="post IDs to save regardless of search")
-    parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--limit", type=int, default=50, help=f"hits per term and family, 1..{MAX_LIMIT}")
     parser.add_argument("--bio", default=os.environ.get("BIO_CLI", "./bin/bio"), help="bio command (shell words)")
     args = parser.parse_args(argv)
+    if not 1 <= args.limit <= MAX_LIMIT:
+        clamped = min(max(args.limit, 1), MAX_LIMIT)
+        print(f"forum_dump.py: --limit {args.limit} is outside 1..{MAX_LIMIT} (the community search bound); "
+              f"using {clamped}. Add --term values to narrow instead of raising the limit", file=sys.stderr)
+        args.limit = clamped
     index = dump(args.out, args.term, args.family or ["forum"], args.show, args.bio, args.limit)
     print(json.dumps({"event": "community_dump", "out": str(args.out), "items": len(index),
                       "index": str(args.out / "INDEX.md")}))

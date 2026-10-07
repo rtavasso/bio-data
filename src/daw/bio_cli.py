@@ -188,8 +188,9 @@ def fetch(ctx: typer.Context, asset: str, allow_raw: bool = False, question: str
 
 
 @data_app.command("fulltext")
-def data_fulltext(ctx: typer.Context, pmcid: str):
-    """Fetch Europe PMC JATS full text; index paragraphs with stable locators (sec[2]/p[3]) and SHA-256."""
+def data_fulltext(ctx: typer.Context, pmcid: Annotated[str, typer.Argument(metavar="PMCID|PMID|DOI")]):
+    """Full text of an open-access article (PMCID, PMID or DOI): Europe PMC, NCBI efetch, then BioC; index paragraphs
+    with stable locators (sec[2]/p[3]) and SHA-256. Abstract-only results are labelled, not counted as full text."""
     with session(ctx) as ws:
         source = Sources(ws)
         try:
@@ -199,7 +200,7 @@ def data_fulltext(ctx: typer.Context, pmcid: str):
 
 
 @data_app.command("supplementary")
-def data_supplementary(ctx: typer.Context, pmcid: str, max_files: int = 10, max_bytes: int = 256 * 2**20,
+def data_supplementary(ctx: typer.Context, pmcid: Annotated[str, typer.Argument(metavar="PMCID|PMID|DOI")], max_files: int = 10, max_bytes: int = 256 * 2**20,
                        max_asset_bytes: int = 64 * 2**20):
     """List an article's supplementary files, fetch tables within budgets and inspect them safely (receipted)."""
     with session(ctx) as ws:
@@ -223,7 +224,7 @@ def import_data(ctx: typer.Context, path: Path, dataset: str = "local"):
 def data_list(ctx: typer.Context, scope: str | None = None, limit: int = 20, offset: int = 0):
     with session(ctx, False) as ws:
         if not 1 <= limit <= 100 or offset < 0:
-            raise DawError("invalid_search_bounds")
+            raise DawError("invalid_search_bounds", f"limit must be 1..100 and offset >= 0 (got limit={limit}, offset={offset})")
         assets = ws.assets([scope] if scope else [])
         emit({"total": len(assets), "offset": offset, "items": [{"asset_revision": a["id"], "name": a["body"]["name"],
               "access": a["access"], "blob": a["blob"], "bytes": a["body"]["size"]} for a in assets[offset:offset + limit]],
@@ -460,18 +461,32 @@ def work_frontier_dataset(ctx: typer.Context, question: str,
                             receipt=receipt))
 
 
+QUESTION_ARGUMENT = typer.Argument(help="Question ID (or pass --question); omit for every question.")
+QUESTION_OPTION = typer.Option("--question", help="Question ID; same as the positional argument.")
+
+
+def _one_question(positional, option):
+    if positional and option and positional != option:
+        raise DawError("conflicting_question", f"positional {positional!r} and --question {option!r} differ; pass one")
+    return positional or option
+
+
 @work_app.command("frontier-items")
-def work_frontier_items(ctx: typer.Context, question: str | None = None):
-    """List this workspace's open items, retrieval gaps and their latest recorded status."""
+def work_frontier_items(ctx: typer.Context, question: Annotated[str | None, QUESTION_ARGUMENT] = None,
+                        question_option: Annotated[str | None, QUESTION_OPTION] = None):
+    """List this workspace's open items, retrieval gaps and their latest recorded status (`frontier-items Q`)."""
     from daw.commons.frontier import workspace_items
+    question = _one_question(question, question_option)
     with session(ctx, False) as ws:
         emit({"items": workspace_items(ws, question), "content_is_untrusted_data": True})
 
 
 @work_app.command("gaps")
-def work_gaps(ctx: typer.Context, question: str | None = None, since: str | None = None,
+def work_gaps(ctx: typer.Context, question: Annotated[str | None, QUESTION_ARGUMENT] = None,
+              question_option: Annotated[str | None, QUESTION_OPTION] = None, since: str | None = None,
               source_or_format: str | None = None, limit: int = 20, max_events: int = 10000):
-    """Aggregate recurring retrieval failures across questions, with source events and coverage."""
+    """Aggregate recurring retrieval failures across questions, with source events and coverage (`gaps [Q]`)."""
+    question = _one_question(question, question_option)
     with session(ctx, False) as ws:
         emit(report_gaps(ws, question=question, since=since, source=source_or_format, limit=limit, max_events=max_events))
 
@@ -588,18 +603,26 @@ def mcp_serve(checkout: Annotated[Path | None, typer.Option(envvar="BIO_CHECKOUT
     serve(checkout, timeout=timeout)
 
 
+def fail(reason, detail, value):
+    """A command error: the JSON on stdout (as every result) and one `error: <reason>: <detail>` line on stderr,
+    so `cmd > out.json` still shows why it exited 1."""
+    emit(value)
+    text = detail if isinstance(detail, str) else canonical(detail).decode() if detail is not None else ""
+    typer.echo(f"error: {reason}: {' '.join(text.split())[:2000]}", err=True)
+    raise SystemExit(1) from None
+
+
 def main():
     try:
         app()
     except DawError as e:
-        emit({"error": e.reason, "detail": e.detail})
-        raise SystemExit(1) from None
+        fail(e.reason, e.detail, {"error": e.reason, "detail": e.detail})
     except ValidationError as e:
-        emit({"error": "invalid_contract", "details": e.errors(include_url=False, include_input=False)})
-        raise SystemExit(1) from None
+        details = e.errors(include_url=False, include_input=False)
+        fail("invalid_contract", "; ".join(f"{'/'.join(map(str, d['loc']))}: {d['msg']}" for d in details),
+             {"error": "invalid_contract", "details": details})
     except (OSError, ValueError) as e:
-        emit({"error": type(e).__name__, "detail": str(e)})
-        raise SystemExit(1) from None
+        fail(type(e).__name__, str(e), {"error": type(e).__name__, "detail": str(e)})
 
 
 if __name__ == "__main__":

@@ -11,12 +11,18 @@ and 15 locator manifests with no shared shape; this helper gives them one.
   ... --register     # bio object add the rows file, then bio register the table with the matching output role
 
 Rows accumulate in outputs/<kind>.rows.json (the registered input) and the table is rewritten as
-outputs/<kind>.tsv every time. Required fields are refused when missing or empty; nothing is inferred.
+outputs/<kind>.tsv every time; calls without --register only add rows. `--register` registers the current
+table once: repeating it with unchanged rows registers nothing and returns the existing artifact, and after
+rows change it registers a new version and reports the artifact it supersedes (outputs/<kind>.registered.json).
+Add every row, then register once. Required fields are refused when missing or empty; nothing is inferred; an
+unknown field is refused with the nearest valid one, and free text goes in note=.
 Publish the table with your first finding (`community publish --artifact`), then answer eligibility or
 coordinate questions by pointing at it.
 """
 import argparse
 import csv
+import difflib
+import hashlib
 import json
 import os
 import shlex
@@ -46,8 +52,11 @@ def parse_row(kind, items):
         if "=" not in item:
             raise ValueError(f"field must be key=value, not {item!r}")
         key, value = item.split("=", 1)
-        if key not in spec["required"] + spec["optional"]:
-            raise ValueError(f"unknown field {key!r}; fields: {', '.join(spec['required'] + spec['optional'])}")
+        fields = spec["required"] + spec["optional"]
+        if key not in fields:
+            near = difflib.get_close_matches(key, fields, n=1, cutoff=0.5)
+            raise ValueError(f"unknown field {key!r}" + (f"; did you mean {near[0]!r}?" if near else "")
+                             + f" Fields: {', '.join(fields)}; put any other free text in note=\"...\"")
         row[key] = value.strip()
     missing = [k for k in spec["required"] if not row.get(k)]
     if missing:
@@ -84,6 +93,29 @@ def write(kind, question_dir, rows):
 
 
 def register(kind, question, written, bio, workspace=None):
+    """Register the current table once per distinct content: unchanged rows return the artifact registered for
+    them (no new version); changed rows register and name the artifact they supersede. State is kept in
+    outputs/<kind>.registered.json beside the rows file."""
+    state_file = Path(written["rows_file"]).with_name(f"{KINDS[kind]['file']}.registered.json")
+    state = json.loads(state_file.read_text()) if state_file.exists() else {}
+    rows_sha = hashlib.sha256(Path(written["rows_file"]).read_bytes()).hexdigest()
+    if state.get("rows_sha256") == rows_sha and state.get("artifact") and state.get("question") == question:
+        return {"step": "register", "exit_code": 0, "artifact": state["artifact"], "unchanged": True,
+                "note": f"rows unchanged since {state['artifact']} was registered; nothing new registered"}
+    result = _register(kind, question, written, bio, workspace)
+    if result.get("exit_code") == 0 and result.get("artifact"):
+        previous = state.get("artifact") if state.get("question") == question else None
+        if previous and previous != result["artifact"]:
+            result["supersedes"] = previous
+            result["note"] = f"rows changed: {result['artifact']} supersedes {previous}; cite the new one"
+        state_file.write_text(json.dumps({"question": question, "rows_sha256": rows_sha, "artifact": result["artifact"],
+                                          "rows": written["rows"],
+                                          "history": state.get("history", []) + ([previous] if previous else [])},
+                                         indent=2) + "\n")
+    return result
+
+
+def _register(kind, question, written, bio, workspace=None):
     """bio object add the rows file (the input), then bio register the table with this script as the code."""
     base = shlex.split(bio) + (["-w", str(workspace)] if workspace else [])
     added = subprocess.run(base + ["object", "add", written["rows_file"], "--classification", "work"],

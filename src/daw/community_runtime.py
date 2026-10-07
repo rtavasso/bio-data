@@ -636,7 +636,7 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
             limit = budgets.execution_timeout(timeout, budget)
             budget_receipt = {"requested": budget, "timeout_seconds": limit} if budget else None
             # Per-turn copy of the sealed harness configuration (read-only in the sandbox), C7.
-            home_receipt = sandbox.turn_harness_config(trial, adapter)
+            home_receipt = sandbox.turn_harness_config(trial, adapter, agent_config=config)
             try:
                 with budgets.download_budget(trial, budget, budget_receipt if budget else {},
                                              keep=folder / "task-budget-observed.json", run=run_id):

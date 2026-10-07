@@ -52,7 +52,8 @@ def search(ws, text="", *, family=None, feature=None, provider=None, format=None
     one long article cannot crowd dataset hits. The article itself stays findable as one `jats` document.
     """
     if not 1 <= limit <= 100 or offset < 0 or min_level not in range(4):
-        raise DawError("invalid_search_bounds")
+        raise DawError("invalid_search_bounds", f"limit must be 1..100, offset >= 0 and min_level 0..3 "
+                       f"(got limit={limit}, offset={offset}, min_level={min_level})")
     if family not in {None, "data", "artifact", "work", "resource", "forum", "claim", "frontier"}:
         raise DawError("unknown_search_family")
     if paragraphs:
