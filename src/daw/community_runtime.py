@@ -277,7 +277,8 @@ def compose_prompt(board, request, agent, trial, post, label):
                                  criteria=(content.get("evidence") or {}).get("criteria"))
     if task_type == "research":
         return assignment_prompt(agent["id"], trial, post, label=label, task=section)
-    return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + UNTRUSTED + SERVICE + _honesty(label) + section
+    untrusted = tasks.REPLICATION_UNTRUSTED if task_type == "replication" else UNTRUSTED  # the C6 carve-out
+    return (_header(agent["id"], trial) + tasks.INSTRUCTIONS[task_type] + untrusted + SERVICE + _honesty(label) + section
             + f"Request post: {post['id']}. Parent discussion: {post['parent'] or 'none'}. "
             "Read that discussion with community show if relevant.\n\n" + content["body"])
 
@@ -376,9 +377,13 @@ def _record_outcome(board, request, content, agent, run_id, started, answer, par
                         if result["original"] in (json.loads(r["body"]).get("evidence") or {}).get("artifacts", [])), None)
             original_post = json.loads(row["body"])["post"] if row else None
             author = board.one("SELECT author FROM post WHERE id=?", (original_post,))["author"] if original_post else "operator"
+            # Same receipt gate as the outcome (daw.commons.replication): only receipted replicas are named.
+            receipts = "; ".join(f"{a}: run_analysis receipt {result['receipts'][a]['receipt_blob']}"
+                                 for a in result["different"] if a in result.get("receipts", {}))
             notify(board, "runtime", author, "Replication produced different bytes",
-                   f"Replication run {run_id} registered {', '.join(result['different'])} with the same derivation key "
-                   f"as {result['original']} but different output bytes, and no correction post named both. "
+                   f"Replication run {run_id} executed the saved code of {result['original']}'s derivation and "
+                   f"registered {', '.join(result['different'])} with the same derivation key but different output "
+                   f"bytes ({receipts}), and no correction post named both. "
                    "Compare the outputs and publish a correction if a reported value changes.",
                    parent=original_post, evidence={"request": request["id"], "run": run_id, "replication": result},
                    key=f"replication-mismatch:{run_id}:{result['original']}")
@@ -403,7 +408,11 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
     adapter = harnesses.for_agent(agent)
     executable = executable or adapter.default_executable
     trial = board.trial(agent)
-    decision = sandbox.policy(board.root, allow_unsandboxed)
+    decision = sandbox.policy(board.root, allow_unsandboxed, request["task_type"])
+    if request["task_type"] == "replication":
+        # Dispatch-time check (C6): the original's producer, or a fork that inherited it, cannot replicate it.
+        from daw.commons.replication import refuse_producer
+        refuse_producer(board, agent["id"], tasks.subject_of(board.show(request["post"])["content"]))
     with exclusive(trial.parent / ".session.lock") as lock_fd:
         agent = board.agent(request["target"])
         with board.writer():
@@ -432,6 +441,9 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                 if decision["override"]:
                     board.event("sandbox_override", {"request": request_id, "run": run_id, "reason": decision["override"],
                                                      "tenancy": decision["tenancy"]})
+                if decision.get("warning"):
+                    board.event("replication_unsandboxed", {"request": request_id, "run": run_id,
+                                                            "warning": decision["warning"], "tenancy": decision["tenancy"]})
         home = trial / adapter.home_dir
         sandboxed = None
         try:

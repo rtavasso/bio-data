@@ -397,47 +397,45 @@ def test_review_deliverable_is_validated_structurally(demo):
     assert value is None and "invalid JSON" in problems[0]
 
 
-REPLICATE = '''import os
-from daw.artifacts import artifact_info, register_artifact
-from daw.catalog import Workspace
-from daw.substrate_models import ArtifactRegistration, Derivation
-from daw.work import create_question
-ws = Workspace(os.environ["BIO_WORKSPACE"])
-with ws.writer():
-    manifest = artifact_info(ws, "{original}")["manifest"]
-    question = create_question(ws, "Replicate {original}")["question"]
-    out = "replicated.tsv"
-    open(out, "w").write({content!r})
-    register_artifact(ws, out, ArtifactRegistration(title="Replication", summary="re-executed",
-        output_role=manifest["output_role"], derivation=Derivation(**manifest["derivation"])), question=question)
-ws.close()
-'''
-
-
-@pytest.mark.parametrize("identical", [True, False])
-def test_replication_compares_bytes_and_requires_a_correction(demo, identical):
+@pytest.mark.parametrize("executed", [True, False])
+def test_replication_outcome_is_gated_on_an_execution_receipt(demo, executed):
+    """C6: the runtime counts a same-derivation registration only under a run_analysis receipt of the derivation's
+    code; the original's fork is refused; local mode records the unsandboxed-execution warning."""
+    from daw.commons import studio_demo
     root, ctx = demo
     original = ctx["artifacts"]["contrast"]
     with Community(root) as board, scripted_runtime(root) as (executable, answers):
-        target = board.agent("alice-fork")
-        content = (board.library.blob_path(board.library.one("SELECT output_blob FROM artifact WHERE id=?",
-                                                             (original,))["output_blob"]).read_text()
-                   if identical else "contrast\tlog2_ratio\nB_vs_A\t1.60\n")
-        request = assign(board, "operator", target["id"], "Replicate", "Replicate the contrast.", task_type="replication",
-                         evidence={"subject_kind": "artifact", "subject_id": original})
-        (answers / f"{request['post']}.hook.py").write_text(REPLICATE.format(original=original, content=content))
+        with pytest.raises(DawError, match="replication_target_produced_original"):
+            assign(board, "operator", board.agent("alice-fork")["id"], "Replicate", "Replicate the contrast.",
+                   task_type="replication", evidence={"subject_kind": "artifact", "subject_id": original})
+        request = assign(board, "operator", ctx["agents"]["bob"], "Replicate", "Replicate the contrast.",
+                         task_type="replication", evidence={"subject_kind": "artifact", "subject_id": original})
+        hook = (studio_demo.replication_hook(ctx["posts"]["finding"], original) if executed else
+                "import os\nfrom daw.artifacts import artifact_info, register_artifact\nfrom daw.catalog import Workspace\n"
+                "from daw.substrate_models import ArtifactRegistration, Derivation\nfrom daw.work import create_question\n"
+                "ws = Workspace(os.environ['BIO_WORKSPACE'])\nwith ws.writer():\n"
+                f"    info = artifact_info(ws, {original!r})\n"
+                "    q = create_question(ws, 'Replicate')['question']\n"
+                "    open('copied.tsv', 'wb').write(ws.blob_path(info['output_blob']).read_bytes())\n"
+                "    register_artifact(ws, 'copied.tsv', ArtifactRegistration(title='Copy', summary='copied',\n"
+                "        output_role=info['manifest']['output_role'], derivation=Derivation(**info['manifest']['derivation'])),\n"
+                "        question=q)\nws.close()\n")
+        answer_for(answers, request, board, "Replicated.")
+        (answers / f"{request['post']}.hook.py").write_text(hook)
         notices = len(events(board, "notice_queued"))
-        dispatch(board, request["id"], executable)
-        [result] = events(board, "task_outcome")[-1]["criteria"]["replication"]
-        if identical:
+        done = dispatch(board, request["id"], executable)
+        prompt = (root / "runs" / done["active_run"] / "prompt.txt").read_text()
+        assert "replicate.py" in prompt and "permission to execute downloaded code" not in prompt
+        assert read_json(root / "runs" / done["active_run"] / "sandbox.json")["warning"].startswith("replication_unsandboxed")
+        outcome = events(board, "task_outcome")[-1]
+        [result] = outcome["criteria"]["replication"]
+        if executed:
             assert result["outcome"] == "byte_identical" and result["identical"] == [original]
-            assert len(events(board, "notice_queued")) == notices
+            assert result["receipts"][original]["exit_code"] == 0 and f"artifact:{original}" in outcome["deliverables_found"]
         else:
-            assert result["outcome"] == "bytes_differ" and result["correction_required"] and not result["correction_post"]
-            notice = events(board, "notice_queued")[-1]
-            assert notice["target"] == ctx["agents"]["alice"]
-            shown = board.show(notice["post"])
-            assert shown["parent"] == ctx["posts"]["finding"] and result["different"][0] in shown["content"]["body"]
+            assert result["outcome"] == "no_execution_receipt" and not result["identical"]
+            assert not result["correction_required"] and f"artifact:{original}" not in outcome["deliverables_found"]
+        assert len(events(board, "notice_queued")) == notices
 
 
 def test_scouting_flags_analysis_and_writing_requires_pointers(demo):
@@ -750,6 +748,34 @@ def test_agent_added_after_proxy_start_reaches_its_provider_host(demo, tmp_path)
     head = egress.parse_head(b"GET http://www.ebi.ac.uk/x HTTP/1.1\r\nHost: www.ebi.ac.uk\r\n"
                              b"Proxy-Authorization: Basic abc\r\n\r\n")[3]
     assert b"Proxy-Authorization" not in head and b"Host: www.ebi.ac.uk" in head
+
+
+def test_replication_egress_is_enforced_by_its_token_scoped_proxy_policy(demo):
+    """C6 x C7: a replication's model-hosts-only allowlist is the policy its proxy credential opens."""
+    import base64
+    from urllib.parse import urlsplit
+    root, ctx = demo
+    (root / "sandbox.toml").write_text('engine = "docker"\nimage = "agent:1"\nnetwork = "egress"\n'
+                                       'proxy = "http://egress:3128"\nallow_hosts = ["example.org"]\n')
+    with Community(root) as board:
+        agent = add_agent(board, "rep-claude", harness="claude")
+        trial = board.trial(agent)
+    env = {"BIO_AGENT": agent["id"], "BIO_COMMUNITY": str(root), "PATH": "/usr/bin"}
+    store = egress.PolicyStore(egress.policy_dir(root), egress.Policy((), resolver=lambda h, p: ["93.184.216.34"]))
+    scoped = {}
+    for task_type in ("replication", "research"):
+        _, client, receipt = sandbox.apply(sandbox.policy(root, None, task_type), ["claude"], env, trial=trial,
+                                           board_root=root, adapter=claude.ADAPTER, agent_config=agent["config"],
+                                           run=f"run_{task_type}")
+        url = urlsplit(client["HTTPS_PROXY"])
+        header = "Basic " + base64.b64encode(f"{url.username}:{url.password}".encode()).decode()
+        policy, reason, record = store.resolve(header)
+        assert reason == "ok" and record["hosts"] == receipt["egress_allowlist"]
+        scoped[task_type] = policy
+    assert scoped["replication"].check("api.anthropic.com", 443)[0]
+    assert scoped["replication"].check("zenodo.org", 443)[1] == "host_not_allowlisted"
+    assert scoped["replication"].check("example.org", 443)[1] == "host_not_allowlisted"
+    assert scoped["research"].check("zenodo.org", 443)[0] and scoped["research"].check("example.org", 443)[0]
 
 
 def test_budget_file_edit_raises_a_policy_violation_event(demo):

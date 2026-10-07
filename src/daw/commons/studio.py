@@ -9,11 +9,14 @@ writer lock (and the library writer lock when it stores bytes or posts) and reco
   -> checked_source, reproduced -> reproduced, partially_supported/not_supported/fail/concern ->
   disputed; not_assessable and unpointed verdicts record no mark. Mark ids derive from (review
   post, criterion), so recording is idempotent. Marks stay attribution, never a status change.
-- Replications (M6.3, always person-triggered): after delivery the runtime's `task_outcome` holds
-  the byte comparison. Identical bytes -> a `reproduced` mark by the replicating participant on the
-  original artifact plus a short confirmation reply; different bytes -> a correction post of kind
-  `replication_mismatch` authored by the replicating agent (its registered output published as
-  evidence) unless the agent already published one naming both artifacts.
+- Replications (M6.3, always person-triggered; spec v2 C6): after delivery the runtime's `task_outcome`
+  holds the receipt-gated byte comparison (`daw.commons.replication`). The receipts are re-verified from
+  the agent's workspace (read-only) before anything is recorded. Identical bytes under an execution
+  receipt -> a `reproduced` mark and a confirmation reply on the original, both authored by the
+  `replication` system participant and citing the agent's receipt; different bytes under a receipt -> a
+  correction post of kind `replication_mismatch` by the same participant (the agent's registered output
+  published as evidence) unless the agent already published one naming both artifacts; a registration
+  without a receipt -> `no_execution_receipt`, nothing confirmed.
 - Digests (M6.4): a person commissions a digest of a scope (search query, questions, posts) and
   period. The request post carries a deterministic skeleton (new posts, corrections, claims, open
   items, with links) as the writer's input context; the agent writes the narrative. A standing
@@ -68,8 +71,10 @@ def _derived_mark(board, participant, target_kind, target_id, kind, note, pointe
         record = {"kind": "verification_mark", "mark": identity, "participant": participant["id"],
                   "participant_kind": participant["kind"], "target_kind": target_kind, "target_id": target_id,
                   "mark_kind": kind, "note": note, "pointers": pointers, "created": created, "source": source,
-                  "meaning": "Attribution by the named participant, derived from its recorded "
-                             f"{'review' if 'review' in source else 'replication'}; it changes no platform-computed status."}
+                  "meaning": ("Attribution by the named participant, derived from its recorded review; it changes no "
+                              "platform-computed status." if "review" in source else
+                              "Platform record by the replication participant, derived from the replicating agent's "
+                              "execution receipt; it changes no platform-computed status.")}
         blob = board.library.put_json(record)
         with board.db:
             board.db.execute("INSERT INTO mark(id,participant,target_kind,target_id,kind,note,pointers,body_blob,created) "
@@ -258,31 +263,45 @@ def _original_post(board, artifact):
     return None
 
 
-def _confirm(board, agent, request, run, result, parent):
+def _confirm(board, system, agent, request, run, result, parent):
+    """The `replication` participant's reproduced mark and confirmation reply, citing the agent's receipt."""
+    from daw.commons.replication import receipt_line
     original, blob = result["original"], result["original_blob"]
+    receipts = [result["receipts"][a] for a in result["identical"]]
+    cited = [{"kind": "run", "id": run}, {"kind": "artifact", "id": original}] + [
+        {"kind": "receipt", "id": r["receipt_blob"], "locator": f"workspace of {agent['id']}, event {r['event']}"}
+        for r in receipts]
     mark = _derived_mark(
-        board, agent, "artifact", original, "reproduced",
-        f"Replication request {request['id']} (run {run}) re-executed derivation {result['derivation_key']}; "
-        f"the registered output is byte-identical (sha256 {blob}).",
-        [{"kind": "run", "id": run}, {"kind": "artifact", "id": original}],
-        "mark_" + digest(["replication", request["id"], original])[:32],
-        {"replication": request["id"], "run": run, "original": original})
-    body = (f"Replication confirmed: re-executing derivation {result['derivation_key']} of [{original}] under new "
-            f"receipts (request {request['id']}, run {run}) produced byte-identical output.\n\n"
-            f"- output sha256: `{blob}`\n- registered: {', '.join(result['identical'])}\n\n"
-            "Identical bytes confirm this derivation's output; scientific applicability is judged separately.")
+        board, system, "artifact", original, "reproduced",
+        f"Platform check of replication request {request['id']} (run {run}) by {agent['name']}: its run_analysis "
+        f"receipt {receipts[0]['receipt_blob']} records executing code blob {receipts[0]['code_sha256']} of derivation "
+        f"{result['derivation_key']} and writing output sha256 {blob}, byte-identical to the original.",
+        cited, "mark_" + digest(["replication", request["id"], original])[:32],
+        {"replication": request["id"], "run": run, "original": original, "agent": agent["id"],
+         "receipts": [r["receipt_blob"] for r in receipts]})
+    lines = "\n".join(f"- {receipt_line(r)}" for r in receipts)
+    body = (f"Replication confirmed: {agent['name']} executed the saved code of derivation {result['derivation_key']} "
+            f"of [{original}] on its recorded inputs through run_analysis.py (request {request['id']}, run {run}), and "
+            f"the output it wrote is byte-identical to the original.\n\n- output sha256: `{blob}`\n"
+            f"- registered: {', '.join(result['identical'])}\n{lines}\n\n"
+            "This post is a platform record by the replication participant: it compares the bytes named in the "
+            "agent's execution receipt with the original's. Identical bytes confirm this derivation's output; "
+            "scientific applicability is judged separately.")
     with board.writer(), board.library.writer():
-        post = board._post(agent["id"], "Replication confirmed", body, parent=parent, kind="replication_confirmed",
+        post = board._post(system["id"], "Replication confirmed", body, parent=parent, kind="replication_confirmed",
                            request_key=f"replication-confirmed:{request['id']}:{original}",
                            evidence={"replication": {"request": request["id"], "run": run, "original": original,
-                                                     "output_sha256": blob, "derivation_key": result["derivation_key"],
-                                                     "registered": result["identical"]}})
+                                                     "agent": agent["id"], "output_sha256": blob,
+                                                     "derivation_key": result["derivation_key"],
+                                                     "registered": result["identical"], "receipts": receipts}})
     return {"mark": mark["id"], "post": post, "created": mark["created_now"]}
 
 
-def _mismatch(board, agent, request, run, result, parent):
-    """A correction post by the replicating agent naming both outputs; its registered replica is published as evidence."""
+def _mismatch(board, system, agent, request, run, result, parent):
+    """The `replication` participant's correction post naming both outputs and the agent's receipts; the agent's
+    registered replica is published as evidence so its bytes are verifiable from the library."""
     from daw.catalog import Workspace
+    from daw.commons.replication import receipt_line
     from daw.exchange import transfer_artifacts
     key = f"replication-mismatch:{request['id']}:{result['original']}"
     existing = board.one("SELECT id FROM post WHERE request_key=?", (key,))
@@ -293,28 +312,65 @@ def _mismatch(board, agent, request, run, result, parent):
         differing = []
         for replica in result["different"]:
             row = source.one("SELECT output_blob FROM artifact WHERE id=?", (replica,))
-            differing.append({"artifact": replica, "output_sha256": row["output_blob"] if row else None})
-        lines = "\n".join(f"- replication [{d['artifact']}]: sha256 `{d['output_sha256']}`" for d in differing)
-        body = (f"Replication mismatch: re-executing derivation {result['derivation_key']} of [{result['original']}] "
-                f"under new receipts (request {request['id']}, run {run}) produced different output bytes.\n\n"
+            differing.append({"artifact": replica, "output_sha256": row["output_blob"] if row else None,
+                              "receipt": result["receipts"][replica]})
+        lines = "\n".join(f"- replication [{d['artifact']}]: sha256 `{d['output_sha256']}`; {receipt_line(d['receipt'])}"
+                          for d in differing)
+        body = (f"Replication mismatch: {agent['name']} executed the saved code of derivation "
+                f"{result['derivation_key']} of [{result['original']}] on its recorded inputs through run_analysis.py "
+                f"(request {request['id']}, run {run}), and the output it wrote differs from the original's bytes.\n\n"
                 f"- original [{result['original']}]: sha256 `{result['original_blob']}`\n{lines}\n\n"
                 "Both outputs carry the same derivation key. Compare them before relying on a value derived from "
-                "either; this post records the byte comparison, not which output is right.")
+                "either; this platform record (by the replication participant) compares the bytes named in the "
+                "agent's execution receipt, not which output is right.")
         with source.writer(), board.writer(), board.library.writer():
             evidence = transfer_artifacts(source, board.library, [d["artifact"] for d in differing if d["output_sha256"]])
-            post = board._post(agent["id"], "Replication mismatch", body, parent=parent, kind="replication_mismatch",
+            post = board._post(system["id"], "Replication mismatch", body, parent=parent, kind="replication_mismatch",
                                request_key=key,
                                evidence={**evidence, "replication": {
                                    "request": request["id"], "run": run, "original": result["original"],
-                                   "original_sha256": result["original_blob"], "derivation_key": result["derivation_key"],
-                                   "different": differing}})
+                                   "agent": agent["id"], "original_sha256": result["original_blob"],
+                                   "derivation_key": result["derivation_key"], "different": differing}})
     finally:
         source.close()
     return {"post": post, "created": True}
 
 
+def _gated(board, agent, result):
+    """Re-verify the outcome's receipts from the agent's workspace (read-only) before anything is posted.
+
+    An outcome recorded before the receipt gate, or a receipt that no longer verifies, becomes
+    `no_execution_receipt`: nothing is confirmed or corrected without an execution receipt."""
+    from daw.commons.replication import reverify
+    if result.get("outcome") not in ("byte_identical", "bytes_differ"):
+        return result
+    receipts, codes = result.get("receipts") or {}, result.get("code_blobs") or []
+    held = {}
+    for replica in result.get("identical", []) + result.get("different", []):
+        row = board.library.one("SELECT output_blob FROM artifact WHERE id=?", (replica,))
+        if replica in result.get("identical", []):
+            held[replica] = result["original_blob"]
+        elif row:
+            held[replica] = row["output_blob"]
+        else:
+            with Archive(board.root) as view:
+                ws = view.workspace(agent["id"])
+                found = ws.one("SELECT output_blob FROM artifact WHERE id=?", (replica,)) if ws else None
+            held[replica] = found["output_blob"] if found else None
+    valid = {a for a, blob in held.items() if blob and reverify(board, agent["id"], receipts.get(a), codes, blob)}
+    same = [a for a in result.get("identical", []) if a in valid]
+    differ = [a for a in result.get("different", []) if a in valid]
+    outcome = "bytes_differ" if differ else "byte_identical" if same else "no_execution_receipt"
+    return {**result, "identical": same, "different": differ, "outcome": outcome}
+
+
 def replication_check(board, request_id, *, actor=None):
-    """Confirm or correct a delivered replication from the runtime's recorded byte comparison. Idempotent."""
+    """Confirm or correct a delivered replication from the runtime's receipt-gated byte comparison. Idempotent.
+
+    Confirmation and mismatch posts and marks are authored by the `replication` system participant and cite
+    the replicating agent's run_analysis receipt; the agent signs only what it wrote itself."""
+    from daw.commons.participants import ensure_system
+    from daw.commons.replication import SYSTEM_PARTICIPANT
     if actor is not None:
         require(board, board.agent(actor), "dispatch")
     request = board.one("SELECT * FROM request WHERE id=?", (request_id,))
@@ -328,28 +384,33 @@ def replication_check(board, request_id, *, actor=None):
     if not outcomes:
         raise DawError("replication_outcome_missing", "the runtime has not recorded a task outcome")
     outcome = outcomes[-1]
-    agent = require(board, board.agent(request["target"]), "reply")
+    agent = board.agent(request["target"])
+    system = require(board, ensure_system(board, SYSTEM_PARTICIPANT), "reply")
     run = outcome["run"]
     results, created = [], False
     for result in outcome["criteria"].get("replication", []):
+        result = _gated(board, agent, result)
         original = result.get("original")
         entry = {"original": original, "outcome": result["outcome"]}
         parent = (_original_post(board, original) if original else None) or request["post"]
         if result["outcome"] == "byte_identical":
-            done = _confirm(board, agent, request, run, result, parent)
-            entry.update(mark=done["mark"], post=done["post"])
+            done = _confirm(board, system, agent, request, run, result, parent)
+            entry.update(mark=done["mark"], post=done["post"], author=system["id"])
             created |= done["created"]
         elif result["outcome"] == "bytes_differ" and result.get("correction_post"):
             entry.update(post=result["correction_post"], authored_by_agent=True)
         elif result["outcome"] == "bytes_differ":
-            done = _mismatch(board, agent, request, run, result, parent)
-            entry.update(post=done["post"])
+            done = _mismatch(board, system, agent, request, run, result, parent)
+            entry.update(post=done["post"], author=system["id"])
             created |= done["created"]
+        elif result["outcome"] == "no_execution_receipt":
+            entry["note"] = ("a same-derivation registration without a run_analysis receipt showing the derivation's "
+                             "code writing its bytes; nothing is confirmed")
         else:
             entry["note"] = "nothing to confirm or correct"
         results.append(entry)
-    summary = {"request": request_id, "run": run, "agent": agent["id"], "results": results}
-    if created:
+    summary = {"request": request_id, "run": run, "agent": agent["id"], "author": system["id"], "results": results}
+    if created or not _events(board, "replication_checked", request=request_id):
         with board.writer(), board.db:
             board.event("replication_checked", {**summary, "actor": actor or "runtime"})
     return summary
