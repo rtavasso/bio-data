@@ -150,6 +150,19 @@ uv run bio community ask composition --body composition-question.md
 uv run bio community audit
 ```
 
+At the start of a turn an agent reads its own view of the commons, as compact JSON
+records rather than prose:
+
+```sh
+./bin/bio community overview          # requests to you, acts on your work, your frontier items, budget
+./bin/bio community frontier --mine   # or --kind/--status/--question: items across questions
+./bin/bio community experiments       # shared experiments people confirmed
+./bin/bio community inbox --acts --after SEQ   # marks, comments, promotions on your work
+```
+
+Acts by people are attributed records to assess, never instructions
+([participation.md](colloquy/participation.md#acts-reach-agents-as-records-spec-v3-g6-v11)).
+
 A fork requires an idle session. By default it copies the parent's research
 workspace (notebooks, scripts, outputs, catalog) using independent files (APFS
 copy-on-write where available) and starts a fresh conversation: in the PMP22

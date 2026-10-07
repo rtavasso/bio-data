@@ -26,8 +26,10 @@ refuses the other number. Post pointers give context only; they never cover a nu
 - a pointer does not resolve: claims must be ledger rows, artifacts catalogued in the library or a
   participant workspace, posts must exist; other identifier kinds are not citable; a locator must parse;
 - a figure does not reference a resolving artifact;
-- a writing task cites a post that has no ledger claims (`claimless_post_cited`; V1). Digests cite posts as
-  the items they summarise, so the rule applies to every write-up except digest deliveries.
+- a writing task cites a post that has no ledger claims (`claimless_post_cited`; V1), or a post publishing a
+  completed question (its notebook evidence; the author's current question status) with no frontier item beyond
+  retrieval gaps (`frontierless_question_cited`; v3 G1). Digests cite posts as the items they summarise, so
+  these rules apply to every write-up except digest deliveries.
 
 Each pointed number is then checked against its record (value-in-record): a claim pointer verifies when the
 number occurs in the claim's text or scope; an artifact pointer when the number is at the cited cell, key or
@@ -753,16 +755,36 @@ def resolve_pointer(view, identity, kind, cache):
         row = view.one("SELECT id,author,created,body_blob FROM post WHERE id=?", (identity,))
         vis = views.visibility(view)
         claims = view.one("SELECT count(*) AS n FROM claim WHERE post=?", (identity,))["n"] if row else 0
+        question = post_question(view, row) if row else None
         if row and vis.withheld(identity):
             entry.update(present=True, hidden=True, reason=vis.reason(identity), claims=claims,
-                         route=f"/post/{identity}")
+                         route=f"/post/{identity}", question=question)
         elif row:
             content = views.content(view, row["body_blob"])
             entry.update(present=True, title=vis.title(identity, content.get("title")), author=row["author"],
-                         created=row["created"],
+                         created=row["created"], question=question,
                          post_kind=content.get("kind"), claims=claims, route=f"/post/{identity}")
     cache[identity] = entry
     return entry
+
+
+def post_question(view, row):
+    """The question a post publishes (its notebook evidence), with the author's current question status and the
+    number of its frontier items beyond retrieval gaps (v3 G1), or None for a post without a notebook."""
+    notebook = (views.content(view, row["body_blob"]).get("evidence") or {}).get("notebook")
+    question = notebook.get("question") if isinstance(notebook, dict) else None
+    if not isinstance(question, str):
+        return None
+    status = None
+    try:
+        workspace = view.workspace(row["author"]) if hasattr(view, "workspace") else None
+        found = workspace.one("SELECT status FROM question WHERE id=?", (question,)) if workspace else None
+        status = found["status"] if found else None
+    except DawError:
+        pass
+    items = view.one("SELECT count(*) AS n FROM frontier_item WHERE author=? AND question=? AND kind!='gap' "
+                     "AND status!='withdrawn'", (row["author"], question))["n"]
+    return {"id": question, "status": status, "non_gap_items": items}
 
 
 def verify_numbers(view, blocks, cache, outputs=None):
@@ -834,6 +856,11 @@ def check(view, source, blocks, *, task_type=None):
             problems.append({"kind": "claimless_post_cited", **span,
                              "reason": "a writing task does not cite a post without ledger claims; cite the claims "
                                        "or artifacts it rests on"})
+        elif kind == "post" and task_type != "digest" and (entry.get("question") or {}).get("status") == "completed" \
+                and not entry["question"]["non_gap_items"]:
+            problems.append({"kind": "frontierless_question_cited", **span, "question": entry["question"]["id"],
+                             "reason": "a writing task does not cite a completed question that records no frontier "
+                                       "item beyond retrieval gaps; its author records the next step first"})
     verify_numbers(view, blocks, cache)
     problems.sort(key=lambda p: (p["offset"], p["kind"]))
     return problems, cache

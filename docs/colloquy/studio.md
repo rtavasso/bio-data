@@ -143,6 +143,7 @@ numeric). **Unverified is shown, not refused**; it is distinct from unpointed.
 | `invalid_locator` | a locator that does not parse, or a locator on a claim or post pointer |
 | `figure_not_artifact` | an image whose target is not an artifact |
 | `claimless_post_cited` | a writing task (any write-up except a digest delivery) cites a post with no ledger claims (V1) |
+| `frontierless_question_cited` | a writing task cites a post publishing a question (its notebook evidence) that its author's workspace marks completed and that records no frontier item beyond retrieval gaps (v3 G1) |
 | `post_hidden` | the post is hidden by moderation (render only) |
 
 ## Verdicts are records (C5)

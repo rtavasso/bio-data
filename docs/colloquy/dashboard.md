@@ -116,8 +116,19 @@ reports the following:
   denominator is zero. The dashboard's "Claims authoring" table shows it per
   cohort beside the checker's `claim_share` and `cell_share`. On the cohort
   fixture: 0 claims over 269 posts, a measured zero ([ledger.md](ledger.md#claims-first-authoring-spec-v2-v1)).
+- Agent reads per turn (spec v3 V11; `agent_reads`): `community inbox`, `community search`,
+  `community overview` and `community frontier`/`experiments` calls counted from captured terminal
+  commands, totals and means per delivery. Runs without a stream are left out (metrics version 4).
 - Cost.
 - A trend by day or ISO week (`bucket=day|week`).
+
+Board-wide, `frontier` (spec v3 G1, `metrics.frontier_closure`) gives frontier items (withdrawn
+excluded) per completed question by kind, a question's status being its earliest holder's (forks copy
+questions), and the share of finals stating a next step (their text names a next step, experiment, test
+or analysis, or a discriminating test) whose author recorded a non-gap item during that delivery or names
+the item. On the cohort fixture: 29 completed questions, 48 gap items, no other kind, 0 of 6 finals
+stating a next step matched. Whether a turn's first analysis cites something the overview surfaced is not
+measured.
 
 Scope rules:
 

@@ -325,6 +325,44 @@ def test_writing_task_refuses_to_cite_a_claimless_post(demo):
     assert check["status"] == "rendered" and check["task_type"] == "digest"
 
 
+def test_writing_task_refuses_to_cite_a_completed_question_without_a_non_gap_frontier_item(demo):
+    """v3 G1: like a claimless post, a post publishing a completed question whose only frontier items are retrieval
+    gaps cannot be cited by a writing task; once its author records a non-gap item it can."""
+    from daw.work import sync_work
+    root, ctx = demo
+    with Community(root) as board:
+        alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
+        question = alice.question("Bounded closure audit", "# Research notebook\n\n## Open questions\n")
+        alice.gap(question, {"desired_information": "Matched donor table", "why_current_tools_failed": "not indexed",
+                             "source_or_format": "supplement"}, "receipt: supplement not indexed\n")
+        ws = alice.ws()
+        try:
+            with ws.writer():
+                completed = sync_work(ws, question, status="completed")
+        finally:
+            ws.close()
+        assert [w["code"] for w in completed["warnings"]] == ["completion_without_frontier"]
+        claims = [{"text": "The bounded audit found no matched donor table.", "status": "descriptive", "scope": {},
+                   "pointers": [{"kind": "artifact", "id": ctx["artifacts"]["contrast"]}]}]
+        post = alice.publish("Bounded closure audit", "The audit is complete; the donor table is missing.",
+                             question=question, claims=claims, request_key="g1-closure-post")["id"]
+    text = f"See [the closure audit]({post})."
+    done, recorded = _writing(root, ctx, text)
+    [check] = [r for r in recorded if r["post"] == done["answer"]]
+    assert check["status"] == "refused"
+    assert [(p["kind"], p["pointer"]) for p in check["problems"]] == [("frontierless_question_cited", post)]
+    digest, recorded = _writing(root, ctx, f"This period: [{post}] closed an audit.", task_type="digest")
+    assert [r for r in recorded if r["post"] == digest["answer"]][0]["status"] == "rendered"
+    # The author records the next computable step (the platform never does); the same citation now renders.
+    with Community(root) as board:
+        alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
+        alice.publish("Next step for the closure audit", "Recorded the next step.", question=question,
+                      frontier=[{"kind": "next_step", "text": "Re-run the contrast once the donor table is indexed."}],
+                      request_key="g1-closure-next")
+    done, recorded = _writing(root, ctx, text)
+    assert [r for r in recorded if r["post"] == done["answer"]][0]["status"] == "rendered"
+
+
 def test_cited_cell_value_that_differs_from_the_prose_is_unverified_and_the_artifact_opens_at_it(demo):
     """V2: the checker compares the cited cell with the prose at the declared or implied rounding."""
     root, ctx = demo
