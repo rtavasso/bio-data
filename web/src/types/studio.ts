@@ -99,7 +99,7 @@ export interface PointerEntry {
 
 export interface Problem {
   kind: "unpointed_number" | "unresolved_pointer" | "pointer_kind_not_allowed" | "figure_not_artifact" | "post_hidden"
-    | "claimless_post_cited" | "invalid_locator";
+    | "claimless_post_cited" | "frontierless_question_cited" | "invalid_locator";
   text?: string;
   pointer?: string;
   offset: number;
@@ -122,9 +122,11 @@ export interface WithdrawnClaim {
 
 export interface Regeneration {
   claims: WithdrawnClaim[];
-  // Flow B: cited posts superseded without a cited later version, and artifacts only superseded publications name.
+  // Flow B: cited posts superseded without a cited later version, and artifacts a superseded publication named or
+  // whose producing question published a superseded post (B14: flagged even when a current publication re-lists them).
   posts?: { post: string; title: string | null; superseded_by: string; replacements: string[] }[];
-  artifacts?: { artifact: string; superseded_posts: string[]; replacements: string[] }[];
+  artifacts?: { artifact: string; superseded_posts: string[]; producer_superseded?: string[]; replacements: string[];
+    relisted_by?: string[]; current_claims?: boolean }[];
   note: string;
   commission: { task_type: "writing"; subject_kind: string; subject_id: string; note: string };
 }
@@ -196,8 +198,11 @@ export interface StudioItem {
       // Spec v2 C6: run_analysis receipts (from the replicating agent's workspace) that cover each counted replica.
       receipts?: Record<string, { receipt_blob: string; code_sha256: string; exit_code: number }>;
       unreceipted?: { artifact: string; output_blob: string }[];
+      // v3 B3: an unsandboxed run is a local rehearsal (its comparison in `rehearsal`); a captured run on
+      // other inputs is inputs_differ. Neither confirms or corrects.
+      rehearsal?: string; sandboxed?: boolean;
     }[];
-    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string; author?: string; authored_by_agent?: boolean }[] | null;
+    followup: { original: string; outcome: string; mark?: string; post?: string; note?: string; author?: string; authored_by_agent?: boolean; rehearsal?: string }[] | null;
   };
   digest?: { scope: Record<string, unknown>; since: string | null; until: string | null; schedule: string | null; counts: Record<string, number> };
 }

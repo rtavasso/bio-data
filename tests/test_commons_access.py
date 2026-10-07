@@ -288,6 +288,30 @@ def test_audit_log_is_operator_only_filtered_and_paged(demo):
     assert http.get("/api/audit?since=nonsense", headers=bearer(ops_token)).status_code == 400
 
 
+def test_local_mode_as_operator_reads_its_own_audit_log(demo, monkeypatch):
+    """B7: a single-user commons served with --as-operator acts as an operator created on first start; plain
+    local mode stays human (403 on the audit log), and an existing human is never turned into an operator."""
+    from typer.testing import CliRunner
+
+    from daw.commons import cli
+    root, _ = demo
+    assert client(root, local_user="solo").get("/api/audit").status_code == 403
+    with pytest.raises(DawError, match="local_user_not_operator"):
+        client(root, local_user="solo", local_operator=True)
+    with pytest.raises(DawError, match="local_operator_needs_local_mode"):
+        client(root, mode="accounts", local_operator=True)
+    served = []
+    monkeypatch.setattr(cli, "_uvicorn", lambda: SimpleNamespace(run=lambda app, **_: served.append(app)))
+    result = CliRunner().invoke(cli.app, ["--root", str(root), "serve", "--user", "steward", "--as-operator",
+                                          "--graph-refresh", "0", "--static-dir", str(root / "missing")])
+    assert result.exit_code == 0, result.output
+    http = TestClient(served[0])
+    assert http.get("/api/me").json()["kind"] == "operator"
+    page = http.get("/api/audit?kind=participant_created").json()
+    assert any(e["body"]["name"] == "steward" and e["body"]["kind"] == "operator" for e in page["items"])
+    assert client(root, local_user="steward", local_operator=True).get("/api/audit").status_code == 200
+
+
 def test_audit_log_on_the_cohort(cohort):
     from daw.commons.audit import audit_log
     with Archive(cohort) as view:

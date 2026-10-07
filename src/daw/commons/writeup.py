@@ -26,8 +26,10 @@ refuses the other number. Post pointers give context only; they never cover a nu
 - a pointer does not resolve: claims must be ledger rows, artifacts catalogued in the library or a
   participant workspace, posts must exist; other identifier kinds are not citable; a locator must parse;
 - a figure does not reference a resolving artifact;
-- a writing task cites a post that has no ledger claims (`claimless_post_cited`; V1). Digests cite posts as
-  the items they summarise, so the rule applies to every write-up except digest deliveries.
+- a writing task cites a post that has no ledger claims (`claimless_post_cited`; V1), or a post publishing a
+  completed question (its notebook evidence; the author's current question status) with no frontier item beyond
+  retrieval gaps (`frontierless_question_cited`; v3 G1). Digests cite posts as the items they summarise, so
+  these rules apply to every write-up except digest deliveries.
 
 Each pointed number is then checked against its record (value-in-record): a claim pointer verifies when the
 number occurs in the claim's text or scope; an artifact pointer when the number is at the cited cell, key or
@@ -753,16 +755,36 @@ def resolve_pointer(view, identity, kind, cache):
         row = view.one("SELECT id,author,created,body_blob FROM post WHERE id=?", (identity,))
         vis = views.visibility(view)
         claims = view.one("SELECT count(*) AS n FROM claim WHERE post=?", (identity,))["n"] if row else 0
+        question = post_question(view, row) if row else None
         if row and vis.withheld(identity):
             entry.update(present=True, hidden=True, reason=vis.reason(identity), claims=claims,
-                         route=f"/post/{identity}")
+                         route=f"/post/{identity}", question=question)
         elif row:
             content = views.content(view, row["body_blob"])
             entry.update(present=True, title=vis.title(identity, content.get("title")), author=row["author"],
-                         created=row["created"],
+                         created=row["created"], question=question,
                          post_kind=content.get("kind"), claims=claims, route=f"/post/{identity}")
     cache[identity] = entry
     return entry
+
+
+def post_question(view, row):
+    """The question a post publishes (its notebook evidence), with the author's current question status and the
+    number of its frontier items beyond retrieval gaps (v3 G1), or None for a post without a notebook."""
+    notebook = (views.content(view, row["body_blob"]).get("evidence") or {}).get("notebook")
+    question = notebook.get("question") if isinstance(notebook, dict) else None
+    if not isinstance(question, str):
+        return None
+    status = None
+    try:
+        workspace = view.workspace(row["author"]) if hasattr(view, "workspace") else None
+        found = workspace.one("SELECT status FROM question WHERE id=?", (question,)) if workspace else None
+        status = found["status"] if found else None
+    except DawError:
+        pass
+    items = view.one("SELECT count(*) AS n FROM frontier_item WHERE author=? AND question=? AND kind!='gap' "
+                     "AND status!='withdrawn'", (row["author"], question))["n"]
+    return {"id": question, "status": status, "non_gap_items": items}
 
 
 def verify_numbers(view, blocks, cache, outputs=None):
@@ -834,6 +856,11 @@ def check(view, source, blocks, *, task_type=None):
             problems.append({"kind": "claimless_post_cited", **span,
                              "reason": "a writing task does not cite a post without ledger claims; cite the claims "
                                        "or artifacts it rests on"})
+        elif kind == "post" and task_type != "digest" and (entry.get("question") or {}).get("status") == "completed" \
+                and not entry["question"]["non_gap_items"]:
+            problems.append({"kind": "frontierless_question_cited", **span, "question": entry["question"]["id"],
+                             "reason": "a writing task does not cite a completed question that records no frontier "
+                                       "item beyond retrieval gaps; its author records the next step first"})
     verify_numbers(view, blocks, cache)
     problems.sort(key=lambda p: (p["offset"], p["kind"]))
     return problems, cache
@@ -897,15 +924,45 @@ def _chain(replaced, post):
     return seen
 
 
+def _producing_questions(view, artifacts):
+    """{artifact: {(agent, question): registered at}}: the questions that registered each artifact (`produced`
+    links in the agents' own catalogs, timed by their work event; recorded only)."""
+    found = {}
+    if not artifacts:
+        return found
+    marks = ",".join("?" * len(artifacts))
+    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY id"):
+        try:
+            ws = view.workspace(agent["id"])
+            links = ws.rows(f"SELECT qa.artifact_id,qa.question_id,e.created FROM question_artifact qa JOIN work_event e "
+                            f"ON e.id=qa.event_id WHERE qa.relationship='produced' AND qa.artifact_id IN ({marks})",
+                            list(artifacts)) if ws else []
+        except DawError:
+            continue  # no catalog: this participant produced nothing readable here
+        for link in links:
+            found.setdefault(link["artifact_id"], {})[(agent["id"], link["question_id"])] = link["created"]
+    return found
+
+
 def _artifact_backing(view, replaced, artifacts):
-    """For each artifact: the posts naming it in their evidence, split into superseded and current, and whether
-    a current ledger claim points at it. Read from `published` events and the claim projection (recorded only)."""
-    backing = {a: {"superseded": [], "current": [], "claims": False} for a in artifacts}
-    for row in view.rows("SELECT body FROM event WHERE kind='published' ORDER BY seq"):
+    """For each artifact: the posts naming it in their evidence, split into superseded and current; the superseded
+    publications of the question that produced it; and whether a current ledger claim points at it. Read from
+    `published` events, the agents' catalogs and the claim projection (recorded only)."""
+    backing = {a: {"superseded": [], "current": [], "producer_superseded": [], "claims": False} for a in artifacts}
+    producing = _producing_questions(view, sorted(backing))
+    for row in view.rows("SELECT body,created FROM event WHERE kind='published' ORDER BY seq"):
         body = json.loads(row["body"])
-        named = (body.get("evidence") or {}).get("artifacts") or []
+        evidence = body.get("evidence") or {}
+        named = evidence.get("artifacts") or []
         for artifact in set(named) & set(backing):
             backing[artifact]["superseded" if body.get("post") in replaced else "current"].append(body.get("post"))
+        notebook = evidence.get("notebook") if isinstance(evidence.get("notebook"), dict) else {}
+        if body.get("post") in replaced and notebook.get("question"):
+            # A superseded publication of the producing question, published once the artifact existed.
+            source = (body.get("author"), notebook["question"])
+            for artifact, questions in producing.items():
+                if source in questions and questions[source] <= row["created"]:
+                    backing[artifact]["producer_superseded"].append(body.get("post"))
     for row in view.rows("SELECT pointers FROM claim WHERE status!='withdrawn' AND withdrawn_by IS NULL"):
         for pointer in json.loads(row["pointers"] or "[]"):
             if isinstance(pointer, dict) and pointer.get("id") in backing:
@@ -918,8 +975,10 @@ def regeneration(view, post_id, pointers):
 
     - it cites a withdrawn ledger claim (with the replacement post and its current claims);
     - it cites a post that has been superseded, and cites no later version of it;
-    - it cites an artifact named by a superseded publication that no current publication or current ledger
-      claim names any longer.
+    - it cites an artifact named by a superseded publication, or produced by a question that published, once the
+      artifact existed, a post that was later superseded (B14). A current publication or claim that re-lists the
+      artifact does not clear the flag (a correction may re-list what it corrects); the flag names the
+      publications that re-listed it.
 
     Supersession is read from `post.supersedes`, evidence from `published` events; nothing is matched by meaning."""
     withdrawn = []
@@ -954,14 +1013,18 @@ def regeneration(view, post_id, pointers):
     present = sorted(i for i, e in pointers.items() if e["kind"] == "artifact" and e["present"])
     if present and replaced:
         for artifact, found in _artifact_backing(view, replaced, present).items():
-            if found["superseded"] and not found["current"] and not found["claims"]:
-                artifacts.append({"artifact": artifact, "superseded_posts": found["superseded"],
-                                  "replacements": sorted({r for p in found["superseded"] for r in _chain(replaced, p)})})
+            superseded = sorted(set(found["superseded"]) | set(found["producer_superseded"]))
+            if superseded:
+                artifacts.append({"artifact": artifact, "superseded_posts": superseded,
+                                  "producer_superseded": sorted(set(found["producer_superseded"])),
+                                  "replacements": sorted({r for p in superseded for r in _chain(replaced, p)}),
+                                  "relisted_by": found["current"], "current_claims": found["claims"]})
     if not (withdrawn or posts or artifacts):
         return None
     lines = ([f"{w['claim']} (withdrawn by {w['withdrawn_by'] or 'its author'})" for w in withdrawn]
              + [f"{p['post']} (superseded by {p['superseded_by']})" for p in posts]
-             + [f"{a['artifact']} (named only by superseded {', '.join(a['superseded_posts'])})" for a in artifacts])
+             + [f"{a['artifact']} (from superseded {', '.join(a['superseded_posts'])}"
+                + (f"; re-listed by {', '.join(a['relisted_by'])})" if a["relisted_by"] else ")") for a in artifacts])
     reasons = (["cites withdrawn claims"] if withdrawn else []) + (["cites superseded posts"] if posts else []) \
         + (["cites artifacts of superseded publications"] if artifacts else [])
     return {"claims": withdrawn, "posts": posts, "artifacts": artifacts,

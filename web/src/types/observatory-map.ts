@@ -262,6 +262,8 @@ export interface Suspension {
   placement: string;
   unplaced_seconds: number;
   attributed?: boolean;
+  // v3 G3: placed between samples reindexed from execution.json, heartbeat.json and the stream's own timestamps.
+  reindexed?: boolean;
   basis?: string;
   records?: (number | null)[];
   precision_seconds?: number;
@@ -273,11 +275,23 @@ export interface RunRecords {
     execution_suspended_seconds: number | null; unrecorded_seconds: number | null } | null;
   receipts: { indexed: string; counts: { receipts: number; pass: number; fail: number };
     reindexed?: { by: string; note: string } | null } | null;
-  compactions: { available: boolean; source: string | null; reason?: string | null; count?: number; fallbacks?: number;
-    reindexed?: boolean } | null;
+  compactions: { available: boolean; source: string | null; reason?: string | null; count?: number; fallbacks?: number | null;
+    reindexed?: boolean; fallback_detection?: { method: string; marker: string } | null } | null;
 }
 
 export type TokenValue = number | "unavailable";
+
+export interface RunEconomics {
+  context: { unit: string; records: number; mean_input_tokens: number; max_input_tokens: number } | null;
+  model_calls: number | null;
+  composition: { basis: string; bytes: Record<string, number | null>; complete: boolean; shares: Record<string, number> | null };
+  compactions: { stream_markers: number | null; summaries: number | null; fallbacks: number | null };
+  time: { monotonic_minutes: number | null; tool_wait_minutes: number | null; generation_minutes: number | null; basis: string };
+  orientation: { help_calls: number; reorientation_calls: number; by_kind: Record<string, number> } | null;
+  ceremony_tail_minutes: number | null;
+  skills: { reads: Record<string, number> | null; version: string | null };
+  reindexed?: { by: string; note: string };
+}
 
 export interface RunTimeline {
   run: { id: string; request: string; target: string; state: string; created: string; finished: string | null };
@@ -296,8 +310,11 @@ export interface RunTimeline {
   records?: RunRecords;
   // null: this harness's stream does not mark compactions (unavailable, not zero).
   compactions: { line: number; t: number | null; source: string; text: string }[] | null;
-  compaction_summaries: { timestamp: number | null; fallback: boolean; excerpt: string | null; t: number | null;
-    source?: string; message_id?: string | number | null; sha256?: string }[] | null;
+  // fallback: a marker match (fallback_detection "marker_match"); null where the harness writes no marker.
+  compaction_summaries: { timestamp: number | null; fallback: boolean | null; excerpt: string | null; t: number | null;
+    source?: string; message_id?: string | number | null; sha256?: string; fallback_detection?: string | null }[] | null;
+  // v3 V13: the delivery's turn_economics.json record (null for a run without one).
+  turn_economics?: RunEconomics | null;
   inbox_reads: (Call & { sent: boolean })[];
   answers_consumed: (Call & { posts: string[]; requests: string[]; attributed?: boolean; basis?: string })[];
   headline: (Call & { basis: string; attributed?: boolean }) | null;

@@ -24,12 +24,15 @@ from daw.commons.demo import SYNTHETIC
 # replicate.py with ./bin/python, which hash-checks the derivation's saved code and inputs, executes the code
 # through run_analysis.py (a receipt is written) and registers the output with the same derivation. The
 # answer is then worded from that receipt, so it claims an execution only when one is recorded.
-REPLICATE_HOOK = r'''import json, os, pathlib, subprocess
+REPLICATE_HOOK = r'''import json, os, pathlib, shlex, subprocess
 trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+CALLS = []  # the helper's terminal call, emitted into the captured stream by the scripted harness
 
 
 def run(*argv, ok=(0,)):
     done = subprocess.run(list(argv), cwd=trial, capture_output=True, text=True)
+    if "replicate.py" in " ".join(argv):
+        CALLS.append({"command": shlex.join(argv), "exit_code": done.returncode, "output": done.stdout})
     if done.returncode not in ok:
         raise SystemExit(f"{argv[:4]} exited {done.returncode}: {done.stdout[-2000:]} {done.stderr[-2000:]}")
     return json.loads(done.stdout.strip().splitlines()[-1])

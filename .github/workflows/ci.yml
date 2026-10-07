@@ -7,7 +7,7 @@ name: ci
 
 on:
   push:
-    branches: [main, "v3/**", "colloquy/**", "colloquy-v2/**"]
+    branches: [main, "v3/**", "colloquy/**", "colloquy-v2/**", "colloquy-v3/**"]
   pull_request:
   workflow_dispatch:
 

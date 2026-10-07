@@ -26,7 +26,13 @@ function Recorded({ basis }: { basis?: string }) {
   return <span className="obs-chip run-recorded" title={basis}>recorded</span>;
 }
 
+// v3 G3: placed between samples reindexed from execution.json, heartbeat.json and the stream's own timestamps.
+function Reindexed({ basis }: { basis?: string }) {
+  return <span className="obs-chip run-recorded" title={basis}>placed between reindexed samples</span>;
+}
+
 function placementText(s: Suspension): string {
+  if (s.placement === "reindexed_samples") return `placed between reindexed samples (${s.window?.sources.join(" and ") ?? ""})`;
   if (s.placement === "clock_records") return `between clock records ${s.records?.join(" and ") ?? ""}`;
   if (s.placement === "largest_event_gap_within_clock_window")
     return `bounded by clock samples to ${formatSeconds(s.window?.monotonic_seconds ?? 0)}; at the largest event gap inside`;
@@ -39,7 +45,7 @@ function RecordsLine({ timeline }: { timeline: RunTimeline }) {
   const r = timeline.records;
   if (!r) return null;
   const parts: string[] = [];
-  parts.push(r.clock ? `${r.clock.records} clock records${r.clock.reindexed ? " (reindexed from execution.json and heartbeat.json)" : ""}`
+  parts.push(r.clock ? `${r.clock.records} clock records${r.clock.reindexed ? " (reindexed from execution.json, heartbeat.json and the stream's timestamps)" : ""}`
     : "no clock records");
   parts.push(r.receipts ? `${r.receipts.counts.receipts} indexed receipt(s)${r.receipts.reindexed ? " (reindexed)" : ""}`
     : "no receipt index (receipts from exit codes)");
@@ -71,6 +77,47 @@ function Verdict({ outcome }: { outcome: "pass" | "fail" | "unknown" }) {
   return <span className={`obs-chip ${outcome === "pass" ? "good" : outcome === "fail" ? "bad" : ""}`}>{label}</span>;
 }
 
+// v3 V13: the delivery's turn economics record. null values are unavailable, never zero.
+function TurnEconomicsSection({ timeline }: { timeline: RunTimeline }) {
+  const e = timeline.turn_economics;
+  const show = (v: number | null | undefined, suffix = "") =>
+    v === null || v === undefined ? <span className="obs-missing">unavailable</span> : `${v}${suffix}`;
+  const source = (k: string, v: number | null) => {
+    if (v === null) return `${k.replace(/_/g, " ")} unmeasured`;
+    const share = e?.composition.shares?.[k];
+    return `${k.replace(/_/g, " ")} ${share !== undefined && share !== null ? `${Math.round(share * 100)}%` : `${v} B`}`;
+  };
+  return (
+    <section className="obs-section">
+      <h2>Turn economics</h2>
+      {!e ? <p className="muted">No turn_economics record for this delivery.</p> : (
+        <>
+          {e.reindexed && <p className="muted">Reindexed: {e.reindexed.note}.</p>}
+          <table className="obs-table">
+            <tbody>
+              <tr><th>context tokens{e.context ? ` per ${e.context.unit}` : ""}</th><td>{show(e.context?.mean_input_tokens)}
+                {e.context ? ` (max ${e.context.max_input_tokens}, ${e.context.records} ${e.context.unit}s)` : ""}</td></tr>
+              <tr><th>model calls</th><td>{show(e.model_calls)}</td></tr>
+              <tr><th>context sources ({e.composition.basis})</th>
+                <td>{Object.entries(e.composition.bytes).map(([k, v]) => source(k, v)).join(" · ")}</td></tr>
+              <tr><th>compactions · summaries (fallbacks, marker match)</th>
+                <td>{show(e.compactions.stream_markers)} · {show(e.compactions.summaries)} ({show(e.compactions.fallbacks)})</td></tr>
+              <tr><th>generation / tool wait</th>
+                <td>{show(e.time.generation_minutes, " min")} / {show(e.time.tool_wait_minutes, " min")} <span className="muted">({e.time.basis})</span></td></tr>
+              <tr><th>help / re-orientation calls</th>
+                <td>{e.orientation ? `${e.orientation.help_calls} / ${e.orientation.reorientation_calls}` : show(null)}</td></tr>
+              <tr><th>ceremony tail</th><td>{show(e.ceremony_tail_minutes, " min")}</td></tr>
+              <tr><th>skill reads</th>
+                <td>{e.skills.reads === null ? show(null) : Object.entries(e.skills.reads).map(([k, v]) => `${k} ×${v}`).join(", ") || "none"}
+                  {` · skill version ${e.skills.version ?? "unrecorded"}`}</td></tr>
+            </tbody>
+          </table>
+        </>
+      )}
+    </section>
+  );
+}
+
 const at = (t: number | null, unit: string) => (t === null ? "—" : unit === "seconds" ? formatSeconds(t) : `#${t}`);
 
 export default function RunPage() {
@@ -99,7 +146,7 @@ export default function RunPage() {
           <span key={`${s.at}-${s.seconds}`}>
             {`Suspension of ${formatSeconds(s.seconds)} placed at ${at(s.at, unit)} (${placementText(s)}` +
               `${s.unplaced_seconds ? `; ${formatSeconds(s.unplaced_seconds)} could not be placed` : ""}). `}
-            {s.attributed ? <Attributed basis={s.basis} /> : <Recorded basis={s.basis} />}
+            {s.attributed ? <Attributed basis={s.basis} /> : s.reindexed ? <Reindexed basis={s.basis} /> : <Recorded basis={s.basis} />}
           </span>
         ))}</p>
         <RecordsLine timeline={t} />
@@ -109,12 +156,12 @@ export default function RunPage() {
           <span className="run-good">✓ receipt passed</span>
           <span className="run-bad">✗ receipt failed</span>
           <span>C compaction</span>
-          <span>F compaction fallback</span>
+          <span>F compaction fallback (marker match)</span>
           <span>★ headline result</span>
           <span>↩ peer answer read</span>
           <span><i className="run-key break" /> host suspension (not to scale)</span>
           <span><i className="run-key attributed" /> attributed, not recorded (dotted, hatched: placed by a heuristic)</span>
-          <span><i className="run-key break" /> recorded suspension: solid (placed between clock records)</span>
+          <span><i className="run-key break" /> recorded suspension: solid (placed between clock records or reindexed samples)</span>
         </div>
         <details>
           <summary>Table view ({t.calls.length} tool calls)</summary>
@@ -166,10 +213,13 @@ export default function RunPage() {
             {summaries === null ? (t.records?.compactions && !t.records.compactions.available
               ? <>summaries <span className="obs-missing">unavailable</span> ({t.records.compactions.reason})</>
               : "no agent-state database to read summaries from") :
-              `${summaries.length} summaries in this delivery, ${summaries.filter((s) => s.fallback).length} deterministic fallback(s)`}
+              `${summaries.length} summaries in this delivery, ` + (summaries.some((s) => s.fallback === null)
+                ? "fallbacks unavailable (this harness writes no fallback marker)"
+                : `${summaries.filter((s) => s.fallback).length} deterministic fallback(s) by marker match`)}
           </p>
           {summaries?.filter((s) => s.fallback).map((_, i) => (
-            <p key={i} className="run-fallback"><span className="obs-chip warn">fallback</span> the summarizer failed; a placeholder replaced the context.</p>
+            <p key={i} className="run-fallback"><span className="obs-chip warn">fallback (marker match)</span> the summary text
+              contains the deterministic-fallback marker: the summarizer failed and a placeholder replaced the context.</p>
           ))}
           <h2>Inbox and peer answers</h2>
           <p>{t.inbox_reads.length} inbox read(s), {t.inbox_reads.filter((r) => r.sent).length} of sent questions.</p>
@@ -183,6 +233,8 @@ export default function RunPage() {
           ) : <p className="muted">No peer answers were read in this delivery.</p>}
         </div>
       </section>
+
+      <TurnEconomicsSection timeline={t} />
 
       <section className="obs-section">
         <h2>Final answer</h2>

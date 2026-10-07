@@ -71,6 +71,16 @@ test("a flagged write-up shows the regeneration band, replacements and a prefill
   expect((within(band).getByLabelText("Scope") as HTMLInputElement).value).toContain(`Regenerate write-up ${post}`);
 });
 
+test("an artifact from a superseded publication stays flagged and names the publication that re-listed it", async () => {
+  const flag = rendered.regeneration_required!;
+  mount({ ...rendered, regeneration_required: { ...flag, claims: [], artifacts: [{
+    artifact, superseded_posts: [claim.replace("claim_", "post_")], producer_superseded: [], replacements: [replacement],
+    relisted_by: [replacement], current_claims: false }] } });
+  const band = await screen.findByRole("alert", { name: "Regeneration required" });
+  expect(within(band).getByRole("link", { name: `re-listed by ${replacement}` }).getAttribute("href")).toBe(`/post/${replacement}`);
+  expect(band.textContent).toContain("which does not clear the flag");
+});
+
 test("pointers show what they open and pin the record with links to the artifact and its bytes", async () => {
   mount(rendered);
   const pointer = await screen.findByRole("link", { name: "1.45" });

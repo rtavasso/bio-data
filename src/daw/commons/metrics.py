@@ -17,6 +17,7 @@ Counts are behaviour, not scientific value.
 """
 import json
 import re
+import sqlite3
 import statistics
 import tomllib
 import uuid
@@ -25,6 +26,7 @@ from pathlib import Path
 
 from daw import hermes
 from daw.artifacts import reuse_links
+from daw.commons import economics
 from daw.commons.permissions import require
 from daw.commons.hygiene import aggregate as hygiene_totals
 from daw.commons.hygiene import run_hygiene
@@ -34,9 +36,11 @@ from daw.util import DawError, canonical, digest, now, read_json
 
 # 2: unavailable clocks, streams and compactions are None, never 0 (spec v2 C10).
 # 3: compaction hygiene per run (spec v2 V8, daw.commons.hygiene).
-METRICS_VERSION = 3
+# 4: overview and frontier reads per run (spec v3 V11).
+# 5: the run's turn_economics.json record (spec v3 V13, daw.commons.economics).
+METRICS_VERSION = 5
 # Files a run's metrics are computed from; size and mtime changes mark the projection stale.
-RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db", "prompt.txt")
+RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db", "prompt.txt", economics.FILE)
 
 
 class _HarnessParsers(dict):
@@ -75,9 +79,15 @@ LIMITATIONS = [
     "neither the request post nor the assignment key; context per call is what the stream reports (per call or per turn).",
     "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
     "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
+    "Turn economics (V13) are read from each run's turn_economics.json record; runs without one are counted as "
+    "unrecorded, never as zero. " + " ".join(economics.LIMITATIONS),
     "Claims authoring (V1) counts ledger claims per post, evidence-carrying posts (artifacts or a notebook) with "
     "claims, refused final-answer claims blocks and the claims' pointer kinds and scopes (cell, key, line from the "
     "locator grammar; record without a locator; invalid for free-text locators).",
+    "Frontier closure (v3 G1) counts non-withdrawn frontier items per completed question (its earliest holder's "
+    "status) by kind; a final states a next step when its text names one, and matches when its author recorded a "
+    "non-gap item during that delivery or the final names the item. Agent reads per turn count captured terminal "
+    "commands (community inbox, search, overview, frontier/experiments).",
 ]
 _RUN_CACHE, _POST_CACHE = {}, {}
 
@@ -124,7 +134,7 @@ def compute_run(folder, harness="hermes", config=None):
     tokens, note = token_usage(parsed)
     metrics.update(turns_completed=parsed["turns_completed"], malformed_lines=len(parsed["malformed_lines"]),
                    usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note,
-                   hygiene=run_hygiene(folder, harness))
+                   hygiene=run_hygiene(folder, harness), turn_economics=economics.read(folder))
     return metrics
 
 
@@ -377,6 +387,15 @@ def board_index(view, runs):
         claims.setdefault(c["post"], []).append(c["status"])
         claim_pointers.setdefault(c["post"], []).extend(json.loads(c["pointers"] or "[]"))
     superseded = {p["supersedes"] for p in posts if p["supersedes"]}
+    # V13 useful data: claims with a verified number->claim pointer, and frontier items later promoted.
+    from daw.commons import checks
+    verified = checks.verified_claim_pointers(view)
+    claim_rows = [{**c, "verified": c["id"] in verified}
+                  for c in view.rows("SELECT id,post,status FROM claim WHERE status!='withdrawn'")]
+    try:
+        frontier = view.rows("SELECT id,author,created,status,promoted_to FROM frontier_item")
+    except sqlite3.Error:
+        frontier = []
     links = []
     for identity, agent in agents.items():
         if agent["kind"] != "agent" or not agent["trial"]:
@@ -395,7 +414,7 @@ def board_index(view, runs):
                 continue  # inherited by a fork: not this participant's reuse
             links.append({**entry, "participant": identity, "created": created})
     return {"posts": posts, "marks": marks, "claims": claims, "claims_recorded": bool(claims),
-            "claim_pointers": claim_pointers,
+            "claim_pointers": claim_pointers, "claim_rows": claim_rows, "frontier": frontier,
             "superseded": superseded, "links": links, "agents": agents, "numbers": _final_numbers(view)}
 
 
@@ -541,6 +560,20 @@ def cost_summary(runs, pricing):
             "pricing": "available" if pricing.get("available") else pricing.get("reason")}
 
 
+READ_CALLS = ("inbox_calls", "forum_searches", "overview_calls", "frontier_reads")
+
+
+def agent_reads(m):
+    """V11: inbox, forum search, overview and frontier calls per turn (one delivery is one turn), from the captured
+    terminal commands. A run whose stream (or this metrics version) lacks the count is left out of its mean."""
+    out = {}
+    for field in READ_CALLS:
+        known = [x.get(field) for x in m if x.get(field) is not None]
+        out[field] = sum(known) if known else None
+        out[field + "_per_turn"] = _ratio(sum(known), len(known)) if known else None
+    return out
+
+
 def run_criteria(runs):
     """Behaviour totals over runs (M9.1 criteria). A total is None when no run recorded the value; runs
     that did not record it are left out of the sum rather than counted as zero (`*_unavailable_runs`)."""
@@ -559,6 +592,7 @@ def run_criteria(runs):
             "suspensions": sum(1 for s in suspended if s) if any(s is not None for s in suspended) else None,
             "suspended_hours": _ratio(_total(suspended), 3600, 4) if any(s is not None for s in suspended) else None,
             "tool_calls": _total(x.get("tool_calls") for x in m), "inbox_calls": _total(x.get("inbox_calls") for x in m),
+            "agent_reads": agent_reads(m),
             "analysis_receipts": analyses, "analysis_failures": _total(x.get("analysis_failures") for x in m),
             "minutes_per_executed_analysis": _ratio(mono / 60 if mono is not None else None, analyses, 3),
             "scripts_written": scripts, "plumbing_scripts": plumbing,
@@ -600,10 +634,45 @@ def trend(runs, bucket="week"):
     return out
 
 
+def useful_data(index, runs, board, *, authors=None):
+    """V13: counts of useful data in a group's scope (by author when `authors` is given, else posts and items made
+    during its runs): registered artifacts (from `board`), non-withdrawn claims with at least one verified
+    number->claim pointer, and frontier items later promoted."""
+    if authors is not None:
+        posts = {p["id"] for p in index["posts"] if p["author"] in authors}
+        items = [f for f in index.get("frontier", []) if f["author"] in authors]
+    else:
+        run_ids = {r["run"] for r in runs}
+        posts = {p["id"] for p in index["posts"] if p["run"] in run_ids}
+        participants, windows = {r["participant"] for r in runs}, _windows(runs)
+        items = [f for f in index.get("frontier", []) if f["author"] in participants and _within(f["created"], windows)]
+    return {"registered_artifacts": board["registered_artifacts"],
+            "verified_claims": sum(1 for c in index.get("claim_rows", []) if c["post"] in posts and c["verified"]),
+            "promoted_frontier_items": sum(1 for f in items if f["status"] == "promoted" or f.get("promoted_to"))}
+
+
 def group(label, key, runs, index, pricing, bucket, *, authors=None):
+    board = board_criteria(index, runs, authors=authors)
     return {"key": key, "label": label, **run_criteria(runs),
-            "board": board_criteria(index, runs, authors=authors), "cost": cost_summary(runs, pricing),
+            "board": board, "cost": cost_summary(runs, pricing),
+            "turn_economics": economics.criteria(runs, useful_data(index, runs, board, authors=authors)),
             "trend": trend(runs, bucket), "posts_scope": "author" if authors is not None else "run"}
+
+
+def economics_panels(runs, index):
+    """V13: turn economics per skill version (the digest of the skill text staged for each turn; `unrecorded` for
+    turns captured before it was recorded) and the skills table (size, budget, reads per turn)."""
+    versions = {}
+    for r in runs:
+        versions.setdefault(economics.skill_version_key(r), []).append(r)
+    panels = []
+    for key in sorted(versions, key=lambda k: (k == "unrecorded", k)):
+        members = versions[key]
+        board = board_criteria(index, members)
+        panels.append({"key": key, "label": key, "first": min(r["created"] for r in members),
+                       "harnesses": sorted({r["harness"] for r in members}),
+                       "turn_economics": economics.criteria(members, useful_data(index, members, board))})
+    return {"skill_versions": panels, "skills": economics.skill_table(runs), "limitations": economics.LIMITATIONS}
 
 
 def select_runs(view, runs, *, cohort_id=None, participant=None, harness=None, task_type=None):
@@ -658,8 +727,66 @@ def dashboard(view, *, cohort_id=None, participant=None, harness=None, task_type
                         "task_types": sorted({r["task_type"] for r in everything})},
             "summary": group("all runs" if not filtered else "filtered runs", "all", runs, index, pricing, bucket,
                              authors=None if filtered else set(agents)),
-            "panels": panels, "projection": _projection_state(everything),
+            "panels": panels, "economics": economics_panels(runs, index), "projection": _projection_state(everything),
+            "frontier": frontier_closure(view),
             "pricing": {k: v for k, v in pricing.items() if k != "models"}, "limitations": LIMITATIONS}
+
+
+NEXT_STEP = re.compile(r"next (?:computable )?(?:step|experiment|test|analysis)|discriminating (?:test|experiment)",
+                       re.IGNORECASE)
+
+
+def frontier_closure(view):
+    """V3 G1: frontier items per completed question by kind, and the share of finals whose stated next step has a
+    matching item. Items come from the frontier projection (withdrawn excluded); a question's status is its
+    earliest holder's (forks copy questions). None where a denominator is zero (unavailable, never zero)."""
+    from daw.commons import checks, frontier, views
+    from daw.commons.moderation import Visibility
+    holders = {}
+    for agent in view.rows("SELECT id FROM agent WHERE trial IS NOT NULL ORDER BY created,id"):
+        try:
+            ws = view.workspace(agent["id"])
+            rows = ws.rows("SELECT id,status FROM question") if ws else []
+        except DawError:
+            continue
+        for row in rows:
+            holders.setdefault(row["id"], (agent["id"], row["status"]))
+    items = view.rows("SELECT id,author,question,kind,created,source FROM frontier_item WHERE status!='withdrawn'")
+    by_question = {}
+    for item in items:
+        counts = by_question.setdefault(item["question"], dict.fromkeys(frontier.KINDS, 0))
+        counts[item["kind"]] = counts.get(item["kind"], 0) + 1
+    completed = [{"question": q, "holder": a, "by_kind": by_question.get(q, dict.fromkeys(frontier.KINDS, 0))}
+                 for q, (a, status) in sorted(holders.items()) if status == "completed"]
+    for entry in completed:
+        entry["non_gap"] = sum(v for k, v in entry["by_kind"].items() if k != "gap")
+    kinds = {k: sum(e["by_kind"].get(k, 0) for e in completed) for k in frontier.KINDS}
+    vis = Visibility.of(view)
+    stated, matched = [], []
+    for pid in checks.finals(view):
+        if vis.withheld(pid) or vis.refused(pid):
+            continue
+        post = view.one("SELECT p.author,p.created,p.body_blob,a.created AS started FROM post p JOIN request r "
+                        "ON r.answer=p.id LEFT JOIN attempt a ON a.id=r.active_run WHERE p.id=?", (pid,))
+        body = views.content(view, post["body_blob"]).get("body") or "" if post else ""
+        if not post or not NEXT_STEP.search(body):
+            continue
+        stated.append(pid)
+        for item in items:
+            if item["author"] != post["author"] or item["kind"] == "gap":
+                continue
+            event = (json.loads(item["source"] or "{}") or {}).get("event") or ""
+            during = post["started"] and post["started"] <= item["created"] <= post["created"]
+            if during or item["id"] in body or (event and event in body):
+                matched.append(pid)
+                break
+    return {"completed_questions": len(completed),
+            "completed_with_non_gap_item": sum(1 for e in completed if e["non_gap"]),
+            "completed_with_non_gap_share": _ratio(sum(1 for e in completed if e["non_gap"]), len(completed), 4),
+            "items_per_completed_question": {k: _ratio(v, len(completed)) for k, v in kinds.items()},
+            "items_by_kind": kinds, "questions": completed,
+            "finals_stating_next_step": len(stated), "finals_next_step_matched": len(matched),
+            "finals_next_step_matched_share": _ratio(len(matched), len(stated), 4)}
 
 
 def _projection_state(runs):

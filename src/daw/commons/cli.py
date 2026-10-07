@@ -27,11 +27,13 @@ def fixture_build(source: Path, out: Path, name: str | None = None):
 
 
 @fixture_app.command("resettle")
-def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why the fixture is resettled (recorded)")]):
+def fixture_resettle(root: Path, reason: Annotated[str, typer.Option(help="Why the fixture is resettled (recorded)")],
+                     reindex_runs: Annotated[bool, typer.Option(
+                         "--reindex-runs", help="First build run records for runs that predate them (v3 G3)")] = False):
     """Apply the current schema and projection rebuilds to a verified fixture in place and re-record its hashes,
     so that serving it writes nothing (C0). Records the reason and the previous board sequence."""
     from daw.commons.fixture import resettle_fixture
-    emit(resettle_fixture(root, reason=reason))
+    emit(resettle_fixture(root, reason=reason, reindex_runs=reindex_runs))
 
 
 @fixture_app.command("verify")
@@ -61,6 +63,7 @@ def root(ctx: typer.Context, directory: Annotated[Path, typer.Option("--root", e
 def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
           mode: Annotated[str, typer.Option(help="local (single user, no login) or accounts")] = "local",
           user: Annotated[str, typer.Option(help="Human participant used in local mode")] = "local",
+          as_operator: Annotated[bool, typer.Option("--as-operator", help="Local mode: act as an operator participant (created as one on first start), so a single-user commons can read its own audit log")] = False,
           static_dir: Annotated[Path | None, typer.Option(help="Built web app (default web/dist)")] = None,
           forwarded_allow_ips: Annotated[str | None, typer.Option(help="Reverse-proxy addresses trusted for X-Forwarded-For and X-Forwarded-Proto (login limits count client addresses; the session cookie is Secure when the proxy forwarded https)")] = None,
           graph_refresh: Annotated[int, typer.Option(help="Refresh the graph store at start and every N seconds (0: only after writes)")] = 60):
@@ -69,7 +72,8 @@ def serve(ctx: typer.Context, host: str = "127.0.0.1", port: int = 8765,
     from daw.commons.app import create_app
     if host not in {"127.0.0.1", "localhost", "::1"} and mode == "local":
         raise DawError("local_mode_is_loopback_only", "use --mode accounts to listen on other interfaces")
-    app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir, forwarded_allow_ips=forwarded_allow_ips)
+    app = create_app(ctx.obj, mode=mode, local_user=user, static_dir=static_dir, forwarded_allow_ips=forwarded_allow_ips,
+                     local_operator=as_operator)
     from daw.commons.sandbox import record_tenancy
     # Live dispatch on a commons that serves accounts requires a sandbox (M3.6).
     record_tenancy(Path(ctx.obj).expanduser().resolve(), mode)

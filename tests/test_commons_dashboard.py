@@ -323,11 +323,13 @@ def test_unavailable_clocks_streams_and_compactions_are_none_not_zero(tmp_path):
     analysis = {"name": "terminal", "command": "./bin/python run_analysis.py x.py", "exit_code": None, "input": {}}
     m = run_metrics(folder, {"items": [analysis], "events": []})
     assert m["analysis_receipts"] == 1 and m["analysis_failures"] is None and m["analysis_exit_codes_unknown"] == 1
-    # The capability flag per adapter: Hermes marks compactions in its stream; the others do not.
-    assert get("hermes").reports_compactions({}) and not get("claude").reports_compactions({})
+    # The capability flag per adapter: Hermes and Claude Code mark compactions in their streams (v3 B16: Claude
+    # Code emits compact_boundary); Codex and MCP do not.
+    assert get("hermes").reports_compactions({}) and get("claude").reports_compactions({})
     assert not get("codex").reports_compactions({}) and not get("mcp").reports_compactions({})
-    assert get("scripted").reports_compactions({}) and not get("scripted").reports_compactions(
+    assert get("scripted").reports_compactions({}) and get("scripted").reports_compactions(
         {"harness_options": {"stream_format": "claude"}})
+    assert not get("scripted").reports_compactions({"harness_options": {"stream_format": "codex"}})
     runs = [{"state": "completed", "metrics": {"monotonic_seconds": None, "wall_seconds": None, "suspended_seconds": None,
                                                "compactions": None, "analysis_receipts": 0, "scripts_written": 0,
                                                "plumbing_scripts": 0, "tool_calls": 3, "inbox_calls": 0,
@@ -337,17 +339,27 @@ def test_unavailable_clocks_streams_and_compactions_are_none_not_zero(tmp_path):
     assert criteria["monotonic_hours"] is None and criteria["clock_unavailable_runs"] == 1
 
 
-def test_claude_runs_report_compactions_unavailable_on_dashboard_and_timeline(demo_only):
+def test_claude_runs_report_compaction_boundaries_and_codex_runs_unavailable(demo_only):
+    """v3 B16: the Claude adapter's flag is true (Claude Code emits compact_boundary in stream-json); Codex's
+    stream marks no compactions, so its counts stay unavailable (None), never zero."""
     root, _ = demo_only()
     with Community(root) as board, scripted_runtime(root) as (executable, answers):
         add_agent(board, "claudia", harness="claude")
-        request = board.ask("claudia", "operator", "One turn")
-        dispatch(board, request["id"], executable)
-        run = board.one("SELECT id FROM attempt WHERE request=?", (request["id"],))["id"]
+        add_agent(board, "cody", harness="codex")
+        runs = {}
+        for name in ("claudia", "cody"):
+            request = board.ask(name, "operator", "One turn")
+            dispatch(board, request["id"], executable)
+            runs[name] = board.one("SELECT id FROM attempt WHERE request=?", (request["id"],))["id"]
     client = TestClient(create_app(root, local_user="local", static_dir=root / "missing"))
-    timeline = client.get(f"/api/runs/{run}").json()
-    assert timeline["compactions"] is None and timeline["metrics"]["compactions"] is None
+    timeline = client.get(f"/api/runs/{runs['claudia']}").json()
+    assert len(timeline["compactions"]) == 1 and timeline["metrics"]["compactions"] == 1
+    assert timeline["compactions"][0]["text"].startswith("compact_boundary")
     dashboard = client.get("/api/dashboard", params={"harness": "claude"}).json()
+    assert dashboard["summary"]["compactions"] == 1 and dashboard["summary"]["compaction_unavailable_runs"] == 0
+    codex = client.get(f"/api/runs/{runs['cody']}").json()
+    assert codex["compactions"] is None and codex["metrics"]["compactions"] is None
+    dashboard = client.get("/api/dashboard", params={"harness": "codex"}).json()
     assert dashboard["summary"]["compactions"] is None and dashboard["summary"]["compaction_unavailable_runs"] == 1
 
 
@@ -384,3 +396,36 @@ def test_cohort_claims_authoring_baseline_is_zero_claims_not_unavailable(cohort)
     assert authoring["claims"] == 0 and authoring["posts"] == 269 and authoring["evidence_posts"] > 0
     assert authoring["evidence_posts_with_claims_share"] == 0.0 and authoring["claims_per_post"] == 0.0
     assert authoring["pointers"] == 0 and authoring["cell_pointer_share"] is None
+
+
+def test_agent_reads_per_turn_from_captured_commands(tmp_path):
+    """V11: inbox, search, overview and frontier calls per turn, counted from each delivery's terminal commands;
+    a run without a stream is left out of the mean (unavailable), never counted as zero."""
+    from daw.commons.runmetrics import run_metrics
+    folder = tmp_path / "run"
+    folder.mkdir()
+    (folder / "events.jsonl").write_text("")
+    commands = ["./bin/bio community overview", "./bin/bio community inbox --acts", "./bin/bio community frontier "
+                "--mine", "./bin/bio community experiments", "./bin/bio community search --text x"]
+    parsed = {"items": [{"name": "terminal", "command": c, "input": {}} for c in commands], "events": []}
+    counted = run_metrics(folder, parsed)
+    assert (counted["overview_calls"], counted["inbox_calls"], counted["frontier_reads"],
+            counted["forum_searches"]) == (1, 1, 2, 1)
+    runs = [{"state": "completed", "metrics": counted},
+            {"state": "completed", "metrics": {**counted, "overview_calls": 0, "inbox_calls": 3}},
+            {"state": "completed", "metrics": {"overview_calls": None, "inbox_calls": None}}]
+    reads = metrics.run_criteria(runs)["agent_reads"]
+    assert reads["overview_calls"] == 1 and reads["overview_calls_per_turn"] == 0.5
+    assert reads["inbox_calls"] == 4 and reads["inbox_calls_per_turn"] == 2.0
+    assert metrics.run_criteria(runs[2:])["agent_reads"]["inbox_calls_per_turn"] is None
+
+
+def test_cohort_dashboard_reports_agent_reads_and_frontier_closure(cohort):
+    """On the real cohort: inbox and search calls per turn are measured; no overview or frontier read existed yet
+    (a measured zero), and the board-wide frontier closure is present."""
+    with Archive(cohort) as view:
+        dashboard = metrics.dashboard(view)
+    reads = dashboard["summary"]["agent_reads"]
+    assert reads["inbox_calls"] > 0 and reads["inbox_calls_per_turn"] > 0 and reads["forum_searches_per_turn"] > 0
+    assert reads["overview_calls"] == 0 and reads["frontier_reads"] == 0
+    assert dashboard["frontier"]["completed_questions"] > 0

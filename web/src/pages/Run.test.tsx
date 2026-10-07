@@ -149,3 +149,33 @@ test("the monotonic scale inserts a fixed break after the suspension", () => {
   expect(formatSeconds(7200)).toBe("2 h");
   expect(formatSeconds(90)).toBe("1.5 min");
 });
+
+test("reindexed runs place suspensions between reindexed samples and show turn economics (G3, V13)", async () => {
+  const reindexed: RunTimeline = {
+    ...RUN,
+    suspensions: [{ at: 10, seconds: 1423, gap_seconds: 1525, placement: "reindexed_samples", unplaced_seconds: 0,
+      attributed: false, reindexed: true, records: [1, 2],
+      window: { from: 10, to: 1535, monotonic_seconds: 102, sources: ["events.jsonl:58", "events.jsonl:59"] },
+      basis: "placed between reindexed samples 1 and 2 (events.jsonl:58, events.jsonl:59)" }],
+    attributed: ["headline"],
+    turn_economics: {
+      context: { unit: "turn", records: 1, mean_input_tokens: 1500, max_input_tokens: 1500 }, model_calls: null,
+      composition: { basis: "stream", complete: false, shares: null,
+        bytes: { system_prompt: null, delivery_prompt: 3506, skills: 0, tool_outputs: 228, summaries: null, conversation: null } },
+      compactions: { stream_markers: 1, summaries: null, fallbacks: null },
+      time: { monotonic_minutes: 1.7, tool_wait_minutes: 0.4, generation_minutes: 0.2, basis: "stream timestamps" },
+      orientation: { help_calls: 0, reorientation_calls: 3, by_kind: { inbox: 1 } }, ceremony_tail_minutes: 0.2,
+      skills: { reads: { "bio-research": 1 }, version: null },
+      reindexed: { by: "operator", note: "computed after the delivery from the run folder" } },
+  };
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => new Response(
+    JSON.stringify(String(input).startsWith("/api/runs/") ? reindexed : { items: [] }), { status: 200 })) as typeof fetch;
+  show();
+  await screen.findByText(/placed between reindexed samples \(events.jsonl:58 and events.jsonl:59\)/);
+  expect(screen.getByText("placed between reindexed samples").getAttribute("title")).toMatch(/^placed between reindexed/);
+  expect(screen.getAllByText("attributed, not recorded").length).toBe(1); // the headline only
+  expect(screen.getByText("Turn economics")).toBeTruthy();
+  expect(screen.getByText(/system prompt unmeasured · delivery prompt 3506 B/)).toBeTruthy();
+  expect(screen.getByText(/bio-research ×1 · skill version unrecorded/)).toBeTruthy();
+  expect(screen.getByText(/Reindexed: computed after the delivery/)).toBeTruthy();
+});

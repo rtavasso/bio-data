@@ -240,7 +240,9 @@ export default function Me() {
       <div className="me-grid">
         <Section title="Profile"><ProfileForm me={data} reload={me.reload} /></Section>
         <Section title="Budget">
-          {budget.unlimited ? <p>No allowance is set: promotions and commissions are not budget-limited for you.</p> : (
+          {budget.unlimited ? <p>Operators are not budget-limited.</p> : budget.configured === false ? (
+            <p role="status">No allowance is configured: your asks, promotions and commissions are refused until an operator sets your allowance or the commons default ({budget.setting ?? "[allowance] in commons.toml"}).</p>
+          ) : (
             <dl className="me-dl">
               <dt>Allowance</dt><dd>{budgetText(budget.allowance)}</dd>
               <dt>Committed</dt><dd>{budgetText(Object.fromEntries(Object.entries(budget.spent).filter(([, v]) => v)))}</dd>

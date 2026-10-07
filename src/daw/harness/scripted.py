@@ -7,10 +7,13 @@ Code (`-p --output-format stream-json`), Codex (`exec --json`), or, for the
 session state where the real harness would, so resume and fork go through the
 real adapters. Answers come from `$COLLOQUY_DEMO_ANSWERS/<post>.md`; an
 optional `<post>.hook.py` written by a test runs inside the checkout first
-(fixture code, never downloaded content). A `scripted-sleep` file in the
+(fixture code, never downloaded content); a `CALLS` list it defines
+(`{command, exit_code, output}`) is emitted as terminal calls after the fixed ones,
+so the commands a hook ran are in the captured stream as an agent's would be. A `scripted-sleep` file in the
 checkout makes the harness pause without output for that many seconds (stall
 tests); `fail-next` makes one turn fail; `scripted-compaction` (text `summary` or `fallback`)
-writes a compaction summary message into the session database mid-turn, as Hermes does.
+writes a compaction summary mid-turn where the harness keeps it: a message in the session database (Hermes)
+or an `isCompactSummary` transcript entry (Claude Code, whose stream also carries a `compact_boundary`).
 """
 import json
 import sys
@@ -75,8 +78,7 @@ found = re.search(r"(?:Question|Request) post: (post_[0-9a-f]+)", prompt)
 post = found.group(1) if found else ""
 answers = Path(os.environ.get("COLLOQUY_DEMO_ANSWERS", "/nonexistent"))
 hook = answers / (post + ".hook.py")
-if post and hook.is_file():
-    runpy.run_path(str(hook), run_name="__main__")
+hooked = runpy.run_path(str(hook), run_name="__main__") if post and hook.is_file() else {}
 answer = (answers / (post + ".md")).read_text() if post and (answers / (post + ".md")).is_file() else "No change to my conclusions."
 answer = answer.replace("{turns}", str(turns))
 pause = trial / "scripted-sleep"
@@ -99,7 +101,10 @@ calls = [("terminal", {"command": "./bin/bio community search --text PMP22"}, {"
           {"exit_code": 1, "output": "assertion failed: column missing"}),
          ("terminal", {"command": "./bin/bio register outputs/contrast.tsv --output-role contrast-table"},
           {"exit_code": 0, "output": "registered"})]
-usage = {"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}
+# Terminal calls the hook made (its CALLS list), emitted as the agent's own captured tool calls.
+calls += [("terminal", {"command": c["command"]}, {"exit_code": c.get("exit_code", 0), "output": c.get("output", "")})
+          for c in hooked.get("CALLS", [])]
+usage ={"input_tokens": 1200, "cached_input_tokens": 300, "output_tokens": 450}
 if fmt == "hermes":
     emit({"type": "system", "session_id": sid})
 elif fmt == "claude":
@@ -131,8 +136,19 @@ for n, (name, args, result) in enumerate(calls):
     if n == 2:
         if fmt == "hermes":
             print("⟳ compacting context…", flush=True)
+        elif fmt == "claude":
+            # Claude Code marks a compaction in stream-json with a compact_boundary system message.
+            emit({"type": "system", "subtype": "compact_boundary", "session_id": sid,
+                  "compact_metadata": {"trigger": "auto", "pre_tokens": 1200}})
         compaction = trial / "scripted-compaction"
-        if compaction.is_file() and store != "claude":
+        if compaction.is_file() and store == "claude":
+            # Like Claude Code: the summary is a transcript entry marked isCompactSummary (no fallback marker).
+            with (folder / (sid + ".jsonl")).open("a") as log:
+                log.write(json.dumps({"type": "user", "isCompactSummary": True, "uuid": str(uuid.uuid4()),
+                                      "sessionId": sid, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime()),
+                                      "message": {"role": "user", "content": "This session is being continued from a "
+                                                  "previous conversation. Summary of the work so far."}}) + "\n")
+        elif compaction.is_file():
             # Like Hermes: the summary (or its deterministic fallback) is a message in the session database.
             kind = compaction.read_text().strip() or "summary"
             text = ("[CONTEXT COMPACTION] deterministic fallback: the summarizer did not answer" if kind == "fallback"
@@ -200,8 +216,8 @@ class ScriptedAdapter(Adapter):
     compaction_store = "agent-state/state.db"  # the stand-in keeps a Hermes-like session database
 
     def reports_compactions(self, config):
-        # Only the Hermes-format stand-in stream marks compactions, as Hermes does.
-        return (config.get("harness_options") or {}).get("stream_format", "hermes") == "hermes"
+        # The Hermes- and Claude-format stand-in streams mark compactions, as those harnesses do.
+        return (config.get("harness_options") or {}).get("stream_format", "hermes") in ("hermes", "claude")
 
     def stage(self, trial, home, config):
         fmt = (config.get("harness_options") or {}).get("stream_format", "hermes")

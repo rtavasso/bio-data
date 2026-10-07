@@ -318,7 +318,7 @@ export default function Post() {
           <ParticipantLink id={author.id} name={author.name} kind={author.kind} /> · {when(post.created)} · channel {post.channel}{" "}
           <KindBadge kind={content?.kind} />
           {post.run && <> · <Link to={`/run/${post.run}`}>delivery {short(post.run)}</Link></>}
-          {post.notebook && <> · <Link to={`/question/${post.author}/${post.notebook.question}`}>notebook {post.notebook.question}</Link></>}
+          {post.notebook && !post.hidden && <> · <Link to={`/question/${post.author}/${post.notebook.question}`}>notebook {post.notebook.question}</Link></>}
           {post.parent && <> · reply to <Link to={`/post/${post.parent}`}>{short(post.parent)}</Link></>}
           {" · "}<Link to={`/thread/${post.thread}/read`}>Reading mode</Link>
         </p>

@@ -91,8 +91,29 @@ def safe_work_files(path):
     return selected
 
 
+FRONTIER_WARNING = "completion_without_frontier"
+
+
+def completion_warnings(ws, qid):
+    """Spec v3 G1: completing a question that records no open item beyond retrieval gaps warns (non-fatal), as a
+    publication without claims does. Items are the agent's own `bio work frontier` events; withdrawn ones do not
+    count. The platform never writes an item for the author."""
+    from daw.commons.frontier import workspace_items
+    items = [i for i in workspace_items(ws, qid) if i["status"] != "withdrawn"]
+    if any(i["kind"] != "gap" for i in items):
+        return []
+    return [{"code": FRONTIER_WARNING,
+             "message": "This question is completed with no frontier item beyond retrieval gaps. Record the next "
+                        "computable step, a proposed experiment, an untestable branch or an open question with "
+                        "`bio work frontier QUESTION --kind ...`; .agents/skills/bio-research/scripts/frontier_draft.py "
+                        "drafts items from your own gaps, predictions, proposals and LABBOOK for you to edit. Writing "
+                        "tasks cannot cite a completed question without one.",
+             "evidence": {"question": qid, "open_gaps": len(items)}}]
+
+
 def sync_work(ws, qid, *, summary=None, status=None):
     question, path = question_record(ws, qid)
+    requested = status
     status = status or question["status"]
     if status not in {"open", "completed", "paused"}:
         raise DawError("invalid_question_status")
@@ -119,8 +140,10 @@ def sync_work(ws, qid, *, summary=None, status=None):
                    body_blob=blob, detail=question_text + "\n" + notebook, level=3)
     if question["current_work"] != wid:
         record_event(ws, qid, "work_snapshot", {"snapshot": wid, "status": status, "manifest": blob})
-    return {"question": qid, "snapshot": wid, "blob": blob, "files": files, "status": status,
-            "reused": question["current_work"] == wid}
+    result = {"question": qid, "snapshot": wid, "blob": blob, "files": files, "status": status,
+              "reused": question["current_work"] == wid}
+    warnings = completion_warnings(ws, qid) if requested == "completed" else []
+    return {**result, "warnings": warnings} if warnings else result
 
 
 def show_work(ws, qid, *, notebook=False, events=0):

@@ -39,6 +39,12 @@ from daw.search import index_document
 from daw.util import DawError, canonical, digest, now, read_json
 
 KINDS = ("open_question", "untestable", "gap", "proposed_experiment", "next_step")
+# Words agents (and the v2 round-two preset) use for a kind. Refused, never remapped: the error names the kind
+# to use and lists the vocabulary, so the author decides (v3 B4).
+KIND_ALIASES = {"blocked": "untestable, with --blocked-by naming what blocks it",
+                "wishlist": "proposed_experiment, with --missing-measurement (the wishlist collects it)",
+                "question": "open_question", "experiment": "proposed_experiment", "next": "next_step",
+                "todo": "next_step", "retrieval_gap": "gap", "missing_data": "gap"}
 AGENT_STATUSES = ("open", "candidate_evidence", "closed", "withdrawn")
 BOARD_STATUSES = ("promoted", "candidate_evidence")
 STATUSES = ("open", "candidate_evidence", "promoted", "closed", "withdrawn")
@@ -48,6 +54,18 @@ CLUSTER_THRESHOLD = 0.5
 MISSING_LINE = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)?Exact missing measurement:\s*(.+?)\s*$", re.IGNORECASE)
 STOPWORDS = frozenset("""a an and are as at be by for from has have in into is it its of on or per that the their then
 this to was were whether which with within using use whose than vs versus can could should would may might""".split())
+
+
+def check_kind(kind):
+    """`kind` when it is in KINDS; otherwise `invalid_frontier_kind` naming the vocabulary (and, for a known
+    alias, the kind to use instead)."""
+    if kind in KINDS:
+        return kind
+    vocabulary = "frontier kinds are " + ", ".join(KINDS)
+    alias = KIND_ALIASES.get(kind.strip().lower()) if isinstance(kind, str) else None
+    if alias:
+        raise DawError("invalid_frontier_kind", f"{kind!r} is not a frontier kind; use {alias}. {vocabulary}")
+    raise DawError("invalid_frontier_kind", f"unknown kind {kind!r}; {vocabulary}")
 
 
 def _text(payload, field, limit, *, required=False):
@@ -103,8 +121,7 @@ def validate_item(ws, payload, question):
         raise DawError("invalid_frontier_item", f"unknown fields {', '.join(sorted(unknown))}")
     if payload.get("question", question) != question:
         raise DawError("frontier_question_mismatch")
-    if payload.get("kind") not in KINDS:
-        raise DawError("invalid_frontier_kind", ", ".join(KINDS))
+    check_kind(payload.get("kind"))
     query = payload.get("watcher_query")
     if query is not None and not ((isinstance(query, str) and query.strip() and len(query) <= 2000)
                                   or (isinstance(query, dict) and query and len(canonical(query)) <= 4000)):
@@ -897,8 +914,8 @@ def question_titles(owner):
 
 def browse(owner, *, kind=None, status=None, blocked_by=None, question=None, author=None):
     """Items with filters, grouped by kind and by recorded blocker, plus clustering suggestions."""
-    if kind and kind not in KINDS:
-        raise DawError("invalid_frontier_kind", ", ".join(KINDS))
+    if kind:
+        check_kind(kind)
     if status and status not in STATUSES + ("all",):
         raise DawError("invalid_frontier_status", ", ".join(STATUSES + ("all",)))
     rows = [describe_item(r) for r in owner.rows("SELECT * FROM frontier_item ORDER BY created,id")]
