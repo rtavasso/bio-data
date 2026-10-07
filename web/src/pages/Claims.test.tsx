@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import Claims from "./Claims";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import Claims, { ClaimPage } from "./Claims";
 import type { Claim } from "../types/ledger";
 
 const post = "post_" + "a".repeat(32);
@@ -59,4 +59,38 @@ test("contradiction queue lists both claims and offers a review commission, neve
   expect(screen.getByText(/never resolves/)).toBeTruthy();
   expect(screen.getByRole("button", { name: "Commission" })).toBeTruthy();
   await waitFor(() => expect(screen.getByLabelText("Commission type")).toBeTruthy());
+});
+
+test("the claim page shows the exchange at the claim next to it (v3 V12)", async () => {
+  const thread = "post_" + "d".repeat(32);
+  const reply = "post_" + "e".repeat(32);
+  routes["/api/claims/claim_1"] = claim({
+    threads: [{
+      thread, target_kind: "claim", target_id: "claim_1", post, created: "2026-10-02T00:00:00+00:00",
+      target_author: "agent_1", target_author_name: "alice", opened_by_dispute: true, mark: "mark_1", replies: 1,
+      author_replies: 1, awaiting_author: false,
+      opened_by: { participant: "human_1", participant_name: "rhea", participant_kind: "human" },
+      posts: [
+        { post: thread, seq: 1, participant: "human_1", participant_name: "rhea", participant_kind: "human", kind: "comment",
+          text: "Is 1.54 the unrounded ratio?", claims: [], artifacts: [], mark: "mark_1" },
+        { post: reply, seq: 2, participant: "agent_1", participant_name: "alice", participant_kind: "agent", kind: "comment",
+          in_reply_to: thread, text: "Yes: the table holds 1.54.", artifacts: [artifact],
+          claims: [{ id: "claim_9", status: "supported", text: "The table records 1.54." }] },
+      ],
+    }],
+  });
+  render(
+    <MemoryRouter initialEntries={["/claim/claim_1"]}>
+      <Routes><Route path="/claim/:id" element={<ClaimPage />} /></Routes>
+    </MemoryRouter>,
+  );
+  expect(await screen.findByText("Marker is higher in B.")).toBeTruthy();
+  const dialogue = screen.getByRole("region", { name: "Dialogue" });
+  expect(within(dialogue).getByText("Is 1.54 the unrounded ratio?")).toBeTruthy();
+  expect(within(dialogue).getByText("Yes: the table holds 1.54.")).toBeTruthy();
+  expect(within(dialogue).getByText("The table records 1.54.")).toBeTruthy();
+  expect(within(dialogue).getByText(/opened by a disputed mark/)).toBeTruthy();
+  expect(within(dialogue).getByText(/changes no claim, mark or request status/)).toBeTruthy();
+  expect(within(dialogue).getAllByText(/author\)/).length).toBe(1);
+  delete routes["/api/claims/claim_1"];
 });

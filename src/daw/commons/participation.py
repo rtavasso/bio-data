@@ -471,7 +471,11 @@ def _mark_target(board, view, kind, identity):
 
 
 def mark(board, actor, target_kind, target_id, kind, note, pointers=()):
-    """Record a signed verification mark. Attribution only: no platform status changes."""
+    """Record a signed verification mark. Attribution only: no platform status changes.
+
+    A disputed mark on a claim also opens a comment thread at the claim (spec v3 V12): its root comment is the
+    person's own dispute note, posted as their act with the mark's id in its evidence (`dialogue`). It asks no one
+    and schedules nothing; the claim's author sees the mark and the thread as attributed acts on its work."""
     person = _actor(board, actor, "mark")
     if kind not in MARK_KINDS:
         raise DawError("invalid_mark_kind", f"use one of {', '.join(MARK_KINDS)}")
@@ -479,22 +483,38 @@ def mark(board, actor, target_kind, target_id, kind, note, pointers=()):
     pointers = _pointers(board, list(pointers or []))
     with Archive(board.root) as view:
         target_id = _mark_target(board, view, target_kind, target_id)
+        opens = kind == "disputed" and target_kind == "claim"
+        target = _resolve(board, view, "claim", target_id) if opens else None
+        locator = _anchor("claim", target, {"kind": "node", "node_id": target_id}) if opens else None
     identity = "mark_" + uuid.uuid4().hex
     created = now()
     record = {"kind": "verification_mark", "mark": identity, "participant": person["id"], "participant_kind": person["kind"],
               "target_kind": target_kind, "target_id": target_id, "mark_kind": kind, "note": note,
               "pointers": pointers, "created": created,
               "meaning": "Attribution by the named participant; it changes no platform-computed status."}
+    thread = None
     with board.writer(), board.library.writer():
         check_rate(board, person, "marks_per_hour")
+        if opens:
+            check_rate(board, person, "posts_per_hour")
         blob = board.library.put_json(record)
+        if opens:
+            evidence = {"target": {"kind": "claim", "id": target_id, "author": target["owner"]}, "anchor": locator,
+                        "ask_author": False, "mark": identity}
+            thread = board._post(person["id"], f"Dispute of claim {target_id}", note, parent=target["parent"],
+                                 evidence=evidence, kind="comment")
         with board.db:
             board.db.execute("INSERT INTO mark(id,participant,target_kind,target_id,kind,note,pointers,body_blob,created) "
                              "VALUES(?,?,?,?,?,?,?,?,?)", (identity, person["id"], target_kind, target_id, kind, note,
                                                            canonical(pointers).decode(), blob, created))
             board.event("mark_recorded", {"mark": identity, "participant": person["id"], "target_kind": target_kind,
-                                          "target_id": target_id, "kind": kind, "body_blob": blob})
-    return mark_row(board.one("SELECT * FROM mark WHERE id=?", (identity,)))
+                                          "target_id": target_id, "kind": kind, "body_blob": blob,
+                                          **({"thread": thread} if thread else {})})
+            if thread:
+                board.event("comment_posted", {"post": thread, "author": person["id"], "target_kind": "claim",
+                                               "target_id": target_id, "parent": target["parent"], "anchor": locator,
+                                               "request": None, "addressee": None, "mark": identity})
+    return {**mark_row(board.one("SELECT * FROM mark WHERE id=?", (identity,))), "thread": thread}
 
 
 def mark_row(row):
@@ -757,6 +777,20 @@ def commission(board, actor, task_type, target, budget, deadline=None, subject_k
                          evidence={"subject": subject, "note": note})
 
 
+def request_replication(board, actor, artifact, target, *, budget=None, deadline=None, note=None):
+    """A person's replication request (spec v3 V14): a commission of task type replication with the artifact as
+    subject and, when no budget is stated, the commons' default (`commons.toml [replication] default_budget`,
+    `replication.settings`). Allowance, rate limit and the producer refusal are the commission's."""
+    from daw.commons.replication import settings
+    if not isinstance(artifact, str) or not artifact.startswith("artifact_"):
+        raise DawError("invalid_commission_subject", "name an artifact to replicate")
+    budget = normalize_budget(budget) or settings(board.root)["default_budget"]
+    note = (note or "").strip() or (f"Replicate {artifact}: re-execute its saved derivation on the recorded inputs "
+                                    "and compare the output bytes with the original.")
+    return commission(board, actor, "replication", target, budget, deadline=deadline, subject_kind="artifact",
+                      subject_id=artifact, note=note)
+
+
 # --- comment threads at anchors and review requests (spec v2 V4) -----------------------------------------
 
 def anchor_root(board, comment_post):
@@ -773,13 +807,9 @@ def anchor_root(board, comment_post):
     return shown, evidence
 
 
-def reply_at_anchor(board, actor, comment_post, body):
-    """A person's reply in a comment thread at an anchor. The reply is a comment post with the thread's
-    recorded target and anchor (copied from the root comment's immutable evidence, so it stays anchored to the
-    same bytes), the root comment as parent and `evidence.in_reply_to` naming the post it answers (the root, a
-    reply, or the author's answer). If the replier is the addressee of the root's ask, it answers it."""
-    person = _actor(board, actor, "reply")
-    body = _text(body, "empty_comment")
+def anchored_thread(board, comment_post):
+    """(root comment, its evidence, the post replied to) for a reply in a comment thread at an anchor: the post is
+    the root, a reply under it or the author's answer. Refused when either is hidden (a reply would quote it)."""
     shown = board.show(comment_post)
     if shown["content"].get("kind") != "comment" and not shown["parent"]:
         raise DawError("not_a_comment", f"{comment_post} is not in a comment thread at an anchor")
@@ -789,6 +819,18 @@ def reply_at_anchor(board, actor, comment_post, body):
     for post in {root["id"], shown["id"]}:
         if hidden(board, post):
             raise DawError("hidden_by_moderation", f"post {post} is hidden; replies would quote it")
+    return root, evidence, shown
+
+
+def reply_at_anchor(board, actor, comment_post, body):
+    """A person's reply in a comment thread at an anchor. The reply is a comment post with the thread's
+    recorded target and anchor (copied from the root comment's immutable evidence, so it stays anchored to the
+    same bytes), the root comment as parent and `evidence.in_reply_to` naming the post it answers (the root, a
+    reply, or the author's answer). If the replier is the addressee of the root's ask, it answers it. The author
+    of the anchored work replies with `daw.commons.dialogue.reply` (`bio community reply`)."""
+    person = _actor(board, actor, "reply")
+    body = _text(body, "empty_comment")
+    root, evidence, shown = anchored_thread(board, comment_post)
     target = evidence["target"]
     reply_evidence = {"target": target, "anchor": evidence.get("anchor"), "in_reply_to": shown["id"],
                       "anchor_root": root["id"], "ask_author": False}

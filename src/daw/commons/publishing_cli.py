@@ -39,15 +39,19 @@ def preprint_command(ctx: typer.Context, post: str, as_: As = "operator",
 
 
 @directory_app.command("publish")
-def directory_publish(snapshot: Path,
+def directory_publish(ctx: typer.Context, snapshot: Path,
                       directory: Annotated[Path, typer.Option("--directory", help="directory.json (or its folder)")],
                       lab: Annotated[str, typer.Option(help="Publishing lab or commons name")],
                       title: str | None = None,
                       location: Annotated[str | None, typer.Option(help="Where the snapshot is already hosted (relative path or http(s) URL); default: copy it under the directory")] = None,
                       publisher: str | None = None, note: str | None = None):
-    """Verify a snapshot folder and list it in a directory file (copies it beside the directory by default)."""
+    """Verify a snapshot folder and list it in a directory file (copies it beside the directory by default). From a
+    commons (--root), the entry states whether it accepts replication requests from outside ([replication] in
+    commons.toml) and their default budget."""
     from daw.commons.directory import publish
-    emit(publish(snapshot, directory, lab=lab, title=title, location=location, publisher=publisher, note=note))
+    commons = ctx.obj if ctx.obj and (Path(ctx.obj) / "board.sqlite").is_file() else None
+    emit(publish(snapshot, directory, lab=lab, title=title, location=location, publisher=publisher, note=note,
+                 commons=commons))
 
 
 @directory_app.command("list")

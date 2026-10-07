@@ -8,8 +8,10 @@ import { ParticipantLink } from "../components/board/People";
 import { ProvenanceTree } from "../components/board/ProvenanceTree";
 import { short, size, when } from "../components/board/format";
 import { Markdown } from "../components/Markdown";
-import { CommentBox, MarkForm } from "../components/participation/Actions";
-import { isWithheld, type ArtifactView, type DerivationInput, type Located } from "../types/board";
+import { CommentBox, MarkForm, ReplicationRequestForm } from "../components/participation/Actions";
+import {
+  isWithheld, type ArtifactView, type DerivationInput, type Located, type ReplicationBadge, type ReplicationConfirmation,
+} from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -33,6 +35,65 @@ function InputSource({ input }: { input: DerivationInput }) {
     );
   }
   return <span className="muted">exact bytes only (no source identity recorded)</span>;
+}
+
+const CRITERIA: [keyof NonNullable<ReplicationConfirmation["criteria"]>, string][] = [
+  ["different_participant", "different participant"],
+  ["captured_execution", "captured execution"],
+  ["matching_inputs", "matching inputs"],
+  ["identical_bytes", "identical bytes"],
+];
+
+// Spec v3 V14: replicated means a different participant, a captured execution, matching inputs and identical
+// bytes; each criterion is re-read from records and links to the record it rests on.
+export function ReplicationPanel({ badge, artifact, onDone }: { badge?: ReplicationBadge; artifact: string; onDone?: () => void }) {
+  if (!badge) return null;
+  const confirmed = badge.confirmations.filter((c) => !c.hidden);
+  return (
+    <section className="panel" aria-label="Replication">
+      <h2>Replication{" "}
+        {badge.replicated ? <Badge tone="good">replicated</Badge> : <Badge tone="warn">not replicated</Badge>}
+      </h2>
+      {badge.reason && <p className="muted">{badge.reason}</p>}
+      {confirmed.map((c) => (
+        <div key={c.post}>
+          <ul className="replication-criteria">
+            {CRITERIA.map(([key, label]) => {
+              const criterion = c.criteria?.[key];
+              return (
+                <li key={key}>
+                  <span aria-label={criterion?.ok ? "met" : "not met"}>{criterion?.ok ? "✓" : "✗"}</span>{" "}
+                  {criterion ? <Link to={criterion.route}>{label}</Link> : label}
+                  {key === "different_participant" && criterion && (
+                    <span className="muted"> · <ParticipantLink id={String(c.agent)} /></span>
+                  )}
+                  {key === "captured_execution" && c.run && <span className="muted mono"> · {short(c.run)}</span>}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="meta">Confirmation <Link to={`/post/${c.post}`}>{short(c.post)}</Link> (a platform record by the replication participant)</p>
+        </div>
+      ))}
+      {badge.confirmations.some((c) => c.hidden) && <p className="muted">A confirmation is on a post hidden by moderation.</p>}
+      {badge.attempts.length > 0 && (
+        <>
+          <h3>Attempts</h3>
+          <ul>
+            {badge.attempts.map((a, n) => (
+              <li key={`${a.request}-${n}`}>
+                <Badge>{(a.outcome ?? "unknown").replaceAll("_", " ")}</Badge>{" "}
+                {a.agent && <ParticipantLink id={a.agent} />} · <Link to={a.route}>run</Link>
+                {a.post && <> · <Link to={`/post/${a.post}`}>record</Link></>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {badge.meaning && <p className="meta">{badge.meaning}</p>}
+      <details><summary>Request a replication</summary><ReplicationRequestForm artifact={artifact} onDone={onDone} /></details>
+    </section>
+  );
 }
 
 // The locator a number's pointer carries (`?locator=row=B_vs_A;col=log2_ratio`, or the same after `#`).
@@ -125,6 +186,7 @@ export default function Artifact() {
         <div className="post-main">
           {locator && <CitedLocation id={a.id} locator={locator} />}
           {m.summary && <Untrusted><p>{m.summary}</p></Untrusted>}
+          {a.location.store === "library" && <ReplicationPanel badge={a.replication} artifact={a.id} onDone={state.reload} />}
           {m.limitations && m.limitations.length > 0 && (
             <section className="panel"><h2>Limitations</h2><ul>{m.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul></section>
           )}

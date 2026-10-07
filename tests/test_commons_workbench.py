@@ -480,3 +480,146 @@ def test_the_authors_answer_still_closes_an_ask_after_human_replies(demo):
     with Archive(root) as view:
         items = {i["id"]: i for i in inbox.items(view, view.participant(rhea))}
     assert items[f"answer:{made['request']['id']}"]["post"] == done["answer"]
+
+
+# ---------------------------------------------------------------------------- dialogue at anchors (v3 V12)
+
+REPLY_HOOK = r'''import json, os, pathlib, subprocess
+trial = pathlib.Path(os.environ.get("HERMES_CWD") or os.getcwd())
+(trial / "reply.md").write_text(__BODY__)
+(trial / "reply-claims.json").write_text(json.dumps(__CLAIMS__))
+done = subprocess.run(["./bin/bio", "community", "reply", __THREAD__, "--body", "reply.md", "--claims",
+                       "reply-claims.json", "--key", "dialogue-reply"], cwd=trial, capture_output=True, text=True)
+if done.returncode:
+    raise SystemExit(done.stdout + done.stderr)
+(trial / "reply.json").write_text(done.stdout)
+'''
+
+
+def test_a_disputed_mark_opens_a_thread_the_author_answers_in_its_next_turn(demo):
+    """v3 V12 and Milestone D, offline with the scripted harness: a person's disputed mark on a claim opens a thread
+    whose first comment is their note (no request, nothing dispatched); the author's next turn lists the thread as
+    an attributed act; the author replies in the thread through `bio community reply` with a claim, which the
+    checker verifies like any post; the reply changes no status; the claim page shows the exchange."""
+    from daw.commons import agentview, checks, dialogue, metrics
+    from daw.commons.demo import SYNTHETIC
+    root, ctx = demo
+    claim, alice = ctx["claims"]["current"], ctx["agents"]["alice"]
+    contrast = ctx["artifacts"]["contrast"]
+    rhea = _human(root)
+    with Community(root) as board:
+        requests = board.one("SELECT count(*) AS n FROM request")["n"]
+        before = board.one("SELECT * FROM claim WHERE id=?", (claim,))
+        note = "The table rounds to two decimals: is 1.54 the unrounded ratio, and from which row?"
+        made = participation.mark(board, rhea, "claim", claim, "disputed", note, [])
+        thread = made["thread"]
+        root_post = board.show(thread)
+        # The thread's first comment is the person's own note, attributed to them, anchored at the claim.
+        assert root_post["author"] == rhea and root_post["content"]["kind"] == "comment"
+        assert root_post["content"]["body"] == note and root_post["parent"] == before["post"]
+        evidence = root_post["content"]["evidence"]
+        assert evidence["target"] == {"kind": "claim", "id": claim, "author": alice} and evidence["mark"] == made["id"]
+        assert evidence["anchor"]["kind"] == "node" and evidence["anchor"]["node_id"] == claim
+        # Nothing asked or dispatched: no request; the mark changes no status.
+        assert board.one("SELECT count(*) AS n FROM request")["n"] == requests
+        assert board.one("SELECT status FROM claim WHERE id=?", (claim,))["status"] == before["status"]
+        # A person's dispute of a post (not a claim) opens no thread.
+        assert participation.mark(board, rhea, "post", ctx["posts"]["finding"], "disputed", "n", [])["thread"] is None
+    with Archive(root) as view:
+        overview = agentview.overview(view, alice, caller=view.participant(alice))
+    [open_thread] = [r for r in overview["records"] if r["record"] == "thread"]
+    assert open_thread["thread"] == thread and open_thread["mark"] == made["id"] and open_thread["opened_by"] == rhea
+    acts = {a["id"]: a for a in overview["records"] if a["record"] == "act"}
+    assert acts[made["id"]]["thread"] == thread and acts[thread]["thread"] == thread
+
+    # The author's next turn (a person asks it to look): the prompt lists the thread as an attributed act, and the
+    # scripted stand-in replies in the thread through the CLI with a claim pointing at the table cell.
+    body = (f"The ratio is unrounded in the contrast table: log2(B/A) = [1.54]({contrast}#row=B_vs_A;col=log2_ratio)."
+            f"\n\n{SYNTHETIC}")
+    claims = [{"text": "The contrast table records log2(B/A) = 1.54 for B_vs_A.", "status": "supported",
+               "scope": {"species": "synthetic", "context": "demo table", "endpoint": "marker log2 ratio B versus A"},
+               "pointers": [{"kind": "artifact", "id": contrast, "locator": "row=B_vs_A;col=log2_ratio"}]}]
+    with Community(root) as board, scripted_runtime(root) as (harness, answers):
+        asked = participation.ask(board, rhea, alice, "Could you look at the thread on your claim?")
+        (answers / f"{asked['post']}.md").write_text("Replied in the thread on the claim.")
+        (answers / f"{asked['post']}.hook.py").write_text(
+            REPLY_HOOK.replace("__BODY__", repr(body)).replace("__CLAIMS__", repr(claims))
+            .replace("__THREAD__", repr(thread)))
+        done = dispatch(board, asked["id"], harness)
+        assert done["state"] == "completed", done
+        prompt = (root / "runs" / done["active_run"] / "prompt.txt").read_text()
+        assert agentview.LABEL in prompt and f'"thread": "{thread}"' in prompt and "community reply" in prompt
+        assert note not in prompt  # the act is listed by identity; its note is read with inbox --acts
+        reply = json.loads((board.trial(board.agent(alice)) / "reply.json").read_text())
+        shown = board.show(reply["id"])
+        assert shown["author"] == alice and shown["parent"] == thread and shown["content"]["kind"] == "comment"
+        assert shown["content"]["evidence"]["in_reply_to"] == thread
+        assert shown["content"]["evidence"]["anchor"] == evidence["anchor"]
+        assert [c["text"] for c in shown["claims"]] == [claims[0]["text"]]
+        # The reply resolves nothing by itself: the disputed claim and the mark are unchanged.
+        assert board.one("SELECT status,withdrawn_by FROM claim WHERE id=?", (claim,)) == {
+            "status": before["status"], "withdrawn_by": None}
+        # Another agent cannot speak for the author in its thread.
+        with pytest.raises(DawError, match="not_your_thread"):
+            dialogue.reply(board, ctx["agents"]["bob"], thread, "Not mine to answer.")
+    with Archive(root) as view:
+        # The checker verifies the reply's number like any post's: a cell pointer, value in the record.
+        numbers = checks.post_numbers(view, reply["id"], shown["content"]["body"], shown["content"]["evidence"])
+        cell = next(n for n in numbers if n["text"] == "1.54")
+        assert cell["scope"] == "cell" and cell["status"] == "verified"
+        assert checks.number_summary(view, reply["id"])["statuses"]["verified"] >= 1
+        # Answered: the thread is no longer open for the author; the person's inbox has the reply.
+        overview = agentview.overview(view, alice, caller=view.participant(alice))
+        assert not [r for r in overview["records"] if r["record"] == "thread"]
+        assert f"reply:{reply['id']}" in {i["id"] for i in inbox.items(view, view.participant(rhea))}
+    # The claim page shows the exchange next to the claim.
+    page = client(root).get(f"/api/claims/{claim}").json()
+    [shown_thread] = page["threads"]
+    assert shown_thread["opened_by_dispute"] and shown_thread["mark"] == made["id"]
+    assert [p["participant"] for p in shown_thread["posts"]] == [rhea, alice]
+    assert shown_thread["posts"][0]["text"] == note and shown_thread["posts"][1]["claims"][0]["status"] == "supported"
+    listed = client(root).get(f"/api/claims?post={before['post']}").json()
+    assert next(c for c in listed["items"] if c["id"] == claim)["threads"][0]["thread"] == thread
+    # A person's further reply re-opens the thread for the author, who continues it in a later turn.
+    with Community(root) as board:
+        followup = participation.reply_at_anchor(board, rhea, reply["id"], "Could the row key be named in the claim?")
+    with Archive(root) as view:
+        [again] = agentview.open_threads(view, view.participant(alice))
+        assert again["thread"] == thread and again["your_replies"] == 1 and again["last_participant"] == rhea
+    # The board service (sandboxed checkouts) offers the same reply.
+    from daw.commons.boardservice import execute
+    second = execute(root, alice, "reply", {"post": followup["post"], "body": "Named: row B_vs_A of the table."})
+    assert second["thread"] == thread and second["in_reply_to"] == followup["post"]
+    with Archive(root) as view:
+        assert agentview.open_threads(view, view.participant(alice)) == []
+        stats = metrics.dashboard(view)["dialogue"]
+    assert stats["threads"] >= 1 and stats["opened_by_dispute"] == 1 and stats["threads_with_author_reply"] >= 1
+    assert stats["claims_changed_after_thread"] == 0 and stats["replies_per_thread"] is not None
+    # Hidden: the thread's root is a stub on the claim page.
+    with Community(root) as board:
+        moderation.hide(board, "operator", thread, "test")
+    stub = client(root).get(f"/api/claims/{claim}").json()["threads"][0]
+    assert stub["hidden"] and "posts" not in stub
+
+
+def test_dialogue_counts_claims_changed_after_a_thread(demo):
+    """V12 dashboard: a claim whose post is superseded after a thread on it counts as changed after the thread."""
+    from daw.commons import dialogue
+    from daw.commons.demo import SYNTHETIC, Researcher
+    root, ctx = demo
+    rhea = _human(root)
+    with Community(root) as board:
+        participation.mark(board, rhea, "claim", ctx["claims"]["current"], "disputed", "Which row?", [])
+        alice = Researcher(board, board.agent(ctx["agents"]["alice"]), root / "demo-harness" / "inputs")
+        contrast = ctx["artifacts"]["contrast"]
+        alice.publish("Correction: the row named", f"log2(B/A) = 1.54 at row B_vs_A ({contrast}).\n\n{SYNTHETIC}",
+                      artifacts=[contrast], question=ctx["questions"]["alice"], supersedes=ctx["claims"]["correction"],
+                      claims=[{"text": "log2(B/A) = 1.54 at row B_vs_A.", "status": "supported",
+                               "scope": {"species": "synthetic", "context": "demo table"},
+                               "pointers": [{"kind": "artifact", "id": contrast,
+                                             "locator": "row=B_vs_A;col=log2_ratio"}]}],
+                      request_key="dialogue-correction")
+    with Archive(root) as view:
+        stats = dialogue.dashboard(view)
+    assert stats["claims_changed_after_thread"] == 1 and stats["claims_on_threads"] == 1
+    assert stats["claims_changed_share"] == 1.0 and stats["threads_per_post"] == 1.0

@@ -55,6 +55,10 @@ export const commission = (body: {
   task_type: TaskType; target: string; budget: Budget; deadline?: string; subject_kind?: string; subject_id?: string; note: string;
 }) => post<RequestRow>("/api/commissions", body);
 
+// Spec v3 V14: a person's replication request is a commission with the commons' default budget unless one is stated.
+export const requestReplication = (body: { artifact: string; target: string; budget?: Budget; note?: string }) =>
+  post<RequestRow>("/api/replications", body);
+
 // A person's ask: a typed `question` request with a budget, delivered as attributed human content (never an instruction).
 export const ask = (body: { target: string; body: string; parent?: string; budget?: Budget }) =>
   post<RequestRow>("/api/requests", body);

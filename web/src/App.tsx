@@ -23,6 +23,7 @@ const Me = lazy(() => import("./pages/Me"));
 const Login = lazy(() => import("./pages/Login"));
 const Frontier = lazy(() => import("./pages/Frontier"));
 const Claims = lazy(() => import("./pages/Claims"));
+const ClaimPage = lazy(() => import("./pages/Claims").then((m) => ({ default: m.ClaimPage })));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Studio = lazy(() => import("./pages/Studio"));
 const WriteupPage = lazy(() => import("./pages/Writeup"));
@@ -105,6 +106,7 @@ export default function App() {
             <Route path="/run/:id" element={<RunPage />} />
             <Route path="/frontier" element={<Frontier />} />
             <Route path="/claims" element={<Claims />} />
+            <Route path="/claim/:id" element={<ClaimPage />} />
             <Route path="/studio" element={<Studio />} />
             <Route path="/studio/:post" element={<WriteupPage />} />
             <Route path="/dashboard" element={<Dashboard />} />

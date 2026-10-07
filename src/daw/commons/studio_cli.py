@@ -98,6 +98,26 @@ def federation_verify(ctx: typer.Context, snapshot: str):
         raise typer.Exit(1)
 
 
+@replication_app.command("request")
+def replication_request(ctx: typer.Context, artifact: str, target: Annotated[str, typer.Option()], as_: As = "operator",
+                        minutes: int | None = None, tokens: int | None = None, download_bytes: int | None = None,
+                        deadline: str | None = None, note: str | None = None):
+    """A person's replication request: a commission with the commons' default budget unless one is given (V14)."""
+    from daw.commons.participation import request_replication
+    with _board(ctx) as commons:
+        emit(request_replication(commons, acting(as_), artifact, target, budget=_budget(minutes, tokens, download_bytes),
+                                 deadline=deadline, note=note))
+
+
+@replication_app.command("badge")
+def replication_badge(ctx: typer.Context, artifact: str):
+    """An artifact's replication badge: different participant, captured execution, matching inputs, identical bytes."""
+    from daw.commons.archive import Archive
+    from daw.commons.replication import badge
+    with Archive(ctx.obj) as view:
+        emit(badge(view, artifact))
+
+
 @replication_app.command("check")
 def replication_check(ctx: typer.Context, request: str, as_: As = "operator"):
     """Record the confirmation (reproduced mark + reply) or the mismatch correction for a delivered replication."""

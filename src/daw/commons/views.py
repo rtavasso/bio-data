@@ -477,7 +477,9 @@ def artifact_view(view, aid, *, depth=3, caller=None, full=False):
     fetchers = [{"seq": e["seq"], "created": e["created"], "reader": e["body"].get("reader"),
                  "question": e["body"].get("question"), "post": e["body"].get("post")} for e in fetches]
     output = manifest.get("output") or {}
+    from daw.commons.replication import badge
     return {"id": aid, "location": location, "derivation_key": info["derivation_key"], "output_role": info["output_role"],
+            "replication": badge(view, aid, vis=vis),  # spec v3 V14: each criterion a record and a link
             "output_blob": info["output_blob"], "manifest_blob": info["manifest_blob"], "created": info["created"],
             "manifest": _strip_paths(manifest),
             "derivation": {"inputs": inputs, "code": derivation.get("code", []), "references": derivation.get("references", []),

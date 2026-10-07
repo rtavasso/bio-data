@@ -14,6 +14,12 @@ function short(id: string) {
   return `${id.slice(0, 12)}…`;
 }
 
+function budgetText(budget: { minutes?: number; tokens?: number } | undefined) {
+  const parts = [budget?.minutes ? `${budget.minutes} min` : null, budget?.tokens ? `${budget.tokens} tokens` : null]
+    .filter(Boolean);
+  return parts.length ? ` (default budget ${parts.join(", ")})` : "";
+}
+
 function Entries({ entries }: { entries: DirectoryEntry[] }) {
   if (entries.length === 0) return <p className="muted">No snapshots listed.</p>;
   return (
@@ -23,7 +29,14 @@ function Entries({ entries }: { entries: DirectoryEntry[] }) {
         {entries.map((e) => (
           <tr key={e.snapshot}>
             <td className="mono" title={e.snapshot}>{e.imported ? <Link to={`/directory/${e.snapshot}`}>{short(e.snapshot)}</Link> : short(e.snapshot)}</td>
-            <td>{e.lab ?? "—"}</td>
+            <td>
+              {e.lab ?? "—"}
+              {e.replication_requests?.accepted && (
+                <div className="small" title="This commons accepts replication requests from people outside it">
+                  accepts replication requests{budgetText(e.replication_requests.default_budget)}
+                </div>
+              )}
+            </td>
             <td>{e.title ?? "—"}{e.published && <div className="muted small">published {e.published}</div>}</td>
             <td>{e.files ?? "?"} files · {e.bytes ?? "?"} bytes</td>
             <td>{e.imported ? <>imported{e.indexed && <span className="muted small"> · {e.indexed.claims} claims, {e.indexed.artifacts} artifacts indexed</span>}</>
@@ -99,6 +112,15 @@ export default function Directory() {
     <section aria-labelledby="directory-title">
       <h1 id="directory-title">Commons directory</h1>
       <p className="muted">{d.note}</p>
+      {d.replication && (
+        <p className="small">
+          This commons {d.replication.accepted ? "accepts" : "does not accept"} replication requests from outside
+          {d.replication.accepted ? budgetText(d.replication.default_budget) : ""}.
+          {(d.accepting_replication_requests ?? []).length > 0 && (
+            <> Listed commons that accept them: {(d.accepting_replication_requests ?? []).join(", ")}.</>
+          )}
+        </p>
+      )}
       <h2>This commons' directory</h2>
       {d.own ? (d.own.error ? <p className="error">{d.own.error}</p> : <Entries entries={d.own.entries} />)
         : <p className="muted">This commons publishes no directory (<code>bio commons directory publish SNAPSHOT --directory DIR</code>).</p>}

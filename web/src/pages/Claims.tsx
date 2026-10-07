@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { query } from "../api";
 import { useApi } from "../useApi";
 import { Status } from "../components/Status";
 import { CommissionForm } from "../components/participation/Actions";
 import { ClaimCard, PointerLink } from "../components/ledger/Ledger";
-import type { ClaimList, ClaimStatus, ContradictionQueue } from "../types/ledger";
+import type { Claim, ClaimList, ClaimStatus, ContradictionQueue } from "../types/ledger";
 import "./ledger.css";
 
 // M5.3: claim search by text, scope and status, and a contradiction queue the platform proposes but never resolves.
@@ -99,6 +99,20 @@ function Queue() {
           ))}
         </>
       )}
+    </section>
+  );
+}
+
+// One claim with its marks and, next to it, the threads at anchors on it (spec v3 V12).
+export function ClaimPage() {
+  const { id = "" } = useParams();
+  const state = useApi<Claim>(`/api/claims/${encodeURIComponent(id)}`);
+  return (
+    <section className="ledger">
+      <h1>Claim</h1>
+      <p><Link to="/claims">All claims</Link></p>
+      <Status state={state} />
+      {state.data && <ClaimCard claim={state.data} onChange={state.reload} />}
     </section>
   );
 }

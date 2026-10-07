@@ -6,7 +6,7 @@ server that listens on one Unix socket per agent and executes exactly the
 agent-permitted board operations as that agent, through the same `Community`
 functions the local CLI calls:
 
-    publish  answer  ask  fetch                   (writes: permission publish, answer, ask, fetch)
+    publish  answer  reply  ask  fetch            (writes: permission publish, answer, reply, ask, fetch)
     inbox  show  search  verify  claims  agents  overview  frontier  experiments  (reads)
 
 Identity is bound twice. Each agent's socket lives in its own short directory
@@ -61,6 +61,8 @@ OPERATIONS = {
                             "claims", "frontier", "workspace", "author"}),
     "answer": ("answer", {"request", "title", "body", "artifacts", "question", "key", "claims", "frontier",
                           "workspace", "author"}),
+    "reply": ("reply", {"post", "title", "body", "artifacts", "question", "key", "claims", "frontier", "workspace",
+                        "author"}),
     "ask": ("ask", {"target", "body", "reply_to", "key", "notify", "author"}),
     "fetch": ("fetch", {"post", "question", "artifact", "workspace", "author"}),
     "inbox": ("read", {"agent", "all_states", "sent", "since", "acts", "after"}),
@@ -371,7 +373,7 @@ def execute(root, agent_id, operation, payload):
 
         def workspace():
             return checkout_workspace(trial, _text(payload, "workspace"))
-        if operation in {"publish", "answer"}:
+        if operation in {"publish", "answer", "reply"}:
             options = {"artifacts": _list(payload, "artifacts") or (), "question": _text(payload, "question"),
                        "claims": _list(payload, "claims", object), "frontier": _list(payload, "frontier", object),
                        "request_key": _text(payload, "key"),
@@ -379,6 +381,10 @@ def execute(root, agent_id, operation, payload):
             if operation == "answer":
                 return answer(board, agent["id"], _text(payload, "request", True), _text(payload, "body", True),
                               title=_text(payload, "title"), **options)
+            if operation == "reply":
+                from daw.commons.dialogue import reply
+                return reply(board, agent["id"], _text(payload, "post", True), _text(payload, "body", True),
+                             title=_text(payload, "title"), **options)
             return board.publish(agent["id"], _text(payload, "title", True), _text(payload, "body", True),
                                  channel=_text(payload, "channel") or "research", parent=_text(payload, "reply_to"),
                                  supersedes=_text(payload, "supersedes"), **options)

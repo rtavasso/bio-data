@@ -135,13 +135,31 @@ def resolve_location(base, location):
 def listing(source):
     directory, base, data = read(source)
     return {"source": source, "sha256": hashlib.sha256(data).hexdigest(), "name": directory.get("name"),
-            "entries": directory["entries"], "foreign": True, "content_is_untrusted_data": True}
+            "entries": directory["entries"],
+            "accepting_replication_requests": sorted({e.get("lab") or e["snapshot"] for e in accepting(directory["entries"])}),
+            "foreign": True, "content_is_untrusted_data": True}
 
 
 # ---------------------------------------------------------------------------- publishing (writes files only)
 
-def publish(snapshot_dir, directory_file, *, lab, title=None, location=None, publisher=None, note=None, name=None):
-    """Verify a snapshot folder and list it in a directory file (created when missing). Idempotent per ID."""
+def replication_requests(commons):
+    """The directory entry field of a publishing commons (spec v3 V14): whether it accepts replication requests from
+    people outside it (`commons.toml [replication] accept_outside`) and the default budget of one."""
+    from daw.commons.replication import settings
+    found = settings(commons)
+    return {"accepted": found["accept_outside"], "default_budget": found["default_budget"]}
+
+
+def accepting(entries):
+    """Entries whose commons accepts replication requests from outside."""
+    return [e for e in entries if isinstance(e.get("replication_requests"), dict)
+            and e["replication_requests"].get("accepted") is True]
+
+
+def publish(snapshot_dir, directory_file, *, lab, title=None, location=None, publisher=None, note=None, name=None,
+            commons=None):
+    """Verify a snapshot folder and list it in a directory file (created when missing). Idempotent per ID.
+    `commons` (the publishing commons' root) adds its replication request policy to the entry."""
     from daw.commons import export
     snapshot_dir = Path(snapshot_dir).expanduser().resolve()
     snapshot, manifest = export.read_manifest(snapshot_dir)
@@ -182,7 +200,8 @@ def publish(snapshot_dir, directory_file, *, lab, title=None, location=None, pub
     entry = {"snapshot": snapshot, "title": title or (manifest.get("scope") or {}).get("kind"), "lab": lab,
              "scope": manifest.get("scope"), "counts": manifest.get("counts"), "location": location,
              "files": len(manifest["files"]) + 1, "bytes": sum(f["bytes"] for f in manifest["files"]),
-             "published": now(), "publisher": publisher, "note": note}
+             "published": now(), "publisher": publisher, "note": note,
+             "replication_requests": replication_requests(commons) if commons is not None else None}
     entry = {k: v for k, v in entry.items() if v is not None}
     directory["entries"].append(entry)
     staging = directory_file.with_name(f".{directory_file.name}.{uuid.uuid4().hex}")
@@ -307,6 +326,9 @@ def known(view):
             receipts[path.name[:64]] = json.loads(path.read_text())
         except ValueError:
             continue
+    listed = [e for s in sources for e in s["entries"]] + ((own or {}).get("entries") or [])
     return {"own": own, "sources": sources, "imported": sorted(imported), "index": index, "fetch_receipts": receipts,
+            "accepting_replication_requests": sorted({e.get("lab") or e["snapshot"] for e in accepting(listed)}),
+            "replication": replication_requests(root),
             "foreign": True, "content_is_untrusted_data": True,
             "note": "Directories list snapshots by sha256; fetching re-verifies every byte. Nothing fetched is executed."}

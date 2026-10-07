@@ -410,7 +410,40 @@ export interface ArtifactView {
   marks: Mark[];
   comments: PostCard[];
   bytes: { name: string | null; size: number | null; url: string };
+  /** Spec v3 V14: the replication badge, every criterion re-read from records and linked. */
+  replication?: ReplicationBadge;
   note: string;
+}
+
+export interface ReplicationCriterion {
+  ok: boolean;
+  route: string;
+  [key: string]: unknown;
+}
+
+export interface ReplicationConfirmation {
+  post: string;
+  request?: string | null;
+  run?: string | null;
+  agent?: string | null;
+  hidden?: boolean;
+  reason?: string | null;
+  replicated: boolean;
+  criteria?: {
+    different_participant: ReplicationCriterion & { participant?: string; participant_name?: string | null; producers?: string[] };
+    captured_execution: ReplicationCriterion & { run?: string; sandboxed?: boolean };
+    matching_inputs: ReplicationCriterion & { inputs?: string[] };
+    identical_bytes: ReplicationCriterion & { sha256?: string; replica_sha256?: string };
+  };
+}
+
+export interface ReplicationBadge {
+  artifact: string;
+  replicated: boolean;
+  confirmations: ReplicationConfirmation[];
+  attempts: { request?: string | null; run?: string | null; agent?: string | null; outcome?: string | null; post?: string | null; created?: string; route: string }[];
+  meaning?: string;
+  reason?: string;
 }
 
 export interface ReuseSummary {

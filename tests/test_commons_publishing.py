@@ -258,6 +258,51 @@ def test_preprint_http_route_needs_the_write_discipline(demo):
     assert listed[0]["snapshot"] == body["snapshot"] and listed[0]["post"] == made["writeup"]
 
 
+def test_preprint_shows_replication_badges_and_lists_unreplicated_artifacts(demo, fake_engine, tmp_path):
+    """v3 V14: the artifacts a preprint cites show their replication badge; the preprint lists the unreplicated
+    ones. The Studio demo's own replication is an unsandboxed local rehearsal (nothing replicated); a sandboxed
+    replication of the contrast by a different participant then confirms it, and only the contrast is badged."""
+    from daw.commons.boardservice import BoardService
+    root, _ = demo
+    made, ctx = studio(root)
+    contrast, measurement = ctx["artifacts"]["contrast"], ctx["artifacts"]["measurement"]
+    person = ctx["participation"]["human"]
+    with Community(root) as board:
+        before = preprint.export_preprint(board, person, made["writeup"], tmp_path / "before")
+    data = json.loads((Path(before["output"]) / "preprint.json").read_bytes())
+    local = sorted(a for a, r in data["artifacts"].items() if not r.get("foreign"))
+    assert contrast in local and data["unreplicated"] == local == before["unreplicated"]
+    assert all(data["artifacts"][a]["replication"] == {"replicated": False, "confirmations": []} for a in local)
+    index = (Path(before["output"]) / "index.html").read_text()
+    assert "<h2>Unreplicated artifacts</h2>" in index and "not replicated" in index
+    assert events(root, "preprint_exported")[-1]["unreplicated"] == local
+    # A sandboxed replication of the contrast by bob (not its producer): the badge's four criteria hold.
+    (root / "sandbox.toml").write_text('engine = "docker"\nimage = "agent:1"\nenv = ["COLLOQUY_DEMO_ANSWERS"]\n')
+    service = BoardService(root)
+    service.refresh()
+    try:
+        with Community(root) as board, scripted_runtime(root) as (harness, answers):
+            request = commission(board, person, "replication", ctx["agents"]["bob"], {"minutes": 10},
+                                 subject_kind="artifact", subject_id=contrast, note="Re-execute the contrast.")
+            post = board.one("SELECT post FROM request WHERE id=?", (request["id"],))["post"]
+            (answers / f"{post}.md").write_text("No answer recorded.")
+            (answers / f"{post}.hook.py").write_text(studio_demo.replication_hook(ctx["posts"]["finding"], contrast))
+            dispatch(board, request["id"], harness)
+    finally:
+        service.close()
+    with Community(root) as board:
+        after = preprint.export_preprint(board, person, made["writeup"], tmp_path / "after")
+    data = json.loads((Path(after["output"]) / "preprint.json").read_bytes())
+    badge = data["artifacts"][contrast]["replication"]
+    assert badge["replicated"] and badge["confirmations"][0]["participant"] == ctx["agents"]["bob"]
+    assert badge["confirmations"][0]["criteria"] == {"different_participant": True, "captured_execution": True,
+                                                     "matching_inputs": True, "identical_bytes": True}
+    assert contrast not in data["unreplicated"] and measurement in data["unreplicated"]
+    page = (Path(after["output"]) / f"artifacts/{contrast}.html").read_text()
+    assert "replicated</span>" in page and badge["confirmations"][0]["run"] in page
+    assert run_verifier(Path(after["output"]), "--expect", after["snapshot"]).returncode == 0
+
+
 # ---- V7 federation that resolves --------------------------------------------------------------------------
 
 def export_thread(root, post, out):
@@ -442,6 +487,33 @@ def test_directory_publish_list_and_fetch_over_paths_and_http(demo, demo_only, t
     (tmp_path / "bad.json").write_bytes(canonical(bad))
     with pytest.raises(DawError, match="invalid_directory"):
         directory.listing(str(tmp_path / "bad.json"))
+
+
+def test_directory_lists_commons_that_accept_replication_requests_from_outside(demo, tmp_path):
+    """v3 V14: a commons.toml setting, surfaced in the directory entry its snapshots are published with."""
+    root, ctx = demo
+    export_thread(root, ctx["claims"]["correction"], tmp_path / "snap")
+    export_thread(root, ctx["posts"]["finding"], tmp_path / "other")
+    site = tmp_path / "site"
+    closed = directory.publish(tmp_path / "other", site, lab="Lab B", commons=root)["entry"]
+    assert closed["replication_requests"] == {"accepted": False, "default_budget": {"minutes": 60}}
+    (root / "commons.toml").write_text("[replication]\naccept_outside = true\ndefault_budget = {minutes = 45}\n")
+    runner = CliRunner()
+    out = runner.invoke(app, ["--root", str(root), "directory", "publish", str(tmp_path / "snap"), "--directory",
+                              str(site), "--lab", "Lab A"])
+    assert out.exit_code == 0, out.output
+    assert json.loads(out.output)["entry"]["replication_requests"] == {"accepted": True,
+                                                                      "default_budget": {"minutes": 45}}
+    listed = directory.listing(str(site))
+    assert listed["accepting_replication_requests"] == ["Lab A"]
+    # Without a commons (a bare snapshot folder) the entry states nothing about replication requests.
+    bare = directory.publish(tmp_path / "snap", tmp_path / "bare", lab="Lab A")["entry"]
+    assert "replication_requests" not in bare
+    with Archive(root) as view:
+        assert directory.known(view)["replication"] == {"accepted": True, "default_budget": {"minutes": 45}}
+    (root / "commons.toml").write_text("[replication]\naccept_outside = \"yes\"\n")
+    with pytest.raises(DawError, match="invalid_commons_config"):
+        directory.publish(tmp_path / "snap", tmp_path / "third", lab="Lab A", commons=root)
 
 
 def test_directory_cli_publishes_lists_and_fetches(demo, tmp_path):

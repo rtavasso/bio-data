@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Untrusted } from "../Untrusted";
 import { MarkForm, PromoteForm } from "../participation/Actions";
 import { WatcherPanel } from "../discovery/WatcherPanel";
+import { Dialogue } from "./Dialogue";
 import type { Claim, FrontierItem, Pointer } from "../../types/ledger";
 
 // Shared pieces of the claim ledger and frontier screens. Every author-stated string renders inside
@@ -101,8 +102,9 @@ export function ClaimCard({ claim, onChange }: { claim: Claim; onChange?: () => 
           ))}
         </ul>
       )}
+      {claim.threads && <Dialogue threads={claim.threads} />}
       <footer className="ledger-actions">
-        <span className="mono muted">{claim.id}</span>
+        <Link className="mono muted" to={`/claim/${claim.id}`}>{claim.id}</Link>
         <Toggle label="Mark"><MarkForm targetKind="claim" targetId={claim.id} onDone={onChange} /></Toggle>
       </footer>
     </article>
