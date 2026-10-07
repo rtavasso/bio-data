@@ -14,6 +14,12 @@ import "./Run.css";
 
 // M4.4 Agent timeline for one delivery. Monotonic time is the axis; wall time includes host sleep, so a
 // suspension is shown as a greyed break with its wall duration. Token counts never default to zero.
+// Spec v2 C10: what the stream records is drawn solid; what a heuristic places (the suspension's position,
+// the headline, peer answers read) is labelled and drawn "attributed, not recorded". null is "unavailable".
+
+function Attributed({ basis }: { basis?: string }) {
+  return <span className="obs-chip run-attributed" title={basis}>attributed, not recorded</span>;
+}
 
 function Clock({ timeline }: { timeline: RunTimeline }) {
   const e = timeline.execution;
@@ -24,7 +30,8 @@ function Clock({ timeline }: { timeline: RunTimeline }) {
       <div><dt>wall</dt><dd>{value(e.wall_seconds)}</dd></div>
       <div className={e.suspended_seconds ? "suspended" : undefined}>
         <dt>suspended</dt>
-        <dd>{e.suspended_seconds ? formatSeconds(e.suspended_seconds) : `none above the ${e.suspension_floor_seconds} s floor`}</dd>
+        <dd>{e.suspended_seconds === null || e.suspended_seconds === undefined ? <span className="obs-missing">unavailable</span>
+          : e.suspended_seconds ? formatSeconds(e.suspended_seconds) : `none above the ${e.suspension_floor_seconds} s floor`}</dd>
       </div>
       <div><dt>state</dt><dd>{e.state ?? "unknown"}{e.returncode !== null && e.returncode !== undefined ? ` (exit ${e.returncode})` : ""}</dd></div>
       <div><dt>started</dt><dd>{e.started ?? "unrecorded"}</dd></div>
@@ -56,13 +63,17 @@ export default function RunPage() {
         {" · "}<a href={withBase(t.links.raw)} target="_blank" rel="noopener noreferrer">raw stream</a>
       </p>
       {t.request.title && <Untrusted><strong>{t.request.title}</strong></Untrusted>}
+      {t.request.hidden && !t.request.title && <p className="hidden-notice" role="note">The request post is hidden by moderation: {t.request.reason}.</p>}
       <Clock timeline={t} />
 
       <section className="obs-section">
         <h2>Timeline</h2>
         <p className="muted run-axis">Axis: {t.axis.clock}. {t.suspensions.map((s) => (
-          `Suspension of ${formatSeconds(s.seconds)} placed at ${at(s.at, unit)} (largest gap between event timestamps` +
-          `${s.unplaced_seconds ? `; ${formatSeconds(s.unplaced_seconds)} could not be placed` : ""}).`
+          <span key={s.at}>
+            {`Suspension of ${formatSeconds(s.seconds)} placed at ${at(s.at, unit)} (largest gap between event timestamps` +
+              `${s.unplaced_seconds ? `; ${formatSeconds(s.unplaced_seconds)} could not be placed` : ""}). `}
+            {s.attributed && <Attributed basis={s.basis} />}
+          </span>
         ))}</p>
         <TimelineCanvas timeline={t} />
         <div className="viz viz-legend run-legend">
@@ -72,7 +83,9 @@ export default function RunPage() {
           <span>C compaction</span>
           <span>F compaction fallback</span>
           <span>★ headline result</span>
+          <span>↩ peer answer read</span>
           <span><i className="run-key break" /> host suspension (not to scale)</span>
+          <span><i className="run-key attributed" /> attributed, not recorded (dotted, hatched: placed by a heuristic)</span>
         </div>
         <details>
           <summary>Table view ({t.calls.length} tool calls)</summary>
@@ -105,13 +118,16 @@ export default function RunPage() {
           ) : <p className="muted">No run_analysis.py receipts in this delivery.</p>}
           <h2>Headline result</h2>
           {t.headline ? (
-            <p>★ {at(t.headline.t, unit)}: <span className="mono">{t.headline.summary}</span> <span className="muted">({t.headline.basis})</span></p>
+            <p>★ {at(t.headline.t, unit)}: <span className="mono">{t.headline.summary}</span> <span className="muted">({t.headline.basis})</span>
+              {t.headline.attributed && <> <Attributed basis={`chosen as the ${t.headline.basis}`} /></>}</p>
           ) : <p className="muted">No successful registration, publication or analysis was recorded.</p>}
         </div>
         <div>
           <h2>Compactions</h2>
           <p>
-            {t.compactions.length} in the stream;{" "}
+            {t.compactions === null
+              ? <><span className="obs-missing">unavailable</span> in the stream (this harness does not mark compactions);</>
+              : `${t.compactions.length} in the stream;`}{" "}
             {summaries === null ? "no agent-state database to read summaries from" :
               `${summaries.length} summaries in this delivery, ${summaries.filter((s) => s.fallback).length} deterministic fallback(s)`}
           </p>
@@ -123,7 +139,8 @@ export default function RunPage() {
           {t.answers_consumed.length ? (
             <ul className="run-list">
               {t.answers_consumed.map((a) => (
-                <li key={a.line}>{at(a.t, unit)}: read {a.posts.map((p) => <Link key={p} to={`/post/${p}`} className="mono">{p.slice(0, 13)}… </Link>)}</li>
+                <li key={a.line}>{at(a.t, unit)}: read {a.posts.map((p) => <Link key={p} to={`/post/${p}`} className="mono">{p.slice(0, 13)}… </Link>)}
+                  {a.attributed && <Attributed basis={a.basis} />}</li>
               ))}
             </ul>
           ) : <p className="muted">No peer answers were read in this delivery.</p>}
@@ -137,6 +154,9 @@ export default function RunPage() {
             <p className="muted">From {t.final.source}.</p>
             <Untrusted author={t.agent.name}><Markdown source={t.final.text} /></Untrusted>
           </>
+        ) : t.final.hidden ? (
+          <p className="hidden-notice" role="note">The answer post is hidden by moderation: {t.final.reason}. Its text,
+            the raw stream and the model-facing messages are withheld; operators can read them.</p>
         ) : <p className="muted">No final answer was produced.</p>}
       </section>
 

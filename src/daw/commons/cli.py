@@ -470,19 +470,21 @@ def cohort_collect_command(ctx: typer.Context, name: str,
 @app.command("egress")
 def egress_command(ctx: typer.Context, host: str = "0.0.0.0", port: int = 3128,
                    log: Annotated[Path | None, typer.Option(help="JSONL decision log (default <commons>/service/egress.jsonl)")] = None):
-    """Run the allowlisting HTTP(S) CONNECT proxy for sandboxed checkouts (hosts from sandbox.toml and agents' harnesses)."""
-    from daw import harness
-    from daw.commons import egress, sandbox
+    """Run the allowlisting HTTP(S) CONNECT proxy for sandboxed checkouts.
+
+    Allowlists are token-scoped: each dispatch writes its own policy (the agent's provider hosts, the
+    source adapter hosts and sandbox.toml extras) under <commons>/service/egress/policies/, and the proxy
+    reads it for the credential presented on each connection. Nothing is frozen at start."""
+    from daw.commons import egress
     from daw.community import Community
     with Community(ctx.obj) as board:
-        config = sandbox.load(board.root)
-        provider = {h for a in board.rows("SELECT config FROM agent WHERE kind='agent'")
-                    for h in harness.for_agent({"config": json.loads(a["config"])}).hosts(json.loads(a["config"]))}
-        allowed = sandbox.hosts(config, provider)
-        log = log or board.root / "service" / "egress.jsonl"
-        log.parent.mkdir(exist_ok=True)
-    typer.echo(canonical({"listen": f"{host}:{port}", "hosts": allowed, "log": str(log)}).decode())
-    egress.serve(egress.Policy(allowed), host, port, log)
+        root = board.root
+    log = log or root / "service" / "egress.jsonl"
+    log.parent.mkdir(exist_ok=True)
+    store = egress.PolicyStore(egress.policy_dir(root))
+    typer.echo(canonical({"listen": f"{host}:{port}", "policies": str(store.directory), "log": str(log),
+                          "scope": "per-dispatch credential (Proxy-Authorization); no anonymous egress"}).decode())
+    egress.serve(store, host, port, log)
 
 
 @app.command("board-service")

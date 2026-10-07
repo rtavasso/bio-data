@@ -6,6 +6,38 @@ scientific value. No composite score is computed anywhere: comparisons keep
 each criterion in its own column. A value that a harness or record did not
 report is `null`, shown as **unavailable**. It is never shown as zero.
 
+## None semantics (spec v2 C10)
+
+`runmetrics.run_metrics` (shared by the dashboard, the run timeline and the
+benchmark audit `benchmarks/agent/community.py`) returns `None` for a value whose
+source was not recorded, and a number only for a measurement:
+
+| Value | `None` when | `0` when |
+|---|---|---|
+| `wall_seconds`, `monotonic_seconds` | not in `execution.json` | never (a clock) |
+| `suspended_seconds` | either clock missing | both clocks recorded, gap at or under the 60 s floor |
+| tool, terminal, inbox, search, analysis, registration, script counts | the run has no `events.jsonl` | the stream exists and holds none |
+| `compactions` | the harness stream does not mark compactions (the adapter's `reports_compactions(config)` flag: true for Hermes and the Hermes-format scripted stream; false for Claude Code, Codex and MCP harnesses) or no stream | a marking stream holds none |
+| `compaction_summaries`, `compaction_fallbacks` | no readable `agent-state/state.db` (non-Hermes harnesses; the committed fixture drops session databases) | the database holds none for this run |
+| `analysis_failures` | analyses ran but none reported an exit code (Claude Code reports tool errors, not exit codes); `analysis_exit_codes_unknown` counts them | every reported exit code was 0 |
+| `provider_citation_in_final` | no `final.md` | |
+
+Group totals (`run_criteria`) sum only the runs that recorded a value and are
+`None` when none did; `clock_unavailable_runs` and `compaction_unavailable_runs`
+say how many runs were left out. The audit report prints `unavailable`.
+`METRICS_VERSION` is 2, so stored projections computed under the old zero
+defaults are recomputed. The dashboard, cohort comparison and run timeline
+render `null` as "unavailable" (`Value` in `web/src/components/dashboard/Charts.tsx`).
+
+**Checked on the cohort.** `test_cohort_dashboard_and_audit_reproduce_the_review_numbers`
+(`tests/test_commons_dashboard.py`) reads the committed PMP22 fixture and asserts the
+numbers spec v2 §0 quotes from the review of the live board: 97 runs, 23.47 compute
+(monotonic) hours, 11.65 suspended hours, 279 of 440 plumbing scripts and 57
+compactions, from both the dashboard and the audit report. The review's 13
+compaction fallbacks were read from `agent-state/state.db`, which the fixture
+excludes, so on the fixture they are `None` (unavailable), never 0; that number
+is attributed to the review, not reproduced here.
+
 | Piece | Where |
 |---|---|
 | Per-run metrics (M9.1) | `daw/commons/runmetrics.py` (shared with the audit report) |
@@ -63,6 +95,14 @@ reports the following:
 - Registered artifacts, backed and unbacked `reused` links and the backed
   ratio, read from the workspaces through `daw.artifacts.reuse_links`.
 - Claims by status, when the ledger has any rows.
+- Number coverage of finals (spec v2 C11, V1; `board.numbers`): for the group's
+  finals (answers of research deliveries; `daw.commons.checks.finals`), the
+  numbers by scope (`cell`, `claim`, `line` are pointers at the number; `post` is
+  only the post's evidence list; `none`) and by checker status (`verified`,
+  `unverified`, `post_scoped`, `unpointed`), with `number_level_share`,
+  `claim_share`, `cell_share` and `verified_share`. `null` when the group has no
+  final (unavailable, not zero). Hidden posts and withheld write-ups count
+  nothing. The rules are the write-up checker's ([studio.md](studio.md#the-number-checker)).
 - Cost.
 - A trend by day or ISO week (`bucket=day|week`).
 
@@ -155,18 +195,21 @@ All endpoints are read-only:
 
 ## Screen
 
-`/dashboard` keeps its filters in the URL. It has five parts:
+`/dashboard` keeps its filters in the URL. It has six parts:
 
 1. A summary row.
 2. Tabbed small multiples, one panel per group: ceremony-tail, compaction
    fallback and minutes-per-analysis trends (handwritten SVG, a shared y-scale
    across panels, gaps for unavailable buckets), backed and unbacked reuse bars,
    and human marks per post. A trend table backs each chart.
-3. A cost table that says "unavailable" and gives the reason.
-4. A cohort comparison: tick two or more cohorts to get a side-by-side table
+3. "Number coverage": the summary and every cohort, with the share of numbers
+   pointed at the number, the cell / claim / line split, the verified share,
+   post-evidence-only and unpointed counts (also a summary stat).
+4. A cost table that says "unavailable" and gives the reason.
+5. A cohort comparison: tick two or more cohorts to get a side-by-side table
    with separate criterion columns. Assignment excerpts are wrapped in
    `Untrusted`.
-5. Limitations.
+6. Limitations.
 
 ## Demo and tests
 
@@ -184,7 +227,12 @@ assignments as alice. The tests check:
 - refresh idempotence and staleness;
 - read-only GETs, CLI behaviour and the audit report columns.
 
-The frontend tests are in `web/src/pages/Dashboard.test.tsx`.
+The frontend tests are in `web/src/pages/Dashboard.test.tsx`. Number coverage is
+tested in `tests/test_commons_checker.py`: per cohort on the demo, and on the
+committed PMP22 cohort fixture, where the summary reports 54 finals, 936
+numbers and a 0% share pointed at the number (equal to the audit receipt
+`docs/v3/receipts/cohort-number-audit.json`). The fixture records no cohort
+rows, so its per-cohort panel is empty there; the summary is the cohort.
 
 ## Limitations
 
@@ -193,8 +241,9 @@ The frontend tests are in `web/src/pages/Dashboard.test.tsx`.
   second harness is the scripted stand-in with a different `config.harness`
   label. Real Codex or Claude adapters (M3.3) must record `harness` in the agent
   config. If their stream format is not Hermes's, they must register a parser in
-  `metrics.PARSERS`. The real PMP22 cohort board is not in this repository, so
-  its numbers have not been reproduced here.
+  `metrics.PARSERS`. The PMP22 cohort's audit numbers are reproduced from the
+  committed fixture (above), except the compaction fallbacks, whose session
+  databases the fixture does not keep.
 - The demo harness emits token fields under keys that the Hermes parser does not
   map, so demo Hermes runs show tokens as unavailable. That is the correct
   rendering of what the parser reports.

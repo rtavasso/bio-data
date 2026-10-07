@@ -109,6 +109,19 @@ test("panels show behaviour per group and unavailable values are never zero", as
   expect(within(cost).getAllByText(/harness did not report/).length).toBeGreaterThan(0);
 });
 
+test("unrecorded clocks and compactions show as unavailable in the summary, never 0 (spec v2 C10)", async () => {
+  const blind = group("all runs", { suspensions: null, suspended_hours: null, clock_unavailable_runs: 2, compactions: null,
+    compaction_unavailable_runs: 2, tool_calls: null, analysis_receipts: null, analysis_failures: null });
+  globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ ...dashboard, summary: blind }), { status: 200 })) as typeof fetch;
+  show();
+  const summary = await screen.findByLabelText("Summary");
+  const stat = (label: string) => within(summary).getByText(label).parentElement as HTMLElement;
+  expect(stat("Suspensions").textContent).toMatch(/^Suspensionsunavailable \(unavailable h\) · 2 without clocks$/);
+  expect(stat("Compactions (fallbacks)").textContent).toContain("unavailable (unavailable) · 2 runs unavailable");
+  expect(stat("Analyses (failed)").textContent).toBe("Analyses (failed)unavailable (unavailable)");
+  expect(stat("Tool / inbox calls").textContent).toBe("Tool / inbox callsunavailable / 2");
+});
+
 test("tabs switch the small multiples and filters live in the request URL", async () => {
   show("/dashboard?harness=claude");
   await screen.findByLabelText("Summary");
@@ -139,4 +152,24 @@ test("cohort comparison keeps criteria in separate columns with no composite sco
   expect(within(compare).getAllByText(/unavailable \(no ledger claims\)/).length).toBeGreaterThan(0);
   expect(within(compare).getByText(/supported 2/)).toBeTruthy();
   expect(compare.querySelectorAll('[data-untrusted="true"]').length).toBe(2);
+});
+
+test("number coverage per cohort: share of numbers with a pointer at the number (C11)", async () => {
+  const numbers = { finals: 54, numbers: 936, scopes: { cell: 0, claim: 0, line: 0, post: 914, none: 22 },
+    statuses: { verified: 0, unverified: 0, post_scoped: 914, unpointed: 22 }, number_level: 0,
+    number_level_share: 0, claim_share: 0, cell_share: 0, verified_share: 0 };
+  const withNumbers = (g: Group, value: typeof numbers | null): Group => ({ ...g, board: { ...g.board, numbers: value } });
+  Object.assign(dashboard, {
+    summary: withNumbers(dashboard.summary, numbers),
+    panels: { ...dashboard.panels, cohort: [withNumbers(dashboard.panels.cohort[0], null)] },
+  });
+  show();
+  const table = await screen.findByRole("table", { name: "Number coverage" });
+  const [summary, cohort] = within(table).getAllByRole("row").slice(1);
+  expect(summary.textContent).toContain("936");
+  expect(summary.textContent).toContain("0%");
+  expect(summary.textContent).toContain("914");
+  expect(cohort.textContent).toContain("hermes-cohort");
+  expect(cohort.textContent).toContain("unavailable");  // no final in the group: unavailable, never zero
+  expect(screen.getByText("Numbers pointed at the number").parentElement?.textContent).toContain("(0/936)");
 });

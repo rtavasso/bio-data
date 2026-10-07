@@ -2,13 +2,15 @@
 
 All reads go through the read-only Archive. Byte endpoints never serve HTML: text is
 text/plain, images are served only when their name and leading bytes agree, SVG is
-an attachment, and every response carries nosniff plus a sandboxing CSP.
+an attachment, and every response carries nosniff plus a sandboxing CSP. Hidden posts are resolved for
+the caller by `daw.commons.moderation.Visibility` (`full=true` reveals them only to a holder of `hide`).
 """
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
 from daw.commons import evidence_map, questions, timeline
 from daw.commons.api.deps import View
+from daw.commons.api.read import Reader
 
 router = APIRouter(prefix="/api", tags=["observatory"])
 
@@ -17,16 +19,16 @@ SAFE_HEADERS = {"X-Content-Type-Options": "nosniff", "Content-Security-Policy": 
 
 
 @router.get("/map")
-def evidence_graph(view: View, question: str | None = None, participant: str | None = None, since: str | None = None,
-                   until: str | None = None, family: str | None = None,
-                   limit: int = Query(evidence_map.DEFAULT_LIMIT, ge=1, le=evidence_map.MAX_LIMIT)):
+def evidence_graph(view: View, caller: Reader, question: str | None = None, participant: str | None = None,
+                   since: str | None = None, until: str | None = None, family: str | None = None,
+                   limit: int = Query(evidence_map.DEFAULT_LIMIT, ge=1, le=evidence_map.MAX_LIMIT), full: bool = False):
     return evidence_map.evidence_map(view, question=question, participant=participant, since=since, until=until,
-                                     family=family, limit=limit)
+                                     family=family, limit=limit, caller=caller, full=full)
 
 
 @router.get("/map/node/{identity}")
-def map_node(identity: str, view: View):
-    return evidence_map.node_record(view, identity)
+def map_node(identity: str, view: View, caller: Reader, full: bool = False):
+    return evidence_map.node_record(view, identity, caller=caller, full=full)
 
 
 @router.get("/questions")
@@ -35,17 +37,17 @@ def question_index(view: View, agent: str | None = None, status: str | None = No
 
 
 @router.get("/questions/{qid}")
-def question_by_id(qid: str, view: View, snapshot: str | None = None):
+def question_by_id(qid: str, view: View, caller: Reader, snapshot: str | None = None, full: bool = False):
     """The spec's GET /api/questions/{id}: a bare question id opens the earliest participant holding it (the
     original author precedes its forks, whose workspaces carry inherited copies), as comments on questions do."""
     from daw.commons.participation import question_owner
     owner, question, _ = question_owner(view, qid)
-    return questions.question_page(view, owner, question, snapshot=snapshot)
+    return questions.question_page(view, owner, question, snapshot=snapshot, caller=caller, full=full)
 
 
 @router.get("/questions/{agent}/{qid}")
-def question(agent: str, qid: str, view: View, snapshot: str | None = None):
-    return questions.question_page(view, agent, qid, snapshot=snapshot)
+def question(agent: str, qid: str, view: View, caller: Reader, snapshot: str | None = None, full: bool = False):
+    return questions.question_page(view, agent, qid, snapshot=snapshot, caller=caller, full=full)
 
 
 @router.get("/blobs/{owner}/{sha}")
@@ -57,23 +59,23 @@ def blob(owner: str, sha: str, view: View, name: str | None = None):
 
 
 @router.get("/runs")
-def runs(view: View, agent: str | None = None, state: str | None = None,
-         limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)):
-    return timeline.run_list(view, agent=agent, state=state, limit=limit, offset=offset)
+def runs(view: View, caller: Reader, agent: str | None = None, state: str | None = None,
+         limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0), full: bool = False):
+    return timeline.run_list(view, agent=agent, state=state, limit=limit, offset=offset, caller=caller, full=full)
 
 
 @router.get("/runs/{run}")
-def run(run: str, view: View):
-    return timeline.run_timeline(view, run)
+def run(run: str, view: View, caller: Reader, full: bool = False):
+    return timeline.run_timeline(view, run, caller=caller, full=full)
 
 
 @router.get("/runs/{run}/raw")
-def run_raw(run: str, view: View):
-    return FileResponse(timeline.raw_stream(view, run), media_type="text/plain; charset=utf-8",
+def run_raw(run: str, view: View, caller: Reader, full: bool = False):
+    return FileResponse(timeline.raw_stream(view, run, caller=caller, full=full), media_type="text/plain; charset=utf-8",
                         filename=f"{run}-events.jsonl", content_disposition_type="inline", headers=SAFE_HEADERS)
 
 
 @router.get("/runs/{run}/messages")
-def run_messages(run: str, view: View, offset: int = Query(0, ge=0),
-                 limit: int = Query(50, ge=1, le=timeline.MAX_MESSAGES)):
-    return timeline.run_messages(view, run, offset=offset, limit=limit)
+def run_messages(run: str, view: View, caller: Reader, offset: int = Query(0, ge=0),
+                 limit: int = Query(50, ge=1, le=timeline.MAX_MESSAGES), full: bool = False):
+    return timeline.run_messages(view, run, offset=offset, limit=limit, caller=caller, full=full)

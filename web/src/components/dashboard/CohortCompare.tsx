@@ -40,7 +40,7 @@ function Cells({ cell }: { cell: CompareCell | null | undefined }) {
     <>
       <td>
         posts {cell.yield.posts}<br />artifacts {cell.yield.registered_artifacts}<br />
-        analyses {cell.yield.analysis_receipts} ({cell.yield.analysis_failures} failed)
+        analyses <Value value={cell.yield.analysis_receipts} /> (<Value value={cell.yield.analysis_failures} /> failed)
       </td>
       <td>
         {c === null ? <span className="unavailable">unavailable (no ledger claims)</span> : (

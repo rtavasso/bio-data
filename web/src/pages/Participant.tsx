@@ -1,11 +1,11 @@
 import { Link, useParams } from "react-router-dom";
 import { Status } from "../components/Status";
-import { Badge, KindBadge, MarkList, ReuseBadge } from "../components/board/Badges";
+import { Badge, HiddenNotice, KindBadge, MarkList, ReuseBadge } from "../components/board/Badges";
 import { ParticipantLink } from "../components/board/People";
 import { short, when } from "../components/board/format";
 import { AskForm, CommissionForm } from "../components/participation/Actions";
 import { ModerateParticipant } from "../components/participation/Moderation";
-import type { Activity, PostCard, RequestRow } from "../types/board";
+import { isWithheld, type Activity, type PostCard, type RequestRow } from "../types/board";
 import { useApi } from "../useApi";
 import "./board.css";
 
@@ -42,9 +42,11 @@ function Posts({ posts, empty }: { posts: PostCard[]; empty: string }) {
   if (!posts.length) return <p className="muted">{empty}</p>;
   return (
     <ul className="replies">
-      {posts.map((p) => (
+      {posts.map((p) => isWithheld(p) ? (
+        <li key={p.id}><Link to={`/post/${p.id}`}>Hidden post</Link> <HiddenNotice reason={p.reason} /></li>
+      ) : (
         <li key={p.id}>
-          <Link to={`/post/${p.id}`}>{p.hidden ? "Hidden post" : p.title}</Link> <KindBadge kind={p.kind} />{" "}
+          <Link to={`/post/${p.id}`}>{p.title}</Link> <KindBadge kind={p.kind} />{" "}
           {p.superseded_by.length > 0 && <Badge tone="warn">superseded</Badge>}{" "}
           <span className="meta">{when(p.created)}{p.evidence.artifacts > 0 && ` · ${p.evidence.artifacts} artifacts`}</span>
         </li>

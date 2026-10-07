@@ -38,18 +38,28 @@ function Summary({ g }: { g: Group }) {
       <Stat label="Monotonic vs wall hours" hint="Wall time includes host sleep">
         <Value value={g.monotonic_hours} digits={3} /> / <Value value={g.wall_hours} digits={3} />
       </Stat>
-      <Stat label="Suspensions">{g.suspensions} <span className="muted small">({g.suspended_hours.toFixed(2)} h)</span></Stat>
+      <Stat label="Suspensions" hint="Runs whose wall or monotonic clock was not recorded are left out (unavailable, not zero)">
+        <Value value={g.suspensions} /> <span className="muted small">(<Value value={g.suspended_hours} digits={2} /> h)</span>
+        {g.clock_unavailable_runs ? <span className="muted small"> · {g.clock_unavailable_runs} without clocks</span> : null}
+      </Stat>
       <Stat label="Minutes per executed analysis"><Value value={g.minutes_per_executed_analysis} /></Stat>
-      <Stat label="Analyses (failed)">{g.analysis_receipts} ({g.analysis_failures})</Stat>
-      <Stat label="Tool / inbox calls">{g.tool_calls} / {g.inbox_calls}</Stat>
+      <Stat label="Analyses (failed)"><Value value={g.analysis_receipts} /> (<Value value={g.analysis_failures} />)</Stat>
+      <Stat label="Tool / inbox calls"><Value value={g.tool_calls} /> / <Value value={g.inbox_calls} /></Stat>
       <Stat label="Plumbing share">{ratioText(g.plumbing_share)}</Stat>
-      <Stat label="Compactions (fallbacks)">{g.compactions} (<Value value={g.compaction_fallbacks} />)</Stat>
+      <Stat label="Compactions (fallbacks)" hint="Harnesses whose stream does not mark compactions are unavailable, not zero">
+        <Value value={g.compactions} /> (<Value value={g.compaction_fallbacks} />)
+        {g.compaction_unavailable_runs ? <span className="muted small"> · {g.compaction_unavailable_runs} runs unavailable</span> : null}
+      </Stat>
       <Stat label="Ceremony tail, median min" hint="Minutes after the last successful analysis">
         <Value value={g.ceremony_tail_minutes.median} digits={1} />
       </Stat>
       <Stat label="Reuse backed">{ratioText(g.board.reuse.backed_ratio)} <span className="muted small">({g.board.reuse.backed}/{g.board.reuse.backed + g.board.reuse.unbacked})</span></Stat>
       <Stat label="Human marks per post"><Value value={g.board.human_marks_per_post} /></Stat>
-      <Stat label="Provider-citation hits">{g.provider_citation_finals} finals · {g.board.provider_citation_posts} posts</Stat>
+      <Stat label="Provider-citation hits"><Value value={g.provider_citation_finals} /> finals · {g.board.provider_citation_posts} posts</Stat>
+      <Stat label="Numbers pointed at the number" hint="Share of numbers in finals with a line, claim or cell pointer (C11)">
+        {ratioText(g.board.numbers?.number_level_share ?? null)}
+        {g.board.numbers && <span className="muted small"> ({g.board.numbers.number_level}/{g.board.numbers.numbers})</span>}
+      </Stat>
     </div>
   );
 }
@@ -77,7 +87,7 @@ function Panel({ g, scale }: { g: Group; scale: { tail: number; fallbacks: numbe
       <dl className="panel-facts">
         <dt>Human marks per post</dt><dd><Value value={g.board.human_marks_per_post} /> <span className="muted small">({g.board.human_marks}/{g.board.posts})</span></dd>
         <dt>Corrections</dt><dd>{g.board.corrections}</dd>
-        <dt>Analyses (failed)</dt><dd>{g.analysis_receipts} ({g.analysis_failures})</dd>
+        <dt>Analyses (failed)</dt><dd><Value value={g.analysis_receipts} /> (<Value value={g.analysis_failures} />)</dd>
         <dt>Monotonic h</dt><dd><Value value={g.monotonic_hours} digits={3} /></dd>
       </dl>
       {g.runs > 0 && <details>
@@ -107,6 +117,44 @@ function Panels({ groups }: { groups: Group[] }) {
     reuse: maxOf(groups, (g) => [g.board.reuse.backed, g.board.reuse.unbacked]),
   };
   return <div className="multiples">{groups.map((g) => <Panel key={g.key} g={g} scale={scale} />)}</div>;
+}
+
+// C11/V1: per cohort, the share of numbers in finals with a pointer at the number (line, claim or cell scope),
+// beside the numbers covered only by the post's evidence list and the unpointed ones.
+function NumberCoverageTable({ groups }: { groups: Group[] }) {
+  const rows = groups.filter((g) => g.board.numbers !== undefined);
+  return (
+    <div className="compare-scroll">
+      <table className="coverage-table" aria-label="Number coverage">
+        <thead>
+          <tr>
+            <th scope="col">Group</th><th scope="col">Finals</th><th scope="col">Numbers</th>
+            <th scope="col">Pointer at the number</th><th scope="col">cell / claim / line</th>
+            <th scope="col">Verified</th><th scope="col">Post's evidence only</th><th scope="col">Unpointed</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((g) => {
+            const n = g.board.numbers;
+            return (
+              <tr key={g.key}>
+                <th scope="row">{g.label}</th>
+                {n ? (
+                  <>
+                    <td>{n.finals}</td><td>{n.numbers}</td>
+                    <td>{ratioText(n.number_level_share)} <span className="muted small">({n.number_level})</span></td>
+                    <td>{n.scopes.cell} / {n.scopes.claim} / {n.scopes.line}</td>
+                    <td>{ratioText(n.verified_share)} <span className="muted small">({n.statuses.verified}; {n.statuses.unverified} unverified)</span></td>
+                    <td>{n.statuses.post_scoped}</td><td>{n.statuses.unpointed}</td>
+                  </>
+                ) : <td colSpan={7}><span className="unavailable">unavailable</span> <span className="muted small">no final in this group</span></td>}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function CostTable({ groups, currency }: { groups: Group[]; currency: string | null }) {
@@ -190,6 +238,12 @@ export default function Dashboard() {
             ))}
           </div>
           <div role="tabpanel"><Panels groups={data.panels[dimension]} /></div>
+          <h2>Number coverage</h2>
+          <p className="muted small">
+            Numbers in finals (answers of research deliveries), checked by the write-up checker: a pointer at the number
+            (cell, claim or line scope) can be verified against its record; the post's evidence list alone cannot.
+          </p>
+          <NumberCoverageTable groups={[data.summary, ...data.panels.cohort]} />
           <h2>Cost</h2>
           <p className="muted small">
             Tokens from harness telemetry where reported; currency only from an operator price table.

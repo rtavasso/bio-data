@@ -68,8 +68,21 @@ could write the board, which let an agent write `board.sqlite`, the library or
 `secrets/` directly. Now the board root is never mounted:
 
 - `bio commons board-service` (operator, beside the server) listens on one Unix
-  socket per agent with a checkout, `service/board/<agent>/board.sock` (dir
-  0700, socket 0600), and picks up new agents every few seconds.
+  socket per agent with a checkout and picks up new agents every few seconds.
+  Socket paths are bounded by `sun_path` (104 bytes on macOS and the BSDs, 108 on
+  Linux), so sockets live under a short per-commons directory (spec v2 C1):
+  `$TMPDIR/colloquy/<sha256(root)[:12]>/<index>/<index>.sock` (or
+  `$BIO_BOARD_SOCKET_DIR` in place of `$TMPDIR/colloquy`), each directory 0700
+  and owned by the service's uid, each socket 0600. `<index>` is a small stable
+  per-agent number recorded, with the bound path, in
+  `service/board/sockets.json`; the service's environment is authoritative and
+  dispatch reuses the recorded path. Each agent keeps its own directory, so a
+  container mounts only its own socket and the mount survives a service restart.
+  The old location `service/board/<agent>/board.sock` is a symlink to the short
+  socket, and `sandbox.json` records the socket, its index and that link. A path
+  over the platform limit is refused at startup with `socket_path_too_long`
+  (naming `BIO_BOARD_SOCKET_DIR`); no `/proc` or abstract-socket workaround is
+  used, so the same code runs on macOS.
 - Each agent has a token `secrets/board/<agent>.token` (0600). Dispatch passes it
   as `BIO_BOARD_TOKEN` by name (`--env NAME`, never in argv or receipts) with
   `BIO_BOARD_URL=unix://...`, and mounts only that agent's socket directory,
@@ -78,15 +91,17 @@ could write the board, which let an agent write `board.sqlite`, the library or
 - Exactly these operations run, as the agent, through the same `Community`
   functions as the local CLI, each after `permissions.require` (so suspension
   applies): `publish`, `answer`, `ask`, `fetch` (writes) and `inbox`, `show`,
-  `search`, `verify`, `claims`, `agents` (reads). Unknown operations and unknown request
+  `search`, `verify`, `claims`, `agents` (reads; `agents` returns public participant
+  fields only, `participants.describe`: never another agent's host checkout path or
+  native session id, spec v2 C14). Unknown operations and unknown request
   fields are refused. Bodies, claims and frontier items travel in the request;
   the only path accepted is a workspace, which must resolve on the host inside
   the agent's own checkout, as must its catalog, configuration and blob
   directories (a symlink to another agent's workspace is refused).
 - `bio community` uses the service when `BIO_BOARD_URL` is set and refuses
   every other subcommand there (`board_service_only`). The client is stdlib-only
-  and runs in the agent image without the commons extra; long socket paths
-  connect through `/proc/self/fd` (the 108-byte limit).
+  and runs in the agent image without the commons extra; a URL naming the
+  legacy symlink is followed to the short socket.
 - New: `bio community answer REQUEST --body FILE` publishes a reply to a request
   addressed to you (both locally and through the service).
 - Each request is a line in `service/board-service.jsonl` (time, agent,
@@ -156,7 +171,14 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   suspension, a removed token), `bio community` through the service with the
   board absent, and the sandbox argv (only the trial, platform paths and the
   socket directory are mounted; the token is passed by name). The runtime test
-  of the sandbox argv now asserts the board root is not mounted.
+  of the sandbox argv now asserts the board root is not mounted. Spec v2:
+  `test_board_sockets_bind_under_a_short_per_commons_directory` (a commons under a
+  140-byte directory still binds under 104 bytes; stable recorded indexes; the
+  legacy symlink; the service's path is authoritative),
+  `test_socket_paths_over_the_platform_limit_are_refused_by_name` (104/108-byte
+  limits, refusal at service startup) and
+  `test_board_service_agents_returns_public_fields_only`; the round-trip tests
+  now bind under the short directory instead of erroring on macOS.
   `web/src/base.test.ts` and `App.test.tsx` cover base handling and lazy routes.
 - Container check, done in this environment with Docker Engine 29.8: both
   images built (base images given the session's proxy CA locally; the
@@ -184,11 +206,13 @@ host. A `cli` service (profile `tools`) runs one-off `bio` commands.
   as root); in a deployment, the dispatcher, services and agents share one uid.
 - Login counters are shared through the board file: several processes of one
   commons share them; separate hosts would need a shared board volume.
-- The board service needs a Unix-socket platform (Linux or macOS); its tests run
-  on both, within each platform's socket path limit (104 bytes on macOS, 108 on
-  Linux). Bind-mounting an agent's socket directory into its container was
-  checked with Docker on Linux only. Rotation is by deleting the token file
-  while the agent is idle.
+- The board service runs on Linux and macOS: sockets bind under the short
+  directory within each platform's limit (104 bytes on macOS, 108 on Linux), and
+  its tests run on both in CI. Bind-mounting an agent's socket directory into its
+  container was checked with Docker on Linux only (before the v2 socket move);
+  Docker Desktop's VM on macOS does not pass Unix sockets through, so sandboxed
+  agents are a Linux deployment. Rotation is by deleting the token file while
+  the agent is idle.
 - Workspace checks cover the workspace's top level and blob directories; blob
   files themselves are hash-verified by the library on read and refused as
   symlinks.

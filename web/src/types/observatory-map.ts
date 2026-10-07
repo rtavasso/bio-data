@@ -25,6 +25,7 @@ export interface MapNode {
   hidden?: boolean;
   status?: string;
   superseded_by?: string[];
+  verified_pointers?: number;  // claim nodes: verified number->claim pointers in recorded write-up verdicts (V2)
   [field: string]: unknown;
 }
 
@@ -42,6 +43,14 @@ export interface MapEdge {
   into_superseded?: string[];
 }
 
+/** Kinds dropped (lowest degree first) to honour the node limit; posts and artifacts never are (spec v2 C13). */
+export interface TruncatedFamily {
+  family: Family;
+  total: number;
+  shown: number;
+  dropped: number;
+}
+
 export interface EvidenceMap {
   sequence: number;
   fingerprint: string;
@@ -51,6 +60,8 @@ export interface EvidenceMap {
   edges: MapEdge[];
   total_nodes: number;
   truncated: boolean;
+  truncated_families?: Record<string, TruncatedFamily>;
+  never_truncated?: string[];
   counts: { nodes: Record<string, number>; edges: Record<string, number> };
   layout: { positions: Record<string, [number, number]>; bounds: [number, number, number, number]; algorithm: string };
   relations: Record<string, { style: string; record: string }>;
@@ -61,6 +72,9 @@ export interface EvidenceMap {
 export interface NodeRecord {
   kind: string;
   id: string;
+  /** A post hidden by moderation (or a claim of one): the record is `{id, hidden: true, reason}` only. */
+  hidden?: boolean;
+  reason?: string | null;
   record?: Record<string, unknown>;
   records?: Record<string, unknown>[];
   content_is_untrusted_data?: boolean;
@@ -224,21 +238,26 @@ export type TokenValue = number | "unavailable";
 
 export interface RunTimeline {
   run: { id: string; request: string; target: string; state: string; created: string; finished: string | null };
-  request: { id?: string; post?: string; state?: string; task_type?: string | null; title?: string | null; kind?: string | null };
+  request: { id?: string; post?: string; state?: string; task_type?: string | null; title?: string | null; kind?: string | null;
+    hidden?: boolean; reason?: string | null; answer_hidden?: boolean };
   agent: { id: string; name: string; model?: string | null; effort?: string | null; harness?: string };
   execution: { state?: string; started?: string; finished?: string; returncode?: number | null; wall_seconds?: number | null;
-    monotonic_seconds?: number | null; suspended_seconds: number; suspension_floor_seconds: number; bounded: boolean };
+    monotonic_seconds?: number | null; suspended_seconds: number | null; suspension_floor_seconds: number; bounded: boolean };
   axis: { unit: "seconds" | "events"; duration: number; clock: string };
-  suspensions: { at: number; seconds: number; gap_seconds: number; placement: string; unplaced_seconds: number }[];
+  // Heuristically placed items carry attributed: true and the rule in basis (spec v2 C10).
+  suspensions: { at: number; seconds: number; gap_seconds: number; placement: string; unplaced_seconds: number;
+    attributed?: boolean; basis?: string }[];
   lanes: { id: string; label: string; count: number }[];
   calls: Call[];
   receipts: Receipt[];
-  compactions: { line: number; t: number | null; source: string; text: string }[];
+  // null: this harness's stream does not mark compactions (unavailable, not zero).
+  compactions: { line: number; t: number | null; source: string; text: string }[] | null;
   compaction_summaries: { timestamp: number | null; fallback: boolean; excerpt: string; t: number | null }[] | null;
   inbox_reads: (Call & { sent: boolean })[];
-  answers_consumed: (Call & { posts: string[]; requests: string[] })[];
-  headline: (Call & { basis: string }) | null;
-  final: { text: string | null; source: string | null };
+  answers_consumed: (Call & { posts: string[]; requests: string[]; attributed?: boolean; basis?: string })[];
+  headline: (Call & { basis: string; attributed?: boolean }) | null;
+  attributed?: string[];
+  final: { text: string | null; source: string | null; hidden?: boolean; reason?: string | null };
   tokens: Record<string, TokenValue | string>;
   metrics: Record<string, unknown>;
   malformed_lines: number[];
@@ -249,6 +268,9 @@ export interface RunTimeline {
 
 export interface RunListItem {
   id: string;
+  request_post?: string;
+  request_hidden?: boolean;
+  reason?: string | null;
   request: string;
   target: string;
   agent_name: string;

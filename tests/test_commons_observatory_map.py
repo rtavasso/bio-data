@@ -13,7 +13,7 @@ from daw.artifacts import register_artifact
 from daw.catalog import Workspace
 from daw.commons.app import create_app
 from daw.commons.archive import Archive
-from daw.commons.evidence_map import evidence_map, layout, question_node
+from daw.commons.evidence_map import MAX_LIMIT, TRUNCATABLE, evidence_map, layout, question_node
 from daw.commons.questions import question_page
 from daw.commons.timeline import run_timeline
 from daw.substrate_models import ArtifactRegistration, Derivation, ObjectInput
@@ -122,6 +122,30 @@ def test_map_renders_every_artifact_with_recorded_edges_only(demo):
     assert set(value["layout"]["positions"]) == set(nodes)
 
 
+def test_cohort_map_at_default_limit_draws_every_library_artifact_and_post(cohort):
+    """C13 on the real PMP22 cohort board: the default view keeps all 281 library artifacts and all 269 posts;
+    only bare objects and assets are truncated, and the response says how many of each."""
+    with Archive(cohort) as view:
+        library = {r["id"] for r in view.library.rows("SELECT id FROM artifact")}
+        posts = {r["id"] for r in view.rows("SELECT id FROM post")}
+        value = evidence_map(view, use_cache=False)
+    assert len(library) == 281 and len(posts) == 269
+    drawn = {n["id"]: n for n in value["nodes"]}
+    assert library <= set(drawn) and posts <= set(drawn)
+    assert value["filters"]["limit"] == 2000 and value["truncated"]
+    families = value["truncated_families"]
+    assert families and set(families) <= set(TRUNCATABLE)
+    assert sum(f["dropped"] for f in families.values()) == value["total_nodes"] - len(value["nodes"])
+    for kind, entry in families.items():
+        assert entry["shown"] == sum(1 for n in value["nodes"] if n["kind"] == kind)
+    # Every record kind other than objects and assets is drawn in full.
+    with Archive(cohort) as view:
+        whole = evidence_map(view, use_cache=False, limit=MAX_LIMIT)
+    for kind in {n["kind"] for n in whole["nodes"]} - set(TRUNCATABLE):
+        assert (sum(1 for n in whole["nodes"] if n["kind"] == kind)
+                == sum(1 for n in value["nodes"] if n["kind"] == kind)), kind
+
+
 def test_map_filters_layout_cache_and_unrecorded_changes(demo):
     root, ctx = demo
     with Archive(root) as view:
@@ -145,8 +169,20 @@ def test_map_filters_layout_cache_and_unrecorded_changes(demo):
         assert {n["family"] for n in sources["nodes"]} == {"artifacts", "sources"}
         assert {e["relation"] for e in sources["edges"]} <= {"input", "source_receipt"}
         assert evidence_map(view, since="2999-01-01")["nodes"] == []
+        # C13 (spec v2): a limit drops only bare objects and assets; every other record kind stays drawn and the
+        # response names the truncated families with their counts.
+        whole = evidence_map(view, limit=MAX_LIMIT)
         limited = evidence_map(view, limit=5)
-        assert len(limited["nodes"]) == 5 and limited["truncated"]
+        protected = {n["id"] for n in whole["nodes"] if n["kind"] not in TRUNCATABLE}
+        assert limited["truncated"] and protected <= {n["id"] for n in limited["nodes"]}
+        assert {n["kind"] for n in limited["nodes"]} - set(TRUNCATABLE) and set(limited["truncated_families"]) <= set(
+            TRUNCATABLE)
+        dropped = sum(f["dropped"] for f in limited["truncated_families"].values())
+        assert dropped == limited["total_nodes"] - len(limited["nodes"]) > 0
+        for kind, entry in limited["truncated_families"].items():
+            drawn = sum(1 for n in limited["nodes"] if n["kind"] == kind)
+            assert entry["shown"] == drawn and entry["total"] == drawn + entry["dropped"]
+            assert entry["total"] == sum(1 for n in whole["nodes"] if n["kind"] == kind)
         for bad in ({"family": "biology"}, {"question": "q_missing"}, {"since": "yesterday"}, {"limit": 0}):
             with pytest.raises(DawError):
                 evidence_map(view, **bad)
@@ -330,6 +366,10 @@ def test_timeline_shows_suspension_compactions_fallbacks_and_headline(demo):
     assert summary["fallback"] is True
     assert timeline["metrics"]["compaction_fallbacks"] == 1
     assert timeline["headline"]["lane"] == "terminal:register" and timeline["headline"]["exit_code"] == 0
+    # C10: heuristic placements are marked attributed (with their rule); recorded items are not.
+    assert suspension["attributed"] is True and "largest gap" in suspension["basis"]
+    assert timeline["headline"]["attributed"] is True and timeline["attributed"] == ["suspension", "headline"]
+    assert not any("attributed" in item for item in timeline["calls"] + timeline["receipts"] + timeline["compactions"])
     assert timeline["inbox_reads"][0]["sent"] is True
     assert timeline["final"]["text"] and timeline["final"]["source"] == "final.md"
     assert timeline["tokens"]["input_tokens"] == 1200 and timeline["tokens"]["reasoning_output_tokens"] == "unavailable"
@@ -372,6 +412,7 @@ def test_timeline_records_peer_answers_consumed_and_unreported_tokens(demo):
         timeline = run_timeline(view, run)
     assert timeline["axis"]["unit"] == "events" and timeline["suspensions"] == []
     assert [c["posts"] for c in timeline["answers_consumed"]] == [[answer], [answer]]
+    assert all(c["attributed"] is True for c in timeline["answers_consumed"]) and timeline["attributed"] == ["answers_consumed"]
     assert timeline["tokens"]["output_tokens"] == "unavailable" and "zero" in timeline["tokens"]["note"]
     assert timeline["final"]["source"].startswith("stream") and timeline["compaction_summaries"] is None
     assert timeline["headline"] is None

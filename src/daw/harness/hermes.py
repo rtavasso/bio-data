@@ -21,6 +21,8 @@ class HermesAdapter(Adapter):
     provider_hosts = ("chatgpt.com", "api.openai.com", "auth.openai.com")
     auth = ("BIO_HERMES_AUTH_FILE", "auth.json")
     supports_fork = True
+    config_files = ("config.yaml",)
+    emits_compactions = True  # "⟳ compacting context…" in the stream (daw.hermes.parse: runtime_status)
     limitations = ("Hermes stream tool outputs are capped upstream at 5000 characters; inspect state.db for full messages.",)
 
     def prepare(self, trial, config, checkpoint=None):

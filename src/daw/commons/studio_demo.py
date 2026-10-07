@@ -2,11 +2,12 @@
 
 Everything goes through the ordinary functions: a synthetic person (`mira`, from the participation
 demo) commissions tasks, the scripted harness delivers them through `community_runtime.dispatch`,
-and the runtime's post-delivery hook records review marks and the replication confirmation. The
-replication really re-executes the synthetic contrast script (`daw.commons.demo.CODE`) through the
-research skill's replicate.py and run_analysis.py, and its answer is worded from that receipt. One
-write-up cites current ledger claims and artifacts (renders), one cites a withdrawn claim (flagged
-for regeneration) and one has numbers without claim or artifact pointers (refused). All synthetic.
+and the runtime's post-delivery hook records review marks, the replication confirmation and each
+write-up's checker verdict (`writeup_check`). The replication really re-executes the synthetic contrast
+script (`daw.commons.demo.CODE`) through the research skill's replicate.py and run_analysis.py, and its
+answer is worded from that receipt. One write-up cites current ledger claims and artifact cells (renders,
+every number verified), one cites a withdrawn claim (flagged for regeneration) and one has numbers
+without claim or artifact pointers (refused, withheld on every surface). All synthetic.
 
 It is not in `daw.commons.demo.EXTENSIONS`, because other areas' tests pin the core demo's exact runs
 and task outcomes. `bio commons demo-studio DIR` (`apply`) adds these records to a built demo commons;
@@ -80,13 +81,15 @@ def extend(board, ctx):
             (answers / f"{post}.hook.py").write_text(hook)
         return dispatch(board, request["id"], ctx["harness"])
 
-    figure_line = f"\n\n![Figure 1: synthetic marker figure]({figure})" if figure else ""
+    figure_line = f"\n\n![Synthetic marker figure]({figure})" if figure else ""
+    measurement = artifacts["measurement"]
     current = commission("writing", agents["dana"], "Plain-language summary of the corrected marker contrast.",
                          subject_kind="post", subject_id=claims["correction"])
     current = deliver(current, (
         "# The demo marker contrast, corrected\n\nBy dana (synthetic demo writer)\n\n"
         f"The demo marker is higher in condition B than in A: log2(B/A) = [1.54]({claims['current']}). "
-        f"The per-condition means are 11.0 and 32.0 [{artifacts['measurement']}], and the contrast table itself is "
+        f"The per-condition means are [11.0]({measurement}#row=A;col=mean) and "
+        f"[32.0]({measurement}#row=B;col=mean), and the contrast table itself is "
         f"[the contrast artifact]({artifacts['contrast']}). Donor independence was not assessed; see "
         f"[the correction]({claims['correction']}) for context.{figure_line}\n\n{SYNTHETIC}"))
     stale = commission("writing", agents["bob"], "Short report on the original structured summary.",

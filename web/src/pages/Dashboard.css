@@ -52,7 +52,7 @@
 .dashboard .cost-cell { min-width: 12rem; }
 .dashboard .cost-cell div + div { margin-top: 0.15rem; }
 .dashboard .compare td { min-width: 6.5rem; }
-.dashboard .cost-table th[scope=row] { white-space: nowrap; }
+.dashboard .cost-table th[scope=row], .dashboard .coverage-table th[scope=row] { white-space: nowrap; }
 .dashboard .no-runs { font-size: 0.8rem; color: var(--muted); margin: 0.4rem 0; }
 .dashboard .cohort-picks { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; border: 1px solid var(--line); border-radius: 6px; }
 .dashboard .compare-section { margin-top: 1.5rem; }

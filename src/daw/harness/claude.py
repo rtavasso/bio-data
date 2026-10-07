@@ -51,6 +51,7 @@ class ClaudeAdapter(Adapter):
     auth = ("BIO_CLAUDE_AUTH_FILE", ".credentials.json")
     state_globs = ("projects/*/*.jsonl",)
     supports_fork = True
+    config_files = ("settings.json", "CLAUDE.md")
 
     def stage(self, trial, home, config):
         trial = Path(trial)

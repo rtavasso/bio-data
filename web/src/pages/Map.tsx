@@ -67,6 +67,21 @@ function Filters({ params, setParams }: { params: URLSearchParams; setParams: (p
   );
 }
 
+// C13: posts, artifacts and every other record kind are always drawn; only bare objects and assets are
+// dropped (lowest degree first) to honour the limit, and the note says which kinds and how many.
+function TruncationNote({ map }: { map: EvidenceMap }) {
+  const families = Object.entries(map.truncated_families ?? {});
+  if (!families.length) return null;
+  return (
+    <p className="map-truncation" role="note">
+      Truncated to the limit:{" "}
+      {families.map(([kind, f], i) => (
+        <span key={kind}>{i > 0 && "; "}{f.dropped} of {f.total} {kind === "asset" ? "assets" : "objects"} not drawn</span>
+      ))}. Posts and artifacts are never truncated.
+    </p>
+  );
+}
+
 export default function MapPage() {
   const [params, setParams] = useSearchParams();
   const filters = Object.fromEntries(FILTERS.map((k) => [k, params.get(k)]));
@@ -96,6 +111,7 @@ export default function MapPage() {
             {data.truncated && ` · showing ${data.nodes.length} of ${data.total_nodes} (raise the limit or filter)`}
             {data.cached ? " · cached layout" : ""}
           </p>
+          <TruncationNote map={data} />
           <MapLegend counts={familyCounts} />
           <div className="map-body">
             <div className="map-canvas">

@@ -7,7 +7,7 @@ export interface TrendPoint {
   bucket: string;
   runs: number;
   ceremony_tail_median: Num;
-  compactions: number;
+  compactions: Num;
   compaction_fallbacks: Num;
   minutes_per_executed_analysis: Num;
   monotonic_hours: Num;
@@ -53,6 +53,21 @@ export interface BoardCriteria {
   registered_artifacts: number;
   reuse: { backed: number; unbacked: number; backed_ratio: Num };
   claims: ClaimCounts | null;
+  numbers?: NumberCoverage | null;
+}
+
+// Number coverage of a group's finals (spec v2 C11, V1): pointers at the number (cell, claim, line) versus only the
+// post's evidence list (post) or none; statuses from the value-in-record check. null: no final in the group.
+export interface NumberCoverage {
+  finals: number;
+  numbers: number;
+  scopes: { cell: number; claim: number; line: number; post: number; none: number };
+  statuses: { verified: number; unverified: number; post_scoped: number; unpointed: number };
+  number_level: number;
+  number_level_share: Num;
+  claim_share: Num;
+  cell_share: Num;
+  verified_share: Num;
 }
 
 export interface Group {
@@ -63,21 +78,25 @@ export interface Group {
   failed: number;
   wall_hours: Num;
   monotonic_hours: Num;
-  suspensions: number;
-  suspended_hours: number;
-  tool_calls: number;
-  inbox_calls: number;
-  analysis_receipts: number;
-  analysis_failures: number;
+  // Spec v2 C10: totals are null when no run in the group recorded the value (clock, stream or harness
+  // capability unavailable); the *_unavailable_runs counts say how many runs were left out of a sum.
+  suspensions: Num;
+  suspended_hours: Num;
+  clock_unavailable_runs?: number;
+  tool_calls: Num;
+  inbox_calls: Num;
+  analysis_receipts: Num;
+  analysis_failures: Num;
   minutes_per_executed_analysis: Num;
-  scripts_written: number;
-  plumbing_scripts: number;
+  scripts_written: Num;
+  plumbing_scripts: Num;
   plumbing_share: Num;
-  compactions: number;
+  compactions: Num;
+  compaction_unavailable_runs?: number;
   compaction_summaries: Num;
   compaction_fallbacks: Num;
   ceremony_tail_minutes: { runs: number; median: Num; mean: Num; max: Num };
-  provider_citation_finals: number;
+  provider_citation_finals: Num;
   board: BoardCriteria;
   cost: Cost;
   trend: TrendPoint[];
@@ -123,7 +142,7 @@ export interface CompareCell {
   participants: string[];
   harnesses: string[];
   models: string[];
-  yield: { posts: number; registered_artifacts: number; analysis_receipts: number; analysis_failures: number };
+  yield: { posts: number; registered_artifacts: number; analysis_receipts: Num; analysis_failures: Num };
   calibration: ClaimCounts | null;
   corrections: { corrections: number; posts_superseded: number; human_marks: number };
   cost: Cost;

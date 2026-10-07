@@ -89,7 +89,9 @@ export interface MeSummary extends Participant {
   writes_over_http: boolean;
   suspended: boolean;
   budget: BudgetSummary;
-  posts: { id: string; created: string; title: string; kind: string; parent: string | null }[];
+  /** A hidden post is `{id, hidden: true, reason}` here too (spec v2 C2). */
+  posts: { id: string; created?: string; title?: string; kind?: string; parent?: string | null; hidden?: boolean;
+    reason?: string | null }[];
   comments: CommentSummary[];
   promotions: TaskRequest[];
   commissions: TaskRequest[];

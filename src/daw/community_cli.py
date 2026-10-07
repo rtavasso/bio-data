@@ -72,8 +72,8 @@ def create_agent(ctx: typer.Context, name: str, seed_workspace: Path | None = No
 
 @app.command()
 def agents(ctx: typer.Context):
-    """List participants with their checkout, saved session and harness."""
-    from daw.commons.boardservice import agents as listing
+    """List participants (on the host: with checkout, saved session and harness; through the board service: public fields only)."""
+    from daw.commons.boardservice import local_agents as listing
     if client := remote():
         return emit(client.call("agents", {}))
     with Community(ctx.obj) as board:

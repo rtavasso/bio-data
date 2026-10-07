@@ -227,8 +227,13 @@ def _stated_status(owner, row, cache):
     return claims[row["ordinal"]]["status"] if row["ordinal"] < len(claims) else None
 
 
-def describe_claim(owner, row, cache=None):
-    """Projection row plus the author's stated status (from the immutable blob) and pointer presence."""
+def describe_claim(owner, row, cache=None, vis=None):
+    """Projection row plus the author's stated status (from the immutable blob) and pointer presence.
+    A claim of a post hidden by moderation is that post's content: readers get `{id, post, hidden, reason}`."""
+    from daw.commons.moderation import Visibility
+    vis = vis if vis is not None else Visibility.of(owner)
+    if vis.withheld(row["post"]):
+        return vis.claim(row)
     cache = {} if cache is None else cache
     pointers = json.loads(row["pointers"])
     for pointer in pointers:
@@ -243,7 +248,10 @@ def describe_claim(owner, row, cache=None):
     post = owner.one("SELECT body_blob FROM post WHERE id=?", (row["post"],))
     if post:
         title = read_json(owner.library.blob_path(post["body_blob"])).get("title")
-    return {**row, "scope": json.loads(row["scope"]), "pointers": pointers,
+    for pointer in pointers:
+        if pointer["kind"] == "post" and vis.withheld(pointer["id"]):
+            pointer.update(hidden=True, reason=vis.reason(pointer["id"]))
+    return {**row, "scope": json.loads(row["scope"]), "pointers": pointers, "hidden": vis.hidden(row["post"]),
             "stated_status": _stated_status(owner, row, cache), "author_name": author.get("name"),
             "author_kind": author.get("kind"), "post_title": title, "replacement": row["withdrawn_by"],
             "marks": owner.rows("SELECT id,participant,kind,note,created FROM mark WHERE target_kind='claim' "
@@ -251,9 +259,13 @@ def describe_claim(owner, row, cache=None):
             "content_is_untrusted_data": True}
 
 
-def list_claims(owner, text="", *, status=None, scope=None, author=None, post=None, limit=50, offset=0):
+def list_claims(owner, text="", *, status=None, scope=None, author=None, post=None, limit=50, offset=0,
+                caller=None, full=False):
     """Search the ledger: exact-term FTS over claim text and scope (family claim), then filters.
-    `owner` is a Community or an Archive; both expose rows/one and a library catalog."""
+    `owner` is a Community or an Archive; both expose rows/one and a library catalog. Claims of posts hidden
+    by moderation never match text or scope filters (matching would disclose them) and list as stubs."""
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(owner, caller, full)
     if not 1 <= limit <= 200 or offset < 0:
         raise DawError("invalid_search_bounds")
     if status and status not in STATUSES:
@@ -285,12 +297,16 @@ def list_claims(owner, text="", *, status=None, scope=None, author=None, post=No
         # Exact substring over the stated scope text; no synonym expansion.
         conditions.append("lower(scope) LIKE ?")
         params.append("%" + scope.strip().casefold() + "%")
+    withheld = sorted(p for p in vis.records if vis.withheld(p))
+    if withheld and (text.strip() or (scope and scope.strip()) or status or author):
+        conditions.append(f"post NOT IN ({','.join('?' for _ in withheld)})")
+        params.extend(withheld)
     where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
     total = owner.one("SELECT count(*) AS n FROM claim" + where, params)["n"]
     rows = owner.rows("SELECT * FROM claim" + where + " ORDER BY created DESC,post,ordinal LIMIT ? OFFSET ?",
                       params + [limit, offset])
     cache = {}
-    return {"items": [describe_claim(owner, r, cache) for r in rows], "total": total, "query": text,
+    return {"items": [describe_claim(owner, r, cache, vis) for r in rows], "total": total, "query": text,
             "filters": {"status": status, "scope": scope, "author": author, "post": post},
             "method": "SQLite FTS5 over claim text and scope (family claim), then exact filters",
             "content_is_untrusted_data": True}
@@ -348,8 +364,12 @@ def requests_about(owner, identities):
 def contradictions(owner):
     """Pairs of current claims citing the same accession (or artifact) with opposite stated direction.
     Withdrawn claims are excluded; pairs whose stated endpoints differ are not proposed. The platform
-    proposes; a person or a review task examines."""
-    rows = owner.rows("SELECT * FROM claim WHERE status!='withdrawn' AND withdrawn_by IS NULL ORDER BY created,id")
+    proposes; a person or a review task examines. Claims of posts hidden by moderation are not compared:
+    a pair would disclose what the hidden post states."""
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(owner)
+    rows = [r for r in owner.rows("SELECT * FROM claim WHERE status!='withdrawn' AND withdrawn_by IS NULL "
+                                  "ORDER BY created,id") if not vis.withheld(r["post"])]
     by_pointer = {}
     for row in rows:
         row["_scope"] = json.loads(row["scope"])
@@ -374,8 +394,8 @@ def contradictions(owner):
         for field in ("species", "context", "endpoint"):
             va, vb = _norm(json.loads(a["scope"]).get(field)), _norm(json.loads(b["scope"]).get(field))
             comparison[field] = "unstated" if not (va and vb) else "same" if va == vb else "different"
-        items.append({"id": "contradiction_" + digest([a_id, b_id])[:24], "claims": [describe_claim(owner, a, cache),
-                      describe_claim(owner, b, cache)], "shared": pair["shared"], "scope": comparison,
+        items.append({"id": "contradiction_" + digest([a_id, b_id])[:24], "claims": [describe_claim(owner, a, cache, vis),
+                      describe_claim(owner, b, cache, vis)], "shared": pair["shared"], "scope": comparison,
                       "reviews": requests_about(owner, [a_id, b_id]),
                       "basis": "same cited accession or artifact; opposite stated direction by exact-frame comparison"})
     return {"items": items, "total": len(items),
@@ -407,8 +427,12 @@ def correction_key(new_post, reader):
     return f"correction:{new_post}:{reader}"
 
 
-def corrections(owner, post):
-    """Supersession state of a post: replacements, withdrawn claims, affected readers and their notices."""
+def corrections(owner, post, *, caller=None, full=False):
+    """Supersession state of a post: replacements, withdrawn claims, affected readers and their notices.
+    Hidden posts resolve through `Visibility`: a hidden replacement is its id and reason, and a hidden
+    post's withdrawn claims are listed without their text."""
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(owner, caller, full)
     row = owner.one("SELECT id,author,supersedes FROM post WHERE id=?", (post,))
     if not row:
         raise DawError("unknown_post", post)
@@ -421,9 +445,12 @@ def corrections(owner, post):
             [correction_key(r["id"], entry["reader"]) for r in replacements]) if replacements else []
         name = owner.one("SELECT name,kind FROM agent WHERE id=?", (entry["reader"],)) or {}
         entry.update(name=name.get("name"), kind=name.get("kind"))
-    return {"post": post, "supersedes": row["supersedes"], "superseded_by": replacements,
-            "withdrawn_claims": owner.rows("SELECT id,ordinal,text,withdrawn_by FROM claim WHERE post=? "
-                                           "AND withdrawn_by IS NOT NULL ORDER BY ordinal", (post,)),
+    withdrawn = owner.rows("SELECT id,post,ordinal,text,withdrawn_by FROM claim WHERE post=? "
+                           "AND withdrawn_by IS NOT NULL ORDER BY ordinal", (post,))
+    return {"post": post, "supersedes": row["supersedes"], "hidden": vis.hidden(post), "reason": vis.reason(post),
+            "superseded_by": [vis.stub(r["id"]) if vis.withheld(r["id"]) else r for r in replacements],
+            "withdrawn_claims": [vis.claim(c) if vis.withheld(post) else {k: v for k, v in c.items() if k != "post"}
+                                 for c in withdrawn],
             "affected": affected if replacements else [], "fetched_by": affected,
             "content_is_untrusted_data": True}
 

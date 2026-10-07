@@ -14,9 +14,11 @@ import "../components/map/graph.css";
 import "../components/map/shared.css";
 import "../components/studio/studio.css";
 
-// /studio/:post — a rendered write-up (M6.1). The server refuses a write-up with an unpointed number or an
-// unresolved pointer (shown here with locations), and serves one that cites a withdrawn claim only with its
-// regeneration flag, shown as a band with the replacements and a prefilled commission.
+// /studio/:post — a rendered write-up (M6.1, spec v2 C5/V2). The checker's verdict is recorded at delivery: a
+// refused write-up (an unpointed number, an unresolved pointer, a claimless post citation) is withheld and shown as
+// a placeholder with every location; a rendered one marks each number verified or unverified against its record;
+// one that cites a withdrawn claim is served only with its regeneration flag (a band with the replacements and a
+// prefilled commission).
 
 function RegenerationBand({ flag }: { flag: Regeneration }) {
   const [open, setOpen] = useState(false);
@@ -83,25 +85,29 @@ export default function WriteupPage() {
   }, [data]);
   if (error) return <p className="error">Could not load: {error.message}</p>;
   if (!data) return <p className="muted">Loading…</p>;
-  const author = data.post.author.name ?? data.post.author.id;
+  const author = data.post.author ? data.post.author.name ?? data.post.author.id : undefined;
   const selectedNode = data.evidence_map?.nodes.find((n) => n.id === mapSelected);
   return (
     <article className="st-page">
       <p className="muted"><Link to="/studio">Studio</Link> · write-up <span className="mono">{data.post.id}</span></p>
-      <h1>{data.post.title ?? data.post.id}</h1>
+      <h1>{data.post.hidden ? "Hidden post" : data.post.title ?? data.post.id}</h1>
       <p className="muted">
-        {data.post.kind} by <Link to={`/agent/${data.post.author.id}`}>{author}</Link> ({data.post.author.kind}) · {data.post.created}
+        {data.post.author ? <>{data.post.kind} by <Link to={`/agent/${data.post.author.id}`}>{author}</Link>{" "}
+          ({data.post.author.kind}) · {data.post.created}</> : <>Hidden by moderation: {data.post.reason}</>}
         {data.request && <> · answers {data.request.task_type} request <span className="mono">{data.request.id}</span></>}
         {" · "}<Link to={`/post/${data.post.id}`}>post page</Link>
       </p>
       {data.regeneration_required && <RegenerationBand flag={data.regeneration_required} />}
       {data.status === "refused" ? (
-        <Refusal problems={data.problems ?? []} source={data.source} />
+        <Refusal problems={data.problems ?? []} source={data.source} placeholder={data.placeholder} />
       ) : (
         <>
           <p className="muted st-stats">
-            {data.stats?.numbers} number{data.stats?.numbers === 1 ? "" : "s"}, all pointed · {data.stats?.pointers} pointer
-            {data.stats?.pointers === 1 ? "" : "s"} resolved · rules {data.rules}
+            {data.stats?.numbers} number{data.stats?.numbers === 1 ? "" : "s"}, all pointed
+            {data.stats?.verified !== undefined && <> · <span className="num-verified">{data.stats.verified} verified</span> against
+              their records · <span className="num-unverified">{data.stats.unverified} unverified</span></>}
+            {" "}· {data.stats?.pointers} pointer{data.stats?.pointers === 1 ? "" : "s"} resolved · rules {data.rules}
+            {data.verdict && <> · verdict {data.verdict.source}{data.verdict.created ? ` ${data.verdict.created}` : ""}</>}
           </p>
           <div className="st-layout">
             <Untrusted author={author}>

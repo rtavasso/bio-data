@@ -8,8 +8,10 @@ them (fetches, reuse, questions holding an artifact) are computed on each reques
 
 Edges are recorded relations only: a post's evidence list, `published`/`evidence_fetched` board
 events, `question_artifact` rows, derivation inputs, parent/supersedes links and request rows.
-Numbers in a post are paired with the artifact identifiers the post itself carries; a number
-without one is reported as unpointed, never silently attached to a guess.
+Numbers in a post are reported by the write-up number checker (`daw.commons.checks.post_numbers`): a
+pointer at the number is verified against its record or shown as unverified; a number covered only by
+the post's evidence list is post-scoped; one without either is unpointed, never attached to a guess.
+Refused write-ups (a recorded `writeup_check` verdict) are placeholders on every card and page here.
 """
 import difflib
 import json
@@ -21,6 +23,7 @@ from types import SimpleNamespace
 
 from daw.artifacts import artifact_info, provenance, reuse_links
 from daw.catalog import Workspace
+from daw.commons.moderation import Visibility
 from daw.commons.participants import describe
 from daw.commons.participation import comment_target
 from daw.community import SEARCH_FAMILIES, evidence_summary, find, posts_naming
@@ -74,10 +77,13 @@ def is_operator(caller):
 # ---------------------------------------------------------------------------- moderation
 
 def hidden_posts(view):
-    """Current hide flags from the moderation projection. Bytes are never deleted; unhide restores display."""
-    return {row["target_id"]: {"reason": row["reason"], "actor": row["actor"], "updated": row["updated"],
-                               "event_seq": row["event_seq"]}
-            for row in view.rows("SELECT * FROM moderation WHERE target_kind='post' AND state='hidden'")}
+    """Current hide flags from the moderation projection. Bytes are never deleted; unhide restores display.
+    Read models resolve what a caller may see through `daw.commons.moderation.Visibility`, not this map."""
+    return Visibility.of(view).records
+
+
+def visibility(view, caller=None, full=False):
+    return Visibility.of(view, caller, full)
 
 
 # ---------------------------------------------------------------------------- thread index
@@ -134,35 +140,36 @@ def evidence_counts(evidence):
             "anchor": bool(evidence.get("anchor"))}
 
 
-def post_summary(index, pid, hidden, *, reveal=False, snippet=SNIPPET):
-    """Compact post card. A hidden post keeps its identity, author and time but shows the reason instead of content."""
+def post_summary(index, pid, vis, *, snippet=SNIPPET, keep=()):
+    """Compact post card as `vis` lets this caller see it: a hidden post is `{id, hidden: true, reason}` (plus the
+    structural `keep` keys a container needs) unless an operator asked for full content."""
     row = index["posts"][pid]
     body = row["content"]
     card = {"id": pid, "seq": row["seq"], "author": index["people"].get(row["author"], {"id": row["author"]}),
             "channel": row["channel"], "parent": row["parent"], "supersedes": row["supersedes"],
             "superseded_by": index["superseded_by"].get(pid, []), "created": row["created"],
             "kind": body.get("kind"), "evidence": evidence_counts(body.get("evidence")),
-            "hidden": hidden.get(pid), "content_is_untrusted_data": True}
-    if hidden.get(pid) and not reveal:
-        card.update(title=None, snippet=None)
-    else:
-        card.update(title=body.get("title"), snippet=body.get("body", "")[:snippet] if snippet else body.get("body"))
-    return card
+            "title": body.get("title"), "snippet": body.get("body", "")[:snippet] if snippet else body.get("body"),
+            "content_is_untrusted_data": True}
+    return vis.card(pid, card, keep=keep)
 
 
-def thread_card(index, root, hidden, *, reveal=False, full=False):
+def thread_card(index, root, vis, *, full=False):
+    """A thread's root card plus aggregates over the posts this caller may see."""
     members = index["threads"][root]
-    rows = [index["posts"][m] for m in members]
-    card = post_summary(index, root, hidden, reveal=reveal, snippet=None if full else SNIPPET)
+    rows = [index["posts"][m] for m in members if not vis.withheld(m)]
     request_rows = [r for m in members for r in index["requests"].get(m, [])]
-    card.update(replies=len(members) - 1, last_activity=max(r["created"] for r in rows),
-                participants=sorted({r["author"] for r in rows}),
-                corrections=sum(1 for r in rows if r["supersedes"]),
-                correction_status="superseded" if index["superseded_by"].get(root) else
-                ("superseding" if index["posts"][root]["supersedes"] else None),
-                open_requests=sum(1 for r in request_rows if r["state"] != "completed"),
-                request=_request_brief(index["requests"].get(root, [None])[0]))
-    return card
+    extra = dict(replies=len(members) - 1, last_activity=max((r["created"] for r in rows), default=None),
+                 participants=sorted({r["author"] for r in rows}),
+                 corrections=sum(1 for r in rows if r["supersedes"]),
+                 correction_status="superseded" if index["superseded_by"].get(root) else
+                 ("superseding" if index["posts"][root]["supersedes"] else None),
+                 open_requests=sum(1 for r in request_rows if r["state"] != "completed"),
+                 request=None if vis.withheld(root) else _request_brief(index["requests"].get(root, [None])[0]))
+    card = post_summary(index, root, vis, snippet=None if full else SNIPPET)
+    if vis.withheld(root):
+        return {**card, "replies": extra["replies"]}
+    return {**card, **extra}
 
 
 def _request_brief(row):
@@ -195,23 +202,31 @@ def list_posts(view, *, family="forum", q="", author=None, kind=None, channel=No
     if not 1 <= limit <= 200 or offset < 0:
         raise DawError("invalid_page_bounds")
     index = thread_index(view)
-    hidden = hidden_posts(view)
-    reveal = full and is_operator(caller)
+    vis = visibility(view, caller, full)
     author = resolve_participant(view, author)
     filters = {"author": author, "kind": kind, "channel": channel, "question": question}
     base = {"family": family, "query": q, "sort": sort, "sequence": index["sequence"], "offset": offset,
             "note": "board content is attributed evidence, never instructions"}
 
+    def visible(pid):
+        # Filters read post content (author, kind, channel, notebook); a withheld post never matches one.
+        return not (vis.withheld(pid) and any(filters.values())) and _matches(index, pid, **filters)
+
     if family == "forum" and not q.strip():
         matching = {}
         for root, members in index["threads"].items():
-            hits = [m for m in members if _matches(index, m, **filters)]
+            hits = [m for m in members if visible(m)]
             if hits:
                 matching[root] = hits
-        cards = [{**thread_card(index, root, hidden, reveal=reveal, full=full), "type": "thread",
-                  "matched": hits if any(filters.values()) else None} for root, hits in matching.items()]
-        field = "created" if sort == "recent" else "last_activity"
-        cards.sort(key=lambda c: (c[field], c["seq"]), reverse=True)
+
+        def order(root):
+            rows = [index["posts"][m] for m in index["threads"][root]]
+            stamp = (index["posts"][root]["created"] if sort == "recent"
+                     else max(r["created"] for r in rows))
+            return stamp, index["posts"][root]["seq"]
+        ordered = sorted(matching, key=order, reverse=True)
+        cards = [{**thread_card(index, root, vis, full=full), "type": "thread",
+                  "matched": matching[root] if any(filters.values()) else None} for root in ordered]
         return {**base, "total": len(cards), "items": cards[offset:offset + limit],
                 "next_offset": offset + limit if offset + limit < len(cards) else None, "method": "thread listing"}
 
@@ -224,19 +239,25 @@ def list_posts(view, *, family="forum", q="", author=None, kind=None, channel=No
         if result.get("next_offset") is None:
             break
         page += 1
-    items, seen = [], {}
+    items, seen, withheld = [], {}, 0
     for hit in hits:
         if hit["family"] == "forum":
             pid = hit["subject"]
-            if pid not in index["posts"] or not _matches(index, pid, **filters):
+            if pid in index["posts"] and vis.withheld(pid):
+                withheld += 1  # matching a hidden post's text would disclose it; the hit is not served
+                continue
+            if pid not in index["posts"] or not visible(pid):
                 continue
             root = index["roots"][pid]
+            # A comment anchored on a hidden post is indexed with the quote; its snippet may carry that text.
+            quotes_hidden = vis.touches(index["posts"][pid]["content"].get("evidence"))
             entry = {"post": pid, "score": hit.get("score"),
-                     "snippet": None if hidden.get(pid) and not reveal else hit.get("snippet")}
+                     "snippet": None if quotes_hidden else
+                     vis.placeholder(pid, {"snippet": None})["snippet"] if vis.refused(pid) else hit.get("snippet")}
             if root in seen:
                 seen[root]["hits"].append(entry)
                 continue
-            card = {**thread_card(index, root, hidden, reveal=reveal, full=full), "type": "thread", "hits": [entry]}
+            card = {**thread_card(index, root, vis, full=full), "type": "thread", "hits": [entry]}
             seen[root] = card
             items.append(card)
         elif any(filters.values()):
@@ -246,17 +267,24 @@ def list_posts(view, *, family="forum", q="", author=None, kind=None, channel=No
             items.append({**hit, "type": "artifact", **(row or {})})
         elif hit["family"] == "work":
             items.append({**hit, "type": "work",
-                          "posts": [pid for pid, row in index["posts"].items()
-                                    if ((row["content"].get("evidence") or {}).get("notebook") or {}).get("question")
+                          "posts": [pid for pid, row in index["posts"].items() if not vis.withheld(pid)
+                                    and ((row["content"].get("evidence") or {}).get("notebook") or {}).get("question")
                                     == hit["subject"]]})
+        elif hit["family"] == "claim" and vis.withheld(_claim_post(view, hit["subject"])):
+            withheld += 1
         else:
             items.append({**hit, "type": hit["family"]})
     truncated = page == SEARCH_PAGES
     return {**base, "total": len(items), "items": items[offset:offset + limit],
             "next_offset": offset + limit if offset + limit < len(items) else None, "method": method,
-            "truncated": truncated,
+            "truncated": truncated, "withheld_hidden": withheld,
             "limitations": ["A missing search hit is not negative evidence; inspect indexing coverage"]
             + (["text search considered only the first 1000 index hits"] if truncated else [])}
+
+
+def _claim_post(view, claim):
+    row = view.one("SELECT post FROM claim WHERE id=?", (claim,))
+    return row["post"] if row else None
 
 
 # ---------------------------------------------------------------------------- numbers and diffs
@@ -271,25 +299,6 @@ def numbers(text):
             found.append({"text": match.group(0), "offset": position + match.start(), "line": line.strip()})
         position += len(line)
     return found
-
-
-def number_pointers(view, text, evidence):
-    """Pair each number with the artifact pointers the post carries.
-
-    scope=line: artifact identifiers on the same line; scope=post: identifiers elsewhere in the text or the
-    post's evidence list; scope=none: no pointer (reported, never hidden). Each pointer says where the
-    artifact can be opened (the library, a participant workspace, or missing)."""
-    evidence = evidence if isinstance(evidence, dict) else {}
-    post_level = list(dict.fromkeys(ARTIFACT_ID.findall(text) + list(evidence.get("artifacts") or [])))
-    located = {aid: locate_artifact(view, aid, quiet=True) for aid in post_level}
-    out = []
-    for item in numbers(text):
-        on_line = list(dict.fromkeys(ARTIFACT_ID.findall(item["line"])))
-        pointers, scope = (on_line, "line") if on_line else (post_level, "post") if post_level else ([], "none")
-        out.append({"text": item["text"], "offset": item["offset"], "scope": scope,
-                    "pointers": [{"artifact": aid, "location": located.get(aid) or locate_artifact(view, aid, quiet=True)}
-                                 for aid in pointers]})
-    return out
 
 
 def diff_texts(old, new):
@@ -359,7 +368,7 @@ def _artifact_record(store, aid):
             "questions": store.rows("SELECT question_id,relationship FROM question_artifact WHERE artifact_id=?", (aid,))}
 
 
-def artifact_view(view, aid, *, depth=3):
+def artifact_view(view, aid, *, depth=3, caller=None, full=False):
     if not 0 <= depth <= 6:
         raise DawError("invalid_provenance_depth", "0 to 6")
     location = locate_artifact(view, aid)
@@ -401,8 +410,8 @@ def artifact_view(view, aid, *, depth=3):
         links = [link for link in reuse_links(ws) if link["artifact"] == aid]
         questions.extend({"participant": agent["id"], **link} for link in links)
     index = thread_index(view)
-    hidden = hidden_posts(view)
-    naming = [post_summary(index, pid, hidden) for pid in posts_naming(view, aid) if pid in index["posts"]]
+    vis = visibility(view, caller, full)
+    naming = [post_summary(index, pid, vis) for pid in posts_naming(view, aid) if pid in index["posts"]]
     fetchers = [{"seq": e["seq"], "created": e["created"], "reader": e["body"].get("reader"),
                  "question": e["body"].get("question"), "post": e["body"].get("post")}
                 for e in _events(view, "evidence_fetched") if aid in (e["body"].get("artifacts") or [])]
@@ -414,7 +423,7 @@ def artifact_view(view, aid, *, depth=3):
                            "parameters": derivation.get("parameters", {}), "environment": derivation.get("environment", {})},
             "provenance": _strip_paths(graph), "questions": questions, "posts": naming, "fetchers": fetchers,
             "marks": marks_for(view, [("artifact", aid)]),
-            "comments": [post_summary(index, pid, hidden, snippet=None) for pid, row in index["posts"].items()
+            "comments": [post_summary(index, pid, vis, snippet=None) for pid, row in index["posts"].items()
                          if row["content"].get("kind") == "comment"
                          and comment_target(row["content"].get("evidence") or {}) == ("artifact", aid)],
             "bytes": {"name": output.get("name"), "size": output.get("bytes"), "url": f"/api/artifacts/{aid}/bytes",
@@ -462,7 +471,8 @@ def _events(view, kind=None, *, after=0, limit=None):
 def event_log(view, *, after=0, limit=200):
     if after < 0 or not 1 <= limit <= 1000:
         raise DawError("invalid_page_bounds")
-    items = _events(view, after=after, limit=limit)
+    vis = visibility(view)
+    items = [vis.event(e) for e in _events(view, after=after, limit=limit)]
     return {"after": after, "items": items, "sequence": view.sequence(),
             "next_after": items[-1]["seq"] if items else after}
 
@@ -535,8 +545,10 @@ def post_view(view, pid, *, caller=None, full=False):
     index = thread_index(view)
     if pid not in index["posts"]:
         raise DawError("unknown_post", pid)
-    hidden = hidden_posts(view)
-    reveal = not hidden.get(pid) or (full and is_operator(caller))
+    vis = visibility(view, caller, full)
+    if vis.withheld(pid):
+        return vis.stub(pid)
+    refused = vis.refused(pid)  # a write-up the number checker refused: a placeholder, not its content (C5)
     record = view.post(pid)  # verifies the body bytes against their hash
     body = record["content"]
     evidence = body.get("evidence") if isinstance(body.get("evidence"), dict) else {}
@@ -547,13 +559,14 @@ def post_view(view, pid, *, caller=None, full=False):
     for child in index["children"].get(pid, []):
         crow = index["posts"][child]
         cbody = crow["content"]
-        card = post_summary(index, child, hidden, snippet=None)
+        card = post_summary(index, child, vis, snippet=None)
         if cbody.get("kind") == "comment":
             # Flow D: the author's answer (a reply to the comment, which closes its request) is shown under
             # the anchor, with the request's state.
             card["request"] = _request_brief((index["requests"].get(child) or [None])[0])
-            card["answers"] = [post_summary(index, a, hidden, snippet=None) for a in index["children"].get(child, [])]
-            anchor = (cbody.get("evidence") or {}).get("anchor")
+            card["answers"] = [post_summary(index, a, vis, snippet=None) for a in index["children"].get(child, [])]
+            # A withheld comment's evidence (its anchor) is its content: it is listed without one.
+            anchor = None if vis.withheld(child) else (cbody.get("evidence") or {}).get("anchor")
             key = _anchor_key(anchor) if isinstance(anchor, dict) else "null"
             group = comments.setdefault(key, {"anchor": anchor if isinstance(anchor, dict) else None, "comments": []})
             group["comments"].append(card)
@@ -565,37 +578,70 @@ def post_view(view, pid, *, caller=None, full=False):
                                      "request_key", "created")}
     result.update(
         author_participant=people.get(record["author"], {"id": record["author"]}),
-        thread=index["roots"][pid], hidden=hidden.get(pid), content_is_untrusted_data=True,
-        content=body if reveal else None,
+        thread=index["roots"][pid], hidden=vis.hidden(pid), content_is_untrusted_data=True,
+        content={**body, "evidence": vis.evidence(body["evidence"])} if "evidence" in body else body,
         evidence_artifacts=evidence_summary(view.library, evidence),
         notebook=evidence.get("notebook"), run=evidence.get("run") or body.get("run"),
         fetches=_fetches(view, pid), claims=claims,
         marks=marks_for(view, [("post", pid)] + [("claim", c["id"]) for c in claims]
                         + [("artifact", a) for a in artifacts]),
         comments=list(comments.values()), replies=replies,
-        superseded_by=[post_summary(index, s, hidden) for s in index["superseded_by"].get(pid, [])],
+        superseded_by=[post_summary(index, s, vis) for s in index["superseded_by"].get(pid, [])],
         supersedes_chain=chain,
-        requests=_requests_for_post(view, index, pid),
-        numbers=number_pointers(view, text, evidence) if reveal else [],
+        requests=_requests_for_post(view, index, pid, vis),
+        numbers=[] if refused else _post_numbers(view, pid, text, evidence),
+        withheld=_withheld_view(view, pid, vis.refused_writeups[pid]) if refused else None,
     )
-    result["unpointed_numbers"] = [n["text"] for n in result["numbers"] if n["scope"] == "none"]
+    if vis.hidden(pid):
+        result.update(reason=vis.reason(pid), moderation=vis.records[pid], revealed=True)
+    if refused:
+        result["content"] = None
+    # C11: numbers without a pointer at the number are listed apart from those covered only by the post's evidence.
+    result["unpointed_numbers"] = [n["text"] for n in result["numbers"] if n["status"] == "unpointed"]
+    result["post_scoped_numbers"] = [n["text"] for n in result["numbers"] if n["status"] == "post_scoped"]
+    result["number_summary"] = None if refused else _summarize(result["numbers"])
     latest = chain["superseded_by"][-1] if chain["superseded_by"] else None
     result["diff"] = ({"from": pid, "to": latest, **diff_texts(text, index["posts"][latest]["content"].get("body", ""))}
-                      if latest and reveal and not hidden.get(latest) else None)
+                      if latest and not (refused or vis.withheld(latest) or vis.refused(latest)) else None)
     previous = record["supersedes"]
     result["diff_from_superseded"] = ({"from": previous, "to": pid,
                                        **diff_texts(index["posts"][previous]["content"].get("body", ""), text)}
-                                      if previous in index["posts"] and reveal and not hidden.get(previous) else None)
+                                      if previous in index["posts"] and not (refused or vis.withheld(previous)
+                                                                             or vis.refused(previous)) else None)
     return result
 
 
-def _requests_for_post(view, index, pid):
-    """Requests whose post is this post, or whose question post replies to it (asks, comments to the author)."""
+def _post_numbers(view, pid, text, evidence):
+    from daw.commons.checks import post_numbers
+    return post_numbers(view, pid, text, evidence)
+
+
+def _summarize(numbers):
+    from daw.commons.checks import summarize
+    return summarize(numbers)
+
+
+def _withheld_view(view, pid, info):
+    """A refused write-up's verdict for its placeholder: status, counts and every problem location."""
+    from daw.commons.checks import PLACEHOLDER_TITLE, placeholder, recorded, verdict_body
+    from daw.commons.writeup import verdict
+    stored = recorded(view).get(pid)
+    value = verdict_body(view, stored) if stored else verdict(view, pid)[0]
+    return {**info, "title": PLACEHOLDER_TITLE, "placeholder": placeholder(value["problems"]),
+            "problems": [{k: p.get(k) for k in ("kind", "text", "pointer", "line", "offset", "length", "reason")}
+                         for p in value["problems"]],
+            "stats": value["stats"], "created": stored["created"] if stored else None}
+
+
+def _requests_for_post(view, index, pid, vis):
+    """Requests whose post is this post, or whose question post replies to it (asks, comments to the author).
+    The asker of a withheld question post is withheld with it."""
     related = [pid, *index["children"].get(pid, [])]
     out = []
     for post in related:
         for row in index["requests"].get(post, []):
-            out.append({**row, "budget": _jsonish(row.get("budget"), None), "asker": index["posts"][post]["author"]})
+            out.append({**row, "budget": _jsonish(row.get("budget"), None),
+                        "asker": None if vis.withheld(post) else index["posts"][post]["author"]})
     return out
 
 
@@ -604,47 +650,52 @@ def thread_view(view, pid, *, caller=None, full=False):
     index = thread_index(view)
     if pid not in index["posts"]:
         raise DawError("unknown_post", pid)
-    hidden = hidden_posts(view)
-    reveal = full and is_operator(caller)
+    vis = visibility(view, caller, full)
     root = index["roots"][pid]
     seen = set()
 
     def node(current):
         seen.add(current)
-        card = post_summary(index, current, hidden, reveal=reveal, snippet=None)
         kids = [c for c in index["children"].get(current, []) if c not in seen]
         loose = [c for c in index["superseded_by"].get(current, [])
                  if c not in seen and index["posts"][c]["parent"] != current and not index["posts"][c]["parent"]]
-        card["corrects"] = index["posts"][current]["supersedes"]
-        card["children"] = [node(c) for c in kids if c not in seen]
-        card["corrections"] = [node(c) for c in loose if c not in seen]
-        return card
+        children = [node(c) for c in kids if c not in seen]
+        corrections = [node(c) for c in loose if c not in seen]
+        card = post_summary(index, current, vis, snippet=None)
+        if vis.withheld(current):
+            # Structure only: the nested cards are other posts, each resolved on its own.
+            return {**card, "children": children, "corrections": corrections}
+        return {**card, "corrects": index["posts"][current]["supersedes"], "children": children,
+                "corrections": corrections}
 
     return {"root": root, "focus": pid, "sequence": index["sequence"], "tree": node(root)}
 
 
 # ---------------------------------------------------------------------------- participants, requests, running
 
-def participant_activity(view, identity):
+def participant_activity(view, identity, *, caller=None, full=False):
     """M4.5: agents get assignments, posts, runs, reuse backed ratio, open requests and forks;
     humans get comments, marks, promotions and commissions. Keys are present for every kind."""
     participant = view.participant(identity)
     pid = participant["id"]
     index = thread_index(view)
-    hidden = hidden_posts(view)
-    authored = [p for p, row in index["posts"].items() if row["author"] == pid]
-    posts = [post_summary(index, p, hidden) for p in reversed(authored)]
+    vis = visibility(view, caller, full)
+    # A withheld post's author is withheld with it, so it is not listed under its author.
+    authored = [p for p, row in index["posts"].items() if row["author"] == pid and not vis.withheld(p)]
+    posts = [post_summary(index, p, vis) for p in reversed(authored)]
     assignments = []
     for row in view.rows("SELECT * FROM request WHERE target=? ORDER BY created DESC,id", (pid,)):
         post = index["posts"].get(row["post"])
         assignments.append({**row, "budget": _jsonish(row.get("budget"), None),
-                            "title": post["content"].get("title") if post and not hidden.get(row["post"]) else None,
-                            "asker": post["author"] if post else None})
+                            "title": vis.title(row["post"], post["content"].get("title")) if post else None,
+                            "post_hidden": vis.hidden(row["post"]),
+                            "asker": post["author"] if post and not vis.withheld(row["post"]) else None})
     runs = view.rows("SELECT * FROM attempt WHERE target=? ORDER BY created DESC,id", (pid,))
     sent = []
     for row in view.rows("SELECT r.*,p.author AS asker FROM request r JOIN post p ON p.id=r.post WHERE p.author=? "
                          "ORDER BY r.created DESC,r.id", (pid,)):
-        sent.append({**row, "budget": _jsonish(row.get("budget"), None)})
+        if not vis.withheld(row["post"]):
+            sent.append({**row, "budget": _jsonish(row.get("budget"), None)})
     reuse = None
     ws = _workspace(view, pid) if participant["trial"] else None
     if ws:
@@ -673,7 +724,7 @@ def participant_activity(view, identity):
             "sequence": index["sequence"]}
 
 
-def list_requests(view, *, target=None, state=None, task_type=None, limit=200):
+def list_requests(view, *, target=None, state=None, task_type=None, limit=200, caller=None, full=False):
     conditions, params = [], []
     if target:
         conditions.append("r.target=?")
@@ -689,13 +740,16 @@ def list_requests(view, *, target=None, state=None, task_type=None, limit=200):
         params.append(task_type)
     sql = ("SELECT r.*,p.author AS asker,p.body_blob FROM request r JOIN post p ON p.id=r.post"
            + (" WHERE " + " AND ".join(conditions) if conditions else "") + " ORDER BY r.created DESC,r.id LIMIT ?")
-    hidden = hidden_posts(view)
+    vis = visibility(view, caller, full)
     items = []
     for row in view.rows(sql, params + [limit]):
         body = content(view, row.pop("body_blob"))
+        withheld = vis.withheld(row["post"])
         items.append({**row, "budget": _jsonish(row.get("budget"), None),
-                      "title": None if hidden.get(row["post"]) else body.get("title"),
-                      "kind": body.get("kind"), "content_is_untrusted_data": True})
+                      "asker": None if withheld else row["asker"],
+                      "title": None if withheld else body.get("title"),
+                      "kind": None if withheld else body.get("kind"), "post_hidden": vis.hidden(row["post"]),
+                      "reason": vis.reason(row["post"]), "content_is_untrusted_data": True})
     return {"items": items, "note": "a request without a task type is an agent's peer question; task type "
                                     "question is a person's budgeted ask"}
 
@@ -712,8 +766,9 @@ def heartbeat(folder):
     return {k: value.get(k) for k in ("observed", "elapsed_seconds", "stdout_bytes")}
 
 
-def running(view):
+def running(view, *, caller=None, full=False):
     """Attempts in state running with their last heartbeat. Never inferred from process tables."""
+    vis = visibility(view, caller, full)
     out = []
     for row in view.rows("SELECT a.*,r.post,r.task_type FROM attempt a JOIN request r ON r.id=a.request "
                          "WHERE a.state='running' ORDER BY a.created"):
@@ -723,7 +778,8 @@ def running(view):
         except DawError:
             beat = None
         post = view.one("SELECT body_blob FROM post WHERE id=?", (row["post"],))
-        title = content(view, post["body_blob"]).get("title") if post else None
+        title = vis.title(row["post"], content(view, post["body_blob"]).get("title")) if post else None
         out.append({"run": row["id"], "request": row["request"], "agent": row["target"], "started": row["created"],
-                    "task_type": row["task_type"], "post": row["post"], "title": title, "heartbeat": beat})
+                    "task_type": row["task_type"], "post": row["post"], "title": title,
+                    "post_hidden": vis.hidden(row["post"]), "reason": vis.reason(row["post"]), "heartbeat": beat})
     return {"items": out, "sequence": view.sequence()}

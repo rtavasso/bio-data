@@ -63,16 +63,22 @@ class AllowanceIn(Strict):
 
 def summary(view, participant, mode):
     """Identity, permissions, budget and the participant's own attributed writes (read-only archive)."""
+    from daw.commons.moderation import Visibility
     pid = participant["id"]
+    vis = Visibility.of(view, participant)  # the author's own hidden posts are withheld like anyone's (C2)
     posts = view.rows("SELECT * FROM post WHERE author=? ORDER BY seq DESC LIMIT ?", (pid, RECENT))
     comments, authored = [], []
     for row in posts:
+        if vis.withheld(row["id"]):
+            authored.append(vis.stub(row["id"]))
+            continue
         content = view.library.json_blob(row["body_blob"])
         evidence = content.get("evidence") or {}
         if content.get("kind") == "comment":
             request = view.one("SELECT id,state,target,answer FROM request WHERE post=?", (row["id"],))
             comments.append({"id": row["id"], "created": row["created"], "parent": row["parent"], "body": content["body"],
-                             "target": evidence.get("target"), "anchor": evidence.get("anchor"), "request": request})
+                             "target": evidence.get("target"),
+                             "anchor": vis.anchor(evidence.get("anchor"), evidence.get("target")), "request": request})
         elif content.get("kind") not in {"promotion", "commission"}:
             authored.append({"id": row["id"], "created": row["created"], "title": content["title"],
                              "kind": content.get("kind"), "parent": row["parent"]})

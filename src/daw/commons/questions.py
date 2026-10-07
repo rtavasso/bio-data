@@ -342,9 +342,11 @@ def _research_files(ws, question_path, revisions, outputs):
     return networks, coverage
 
 
-def question_page(view, agent, qid, *, snapshot=None):
-    """GET /api/questions/{agent}/{qid}: the question as recorded, at the current or a chosen snapshot."""
+def question_page(view, agent, qid, *, snapshot=None, caller=None, full=False):
+    """GET /api/questions/{agent}/{qid}: the question as recorded, at the current or a chosen snapshot.
+    Posts hidden by moderation are not listed: which question a post published is part of its content."""
     from daw.commons.evidence_map import question_subgraph
+    from daw.commons.moderation import Visibility
     from daw.commons.participants import describe
     from daw.work import question_record
     participant, ws = _workspace(view, agent)
@@ -373,12 +375,16 @@ def question_page(view, agent, qid, *, snapshot=None):
     outputs = _outputs(ws, participant["id"], qid)
     networks, coverage = _research_files(ws, question_path, revisions, outputs)
     posts = []
+    vis = Visibility.of(view, caller, full)
     for event in view.rows("SELECT body,created FROM event WHERE kind='published' ORDER BY seq"):
         body = json.loads(event["body"])
+        if vis.withheld(body.get("post")):
+            continue
         notebook_evidence = (body.get("evidence") or {}).get("notebook") if isinstance(body.get("evidence"), dict) else None
         if (body.get("author") == participant["id"] and isinstance(notebook_evidence, dict)
                 and notebook_evidence.get("question") == qid):
-            posts.append({"post": body["post"], "snapshot": notebook_evidence.get("snapshot"), "created": event["created"]})
+            posts.append({"post": body["post"], "snapshot": notebook_evidence.get("snapshot"), "created": event["created"],
+                          "hidden": vis.hidden(body["post"])})
     store = "workspace:" + participant["id"]
     agent_row = {"id": participant["id"], "name": participant["name"]}
     return {"agent": describe(participant), "question": row, "node": f"question:{participant['id']}:{qid}",

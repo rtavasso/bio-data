@@ -1,7 +1,10 @@
 """Pilot hardening (Milestone 6): tenancy (M7.4), the agent board service, login rate limits, base paths."""
+import hashlib
 import json
+import os
 import shutil
 import stat
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -53,6 +56,17 @@ def person_token(root, name):
 
 
 # ---- M7.4 tenancy ---------------------------------------------------------------------------------
+
+
+def short_dir():
+    """A short scratch directory for socket paths: pytest's tmp_path on macOS (/private/var/folders/…) alone
+    can exceed the 104-byte socket limit, which the service correctly refuses."""
+    import shutil
+    import tempfile
+    path = Path(tempfile.mkdtemp(prefix="cq", dir="/tmp"))
+    import atexit
+    atexit.register(shutil.rmtree, path, True)
+    return path
 
 def test_tenant_config_is_validated(two_commons, tmp_path):
     a, b, _ = two_commons
@@ -319,7 +333,7 @@ def test_board_service_binds_each_socket_to_one_agent(service, tmp_path):
     with pytest.raises(DawError, match="authentication_required"):
         BoardClient(b_end["url"], b_end["token"]).call("inbox", {})
     with pytest.raises(DawError, match="board_service_unavailable"):
-        BoardClient(f"unix://{tmp_path / 'none.sock'}", "t").call("inbox", {})
+        BoardClient(f"unix://{short_dir() / 'none.sock'}", "t").call("inbox", {})
 
 
 def test_sandboxed_checkout_uses_the_board_service_without_the_board(service, monkeypatch, tmp_path):
@@ -381,3 +395,67 @@ def test_sandbox_argv_mounts_only_the_agent_socket_never_the_board(demo):
                                              adapter=Adapter(), agent_config={}, run="run_1")
     assert receipt["board_mounted"] is False and receipt["board_service"]["url"] == endpoint["url"]
     assert endpoint["token"] not in json.dumps(receipt) and "BIO_BOARD_TOKEN" in receipt["environment_names"]
+    # sandbox.json records the short socket and the symlink left at the old in-commons location.
+    assert receipt["board_service"]["link"] == str(root / "service" / "board" / alice / "board.sock")
+    assert receipt["board_service"]["socket"] == str(endpoint["socket"]) and receipt["board_service"]["index"] >= 1
+
+
+# ---- spec v2 C1: short socket directory (macOS sun_path is 104 bytes) and C14 agents listing ------
+
+def test_board_sockets_bind_under_a_short_per_commons_directory(tmp_path, monkeypatch):
+    monkeypatch.delenv(boardservice.SOCKET_ROOT_ENV, raising=False)
+    root = tmp_path / ("a-very-long-commons-directory-name-" * 4)  # the commons path itself is never in the socket
+    root.mkdir()
+    first, second = boardservice.provision(root, "agent_one"), boardservice.provision(root, "agent_two")
+    digest = hashlib.sha256(str(root.resolve()).encode()).hexdigest()[:12]
+    base = (boardservice.socket_root() / digest).resolve()
+    assert first["socket"] == base / "1" / "1.sock" and second["socket"] == base / "2" / "2.sock"
+    assert len(os.fsencode(first["socket"])) < 104 and first["url"] == f"unix://{first['socket']}"
+    assert first["dir"] == base / "1" and stat.S_IMODE(first["dir"].stat().st_mode) == 0o700
+    # The old in-commons location is a symlink to the short socket; indexes are stable and recorded.
+    assert first["link"] == root / "service" / "board" / "agent_one" / "board.sock"
+    assert first["link"].is_symlink() and Path(os.readlink(first["link"])) == first["socket"]
+    assert boardservice.provision(root, "agent_one")["socket"] == first["socket"]
+    state = boardservice.socket_state(root)["agents"]
+    assert {k: v["index"] for k, v in state.items()} == {"agent_one": 1, "agent_two": 2}
+    # The service's own environment is authoritative; dispatch reuses the recorded path.
+    sockets = short_dir()
+    monkeypatch.setenv(boardservice.SOCKET_ROOT_ENV, str(sockets))
+    bound = boardservice.provision(root, "agent_one", bind=True)
+    assert bound["socket"] == sockets.resolve() / digest / "1" / "1.sock"
+    monkeypatch.delenv(boardservice.SOCKET_ROOT_ENV)
+    assert boardservice.provision(root, "agent_one")["socket"] == bound["socket"]
+    assert Path(os.readlink(bound["link"])) == bound["socket"]
+
+
+def test_socket_paths_over_the_platform_limit_are_refused_by_name(demo, tmp_path, monkeypatch):
+    assert boardservice.socket_limit("darwin") == 104 and boardservice.socket_limit("freebsd14") == 104
+    assert boardservice.socket_limit("linux") == 108
+    folder = Path("/colloquy-no-such-directory")  # absent, so not resolved: the arithmetic is host-independent
+    room = 103 - len(os.fsencode(folder)) - 1  # bytes left for the name under a 104-byte limit (NUL included)
+    assert boardservice.check_socket_path(folder / ("s" * room), "darwin") == folder / ("s" * room)
+    with pytest.raises(DawError, match="socket_path_too_long"):
+        boardservice.check_socket_path(folder / ("s" * (room + 1)), "darwin")
+    boardservice.check_socket_path(folder / ("s" * (room + 4)), "linux")  # 108 on Linux
+    with pytest.raises(DawError, match="socket_path_too_long"):
+        boardservice.check_socket_path(folder / ("s" * (room + 5)), "linux")
+    root, _ = demo
+    monkeypatch.setenv(boardservice.SOCKET_ROOT_ENV, str(tmp_path / ("long" * 30)))
+    with pytest.raises(DawError, match="socket_path_too_long") as refused:
+        BoardService(root)  # refused at startup, before any agent is served
+    assert boardservice.SOCKET_ROOT_ENV in refused.value.detail
+
+
+def test_board_service_agents_returns_public_fields_only(service):
+    root, ctx, _, _ = service
+    alice = ctx["agents"]["alice"]
+    rows = agent_client(root, alice).call("agents", {})
+    assert {r["id"] for r in rows} >= set(ctx["agents"].values())
+    listed = json.dumps(rows)
+    with Community(root) as board:
+        for row in board.rows("SELECT trial,native_session FROM agent WHERE trial IS NOT NULL"):
+            assert row["trial"] not in listed and (not row["native_session"] or row["native_session"] not in listed)
+    assert str(root) not in listed
+    assert all(set(r) <= {"id", "name", "kind", "parent", "created", "harness", "model", "effort", "started", "profile",
+                            "role"}
+               for r in rows)

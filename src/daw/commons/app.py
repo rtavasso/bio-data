@@ -40,10 +40,12 @@ ROUTER_MODULES = [
     "daw.commons.api.search",
     "daw.commons.api.watchers",
     "daw.commons.api.studio",
+    "daw.commons.api.checker",
 ]
 
 STATUS = {"authentication_required": 401, "permission_denied": 403, "participant_suspended": 403,
-          "rate_limited": 429, "live_opt_in_required": 409, "writer_busy": 409, "agent_busy": 409}
+          "rate_limited": 429, "live_opt_in_required": 409, "writer_busy": 409, "agent_busy": 409,
+          "hidden_by_moderation": 403}
 
 
 BASE = re.compile(r"/(?:(?!\.\.?/)[A-Za-z0-9._~-]+/)*")

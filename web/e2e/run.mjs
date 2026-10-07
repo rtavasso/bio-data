@@ -12,6 +12,11 @@
 // Output (ignored by git): web/e2e/.out/<run>/{screenshots/*.png, report.json, commons/, server logs}.
 // Environment: E2E_OUT (output root), E2E_SKIP_BUILD=1 (reuse web/dist), E2E_CHROMIUM (browser binary),
 // E2E_HEADED=1, PLAYWRIGHT_BROWSERS_PATH (default /opt/pw-browsers when present).
+//
+// Browsers (spec v2 C1): Playwright is a pinned devDependency of web/ (`npm ci` installs it); its browser
+// comes from `npx playwright install chromium` (CI: `--with-deps` on Linux), into the default cache or
+// PLAYWRIGHT_BROWSERS_PATH. A pre-installed browser is honoured: E2E_CHROMIUM names one explicitly, and
+// when the pinned revision is missing the newest Chromium under PLAYWRIGHT_BROWSERS_PATH is used.
 // Every number on the demo board is a synthetic fixture; nothing here validates science.
 import { execFile, spawn } from "node:child_process";
 import crypto from "node:crypto";
@@ -34,6 +39,7 @@ fs.mkdirSync(shots, { recursive: true });
 // ---- harness ------------------------------------------------------------------------------------
 
 function loadPlaywright() {
+  // The pinned devDependency first (web/node_modules); a global install only as a fallback.
   const require = createRequire(import.meta.url);
   const roots = [...(process.env.NODE_PATH ?? "").split(path.delimiter), "/opt/node-tools/node_modules", "/usr/local/lib/node_modules"];
   for (const id of ["playwright", ...roots.filter(Boolean).map((r) => path.join(r, "playwright"))]) {
@@ -43,7 +49,44 @@ function loadPlaywright() {
       // try the next location
     }
   }
-  throw new Error("playwright is not resolvable: install it globally or set NODE_PATH (the browsers must already be installed)");
+  throw new Error("playwright is not resolvable: run `npm --prefix web ci` (it is a pinned devDependency)");
+}
+
+// Chromium executables inside a Playwright browser directory, newest revision first.
+const CHROMIUM_BINARIES = ["chrome-linux/headless_shell", "chrome-headless-shell-linux64/chrome-headless-shell",
+  "chrome-linux/chrome", "chrome-linux64/chrome",
+  "chrome-headless-shell-mac-arm64/chrome-headless-shell", "chrome-headless-shell-mac-x64/chrome-headless-shell",
+  "chrome-mac/Chromium.app/Contents/MacOS/Chromium", "chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium"];
+
+function preinstalledChromium(root = process.env.PLAYWRIGHT_BROWSERS_PATH) {
+  if (!root || !fs.existsSync(root)) return null;
+  const revision = (name) => Number(name.split("-").at(-1)) || 0;
+  const folders = fs.readdirSync(root).filter((d) => /^chromium(_headless_shell)?-\d+$/.test(d))
+    .sort((a, b) => revision(b) - revision(a) || (a.includes("headless") ? -1 : 1));
+  for (const folder of folders) {
+    for (const binary of CHROMIUM_BINARIES) {
+      const candidate = path.join(root, folder, binary);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+  }
+  return null;
+}
+
+async function launchChromium(chromium) {
+  const options = { headless: !process.env.E2E_HEADED };
+  if (process.env.E2E_CHROMIUM) return chromium.launch({ ...options, executablePath: process.env.E2E_CHROMIUM });
+  try {
+    return await chromium.launch(options);
+  } catch (error) {
+    const fallback = preinstalledChromium();
+    if (!/Executable doesn't exist|playwright install/i.test(String(error?.message)) || !fallback) {
+      throw new Error(`${String(error?.message ?? error).split("\n")[0]}\n` +
+        "Install the pinned browser: npx --prefix web playwright install chromium (Linux CI: --with-deps), " +
+        "or set E2E_CHROMIUM to a Chromium binary.");
+    }
+    console.log(`  note: the pinned Playwright browser is not installed; using ${fallback}`);
+    return chromium.launch({ ...options, executablePath: fallback });
+  }
 }
 
 if (!process.env.PLAYWRIGHT_BROWSERS_PATH && fs.existsSync("/opt/pw-browsers")) process.env.PLAYWRIGHT_BROWSERS_PATH = "/opt/pw-browsers";
@@ -196,7 +239,7 @@ async function pendingRequest(target, taskType) {
 
 // ---- browser -------------------------------------------------------------------------------------
 
-const browser = await chromium.launch({ headless: !process.env.E2E_HEADED, ...(process.env.E2E_CHROMIUM ? { executablePath: process.env.E2E_CHROMIUM } : {}) });
+const browser = await launchChromium(chromium);
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 const page = await context.newPage();
 const problems = [];
@@ -560,7 +603,7 @@ await step("C1 attach a watcher query to a frontier item (UI)", async () => {
   const card = page.getByLabel(`Frontier item ${itemC}`);
   await card.getByRole("button", { name: "Watchers" }).click();
   const form = card.getByRole("form", { name: "Attach a watcher query" });
-  await form.getByLabel("Provider").locator("option", { hasText: /^europepmc$/ }).waitFor({ state: "attached" });
+  await form.getByLabel("Provider").locator('option[value="europepmc"]').waitFor({ state: "attached" });
   await form.getByLabel("Watcher query").fill("demo marker qPCR donor-matched");
   await form.getByLabel("Provider").selectOption("europepmc");
   await form.getByRole("button", { name: "Attach watcher" }).click();
@@ -607,22 +650,30 @@ await step("D1 highlight a sentence and comment with ask-author (UI)", async () 
   await page.goto(`${base}/post/${postD}`);
   await page.getByText(quote).first().waitFor();
   await page.evaluate((text) => {
+    // The quote may span several text nodes: checked numbers are wrapped in marks (spec v2 V2).
     const roots = [...document.querySelectorAll(".markdown")];
     for (const root of roots) {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let joined = "";
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        const at = node.data.indexOf(text);
-        if (at >= 0) {
-          const range = document.createRange();
-          range.setStart(node, at);
-          range.setEnd(node, at + text.length);
-          const selection = window.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(range);
-          root.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-          return;
-        }
+        nodes.push({ node, start: joined.length });
+        joined += node.data;
       }
+      const at = joined.indexOf(text);
+      if (at < 0) continue;
+      const locate = (offset, end) => {
+        const hit = nodes.findLast((n) => (end ? n.start < offset : n.start <= offset));
+        return [hit.node, offset - hit.start];
+      };
+      const range = document.createRange();
+      range.setStart(...locate(at, false));
+      range.setEnd(...locate(at + text.length, true));
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      root.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      return;
     }
     throw new Error("quote not found");
   }, quote);

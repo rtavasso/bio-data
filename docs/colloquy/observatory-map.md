@@ -19,18 +19,45 @@ writes is a disposable layout cache.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/map?question=&participant=&since=&until=&family=&limit=` | `{sequence, fingerprint, nodes, edges, layout, counts, truncated, relations}` |
-| `GET /api/map/node/{id}` | the underlying record of one node |
+| `GET /api/map?question=&participant=&since=&until=&family=&limit=&full=` | `{sequence, fingerprint, nodes, edges, layout, counts, truncated, truncated_families, never_truncated, relations}` |
+| `GET /api/map/node/{id}?full=` | the underlying record of one node |
 | `GET /api/questions?agent=&status=` | every question in every participant workspace with counts |
 | `GET /api/questions/{agent}/{qid}?snapshot=work_…` | the question page model (below) |
 | `GET /api/blobs/{agent or library}/{sha}?name=` | bytes referenced by that store's records |
-| `GET /api/runs?agent=&state=&limit=&offset=` | deliveries, newest first |
-| `GET /api/runs/{id}` | the timeline model (below) |
-| `GET /api/runs/{id}/raw` | `events.jsonl` as `text/plain` |
-| `GET /api/runs/{id}/messages?offset=&limit=` | model-facing message bodies, paginated |
+| `GET /api/runs?agent=&state=&limit=&offset=&full=` | deliveries, newest first |
+| `GET /api/runs/{id}?full=` | the timeline model (below) |
+| `GET /api/runs/{id}/raw?full=` | `events.jsonl` as `text/plain` |
+| `GET /api/runs/{id}/messages?offset=&limit=&full=` | model-facing message bodies, paginated |
 
 `{agent}` accepts a participant id or name. Errors follow the commons
-convention: `unknown_*` and `*_missing` are 404, `invalid_*` is 400.
+convention: `unknown_*` and `*_missing` are 404, `invalid_*` is 400,
+`hidden_by_moderation` is 403.
+
+### Moderation on these surfaces (spec v2 C2)
+
+Every endpoint here resolves hidden posts through
+`daw.commons.moderation.Visibility` (see [participation.md](participation.md#moderation-and-rate-limits-m28)).
+`full=true` reads through a hide only for a caller holding `hide`.
+
+- Map build: a hidden post is a node `{id, kind: "post", label: "hidden post",
+  hidden: true, reason}` with no title, author, time, kind or run. Its
+  `authored` edge and the edges recorded in its body (`evidence`, `notebook`,
+  `comments_on`) are not drawn; row-level relations to other posts
+  (`reply_to`, `supersedes`, `answered_by`), fetches and marks stay. Claims of a
+  hidden post are nodes labelled "claim of a hidden post". The cache key
+  includes the moderation state and whether the caller reads through it.
+- Map node: `/api/map/node/{hidden post}` returns `{kind, id, record: {id,
+  hidden: true, reason}, hidden, reason}`; a claim of a hidden post likewise.
+  A visible comment anchored on a hidden post keeps its body but its
+  `evidence.anchor.quote` is `null` (`quote_withheld: true`).
+- Question pages leave out posts hidden by moderation (which question a post
+  published is part of its content).
+- Runs: a hidden request post gives `request_title: null`, `request_kind: null`,
+  `request_hidden: true` and `reason` in `/api/runs`, and a title-less request
+  in `/api/runs/{id}`. A hidden answer post withholds `final.text`. Because the
+  raw stream and model messages carry the request text and the answer
+  verbatim, `/raw` and `/messages` answer 403 `hidden_by_moderation` while
+  either post is hidden.
 
 ## Evidence map (M4.2)
 
@@ -72,8 +99,16 @@ which selects every workspace holding it, e.g. a fork's inherited copy) and
 through participant hubs, plus the full upstream derivation closure
 (inputs, assets, receipts). `since`/`until` (ISO 8601; naive times are UTC)
 filter dated nodes and edges; participants and bare objects stay only while a
-dated record still links them. `family` is a comma list. `limit` (default
-2000) keeps seeds, then the best-connected nodes, and reports `truncated`.
+dated record still links them. `family` is a comma list.
+
+`limit` (default 2000, spec v2 C13): posts, library and workspace artifacts,
+questions, claims, marks, participants, receipts and frontier items are never
+truncated. Only bare objects and assets (`TRUNCATABLE`) are dropped, lowest
+degree first, to bring the drawing to the limit, so the response can exceed
+`limit` when the protected kinds alone do. `truncated` says whether anything
+was dropped; `truncated_families` maps each truncated kind to `{family, total,
+shown, dropped}`, and `never_truncated` lists the protected kinds. The `/map`
+screen prints the truncation note under the counts.
 
 Layout: a seeded Fruchterman–Reingold layout in pure Python with grid-bounded
 repulsion (linear per iteration) and at most 250 iterations, deterministic for a
@@ -83,7 +118,13 @@ sequence, a fingerprint of every workspace catalog (registrations and links are
 written without board events) and the filters. The cache is disposable and
 never authoritative; a missing or unreadable file is recomputed. Measured on
 the demo with 300 extra artifacts and 300 extra posts: 624 nodes and 1095 edges
-in about 0.9 s uncached, 10 ms cached. The client refines positions briefly
+in about 0.9 s uncached, 10 ms cached. Measured on the cohort fixture
+(2026-10-07, this container) at the default limit: 3462 recorded nodes, 2000
+drawn (all 281 library artifacts, 460 artifacts in total, all 269 posts; 1434
+of 2478 objects and 28 of 59 assets dropped), 13,463 edges; about 2.7 to 2.9 s
+uncached (build 0.4 s, layout 2.1 to 2.2 s, fingerprint 0.03 s) and 0.11 to
+0.15 s cached. Before C13 the same view drew 276 library artifacts and 71
+posts in about 2.9 s. The client refines positions briefly
 with d3-force (no refinement above 500 nodes, where it draws on canvas).
 
 The `/map` screen: filters in the URL, family legend (colour plus shape; only
@@ -197,9 +238,16 @@ are in the demo context under `observatory_map`.
   behind every edge and asserts it states exactly that relation. A timeline
   test copies a demo run, sets wall ≫ monotonic and injects a compaction
   fallback row (and an out-of-bounds row that must be excluded) into
-  `agent-state/state.db`. The real PMP22 cohort board (281 artifacts, ten
-  finals) is not in this repository; the "all 281 artifacts" and "two clicks
-  from every number" checks need that board and have not been run here.
+  `agent-state/state.db`.
+- Checked on the cohort fixture (`fixtures/pmp22-cohort`, offline):
+  `test_cohort_map_at_default_limit_draws_every_library_artifact_and_post`
+  asserts that the default map holds all 281 library artifacts and all 269
+  posts, that only objects and assets are truncated, and that the per-family
+  counts add up. The "two clicks from every number" check belongs to V2 and is
+  not run here.
+- Moderation (C2) is checked on the demo and on a private copy of the cohort by
+  `tests/test_commons_moderation.py` (map build, map node, run list, run
+  timeline, running strip, SSE backlog, export and the other read models).
 - The stream records no sleep marker, so suspension placement is an
   attribution to the largest event gap, stated in the response.
 - The demo harness emits token fields under names `hermes.parse` does not read

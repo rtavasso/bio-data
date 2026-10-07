@@ -26,6 +26,18 @@ class Adapter:
     state_globs = ()
     supports_fork = False
     limitations = ()
+    # Staged harness configuration under the home (spec v2 C7). The runtime seals a platform-owned copy
+    # outside the checkout, restores it before every turn, mounts it read-only in the sandbox and records
+    # changes. Files listed in `scratch_config_files` are files the harness itself must write: they get a
+    # fresh writable per-turn copy instead of a read-only mount.
+    config_files = ()
+    scratch_config_files = ()
+    # Whether the harness stream marks context compactions (C10): when it does not, compaction counts are
+    # unavailable (None), never zero.
+    emits_compactions = False
+
+    def reports_compactions(self, config):
+        return self.emits_compactions
 
     def home(self, trial):
         return Path(trial) / self.home_dir

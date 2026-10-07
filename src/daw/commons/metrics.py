@@ -26,11 +26,12 @@ from pathlib import Path
 from daw import hermes
 from daw.artifacts import reuse_links
 from daw.commons.permissions import require
-from daw.commons.runmetrics import run_metrics
+from daw.commons.runmetrics import compactions_reported, run_metrics
 from daw.community import PROVIDER_CITATION
 from daw.util import DawError, canonical, digest, now, read_json
 
-METRICS_VERSION = 1
+# 2: unavailable clocks, streams and compactions are None, never 0 (spec v2 C10).
+METRICS_VERSION = 2
 # Files a run's metrics are computed from; size and mtime changes mark the projection stale.
 RUN_FILES = ("events.jsonl", "execution.json", "final.md", "agent-state/state.db")
 
@@ -67,6 +68,8 @@ LIMITATIONS = [
     "Participant and harness panels count posts by author; cohort and task-type panels count posts made during their runs.",
     "Human marks are marks by human or operator participants; a mark is attribution, never a status change.",
     "Token totals and costs are given only when every run in the group reported them; partial sums are labelled.",
+    "Number coverage counts numbers in finals (answers of research deliveries) by the write-up checker's rules; "
+    "line, claim and cell scopes are pointers at the number, post scope is only the post's evidence list.",
 ]
 _RUN_CACHE, _POST_CACHE = {}, {}
 
@@ -104,26 +107,28 @@ def token_usage(parsed):
     return values, None
 
 
-def compute_run(folder, harness="hermes"):
-    """File-derived metrics for one delivery (no board rows): behaviour counts plus token telemetry."""
+def compute_run(folder, harness="hermes", config=None):
+    """File-derived metrics for one delivery (no board rows): behaviour counts plus token telemetry.
+    Compactions are counted only for harnesses whose stream marks them (else None)."""
     parsed = PARSERS.get(harness, hermes.parse)(folder / "events.jsonl")
-    metrics = {k: v for k, v in run_metrics(folder, parsed).items() if k != "limitations"}
+    metrics = {k: v for k, v in run_metrics(folder, parsed, compactions_reported=compactions_reported(harness, config)
+                                            ).items() if k != "limitations"}
     tokens, note = token_usage(parsed)
     metrics.update(turns_completed=parsed["turns_completed"], malformed_lines=len(parsed["malformed_lines"]),
                    usage_reported=parsed.get("usage"), tokens=tokens, tokens_note=note)
     return metrics
 
 
-def current_metrics(folder, harness, stored=None):
+def current_metrics(folder, harness, stored=None, config=None):
     """Stored projection when its fingerprint matches the files; otherwise computed in memory (cached)."""
     mark = fingerprint(folder)
     if stored and stored.get("fingerprint") == mark and stored.get("version") == METRICS_VERSION:
         return stored["metrics"], True
-    key = (str(folder), harness, mark)
+    key = (str(folder), harness, mark, compactions_reported(harness, config))
     if key not in _RUN_CACHE:
         if len(_RUN_CACHE) > 4096:
             _RUN_CACHE.clear()
-        _RUN_CACHE[key] = compute_run(folder, harness)
+        _RUN_CACHE[key] = compute_run(folder, harness, config)
     return _RUN_CACHE[key], False
 
 
@@ -144,10 +149,11 @@ def refresh_metrics(board, actor="operator"):
             if old and body.get("fingerprint") == mark and body.get("version") == METRICS_VERSION \
                     and old["cohort"] == primary.get(attempt["id"]):
                 continue
-            harness = agents.get(attempt["target"], {}).get("harness", "hermes")
+            config = agents.get(attempt["target"], {})
+            harness = config.get("harness", "hermes")
             changed.append((attempt["id"], primary.get(attempt["id"]),
                             canonical({"version": METRICS_VERSION, "fingerprint": mark,
-                                       "metrics": compute_run(folder, harness)}).decode()))
+                                       "metrics": compute_run(folder, harness, config)}).decode()))
         if changed:
             with board.db:
                 board.db.executemany("INSERT INTO run_metrics(run,cohort,metrics,computed) VALUES(?,?,?,?) "
@@ -327,7 +333,7 @@ def load_runs(view, pricing=None):
         harness = config.get("harness", "hermes")
         request = requests[attempt["request"]]
         content = _post_content(view, request["post"])
-        metrics, fresh = current_metrics(run_folder(view.root, attempt), harness, stored.get(attempt["id"]))
+        metrics, fresh = current_metrics(run_folder(view.root, attempt), harness, stored.get(attempt["id"]), config)
         runs.append({"run": attempt["id"], "request": attempt["request"], "state": attempt["state"],
                      "created": attempt["created"], "finished": attempt["finished"],
                      "participant": agent["id"], "participant_name": agent["name"], "harness": harness,
@@ -374,7 +380,32 @@ def board_index(view, runs):
                 continue  # inherited by a fork: not this participant's reuse
             links.append({**entry, "participant": identity, "created": created})
     return {"posts": posts, "marks": marks, "claims": claims, "claims_recorded": bool(claims),
-            "superseded": superseded, "links": links, "agents": agents}
+            "superseded": superseded, "links": links, "agents": agents, "numbers": _final_numbers(view)}
+
+
+def _final_numbers(view):
+    """Number coverage of every visible final (C11, V1): {answer post: checks.summarize(...)}."""
+    from daw.commons import checks
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(view)  # hidden posts and refused write-ups count nothing (not zero)
+    return {pid: checks.number_summary(view, pid) for pid in checks.finals(view)
+            if not vis.withheld(pid) and not vis.refused(pid)}
+
+
+def number_coverage(index, posts):
+    """Share of numbers in the group's finals with a pointer at the number (cell, claim or line scope), and the
+    full scope/status split. None when the group has no final (unavailable, never zero)."""
+    rows = [index["numbers"][p["id"]] for p in posts if p["id"] in index.get("numbers", {})]
+    if not rows:
+        return None
+    total = sum(r["numbers"] for r in rows)
+    scopes = {k: sum(r["scopes"][k] for r in rows) for k in ("cell", "claim", "line", "post", "none")}
+    statuses = {k: sum(r["statuses"][k] for r in rows) for k in ("verified", "unverified", "post_scoped", "unpointed")}
+    level = scopes["cell"] + scopes["claim"] + scopes["line"]
+    return {"finals": len(rows), "numbers": total, "scopes": scopes, "statuses": statuses,
+            "number_level": level, "number_level_share": _ratio(level, total, 4),
+            "claim_share": _ratio(scopes["claim"], total, 4), "cell_share": _ratio(scopes["cell"], total, 4),
+            "verified_share": _ratio(statuses["verified"], total, 4)}
 
 
 def _total(values):
@@ -425,7 +456,8 @@ def board_criteria(index, runs, *, authors=None):
             "registered_artifacts": sum(1 for link in links if link["relationship"] == "produced"),
             "reuse": {"backed": backed, "unbacked": len(reused) - backed, "backed_ratio": _ratio(backed, len(reused))},
             "claims": ({s: statuses.count(s) for s in CLAIM_STATUSES} | {"total": len(statuses)})
-            if index["claims_recorded"] else None}
+            if index["claims_recorded"] else None,
+            "numbers": number_coverage(index, posts)}
 
 
 def cost_summary(runs, pricing):
@@ -451,30 +483,36 @@ def cost_summary(runs, pricing):
 
 
 def run_criteria(runs):
-    """Behaviour totals over runs (M9.1 criteria)."""
+    """Behaviour totals over runs (M9.1 criteria). A total is None when no run recorded the value; runs
+    that did not record it are left out of the sum rather than counted as zero (`*_unavailable_runs`)."""
     m = [r["metrics"] for r in runs]
     mono = _total(x.get("monotonic_seconds") for x in m)
-    analyses = sum(x["analysis_receipts"] for x in m)
-    scripts = sum(x["scripts_written"] for x in m)
+    analyses = _total(x.get("analysis_receipts") for x in m)
+    scripts = _total(x.get("scripts_written") for x in m)
+    plumbing = _total(x.get("plumbing_scripts") for x in m)
     tails = [x["minutes_after_last_successful_analysis"] for x in m if x.get("minutes_after_last_successful_analysis") is not None]
+    suspended = [x.get("suspended_seconds") for x in m]
     return {"runs": len(runs), "completed": sum(r["state"] == "completed" for r in runs),
             "failed": sum(r["state"] == "failed" for r in runs),
             "wall_hours": _ratio(_total(x.get("wall_seconds") for x in m), 3600, 4),
             "monotonic_hours": _ratio(mono, 3600, 4),
-            "suspensions": sum(1 for x in m if x["suspended_seconds"]),
-            "suspended_hours": round(sum(x["suspended_seconds"] for x in m) / 3600, 4),
-            "tool_calls": sum(x["tool_calls"] for x in m), "inbox_calls": sum(x["inbox_calls"] for x in m),
-            "analysis_receipts": analyses, "analysis_failures": sum(x["analysis_failures"] for x in m),
+            "clock_unavailable_runs": sum(1 for s in suspended if s is None),
+            "suspensions": sum(1 for s in suspended if s) if any(s is not None for s in suspended) else None,
+            "suspended_hours": _ratio(_total(suspended), 3600, 4) if any(s is not None for s in suspended) else None,
+            "tool_calls": _total(x.get("tool_calls") for x in m), "inbox_calls": _total(x.get("inbox_calls") for x in m),
+            "analysis_receipts": analyses, "analysis_failures": _total(x.get("analysis_failures") for x in m),
             "minutes_per_executed_analysis": _ratio(mono / 60 if mono is not None else None, analyses, 3),
-            "scripts_written": scripts, "plumbing_scripts": sum(x["plumbing_scripts"] for x in m),
-            "plumbing_share": _ratio(sum(x["plumbing_scripts"] for x in m), scripts),
-            "compactions": sum(x["compactions"] for x in m),
+            "scripts_written": scripts, "plumbing_scripts": plumbing,
+            "plumbing_share": _ratio(plumbing, scripts),
+            "compactions": _total(x.get("compactions") for x in m),
+            "compaction_unavailable_runs": sum(1 for x in m if x.get("compactions") is None),
             "compaction_summaries": _total(x.get("compaction_summaries") for x in m),
             "compaction_fallbacks": _total(x.get("compaction_fallbacks") for x in m),
             "ceremony_tail_minutes": {"runs": len(tails), "median": round(statistics.median(tails), 1) if tails else None,
                                       "mean": round(statistics.fmean(tails), 1) if tails else None,
                                       "max": max(tails) if tails else None},
-            "provider_citation_finals": sum(1 for x in m if x.get("provider_citation_in_final"))}
+            "provider_citation_finals": sum(1 for x in m if x.get("provider_citation_in_final"))
+            if any(x.get("provider_citation_in_final") is not None for x in m) else None}
 
 
 def bucket_of(created, bucket):
@@ -596,14 +634,18 @@ def compare(view, identities):
     runs = {r["run"]: r for r in load_runs(view, pricing)}
     index = board_index(view, list(runs.values()))
     requests = {r["id"]: r["post"] for r in view.rows("SELECT id,post FROM request")}
+    from daw.commons.moderation import Visibility
+    vis = Visibility.of(view)  # an assignment whose post is hidden by moderation shows no excerpt (C2)
     assignments, order = {}, []
     for c in cohorts:
         for entry in c["body"]["runs"]:
             key = entry["assignment"]
             if key not in assignments:
                 content = _post_content(view, requests[entry["request"]])
+                post = requests[entry["request"]]
                 assignments[key] = {"key": key, "source": entry["assignment_source"],
-                                    "excerpt": content.get("body", "")[:280], "content_is_untrusted_data": True,
+                                    "excerpt": None if vis.withheld(post) else content.get("body", "")[:280],
+                                    "hidden": vis.hidden(post), "content_is_untrusted_data": True,
                                     "cells": {}}
                 order.append(key)
             assignments[key]["cells"].setdefault(c["id"], []).append(runs[entry["run"]])

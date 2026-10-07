@@ -31,11 +31,28 @@ The run writes the following to `web/e2e/.out/<run>/`, which git ignores:
 
 The exit status is non-zero if any step fails.
 
-The suite uses the `playwright` package that is already installed on the machine
-and the pre-installed browsers. It adds no npm dependency. Playwright is
-resolved through `NODE_PATH`, then `/opt/node-tools/node_modules`.
-`PLAYWRIGHT_BROWSERS_PATH` defaults to `/opt/pw-browsers` when that folder
-exists. It never runs `playwright install`.
+Playwright is a pinned devDependency of `web/` (`playwright` 1.56.1, exact), so
+`npm --prefix web ci` installs it on a fresh machine. Its browser is installed
+once with the same pinned version:
+
+```sh
+npx --prefix web playwright install chromium            # macOS, or Linux with system libraries present
+npx --prefix web playwright install --with-deps chromium  # Linux CI: also installs system libraries
+```
+
+The runner never downloads anything itself. It resolves `playwright` from
+`web/node_modules` first (then `NODE_PATH` and `/opt/node-tools/node_modules` as
+fallbacks) and honours a pre-installed browser: `E2E_CHROMIUM` names a binary
+explicitly; `PLAYWRIGHT_BROWSERS_PATH` (default `/opt/pw-browsers` when that folder
+exists) is where Playwright looks for its pinned revision, and if that revision is
+missing there the newest Chromium in that folder is used, with a note in the
+log. Otherwise the launch fails with the install command above.
+
+CI (`.github/workflows/ci.yml`) runs the suite on `ubuntu-latest` and
+`macos-latest` after `npm run build` and `npm test`, with the browser installed
+by `npx playwright install --with-deps chromium` (Linux) or
+`npx playwright install chromium` (macOS), and keeps `report.json` and the
+screenshots as a build artifact.
 
 | Variable | Effect |
 |---|---|

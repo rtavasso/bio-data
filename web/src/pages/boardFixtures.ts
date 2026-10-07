@@ -24,15 +24,12 @@ export const listing: Listing = {
   family: "forum", query: "", sort: "recent", sequence: 20, total: 2, offset: 0, next_offset: null, method: "thread listing",
   items: [
     { type: "thread", id: FINDING, seq: 3, author: alice, channel: "research", parent: null, supersedes: null,
-      superseded_by: [CORRECTION], created: "2026-01-02T00:00:00+00:00", kind: "discussion", evidence, hidden: null,
+      superseded_by: [CORRECTION], created: "2026-01-02T00:00:00+00:00", kind: "discussion", evidence, hidden: false,
       title: "Marker contrast between conditions", snippet: "The marker contrast B versus A is log2 ratio 1.45",
       content_is_untrusted_data: true, replies: 4, last_activity: "2026-01-03T00:00:00+00:00", participants: [ALICE, BOB],
       corrections: 1, correction_status: "superseded", open_requests: 0, request: null },
-    { type: "thread", id: HIDDEN, seq: 8, author: { id: BOB, name: "bob", kind: "agent" }, channel: "research", parent: null,
-      supersedes: null, superseded_by: [], created: "2026-01-04T00:00:00+00:00", kind: "discussion", evidence,
-      hidden: { reason: "off-topic", actor: "operator", updated: "2026-01-05T00:00:00+00:00", event_seq: 9 },
-      title: null, snippet: null, content_is_untrusted_data: true, replies: 0, last_activity: "2026-01-04T00:00:00+00:00",
-      participants: [BOB], corrections: 0, correction_status: null, open_requests: 0, request: null },
+    // A hidden root is its identity and the moderation reason only (spec v2 C2).
+    { type: "thread", id: HIDDEN, hidden: true, reason: "off-topic", replies: 0 },
   ],
 };
 
@@ -44,12 +41,12 @@ export const running = {
 
 const card = (id: string, title: string, kind = "discussion") => ({
   id, seq: 4, author: alice, channel: "research", parent: FINDING, supersedes: null, superseded_by: [],
-  created: "2026-01-03T00:00:00+00:00", kind, evidence, hidden: null, title, snippet: title, content_is_untrusted_data: true as const,
+  created: "2026-01-03T00:00:00+00:00", kind, evidence, hidden: false, title, snippet: title, content_is_untrusted_data: true as const,
 });
 
 export const postDetail: PostDetail = {
   id: FINDING, seq: 3, author: ALICE, author_participant: alice, channel: "research", parent: null, supersedes: null,
-  body_blob: BLOB, created: "2026-01-02T00:00:00+00:00", thread: FINDING, hidden: null, content_is_untrusted_data: true,
+  body_blob: BLOB, created: "2026-01-02T00:00:00+00:00", thread: FINDING, hidden: false, content_is_untrusted_data: true,
   content: { title: "Marker contrast between conditions", body: `The marker contrast B versus A is log2 ratio 1.45 (${ART}).`,
     kind: "discussion", channel: "research", evidence: { artifacts: [ART, MEAS] } },
   evidence_artifacts: [{ id: ART, present: true, title: "Condition B versus A contrast", output_role: "contrast-table",
@@ -71,9 +68,12 @@ export const postDetail: PostDetail = {
   superseded_by: [card(CORRECTION, "Correction: marker contrast")],
   supersedes_chain: { supersedes: [], superseded_by: [CORRECTION] },
   requests: [],
-  numbers: [{ text: "1.45", offset: 46, scope: "line", pointers: [{ artifact: ART, location: { store: "library" } }] },
-    { text: "40", offset: 80, scope: "none", pointers: [] }],
+  numbers: [{ text: "1.45", offset: 45, length: 4, scope: "line", status: "unverified",
+    pointers: [{ id: ART, kind: "artifact", artifact: ART, location: { store: "library" }, result: "unverified",
+      reason: "the value does not occur in the output bytes", route: `/artifact/${ART}` }] },
+    { text: "40", offset: 80, scope: "none", status: "unpointed", pointers: [] }],
   unpointed_numbers: ["40"],
+  post_scoped_numbers: [],
   diff: { from: FINDING, to: CORRECTION, lines: [{ op: "-", text: "ratio 1.45" }, { op: "+", text: "ratio 1.54" }],
     numbers: { removed: ["1.45"], added: ["1.54"] } },
   diff_from_superseded: null,
