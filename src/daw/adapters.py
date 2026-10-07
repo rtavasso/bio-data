@@ -487,49 +487,70 @@ class Sources:
                              "doi": data.get("doi"), "revision_of": data.get("revision_of"), "published_at": data.get("published_at"),
                              "datasets": len(data.get("datasets", [])), "schema_keys": sorted(data)}
 
+    def fulltext_routes(self, pmcid):
+        """The full-text route ladder. Europe PMC's fullTextXML answered 18 cohort calls with HTTP 500 and the
+        agents then wrote 13 fetchers of their own; the NCBI routes serve the same open-access article."""
+        number = pmcid[3:]
+        return [("europepmc", EPMC + pmcid + "/fullTextXML"),
+                ("ncbi_efetch", f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id={number}&retmode=xml"),
+                ("ncbi_bioc", f"https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_xml/{pmcid}/unicode")]
+
     def fulltext(self, reference):
-        """Europe PMC JATS full text: immutable XML, a paragraph object with stable locators, search documents."""
+        """Full text of one open-access article as immutable XML, a paragraph object with stable locators and
+        search documents. Routes are tried in order (`fulltext_routes`) until one serves a parsable article;
+        a stub body (an error page, a BioC "No result can be found" notice, an article set without an article)
+        is recorded as that route's outcome and never kept as the source."""
         pmcid = reference.upper()
         if not re.fullmatch(r"PMC\d+", pmcid):
-            raise DawError("unsupported_reference", "Europe PMC full text needs a PMCID")
+            raise DawError("unsupported_reference", "a PMCID is needed for full text")
         bundle = self.ws.resource("bundle", "europepmc", pmcid, {"reference": pmcid})
         run, _ = self.ws.start_run("fulltext", {"pmcid": pmcid, "adapter_version": VERSION, "parser": JATS_PARSER})
         before = len(self.snapshots)
-        url = EPMC + pmcid + "/fullTextXML"
-        try:
-            root, sid, blob = self.payload(url, "xml")
-            paragraphs = jats_paragraphs(root)
-            node = next((e for e in root.iter() if local_tag(e) == "article-title"), None)
-            title = " ".join("".join(node.itertext()).split()) if node is not None else pmcid
-            aid = self.ws.register_asset(bundle, "europepmc", Asset(
-                native_id=f"{pmcid}:jats", name=f"{pmcid}.xml", url=url, access="available_full",
-                metadata={"article": pmcid, "parser": JATS_PARSER}), sid, blob)
-            record = {"kind": "jats_paragraphs", "parser": JATS_PARSER, "pmcid": pmcid, "title": title,
-                      "asset_revision": aid, "source_blob": blob, "source_snapshot": sid, "paragraphs": paragraphs,
-                      "locators": "element path with 1-based same-tag sibling indexes; body paragraphs are relative to "
-                                  "<body>, others start at abstract/back/floats-group"}
-            obj = self.ws.put_json(record)
-            abstract = " ".join(p["text"] for p in paragraphs if p["locator"].startswith("abstract"))
-            # Keyed by asset revision: a changed upstream representation leaves older documents historical.
-            index_document(self.ws, key=f"fulltext:{aid}", family="data", subject=aid, record_id=obj, title=title,
-                           summary=(abstract or " ".join(p["text"] for p in paragraphs[:3]))[:2000], body_blob=obj,
-                           detail="\n".join(f"[{p['locator']}] {p['text']}" for p in paragraphs),
-                           provider="europepmc", format="jats", level=2)
-            for p in paragraphs:
-                index_document(self.ws, key=f"fulltext:{aid}#{p['locator']}", family="data", subject=aid,
-                               record_id=p["locator"], title=f"{title} — {p['section'] or p['locator']}",
-                               summary=p["text"][:2000], body_blob=obj, detail=p["text"], provider="europepmc",
-                               format="jats-paragraph", level=2)
-            output = {"pmcid": pmcid, "outcome": "available_full", "asset_revision": aid, "source_blob": blob,
-                      "snapshot": sid, "paragraphs_blob": obj, "paragraphs": len(paragraphs), "title": title,
-                      "parser": JATS_PARSER, "run": run,
-                      "warnings": [] if paragraphs else ["no paragraphs parsed; inspect the source XML"],
-                      "next": "bio data search TEXT --paragraphs returns paragraph locators in record_id"}
-            self.ws.finish_run(run, output)
-        except DawError as e:
-            output = {"pmcid": pmcid, "outcome": e.reason, "reason": str(e), "snapshots": self.snapshots[before:], "run": run,
-                      "note": "not_found means Europe PMC served no full text for this ID, not that the article lacks it"}
-            self.ws.finish_run(run, output, error=str(e))
+        routes, output = [], None
+        for route, url in self.fulltext_routes(pmcid):
+            try:
+                root, sid, blob = self.payload(url, "xml")
+                article, paragraphs = article_paragraphs(root)
+                if not paragraphs:
+                    raise DawError("no_full_text", f"{route} served no article paragraphs (snapshot {sid})")
+                node = next((e for e in article.iter() if local_tag(e) == "article-title"), None)
+                title = " ".join("".join(node.itertext()).split()) if node is not None else pmcid
+                provider = "europepmc" if route == "europepmc" else "ncbi"
+                aid = self.ws.register_asset(bundle, provider, Asset(
+                    native_id=f"{pmcid}:jats", name=f"{pmcid}.xml", url=url, access="available_full",
+                    metadata={"article": pmcid, "parser": JATS_PARSER, "route": route}), sid, blob)
+                record = {"kind": "jats_paragraphs", "parser": JATS_PARSER, "pmcid": pmcid, "title": title, "route": route,
+                          "asset_revision": aid, "source_blob": blob, "source_snapshot": sid, "paragraphs": paragraphs,
+                          "locators": "element path with 1-based same-tag sibling indexes; body paragraphs are relative to "
+                                      "<body>, others start at abstract/back/floats-group; BioC routes use passage[N]"}
+                obj = self.ws.put_json(record)
+                abstract = " ".join(p["text"] for p in paragraphs if p["locator"].startswith("abstract"))
+                # Keyed by asset revision: a changed upstream representation leaves older documents historical.
+                index_document(self.ws, key=f"fulltext:{aid}", family="data", subject=aid, record_id=obj, title=title,
+                               summary=(abstract or " ".join(p["text"] for p in paragraphs[:3]))[:2000], body_blob=obj,
+                               detail="\n".join(f"[{p['locator']}] {p['text']}" for p in paragraphs),
+                               provider=provider, format="jats", level=2)
+                for p in paragraphs:
+                    index_document(self.ws, key=f"fulltext:{aid}#{p['locator']}", family="data", subject=aid,
+                                   record_id=p["locator"], title=f"{title} — {p['section'] or p['locator']}",
+                                   summary=p["text"][:2000], body_blob=obj, detail=p["text"], provider=provider,
+                                   format="jats-paragraph", level=2)
+                routes.append({"route": route, "outcome": "available_full"})
+                output = {"pmcid": pmcid, "outcome": "available_full", "route": route, "routes": routes, "asset_revision": aid,
+                          "source_blob": blob, "snapshot": sid, "paragraphs_blob": obj, "paragraphs": len(paragraphs),
+                          "title": title, "parser": JATS_PARSER, "run": run, "warnings": [],
+                          "next": "bio data search TEXT --paragraphs returns paragraph locators in record_id"}
+                self.ws.finish_run(run, output)
+                break
+            except DawError as e:
+                routes.append({"route": route, "outcome": e.reason, "reason": str(e)})
+        if output is None:
+            last = routes[-1] if routes else {"outcome": "unsupported_route", "reason": "no route"}
+            output = {"pmcid": pmcid, "outcome": last["outcome"], "reason": last["reason"], "routes": routes,
+                      "snapshots": self.snapshots[before:], "run": run,
+                      "note": "every route failed; not_found/no_full_text mean these services served no full text for "
+                              "this ID, not that the article lacks it. Record the gap with bio work gap and cite this run."}
+            self.ws.finish_run(run, output, error=last["reason"])
         return output
 
     def supplementary(self, reference, *, max_files=10, max_bytes=256 * 2**20, max_asset_bytes=64 * 2**20, isolated=True):
@@ -835,6 +856,35 @@ def jats_paragraphs(root):
         node = next((c for c in root if local_tag(c) == container), None)
         if node is not None:
             walk(node, "" if container == "body" else container, "")
+    return found
+
+
+def article_paragraphs(root):
+    """(article element, paragraphs) for a JATS <article>, an efetch <pmc-articleset>, or a BioC <collection>.
+    Anything else (an HTML error page parsed as XML, a notice element) yields no paragraphs."""
+    tag = local_tag(root)
+    if tag == "article":
+        return root, jats_paragraphs(root)
+    if tag == "pmc-articleset":
+        article = next((c for c in root if local_tag(c) == "article"), None)
+        return (article, jats_paragraphs(article)) if article is not None else (root, [])
+    if tag == "collection":
+        return root, bioc_paragraphs(root)
+    return root, []
+
+
+def bioc_paragraphs(root):
+    """BioC passages as paragraphs: locator passage[N], section from the section_type/type infons."""
+    found = []
+    for n, passage in enumerate((e for e in root.iter() if local_tag(e) == "passage"), 1):
+        infons = {i.get("key"): "".join(i.itertext()).strip() for i in passage if local_tag(i) == "infon"}
+        if infons.get("type", "").lower() in {"title", "front", "ref"}:
+            continue
+        node = next((c for c in passage if local_tag(c) == "text"), None)
+        text = " ".join("".join(node.itertext()).split()) if node is not None else ""
+        if text:
+            found.append({"locator": f"passage[{n}]", "section": infons.get("section_type") or infons.get("type") or "",
+                          "sha256": hashlib.sha256(text.encode()).hexdigest(), "text": text})
     return found
 
 

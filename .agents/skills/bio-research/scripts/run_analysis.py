@@ -3,6 +3,11 @@
 Declare each input file with --input (repeatable, in the order the code takes them): the receipt records
 its sha256 before the run and whether it was unchanged after. A replication is confirmed only when these
 equal the derivation's recorded inputs and the printed `analysis_executed` line is in the captured stream.
+
+Prints one JSON line: the receipt path and hash, the exit code, the last --tail lines of stdout (default 20,
+at most 3000 characters) and, on a non-zero exit, the stderr tail, so a failure is diagnosed from this result
+instead of a second read of the .stderr file. Full stdout/stderr are spooled next to the receipt
+(RECEIPT.stdout, RECEIPT.stderr); print a summary from your script and leave whole tables in output files.
 """
 import argparse
 import hashlib
@@ -18,7 +23,20 @@ def sha(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def run(receipt, outputs, command, inputs=()):
+TAIL_CHARS = 3000
+
+
+def tail(path, lines):
+    """The last `lines` lines of a spooled stream, bounded by TAIL_CHARS; never fails the receipt."""
+    try:
+        text = Path(path).read_text(errors="replace")
+    except OSError:
+        return ""
+    chosen = "\n".join(text.splitlines()[-lines:]) if lines > 0 else ""
+    return chosen[-TAIL_CHARS:]
+
+
+def run(receipt, outputs, command, inputs=(), *, tail_lines=20):
     if command and command[0] == "--":
         command = command[1:]
     if len(command) < 2 or not re.fullmatch(r"python(?:[23](?:\.\d+)?)?|Rscript", Path(command[0]).name):
@@ -60,7 +78,19 @@ def run(receipt, outputs, command, inputs=()):
                              and value.get("inputs_unchanged", False)
                              and len(value["outputs"]) == len(outputs) and all(o["written"] for o in value["outputs"]))
         json.dump(value, saved, indent=2, allow_nan=False)
-    print(json.dumps({"event": "analysis_executed", "receipt": str(receipt), "sha256": sha(receipt)}), flush=True)
+    event = {"event": "analysis_executed", "receipt": str(receipt), "sha256": sha(receipt),
+             "exit_code": value["exit_code"], "complete": value["complete"],
+             "outputs_written": sum(1 for o in value["outputs"] if o["written"]), "outputs_declared": len(outputs),
+             "stdout_tail": tail(receipt.with_suffix(receipt.suffix + ".stdout"), tail_lines)}
+    if value["exit_code"] != 0 or value.get("error"):
+        event["stderr_tail"] = tail(receipt.with_suffix(receipt.suffix + ".stderr"), tail_lines)
+        if value.get("error"):
+            event["error"] = value["error"]
+    elif not value["complete"]:
+        event["incomplete_reason"] = ("producer changed during the run" if not value.get("code_unchanged")
+                                      else "an input changed during the run" if not value.get("inputs_unchanged")
+                                      else "a declared output was not written")
+    print(json.dumps(event, allow_nan=False), flush=True)
     return 0 if value["complete"] else (value["exit_code"] or 1)
 
 
@@ -69,6 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--output", type=Path, action="append", required=True)
     parser.add_argument("--input", type=Path, action="append", default=[], help="input file the code reads (repeatable)")
+    parser.add_argument("--tail", type=int, default=20, help="stdout lines to print (0 = none); stderr tail is printed on failure")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    raise SystemExit(run(args.receipt, args.output, args.command, args.input))
+    raise SystemExit(run(args.receipt, args.output, args.command, args.input, tail_lines=args.tail))
