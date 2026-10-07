@@ -5,7 +5,8 @@ content-addressed site that a reader verifies offline.
 
 ```
 index.html            the write-up (untrusted, escaped, no scripts); every number marked with its checker
-                      status; pointers open the claim or artifact; figures link to their artifact bytes
+                      status; pointers open the claim or artifact; figures link to their artifact bytes;
+                      each cited artifact with its replication badge, then the unreplicated ones (v3 V14)
 claims.html           every cited claim (text, scope, status, its own pointers), local or of another snapshot
 artifacts/<key>.html  one page per artifact: sha256, output bytes, manifest (local or foreign)
 artifacts/<key>/...   the output bytes and the manifest (server paths stripped)
@@ -153,6 +154,20 @@ def build_preprint(view, post_id):
     absent = [i for i, e in pointers.items() if not e.get("present")]
     if absent or missing:
         raise DawError("preprint_unverifiable", "; ".join(missing + [f"{i}: does not resolve" for i in absent]))
+    # Spec v3 V14: every cited artifact shows its replication badge (this commons' records at export time); the
+    # preprint lists the artifacts nobody has replicated. Foreign artifacts are not assessed here.
+    from daw.commons.replication import badge
+    for identity, record in artifacts.items():
+        if record.get("foreign"):
+            record["replication"] = None
+            continue
+        found = badge(view, identity, vis=vis)
+        record["replication"] = {"replicated": found["replicated"], "confirmations": [
+            {"post": c["post"], "request": c.get("request"), "run": c.get("run"), "participant": c.get("agent"),
+             "criteria": {k: v["ok"] for k, v in c["criteria"].items()}}
+            for c in found["confirmations"] if c.get("replicated")]}
+    unreplicated = sorted(a for a, r in artifacts.items() if r["replication"] is not None
+                          and not r["replication"]["replicated"])
 
     numbers = []
     for n in rendered["numbers"]:
@@ -197,6 +212,19 @@ def build_preprint(view, post_id):
     for n in numbers:
         counts[n["status"]] = counts.get(n["status"], 0) + 1
     title = content.get("title") or post_id
+
+    def replicated(identity):
+        found = artifacts[identity]["replication"]
+        if found is None:
+            return ' <span class="muted">replication not assessed (a record of another snapshot)</span>'
+        if not found["replicated"]:
+            return ' <span class="badge">not replicated</span>'
+        first = found["confirmations"][0]
+        who = people.get(first["participant"], {}).get("name") or first["participant"]
+        return (f' <span class="badge">replicated</span> <span class="muted">by {export.esc(who)}: a different '
+                f'participant, a captured execution (run <span class="mono">{export.esc(first["run"])}</span>), '
+                f'matching inputs and identical bytes (confirmation <span class="mono">{export.esc(first["post"])}'
+                '</span>)</span>')
     foreign = sorted({a["snapshot"] for a in artifacts.values() if a.get("snapshot")}
                      | {c["snapshot"] for c in claims.values() if c.get("snapshot")})
     body = (f"<p class=\"muted\">Write-up by {export.esc(author.get('name') or row['author'])} "
@@ -218,7 +246,12 @@ def build_preprint(view, post_id):
             + "<h2>Artifacts</h2><ul>" + "".join(
                 f"<li><a href=\"{export.esc(page_of(a))}\">{export.esc(artifacts[a].get('title') or a)}</a> · "
                 f"<a href=\"{export.esc(artifacts[a]['path'])}\">bytes</a> <span class=\"muted mono\">sha256 "
-                f"{export.esc(artifacts[a]['sha256'])}</span></li>" for a in sorted(artifacts)) + "</ul>")
+                f"{export.esc(artifacts[a]['sha256'])}</span>{replicated(a)}</li>" for a in sorted(artifacts)) + "</ul>"
+            + "<h2>Unreplicated artifacts</h2>"
+            + ("<ul>" + "".join(f"<li><a href=\"{export.esc(page_of(a))}\">{export.esc(artifacts[a].get('title') or a)}"
+                                f"</a> <span class=\"mono muted\">{export.esc(a)}</span></li>" for a in unreplicated)
+               + "</ul>" if unreplicated else
+               "<p class=\"muted\">Every cited artifact of this commons has a replication confirmation.</p>"))
     site.page("index.html", title, body)
 
     claim_items = []
@@ -249,7 +282,7 @@ def build_preprint(view, post_id):
                   f"<p class=\"mono\">{export.esc(identity)}</p>{origin}<dl><dt>Output bytes</dt><dd><a href=\"{export.esc(rel)}\">"
                   f"{export.esc(item['name'])}</a> · {item['bytes']} bytes · sha256 <span class=\"mono\">"
                   f"{export.esc(item['sha256'])}</span></dd>{manifest_link}<dt>Output role</dt><dd>"
-                  f"{export.esc(item.get('output_role'))}</dd></dl>"
+                  f"{export.esc(item.get('output_role'))}</dd><dt>Replication</dt><dd>{replicated(identity)}</dd></dl>"
                   + (export.untrusted("the registering researcher", f"<p>{export.esc(item['summary'])}</p>")
                      if item.get("summary") else ""))
 
@@ -303,7 +336,7 @@ def build_preprint(view, post_id):
                             if rendered["verdict"].get(k) is not None},
                 "numbers": numbers, "statuses": counts,
                 "claims": {k: v for k, v in claims.items()}, "artifacts": {k: v for k, v in artifacts.items()},
-                "posts": posts, "source_snapshots": foreign,
+                "posts": posts, "source_snapshots": foreign, "unreplicated": unreplicated,
                 "note": "Every number with its recorded checker result; verify.py recomputes each from the bytes listed "
                         "here. Offsets are Unicode code points into the Markdown source."}
     site.add("preprint.json", canonical(preprint))
@@ -318,7 +351,7 @@ def build_preprint(view, post_id):
                 "note": "Content-addressed preprint: the snapshot ID is the sha256 of this file's bytes (canonical "
                         "JSON). Run verify.py to re-check every file and every number offline."}
     return site, manifest, {"numbers": len(numbers), "statuses": counts, "claims": len(claims),
-                            "artifacts": len(artifacts), "foreign_snapshots": foreign}
+                            "artifacts": len(artifacts), "foreign_snapshots": foreign, "unreplicated": unreplicated}
 
 
 def export_preprint(board, actor, post_id, output=None):

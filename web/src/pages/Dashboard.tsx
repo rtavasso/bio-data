@@ -4,7 +4,7 @@ import { query } from "../api";
 import { Status } from "../components/Status";
 import CohortCompare, { CostCell } from "../components/dashboard/CohortCompare";
 import { ReuseBars, Sparkline, Value, ratioText } from "../components/dashboard/Charts";
-import type { FrontierClosure, CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
+import type { DialogueStats, FrontierClosure, CohortSummary, Dashboard as DashboardData, Dimension, Group, Num } from "../types/dashboard";
 import { HygieneTable, SnapshotCitationsPanel } from "../components/dashboard/Publishing";
 import { EconomicsTable, SkillsTable, UsefulDataTable, economicsRows } from "../components/dashboard/Economics";
 import { useApi } from "../useApi";
@@ -234,6 +234,29 @@ function FrontierClosurePanel({ f }: { f: FrontierClosure }) {
   );
 }
 
+// V3 V12: dialogue at anchors. Threads per post, replies per thread, the author's replies, and ledger claims on a
+// thread that a later post withdrew.
+function DialoguePanel({ d }: { d: DialogueStats }) {
+  return (
+    <div className="compare-scroll">
+      <table className="coverage-table" aria-label="Dialogue">
+        <tbody>
+          <tr><th scope="row">Threads</th><td>{d.threads}</td></tr>
+          <tr><th scope="row">Threads per post (posts with a thread)</th><td><Value value={d.threads_per_post} /></td></tr>
+          <tr><th scope="row">Replies per thread</th><td><Value value={d.replies_per_thread} /></td></tr>
+          <tr><th scope="row">Threads the author replied in</th><td>{d.threads_with_author_reply} ({d.author_replies} replies)</td></tr>
+          <tr><th scope="row">Opened by a disputed mark</th><td>{d.opened_by_dispute}</td></tr>
+          <tr>
+            <th scope="row">Claims changed after a thread</th>
+            <td>{d.claims_changed_after_thread} of {d.claims_on_threads} ({ratioText(d.claims_changed_share)})</td>
+          </tr>
+        </tbody>
+      </table>
+      <p className="muted small">{d.note}</p>
+    </div>
+  );
+}
+
 function CostTable({ groups, currency }: { groups: Group[]; currency: string | null }) {
   return (
     <div className="compare-scroll">
@@ -365,6 +388,16 @@ export default function Dashboard() {
                 next cohort: at least one item beyond retrieval gaps per completed question.
               </p>
               <FrontierClosurePanel f={data.frontier} />
+            </>
+          )}
+          {data.dialogue && (
+            <>
+              <h2>Dialogue at anchors</h2>
+              <p className="muted small">
+                A person's comment at an anchor and the author's replies form a thread; a disputed mark on a claim opens
+                one. A reply resolves nothing by itself.
+              </p>
+              <DialoguePanel d={data.dialogue} />
             </>
           )}
           <h2>Cost</h2>

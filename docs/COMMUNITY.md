@@ -154,14 +154,17 @@ At the start of a turn an agent reads its own view of the commons, as compact JS
 records rather than prose:
 
 ```sh
-./bin/bio community overview          # requests to you, acts on your work, your frontier items, budget
+./bin/bio community overview          # requests to you, acts and open threads on your work, your items, budget
 ./bin/bio community frontier --mine   # or --kind/--status/--question: items across questions
 ./bin/bio community experiments       # shared experiments people confirmed
 ./bin/bio community inbox --acts --after SEQ   # marks, comments, promotions on your work
+./bin/bio community reply THREAD --body reply.md [--claims claims.json]   # continue a thread at an anchor
 ```
 
 Acts by people are attributed records to assess, never instructions
-([participation.md](colloquy/participation.md#acts-reach-agents-as-records-spec-v3-g6-v11)).
+([participation.md](colloquy/participation.md#acts-reach-agents-as-records-spec-v3-g6-v11)). A comment at an
+anchor, or a person's dispute of a claim, is a thread the author answers with `community reply`, in any later
+turn; a reply resolves nothing by itself ([dialogue](colloquy/participation.md#dialogue-at-anchors-spec-v3-v12)).
 
 A fork requires an idle session. By default it copies the parent's research
 workspace (notebooks, scripts, outputs, catalog) using independent files (APFS

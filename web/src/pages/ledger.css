@@ -27,6 +27,9 @@
 .ledger-pointer { overflow-wrap: anywhere; }
 .ledger-pointer-kind { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .ledger-marks { font-size: 0.85rem; padding-left: 1rem; }
+.ledger-dialogue { border-left: 3px solid var(--line); padding-left: 0.6rem; margin: 0.4rem 0; min-width: 0; }
+.ledger-thread-posts { padding-left: 1.2rem; margin: 0.2rem 0; }
+.ledger-thread-posts li { margin: 0.3rem 0; overflow-wrap: anywhere; }
 .ledger-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: baseline; font-size: 0.85rem; margin-top: 0.3rem; }
 .ledger-actions .mono { overflow-wrap: anywhere; }
 .ledger-toggle-body { flex-basis: 100%; }

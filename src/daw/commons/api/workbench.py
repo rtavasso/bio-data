@@ -98,6 +98,7 @@ def _sequence(root):
 
 
 def _new_items(root, participant, cursor):
+    """On (re)connect: the full inbox after the client's cursor, and the board sequence it was read at."""
     from daw.commons.archive import Archive
     with Archive(root) as view:
         sequence = view.sequence()
@@ -105,16 +106,36 @@ def _new_items(root, participant, cursor):
     return sequence, sorted(found["items"], key=lambda i: (i.get("seq") or 0, i["id"]))
 
 
+def _delta_items(root, participant, seen, sequence):
+    """After a board change: the items the events in (seen, sequence] record (one shared window per write, v3 B8)."""
+    from daw.commons.archive import Archive
+    with Archive(root) as view:
+        found = inbox.delta(view, participant, seen, sequence)
+        read = inbox.read_state(view, participant["id"]) if found else {}
+    for item in found:
+        item["read"], item["read_at"] = item["id"] in read, read.get(item["id"])
+    return sorted(found, key=lambda i: (i.get("seq") or 0, i["id"]))
+
+
 async def inbox_stream(root, participant, after, *, once=False, request=None, poll=1.0, keepalive=15.0):
-    """Per-caller SSE: each new inbox item once, `id:` its board sequence, so a reconnect resumes after it."""
-    cursor, seen_sequence = after, None
+    """Per-caller SSE: each new inbox item once, `id:` its board sequence, so a reconnect resumes after it.
+    The full inbox is computed only on connect; each later board change is read as a delta of the events since
+    the last sequence this stream read (`inbox.delta`)."""
+    cursor, seen_sequence, sent = after, None, set()
     yield "retry: 3000\n\n"
     last = time.monotonic()
     while True:
         sequence = await asyncio.to_thread(_sequence, root)
         if sequence != seen_sequence:
-            seen_sequence, items = await asyncio.to_thread(_new_items, root, participant, cursor)
+            if seen_sequence is None:
+                seen_sequence, items = await asyncio.to_thread(_new_items, root, participant, cursor)
+            else:
+                items = await asyncio.to_thread(_delta_items, root, participant, seen_sequence, sequence)
+                seen_sequence = sequence
             for item in items:
+                if item["id"] in sent:
+                    continue
+                sent.add(item["id"])
                 cursor = max(cursor, item.get("seq") or 0)
                 yield frame("inbox_item", item, seq=item.get("seq"), named=False)
             if items:

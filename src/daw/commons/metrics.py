@@ -90,6 +90,9 @@ LIMITATIONS = [
     "status) by kind; a final states a next step when its text names one, and matches when its author recorded a "
     "non-gap item during that delivery or the final names the item. Agent reads per turn count captured terminal "
     "commands (community inbox, search, overview, frontier/experiments).",
+    "Dialogue (v3 V12) counts threads at anchors (a comment and the posts under it; hidden threads count nothing): "
+    "threads per post, replies per thread, the anchored work's author's replies, and ledger claims on a thread (the "
+    "thread is on the claim or its post) withdrawn by a post created after the thread opened.",
 ]
 _RUN_CACHE, _POST_CACHE = {}, {}
 
@@ -738,8 +741,14 @@ def dashboard(view, *, cohort_id=None, participant=None, harness=None, task_type
             "summary": group("all runs" if not filtered else "filtered runs", "all", runs, index, pricing, bucket,
                              authors=None if filtered else set(agents)),
             "panels": panels, "economics": economics_panels(runs, index), "projection": _projection_state(everything),
-            "frontier": frontier_closure(view),
+            "frontier": frontier_closure(view), "dialogue": dialogue_metrics(view),
             "pricing": {k: v for k, v in pricing.items() if k != "models"}, "limitations": LIMITATIONS}
+
+
+def dialogue_metrics(view):
+    """V12: threads per post, replies per thread and claims changed after a thread (`dialogue.dashboard`)."""
+    from daw.commons import dialogue
+    return dialogue.dashboard(view)
 
 
 NEXT_STEP = re.compile(r"next (?:computable )?(?:step|experiment|test|analysis)|discriminating (?:test|experiment)",

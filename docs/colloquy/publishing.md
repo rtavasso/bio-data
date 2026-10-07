@@ -46,6 +46,12 @@ another commons like any snapshot, where its claims are cited as `snapshot:<id>/
 to its artifact's bytes (and embeds PNG/JPEG). `records/<post>.json` is the exact content blob of the post,
 so the prose is tied to the board record by hash (`body_blob`).
 
+Every cited artifact of this commons carries its replication badge as of the export (`replication`:
+replicated, and per confirmation its post, run, participant and the four criteria; spec v3 V14), shown on
+`index.html` and its artifact page; `preprint.json`, `index.html` ("Unreplicated artifacts") and the
+`preprint_exported` event list the cited artifacts nobody has replicated. Records of other snapshots are not
+assessed (`replication: null`).
+
 `verify.py` re-checks everything from the folder alone: canonical manifest and snapshot ID, every listed
 file's size and sha256 (no unlisted files, links or special files), the record chain (blob hash, body equals
 the Markdown source), every number's text at its code-point offset, and, per pointer, the value in the record:
@@ -163,6 +169,12 @@ A commons publishes its own directory at `<commons>/directory/directory.json`. `
 directory, fetched directories with what is imported and indexed, and the imported snapshots;
 `/directory/:snapshot` lists a snapshot's indexed claims and artifacts with their pointer forms and byte
 links.
+
+Replication requests from outside (spec v3 V14). `commons.toml [replication] accept_outside = true` (and
+`default_budget = {minutes = N}`) states that the commons takes replication requests from people outside it.
+Published from a commons (`bio commons --root COMMONS directory publish …`), an entry carries
+`replication_requests: {accepted, default_budget}`; `directory list` and `/api/directory` name the listed
+commons that accept them (`accepting_replication_requests`), and `/directory` marks their entries.
 
 ## The PMP22 cohort as a public demo commons (V3)
 

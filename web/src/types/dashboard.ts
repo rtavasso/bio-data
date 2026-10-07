@@ -151,6 +151,22 @@ export interface FrontierClosure {
   finals_next_step_matched_share: Num;
 }
 
+// Spec v3 V12: threads at anchors, replies and claims changed after a thread.
+export interface DialogueStats {
+  threads: number;
+  posts_with_threads: number;
+  threads_per_post: Num;
+  replies: number;
+  replies_per_thread: Num;
+  author_replies: number;
+  threads_with_author_reply: number;
+  opened_by_dispute: number;
+  claims_on_threads: number;
+  claims_changed_after_thread: number;
+  claims_changed_share: Num;
+  note: string;
+}
+
 export type Dimension = "cohort" | "participant" | "harness" | "task_type";
 
 export interface Pricing {
@@ -174,6 +190,7 @@ export interface Dashboard {
   economics?: Economics;
   projection: { runs: number; stored: number; stale: number; missing: number; note: string };
   frontier?: FrontierClosure;
+  dialogue?: DialogueStats;
   pricing: Pricing;
   limitations: string[];
 }

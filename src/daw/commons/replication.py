@@ -275,3 +275,107 @@ def receipt_line(receipt):
             f"{stream.get('helper', 'run_analysis.py')} at events.jsonl line {stream.get('line')}): producer "
             f"code sha256 `{receipt['code_sha256']}`, input sha256 {inputs}, exit code {receipt['exit_code']}, "
             f"started {receipt.get('started')}, finished {receipt.get('finished')}")
+
+
+# ---- requests from people and the badge people can trust (spec v3 V14) --------------------------
+
+DEFAULT_BUDGET = {"minutes": 60}
+
+
+def settings(root):
+    """The commons' replication policy (`commons.toml [replication]`): `default_budget` of a person's replication
+    request (default DEFAULT_BUDGET) and `accept_outside` (whether people from outside this commons may request
+    replications; listed in directory entries). Reads the file only."""
+    import tomllib
+
+    from daw.commons.tasks import normalize_budget
+    path = Path(root) / "commons.toml"
+    try:
+        configured = tomllib.loads(path.read_text()).get("replication", {}) if path.is_file() else {}
+    except tomllib.TOMLDecodeError as error:
+        raise DawError("invalid_commons_config", str(error)) from error
+    if not isinstance(configured, dict) or set(configured) - {"default_budget", "accept_outside"}:
+        raise DawError("invalid_commons_config", "[replication] takes default_budget and accept_outside")
+    accept = configured.get("accept_outside", False)
+    if not isinstance(accept, bool):
+        raise DawError("invalid_commons_config", "[replication] accept_outside is true or false")
+    return {"default_budget": normalize_budget(configured.get("default_budget")) or dict(DEFAULT_BUDGET),
+            "accept_outside": accept}
+
+
+def _system_id(view):
+    row = view.one("SELECT id FROM agent WHERE name=? AND kind='system'", (SYSTEM_PARTICIPANT,))
+    return row["id"] if row else None
+
+
+def badge(view, artifact, *, vis=None):
+    """The replication badge of a library artifact: replicated only when a confirmation by the replication
+    participant shows (1) a different participant from every producer, (2) a captured execution in a sandboxed
+    dispatch, (3) receipt inputs equal to the derivation's recorded inputs and (4) output bytes identical to the
+    artifact's, each re-read from records now and each a link. Other replication outcomes on the artifact are
+    listed as `attempts`. Read-only; a confirmation on a hidden post is withheld and counts nothing."""
+    from daw.artifacts import artifact_info
+    from daw.commons.moderation import Visibility
+    vis = vis or Visibility.of(view)
+    row = view.library.one("SELECT output_blob FROM artifact WHERE id=?", (artifact,))
+    if not row:
+        return {"artifact": artifact, "replicated": False, "confirmations": [], "attempts": [],
+                "reason": "not in the shared library: only published artifacts carry a replication badge"}
+    inputs = False  # read the derivation only when there is a confirmation to check against it
+    system = _system_id(view)
+    names = {r["id"]: r["name"] for r in view.rows("SELECT id,name FROM agent")}
+    confirmations, makers = [], None
+    for event in view.rows("SELECT body FROM event WHERE kind='published' AND json_extract(body,'$.author')=? "
+                           "ORDER BY seq", (system,)) if system else []:
+        body = json.loads(event["body"])
+        record = (body.get("evidence") or {}).get("replication") or {}
+        if record.get("original") != artifact or "output_sha256" not in record:
+            continue
+        post = body["post"]
+        if vis.withheld(post):
+            confirmations.append({"post": post, "hidden": True, "reason": vis.reason(post), "replicated": False})
+            continue
+        agent, run, receipts = record.get("agent"), record.get("run"), record.get("receipts") or []
+        if makers is None:  # read every participant's catalog only when there is a confirmation to check
+            makers = sorted(p for p, made in producers(view, [artifact]).items() if artifact in made)
+        if inputs is False:
+            try:
+                derivation = artifact_info(view.library, artifact)["manifest"].get("derivation") or {}
+                inputs = [item.get("blob") for item in derivation.get("inputs") or []]
+            except DawError as error:  # a manifest whose bytes are absent: inputs cannot be compared
+                if error.reason != "missing_blob":
+                    raise
+                inputs = None
+        criteria = {
+            "different_participant": {"ok": bool(agent) and agent not in makers, "participant": agent,
+                                      "participant_name": names.get(agent), "producers": makers,
+                                      "route": f"/agent/{agent}"},
+            "captured_execution": {"ok": bool(receipts) and dispatch_sandboxed(view.root, run)
+                                   and all((r.get("stream") or {}).get("line") for r in receipts),
+                                   "run": run, "sandboxed": dispatch_sandboxed(view.root, run),
+                                   "receipts": [{"receipt_blob": r.get("receipt_blob"), "event": r.get("event"),
+                                                 "helper": (r.get("stream") or {}).get("helper"),
+                                                 "line": (r.get("stream") or {}).get("line")} for r in receipts],
+                                   "route": f"/run/{run}"},
+            "matching_inputs": {"ok": inputs is not None and bool(receipts)
+                                and all(r.get("inputs") == inputs for r in receipts),
+                                "inputs": inputs, "receipt_inputs": [r.get("inputs") for r in receipts],
+                                "route": f"/artifact/{artifact}"},
+            "identical_bytes": {"ok": record.get("output_sha256") == row["output_blob"],
+                                "sha256": row["output_blob"], "replica_sha256": record.get("output_sha256"),
+                                "replicas": record.get("registered") or [], "route": f"/post/{post}"}}
+        confirmations.append({"post": post, "request": record.get("request"), "run": run, "agent": agent,
+                              "criteria": criteria, "replicated": all(c["ok"] for c in criteria.values())})
+    attempts = []
+    for event in view.rows("SELECT seq,body,created FROM event WHERE kind='replication_checked' ORDER BY seq"):
+        body = json.loads(event["body"])
+        for result in body.get("results") or []:
+            if result.get("original") == artifact:
+                attempts.append({"request": body.get("request"), "run": body.get("run"), "agent": body.get("agent"),
+                                 "outcome": result.get("outcome"), "post": result.get("post"),
+                                 "created": event["created"], "route": f"/run/{body.get('run')}"})
+    replicated = any(c["replicated"] for c in confirmations)
+    return {"artifact": artifact, "replicated": replicated, "confirmations": confirmations, "attempts": attempts,
+            "meaning": "Replicated: a different participant's captured execution of the saved derivation on its "
+                       "recorded inputs wrote identical bytes. It confirms this derivation's output, not scientific "
+                       "applicability."}

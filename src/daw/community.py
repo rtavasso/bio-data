@@ -275,6 +275,17 @@ class Community:
         if identity in vis.records:
             shown = {**shown, "hidden": True, "reason": vis.reason(identity), "revealed": True}
         replies = [vis.stub(r["id"]) if vis.withheld(r["id"]) else r for r in shown["replies"]]
+        # Spec v3 V14: each published evidence artifact's replication badge, as the artifact page shows it.
+        from daw.commons.replication import badge
+        artifacts = []
+        for item in shown["evidence_artifacts"]:
+            found = badge(self, item["id"], vis=vis) if item.get("present") else None
+            artifacts.append({**item, "replication": {
+                "replicated": found["replicated"],
+                "confirmations": [c["post"] for c in found["confirmations"] if c.get("replicated")],
+                "attempts": [{k: a.get(k) for k in ("request", "outcome", "post")} for a in found["attempts"]]}
+                if found else None})
+        shown = {**shown, "evidence_artifacts": artifacts}
         # Spec v3 G6: marks and anchored comments on the post, its claims and artifacts, as attributed records.
         from daw.commons.agentview import LABEL, post_acts
         return {**shown, "content": content, "replies": replies,
@@ -370,11 +381,12 @@ class Community:
         return identity
 
     def publish(self, author, title, body, *, artifacts=(), workspace=None, question=None, claims=None,
-                frontier=None, **options):
+                frontier=None, anchored=None, **options):
         """Publish prose with selected evidence. `claims` (M1.6) is a list of {text, status, scope, pointers}
         stored as a library blob; every pointer must resolve. `frontier` items (M1.7) are recorded as work
-        events in the author's own question first, then named in the post's evidence."""
-        evidence = {}
+        events in the author's own question first, then named in the post's evidence. `anchored` holds a reply's
+        thread fields (target, anchor, in_reply_to, anchor_root: `daw.commons.dialogue.reply`, spec v3 V12)."""
+        evidence = dict(anchored or {})
         source = Workspace(workspace) if workspace else None
         if (artifacts or question or frontier) and source is None:
             raise DawError("publication_workspace_required")
