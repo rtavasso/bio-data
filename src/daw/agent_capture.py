@@ -21,17 +21,56 @@ def stop_process(process):
 
 # Wall time beyond monotonic time by more than this is reported as host sleep (M3.5).
 SLEEP_FLOOR_SECONDS = 60
+# Heartbeat records with both clocks (spec v2 V6), one per this many monotonic seconds, in clock.jsonl.
+CLOCK_SECONDS = 10
+CLOCK_FILE = "clock.jsonl"
+
+
+class ClockRecords:
+    """Append-only heartbeat records `{n, kind, wall, monotonic, stdout_bytes}` in `clock.jsonl`.
+
+    `wall` is time.time() (seconds since the epoch, includes host sleep) and `monotonic` is seconds since
+    the process was launched (excludes sleep on macOS and Linux). Consecutive records whose wall clock
+    advanced much more than their monotonic clock bracket a suspension, so the timeline places it by
+    record. They live beside the harness stream, never inside it: events.jsonl stays the harness's own
+    bytes (its sha256 is cited by the answer post as `transcript_sha256`, and an injected line would be a
+    foreign event to the harness parser, which fails deliveries with malformed lines)."""
+
+    def __init__(self, folder, start, cadence=CLOCK_SECONDS):
+        self.path = Path(folder) / CLOCK_FILE
+        self.start, self.cadence, self.count, self.last = start, cadence, 0, None
+        self.stream = self.path.open("a", encoding="utf-8")
+
+    def write(self, kind, stdout_bytes=None, **extra):
+        mono = time.monotonic()
+        record = {"n": self.count, "kind": kind, "wall": round(time.time(), 3),
+                  "monotonic": round(mono - self.start, 3), "stdout_bytes": stdout_bytes, **extra}
+        self.stream.write(json.dumps(record, separators=(",", ":")) + "\n")
+        self.stream.flush()
+        self.count += 1
+        self.last = mono
+        return record
+
+    def due(self):
+        return self.cadence and (self.last is None or time.monotonic() - self.last >= self.cadence)
+
+    def close(self):
+        self.stream.close()
+
+    def receipt(self):
+        return {"file": CLOCK_FILE, "cadence_seconds": self.cadence, "records": self.count}
 
 
 def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds=(), *,
-            stall_seconds=0, stall_timeout=0, on_stall=None):
+            stall_seconds=0, stall_timeout=0, on_stall=None, clock_seconds=CLOCK_SECONDS):
     """Run a stock CLI, capturing stdout/stderr losslessly.
 
     Stall detection (optional): when stdout has not grown for `stall_seconds`,
     write stall.json and call `on_stall(info)` once per stall episode; the
     process keeps running (the operator decides). Only an explicit
     `stall_timeout` stops it, with the reason recorded. Host sleep (wall minus
-    monotonic time beyond SLEEP_FLOOR_SECONDS) is recorded when detected.
+    monotonic time beyond SLEEP_FLOOR_SECONDS) is recorded when detected. Heartbeat records with both
+    clocks are appended to clock.jsonl every `clock_seconds` (0 disables them; see ClockRecords).
     """
     if timeout < 0 or max_log_bytes < 0 or stall_seconds < 0 or stall_timeout < 0:
         raise ValueError("execution limits must be nonnegative; zero means unlimited")
@@ -44,13 +83,19 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds
     process = None
     heartbeat = start
     grown, size, stalled = start, 0, None
+    clock = ClockRecords(folder, start, clock_seconds) if clock_seconds else None
     try:
         with (folder / "events.jsonl").open("wb") as stdout, (folder / "stderr.log").open("wb") as stderr, prompt.open("rb") as stdin:
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=stdin, stdout=stdout, stderr=stderr,
                                        start_new_session=True, pass_fds=pass_fds)
             result["pid"] = process.pid
+            if clock:
+                clock.write("start", 0, pid=process.pid)
+                result["clock"] = clock.receipt()
             write_json(folder / "execution.json", result)
             while process.poll() is None:
+                if clock and clock.due():
+                    clock.write("tick", (folder / "events.jsonl").stat().st_size)
                 if time.monotonic() - heartbeat >= 30:
                     write_json(folder / "heartbeat.json", {"observed": now(), "pid": process.pid,
                         "elapsed_seconds": round(time.monotonic() - start, 2),
@@ -102,6 +147,14 @@ def execute(argv, prompt, folder, cwd, env, timeout=0, max_log_bytes=0, pass_fds
     finally:
         result.update(finished=now(), wall_seconds=round(max(0, time.time() - wall_start), 4),
                       monotonic_seconds=round(time.monotonic() - start, 4))
+        if clock:
+            if clock.count:
+                stream = folder / "events.jsonl"
+                clock.write("finish", stream.stat().st_size if stream.exists() else None)
+                result["clock"] = clock.receipt()
+            clock.close()
+            if not clock.count:
+                clock.path.unlink(missing_ok=True)  # the harness never started: no clock to record
         # Recorded only when observed, so ordinary receipts keep their fields.
         if result["wall_seconds"] - result["monotonic_seconds"] > SLEEP_FLOOR_SECONDS:
             result.update(host_sleep_detected=True,

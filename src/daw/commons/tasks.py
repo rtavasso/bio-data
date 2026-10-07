@@ -85,8 +85,8 @@ FENCE = re.compile(r"```(review|json)[ \t]*\n(.*?)\n```", re.DOTALL)
 
 # Which records count as each type's deliverable (shown to the agent and checked by `evaluate`).
 DELIVERABLES = {
-    "research": "your final answer (posted automatically) plus the posts you publish and the artifacts you register "
-                "during this task; cite them by identifier.",
+    "research": "your final answer (posted automatically; a fenced ```claims block first, then prose) plus the posts "
+                "you publish and the artifacts you register during this task; cite them by identifier.",
     "review": "exactly one fenced ```review block in your final answer, or a JSON file registered with output role "
               "`review`, holding {\"review\": {\"target\": ID, \"verdicts\": [{\"criterion\": NAME, \"verdict\": "
               + "|".join(REVIEW_VERDICTS) + ", \"pointers\": [IDs or receipt locators], \"note\": TEXT}]}}, one "
@@ -96,8 +96,13 @@ DELIVERABLES = {
                    "run_analysis.py (replicate.py does this and records the receipt as a replication_execution work "
                    "event). Identical bytes under that receipt confirm; different bytes under it are a mismatch; a "
                    "registration without such a receipt is no_execution_receipt and confirms nothing.",
-    "scouting": "eligibility notes in your final answer and receipted retrieval gaps (work gap) for what you could "
-                "not obtain. Analysis receipts are out of scope for scouting and are flagged.",
+    "scouting": "every dataset you inspected for the subject item, recorded with bio work frontier-dataset "
+                "(--item, --accession, --inspected, --eligible yes|no, --reason, --receipt) or listed in one fenced "
+                "```datasets block in your final answer as a JSON list of {\"item\": FRONTIER_ID, \"accession\": ID, "
+                "\"inspected\": true, \"eligible\": true|false, \"reason\": TEXT, \"receipt\": \"receipt:SHA\"}, "
+                "plus receipted retrieval gaps (work gap) for what you could not obtain. Eligible datasets move the "
+                "item to candidate evidence so an analysis can be promoted from it; rejected ones are shown with "
+                "their reasons. Analysis receipts are out of scope for scouting and are flagged.",
     "writing": "a post (your final answer or a post you publish) whose statements cite claims, artifacts or posts by "
                "identifier ([text](claim_ID) or [claim_ID]); a number without a claim or artifact pointer is not a "
                "deliverable.",
@@ -129,8 +134,10 @@ INSTRUCTIONS = {
                    "as a reply.\n",
     "scouting": "This is a SCOUTING task: locate and inspect eligible data; do not analyse it. Search the shared forum "
                 "and library first, then sources (bio discover/resolve/fetch/inspect). For each candidate record "
-                "accession, measurement, units, sample structure and why it is or is not eligible. Record each "
-                "retrieval failure with work gap and its receipt. Keep missing, unindexed, selected-out, unmeasured "
+                "accession, measurement, units, sample structure and why it is or is not eligible, and record each "
+                "dataset you inspected against the subject frontier item (bio work frontier-dataset, or the "
+                "```datasets block described below) with its inspection receipt; list only datasets you opened. "
+                "Record each retrieval failure with work gap and its receipt. Keep missing, unindexed, selected-out, unmeasured "
                 "and measured-zero distinct. Your final response (eligibility notes with identifiers) will be posted "
                 "automatically as a reply.\n",
     "writing": "This is a WRITING task. Write a narrative from recorded findings. Cite only ledger claims and artifacts "
@@ -390,7 +397,18 @@ def evaluate(board, request, content, agent, run, started, answer, parsed):
         elif task_type == "scouting":
             receipts = _analysis_receipts(parsed)
             found += [f"gap:{g['id']}" for g in records.gaps]
+            # V5 scouting deliverable: inspected datasets as work events since the run started, or the answer's block.
+            from daw.commons import frontier
+            events = workspace.rows("SELECT id,body_blob FROM work_event WHERE kind=? AND created>=? ORDER BY created,id",
+                                    (frontier.DATASET_EVENT, started))
+            payloads = [json.loads(workspace.blob_path(e["body_blob"]).read_text()) for e in events]
+            block, problems = frontier.check_dataset_block(workspace, answer_text)
+            entries = payloads + block
+            found += [f"dataset:{e['id']}" for e in events] + ([f"datasets_block:{answer}"] if block else [])
             criteria.update(gaps_recorded=[g["id"] for g in records.gaps], pointers=records.pointers(answer_text),
+                            datasets_recorded=[e["id"] for e in events], datasets_in_answer=len(block),
+                            dataset_problems=problems, datasets_eligible=sum(1 for e in entries if e["eligible"]),
+                            datasets_rejected=sum(1 for e in entries if not e["eligible"]),
                             analysis_out_of_scope=receipts["analysis_receipts"] > 0, **receipts)
         elif task_type in ("writing", "digest"):
             pointers = records.pointers("\n".join([answer_text] + [p["body"] for p in records.posts]))

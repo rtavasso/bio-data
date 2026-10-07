@@ -417,6 +417,24 @@ def work_frontier_status(ctx: typer.Context, question: str, event: str,
         emit(record_status(ws, question, event, status, reason))
 
 
+@work_app.command("frontier-dataset")
+def work_frontier_dataset(ctx: typer.Context, question: str,
+                          item: Annotated[str, typer.Option(help="frontier_item or retrieval_gap event of this question, or a board frontier_ id")],
+                          accession: Annotated[str, typer.Option(help="The dataset you inspected (accession or record id)")],
+                          eligible: Annotated[str, typer.Option(help="yes or no")],
+                          reason: Annotated[str, typer.Option(help="Why it is or is not eligible")],
+                          receipt: Annotated[str, typer.Option(help="Inspection receipt: receipt:SHA, artifact:ID or locator:ID#LOCATOR")],
+                          inspected: Annotated[bool, typer.Option("--inspected", help="Required: you opened and inspected this dataset")] = False):
+    """Record a dataset a scouting task inspected for a frontier item, eligible or rejected with a reason."""
+    from daw.commons.frontier import record_dataset
+    from daw.util import DawError
+    if not inspected:
+        raise DawError("frontier_dataset_not_inspected", "pass --inspected; record only datasets you inspected")
+    with session(ctx) as ws:
+        emit(record_dataset(ws, question, item=item, accession=accession, eligible=eligible, reason=reason,
+                            receipt=receipt))
+
+
 @work_app.command("frontier-items")
 def work_frontier_items(ctx: typer.Context, question: str | None = None):
     """List this workspace's open items, retrieval gaps and their latest recorded status."""

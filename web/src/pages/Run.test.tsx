@@ -74,6 +74,54 @@ test("heuristically placed items are labelled attributed, not recorded, with a l
   expect(screen.getByText("✓ pass").parentElement?.textContent).not.toMatch(/attributed/);
 });
 
+test("recorded runs draw suspensions and receipts from run records, not attributed (V6)", async () => {
+  const recorded: RunTimeline = {
+    ...RUN,
+    suspensions: [{ at: 10, seconds: 7200, gap_seconds: 7201, placement: "clock_records", unplaced_seconds: 0,
+      attributed: false, records: [1, 2], precision_seconds: 10, basis: "recorded: clock records 1 and 2" }],
+    receipts: [{ ...call(3, "terminal:analysis", 2, 0, ""), line: null, script: "workspace/q/scripts/a.py", outcome: "pass",
+      source: "receipt", attributed: false,
+      receipt: { path: "workspace/q/outputs/a-r001.json", sha256: "a".repeat(64), copy: "receipts/a.json", started: null,
+        finished: null, exit_code: 0, complete: true, code_unchanged: true, found_by: "scan", outputs: 1,
+        verified: { stream_sha256: null, producer_now: "unchanged", outputs_now: ["unchanged"] } } }],
+    unreceipted_analysis_calls: [call(5, "terminal:analysis", 12, 1, "run_analysis.py b.py")],
+    records: { clock: { file: "clock.jsonl", records: 12, cadence_seconds: 10, reindexed: false, suspended_seconds: 7200,
+      execution_suspended_seconds: 7200, unrecorded_seconds: 0 },
+      receipts: { indexed: "t", counts: { receipts: 1, pass: 1, fail: 0 } },
+      compactions: { available: false, source: null, reason: "this harness's session state does not expose compaction summaries" } },
+    compaction_summaries: null,
+    attributed: ["headline"],
+  };
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => new Response(
+    JSON.stringify(String(input).startsWith("/api/runs/") ? recorded : { items: [] }), { status: 200 })) as typeof fetch;
+  show();
+  await screen.findByText(/between clock records 1 and 2/);
+  expect(screen.getAllByText("attributed, not recorded").length).toBe(1); // the headline only
+  expect(screen.getAllByText("recorded").length).toBe(2); // the suspension and the receipt
+  expect(screen.getByText(/Run records: 12 clock records; 1 indexed receipt/)).toBeTruthy();
+  expect(screen.getByText(/receipt workspace\/q\/outputs\/a-r001.json/)).toBeTruthy();
+  expect(screen.getByText(/1 run_analysis.py call\(s\) without an indexed receipt file/)).toBeTruthy();
+  expect(screen.getAllByText(/does not expose compaction summaries/).length).toBeGreaterThan(0);
+});
+
+test("old runs label exit-code receipts attributed (V6)", async () => {
+  const old: RunTimeline = { ...RUN, receipts: RUN.receipts.map((r) => ({ ...r, source: "exit_code" as const, attributed: true,
+    basis: "exit code of the run_analysis.py call in the stream" })), attributed: ["suspension", "receipts", "headline"] };
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => new Response(
+    JSON.stringify(String(input).startsWith("/api/runs/") ? old : { items: [] }), { status: 200 })) as typeof fetch;
+  show();
+  await screen.findByText(/Suspension of 2 h placed at 10 s/);
+  expect(screen.getAllByText("attributed, not recorded").length).toBe(4);
+  expect(screen.getByText("✓ pass").parentElement?.textContent).toMatch(/attributed/);
+});
+
+test("the scale inserts one break per recorded suspension", () => {
+  const two = { ...RUN, suspensions: [RUN.suspensions[0], { ...RUN.suspensions[0], at: 20 }] };
+  const x = scaleFor(two, 1000);
+  expect(x(21) - x(19)).toBeGreaterThan(40);
+  expect(x(13) - x(11) + 40).toBeLessThan(x(21) - x(19));
+});
+
 test("unavailable clocks and compactions render as unavailable, never zero (C10)", async () => {
   const unavailable = { ...RUN, execution: { ...RUN.execution, wall_seconds: null, suspended_seconds: null },
     suspensions: [], compactions: null, headline: null, attributed: [] };

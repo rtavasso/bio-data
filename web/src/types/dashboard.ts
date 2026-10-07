@@ -56,6 +56,24 @@ export interface BoardCriteria {
   reuse: { backed: number; unbacked: number; backed_ratio: Num };
   claims: ClaimCounts | null;
   numbers?: NumberCoverage | null;
+  authoring?: ClaimsAuthoring;
+}
+
+// Spec v2 V1: claims per post, evidence-carrying posts with claims, refused final-answer claims blocks, and the kind
+// and scope split of the claims' pointers (cell, key, line from the locator grammar; record: no locator).
+export interface ClaimsAuthoring {
+  posts: number;
+  posts_with_claims: number;
+  claims: number;
+  claims_per_post: Num;
+  evidence_posts: number;
+  evidence_posts_with_claims: number;
+  evidence_posts_with_claims_share: Num;
+  claims_refused: number;
+  pointers: number;
+  pointer_kinds: Record<"artifact" | "locator" | "post" | "receipt" | "accession", number>;
+  pointer_scopes: Record<"cell" | "key" | "line" | "record" | "invalid", number>;
+  cell_pointer_share: Num;
 }
 
 // Number coverage of a group's finals (spec v2 C11, V1): pointers at the number (cell, claim, line) versus only the

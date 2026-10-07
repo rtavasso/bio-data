@@ -158,6 +158,44 @@ function NumberCoverageTable({ groups }: { groups: Group[] }) {
   );
 }
 
+// V1: claims-first authoring per cohort. Claims per post, the share of evidence-carrying posts that state claims,
+// refused final-answer claims blocks, the scope split of claim pointers, and the share of numbers in finals pointed
+// at a claim or a cell (from the number coverage above).
+function ClaimsAuthoringTable({ groups }: { groups: Group[] }) {
+  const rows = groups.filter((g) => g.board.authoring);
+  if (!rows.length) return null;
+  return (
+    <div className="compare-scroll">
+      <table className="coverage-table" aria-label="Claims authoring">
+        <thead>
+          <tr>
+            <th scope="col">Group</th><th scope="col">Claims per post</th><th scope="col">Posts with evidence and claims</th>
+            <th scope="col">Refused claims blocks</th><th scope="col">Pointer scopes cell / key / line / record</th>
+            <th scope="col">Numbers at a claim</th><th scope="col">Numbers at a cell</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((g) => {
+            const a = g.board.authoring!;
+            const s = a.pointer_scopes;
+            return (
+              <tr key={g.key}>
+                <th scope="row">{g.label}</th>
+                <td><Value value={a.claims_per_post} /> <span className="muted small">({a.claims}/{a.posts})</span></td>
+                <td>{ratioText(a.evidence_posts_with_claims_share)} <span className="muted small">({a.evidence_posts_with_claims}/{a.evidence_posts})</span></td>
+                <td>{a.claims_refused}</td>
+                <td>{s.cell} / {s.key} / {s.line} / {s.record}{s.invalid ? <span className="muted small"> ({s.invalid} free-text)</span> : null}</td>
+                <td>{ratioText(g.board.numbers?.claim_share ?? null)}</td>
+                <td>{ratioText(g.board.numbers?.cell_share ?? null)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function CostTable({ groups, currency }: { groups: Group[]; currency: string | null }) {
   return (
     <div className="compare-scroll">
@@ -251,6 +289,13 @@ export default function Dashboard() {
             request post nor the assignment key, and the input context the stream reports per call (or per turn).
           </p>
           <HygieneTable groups={[data.summary, ...data.panels.harness]} />
+          <h2>Claims authoring</h2>
+          <p className="muted small">
+            Ledger claims written by authors (the platform never writes one): per post, on posts that publish evidence,
+            and where their pointers point. Target for the next cohort: every published analysis carries claims, and more
+            than half of numbers in finals point at a claim, cell or line.
+          </p>
+          <ClaimsAuthoringTable groups={[data.summary, ...data.panels.cohort]} />
           <h2>Cost</h2>
           <p className="muted small">
             Tokens from harness telemetry where reported; currency only from an operator price table.

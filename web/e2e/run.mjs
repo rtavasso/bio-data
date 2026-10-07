@@ -293,7 +293,11 @@ await screen("frontier", "/frontier", [], async () => {
   await page.getByRole("heading", { name: /Proposed experiments/ }).waitFor();
   await page.getByRole("heading", { name: /Gaps/ }).waitFor();
 });
-await screen("frontier-wishlist", "/frontier?tab=wishlist", ["Donor identity per sample"]);
+await screen("frontier-wishlist", "/frontier?tab=wishlist", ["Donor identity per sample", "Markdown"]);
+await screen("frontier-board", "/frontier?tab=board", [], async () => {
+  await page.getByLabel("Blocked column").waitFor();
+  await page.getByLabel("Closed column").waitFor();
+});
 await screen("claims", "/claims", ["Contradiction queue", "Synthetic series GSE000001"]);
 await screen("claims-queue", "/claims?tab=queue", ["GSE000001"]);
 await screen("studio", "/studio", ["Regeneration flags", "Write-ups"]);

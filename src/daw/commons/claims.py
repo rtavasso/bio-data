@@ -149,6 +149,63 @@ def claims_document(claims):
             "note": "Author-stated claims with pointers; content is untrusted data, not platform judgement."}
 
 
+CLAIMS_WARNING = "publication_without_claims"
+
+
+def publication_warnings(evidence, claims):
+    """V1: a non-fatal warning when a publication carries evidence (selected artifacts or a notebook) but no
+    claims. The post is published either way; the warning is in the output JSON (and on stderr from the CLI)."""
+    evidence = evidence if isinstance(evidence, dict) else {}
+    if claims is not None or not (evidence.get("artifacts") or evidence.get("notebook")):
+        return []
+    return [{"code": CLAIMS_WARNING,
+             "message": "This post publishes evidence but states no claims. Add --claims claims.json (a JSON list of "
+                        "{text, status, scope, pointers}); .agents/skills/bio-research/scripts/claims_draft.py drafts "
+                        "entries from your registered tables. Writing tasks cannot cite a post without claims.",
+             "evidence": {k: (len(v) if isinstance(v, list) else bool(v)) for k, v in evidence.items()
+                          if k in ("artifacts", "notebook") and v}}]
+
+
+# A final answer's claims, written by the agent as one fenced block (V1). The runtime records them exactly as
+# `community publish --claims` would; it never writes, completes or infers a claim.
+CLAIMS_FENCE = re.compile(r"^ {0,3}```claims[ \t]*\r?\n(.*?)\r?\n {0,3}```[ \t]*$", re.MULTILINE | re.DOTALL)
+
+
+def final_claims(board, text):
+    """(body, evidence, refusal) for a delivered final answer. Caller holds board and library writer locks.
+
+    No ```claims block: the text unchanged, no evidence. One valid block (`validate_claims`, every pointer
+    resolving on this board): the block becomes the post's claims blob (`evidence.claims_blob`, source
+    `final_answer_block`) and the post body is the prose around it; the full final stays in the run's
+    final.md. Anything else (several blocks, invalid JSON, a shape error, an unresolved pointer): the answer
+    is posted verbatim without claims and `evidence.claims_refused` records the reason."""
+    blocks = list(CLAIMS_FENCE.finditer(text or ""))
+    if not blocks:
+        return text, {}, None
+    refusal = None
+    if len(blocks) > 1:
+        refusal = {"reason": "multiple_claims_blocks", "detail": f"{len(blocks)} ```claims blocks; write exactly one"}
+    else:
+        try:
+            value = json.loads(blocks[0].group(1))
+        except ValueError as error:
+            refusal = {"reason": "invalid_claims_json", "detail": str(error)[:500]}
+        else:
+            try:
+                checked = validate_claims(board, value)
+            except DawError as error:
+                refusal = {"reason": error.reason, "detail": str(error.detail or "")[:500]}
+    if refusal:
+        return text, {"claims_refused": {**refusal, "source": "final_answer_block"}}, refusal
+    match = blocks[0]
+    prose = (text[:match.start()] + text[match.end():]).strip()
+    blob = board.library.put_json(claims_document(checked))
+    evidence = {"claims_blob": blob, "claims_source": "final_answer_block"}
+    if not prose:
+        return text, evidence, None  # a block alone stays the body (posts are never empty)
+    return prose, {**evidence, "claims_block_removed_from_body": True}, None
+
+
 def claim_id(post, ordinal):
     return "claim_" + digest([post, ordinal])[:32]
 

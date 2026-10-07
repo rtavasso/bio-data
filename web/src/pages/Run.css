@@ -16,6 +16,8 @@
 .run-key.attributed { border: 1.5px dotted var(--viz-ink-2);
   background: repeating-linear-gradient(135deg, transparent 0 3px, var(--viz-muted) 3px 4px); }
 .run-attributed { border-style: dotted; font-style: italic; }
+.run-recorded { border-style: solid; }
+.run-records { margin-top: 0; }
 .run-good { color: var(--good); }
 .run-bad { color: var(--bad); }
 .run-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem 2rem; }

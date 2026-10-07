@@ -9,7 +9,8 @@ real adapters. Answers come from `$COLLOQUY_DEMO_ANSWERS/<post>.md`; an
 optional `<post>.hook.py` written by a test runs inside the checkout first
 (fixture code, never downloaded content). A `scripted-sleep` file in the
 checkout makes the harness pause without output for that many seconds (stall
-tests); `fail-next` makes one turn fail.
+tests); `fail-next` makes one turn fail; `scripted-compaction` (text `summary` or `fallback`)
+writes a compaction summary message into the session database mid-turn, as Hermes does.
 """
 import json
 import sys
@@ -130,6 +131,16 @@ for n, (name, args, result) in enumerate(calls):
     if n == 2:
         if fmt == "hermes":
             print("⟳ compacting context…", flush=True)
+        compaction = trial / "scripted-compaction"
+        if compaction.is_file() and store != "claude":
+            # Like Hermes: the summary (or its deterministic fallback) is a message in the session database.
+            kind = compaction.read_text().strip() or "summary"
+            text = ("[CONTEXT COMPACTION] deterministic fallback: the summarizer did not answer" if kind == "fallback"
+                    else "[CONTEXT COMPACTION] summary of the work so far")
+            db = sqlite3.connect(home / "state.db")
+            db.execute("INSERT INTO messages VALUES(?,?,?)", (sid + "-compaction", text, time.time()))
+            db.commit()
+            db.close()
         if pause.is_file():
             time.sleep(float(pause.read_text() or 0))
 code = 1 if failed else 0
@@ -186,6 +197,7 @@ class ScriptedAdapter(Adapter):
     home_dir = ".scripted"
     default_model = "scripted"
     default_provider = "none"
+    compaction_store = "agent-state/state.db"  # the stand-in keeps a Hermes-like session database
 
     def reports_compactions(self, config):
         # Only the Hermes-format stand-in stream marks compactions, as Hermes does.

@@ -107,6 +107,15 @@ reports the following:
   fallbacks from session databases, summaries that name neither the request post nor the assignment key,
   and reported input context per call or per turn. None (unavailable) when no run in the group recorded it;
   on the cohort fixture summaries are unavailable (no session databases) ([publishing.md](publishing.md#compaction-hygiene-v8)).
+- Claims authoring (spec v2 V1; `board.authoring`, `metrics.claims_authoring`):
+  claims per post, posts with claims, evidence-carrying posts (selected
+  artifacts or a notebook) and the share of them with claims, refused
+  final-answer claims blocks, and the claims' pointers by kind and by scope
+  (`cell`, `key`, `line` from the V2 locator grammar, `record` without a locator,
+  `invalid` for free-text locators). Shares are `null` only when their
+  denominator is zero. The dashboard's "Claims authoring" table shows it per
+  cohort beside the checker's `claim_share` and `cell_share`. On the cohort
+  fixture: 0 claims over 269 posts, a measured zero ([ledger.md](ledger.md#claims-first-authoring-spec-v2-v1)).
 - Cost.
 - A trend by day or ISO week (`bucket=day|week`).
 

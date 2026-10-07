@@ -318,9 +318,15 @@ def test_question_and_blob_endpoints_serve_only_referenced_bytes_safely(demo):
 
 
 def _suspended_run(root, view):
-    """A copy of a demo delivery that slept for two hours mid-run and fell back to a placeholder summary."""
+    """A copy of a demo delivery that slept for two hours mid-run and fell back to a placeholder summary,
+    captured before V6 run records existed (no clock.jsonl, compactions.jsonl or receipts.json), like the
+    cohort's runs: the timeline falls back to the attributed heuristics."""
+    import shutil
     run = view.one("SELECT * FROM attempt ORDER BY created LIMIT 1")
     folder = root / run["path"]
+    for name in ("clock.jsonl", "compactions.jsonl", "receipts.json"):
+        (folder / name).unlink(missing_ok=True)
+    shutil.rmtree(folder / "receipts", ignore_errors=True)
     execution = json.loads((folder / "execution.json").read_text())
     started = datetime.fromisoformat(execution["started"])
     execution.update(wall_seconds=7300.0, monotonic_seconds=100.0,
@@ -366,10 +372,15 @@ def test_timeline_shows_suspension_compactions_fallbacks_and_headline(demo):
     assert summary["fallback"] is True
     assert timeline["metrics"]["compaction_fallbacks"] == 1
     assert timeline["headline"]["lane"] == "terminal:register" and timeline["headline"]["exit_code"] == 0
-    # C10: heuristic placements are marked attributed (with their rule); recorded items are not.
+    # C10: heuristic placements are marked attributed (with their rule); recorded items are not. V6: a run
+    # without a receipt index draws receipts from exit codes, so they are attributed too (spec v2 V6 changed
+    # this expectation: receipts are records only when indexed).
     assert suspension["attributed"] is True and "largest gap" in suspension["basis"]
-    assert timeline["headline"]["attributed"] is True and timeline["attributed"] == ["suspension", "headline"]
-    assert not any("attributed" in item for item in timeline["calls"] + timeline["receipts"] + timeline["compactions"])
+    assert timeline["headline"]["attributed"] is True
+    assert timeline["attributed"] == ["suspension", "receipts", "headline"]
+    assert all(r["attributed"] is True and r["source"] == "exit_code" for r in timeline["receipts"])
+    assert timeline["records"] == {"clock": None, "receipts": None, "compactions": None}
+    assert not any("attributed" in item for item in timeline["calls"] + timeline["compactions"])
     assert timeline["inbox_reads"][0]["sent"] is True
     assert timeline["final"]["text"] and timeline["final"]["source"] == "final.md"
     assert timeline["tokens"]["input_tokens"] == 1200 and timeline["tokens"]["reasoning_output_tokens"] == "unavailable"
