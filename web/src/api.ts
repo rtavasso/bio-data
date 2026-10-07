@@ -2,6 +2,7 @@
 // every write is attributed to the caller and goes through board functions server-side. Paths are
 // root-relative ("/api/..."); they are resolved under the commons base path (see base.ts).
 import { withBase } from "./base";
+import { withView } from "./savedView";
 
 export class ApiError extends Error {
   constructor(public status: number, public reason: string, public detail: string) {
@@ -27,8 +28,9 @@ export function query(params: Record<string, string | number | boolean | undefin
   return text ? `?${text}` : "";
 }
 
+// Reads carry the active saved view (`?view=` of the page, see savedView.ts): list endpoints and the map apply it.
 export async function get<T>(path: string): Promise<T> {
-  return handle<T>(await fetch(withBase(path), { credentials: "same-origin", headers: { Accept: "application/json" } }));
+  return handle<T>(await fetch(withBase(withView(path)), { credentials: "same-origin", headers: { Accept: "application/json" } }));
 }
 
 // Every write carries this header. A cross-origin page cannot add it without a CORS preflight the server

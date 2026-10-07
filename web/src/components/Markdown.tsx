@@ -107,7 +107,7 @@ function remarkNumbers(source: string, numbers: InlineNumber[]) {
     for (const m of inside) {
       if (m.start < cursor) continue;
       if (m.start > cursor) out.push({ type: "text", value: source.slice(cursor, m.start) });
-      out.push({ type: "numberMark", data: { hName: "span", hProperties: { className: ["num", `num-${m.status}`], title: m.reason ?? MARK_TITLES[m.status!] ?? m.status, "data-number": m.status } },
+      out.push({ type: "numberMark", data: { hName: "span", hProperties: { className: ["num", `num-${m.status}`], title: m.reason ?? MARK_TITLES[m.status!] ?? m.status, "data-number": m.status, "data-num-offset": m.offset } },
         children: [{ type: "text", value: m.text }] });
       cursor = m.end;
     }

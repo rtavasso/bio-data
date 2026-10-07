@@ -416,6 +416,19 @@ def _neighbourhood(graph, seeds):
     return keep
 
 
+def _view_seeds(graph, view):
+    """One set of seed nodes per constraint of a saved view (questions, participants)."""
+    if not view:
+        return []
+    out = []
+    if view.get("questions"):
+        qids = set(view["questions"])
+        out.append({n for n, node in graph.nodes.items() if node["kind"] == "question" and node.get("qid") in qids})
+    if view.get("participants"):
+        out.append({p for p in view["participants"] if p in graph.nodes})
+    return out
+
+
 def resolve_question(view, value):
     """`question:<agent>:<qid>`, `<agent id or name>:<qid>` or a bare qid (every workspace holding it)."""
     text = value.removeprefix("question:")
@@ -425,10 +438,18 @@ def resolve_question(view, value):
     return [text]
 
 
-def select(graph, *, questions=(), participant=None, since=None, until=None, families=None, limit=DEFAULT_LIMIT):
-    """Apply filters to a built graph. Returns (nodes, edges, seeds, total) with deterministic ordering."""
+def select(graph, *, questions=(), participant=None, since=None, until=None, families=None, limit=DEFAULT_LIMIT,
+           view=None):
+    """Apply filters to a built graph. Returns (nodes, edges, seeds, total) with deterministic ordering.
+
+    `view` is a saved view's spec (spec v2 V4): the neighbourhoods of its question nodes (any participant's copy
+    of a listed qid) and of its participant nodes, intersected per constraint; members that are not on the map
+    contribute nothing (a view never raises for a record this board lacks)."""
     keep = set(graph.nodes)
     seeds = set()
+    for wanted in _view_seeds(graph, view):
+        seeds |= wanted
+        keep &= _neighbourhood(graph, wanted) if wanted else set()
     if questions:
         wanted = set()
         for value in questions:
@@ -602,19 +623,24 @@ def _instant(value, name):
 
 
 def evidence_map(view, *, question=None, participant=None, since=None, until=None, family=None,
-                 limit=DEFAULT_LIMIT, use_cache=True, caller=None, full=False):
+                 limit=DEFAULT_LIMIT, use_cache=True, caller=None, full=False, scope=None):
     """GET /api/map: recorded graph, filters and a cached deterministic layout.
 
     `limit` caps the drawing by dropping only bare objects and assets (C13); `truncated_families` says which
-    kinds lost nodes and how many. Hidden posts are resolved for this caller (C2) before caching."""
+    kinds lost nodes and how many. Hidden posts are resolved for this caller (C2) before caching. `scope` is a
+    saved view (V4): its questions and participants select neighbourhoods and its window narrows since/until."""
     if not 1 <= limit <= MAX_LIMIT:
         raise DawError("invalid_map_limit", f"1..{MAX_LIMIT}")
     questions = resolve_question(view, question) if question else []
     participant_id = view.participant(participant)["id"] if participant else None
     families = sorted({f.strip() for f in family.split(",") if f.strip()}) if family else None
     since, until = _instant(since, "since"), _instant(until, "until")
+    spec = scope.spec if scope is not None else None
+    if spec:
+        since = max(filter(None, (since, _instant(spec.get("since"), "since"))), default=None)
+        until = min(filter(None, (until, _instant(spec.get("until"), "until"))), default=None)
     filters = {"question": questions, "participant": participant_id, "since": since, "until": until,
-               "family": families, "limit": limit}
+               "family": families, "limit": limit, **({"view": scope.id} if spec else {})}
     sequence, print_ = view.sequence(), fingerprint(view)
     vis = Visibility.of(view, caller, full)
     key = digest({"version": LAYOUT_VERSION, "sequence": sequence, "fingerprint": print_, "filters": filters,
@@ -624,7 +650,7 @@ def evidence_map(view, *, question=None, participant=None, since=None, until=Non
         return {**cached, "cached": True}
     graph = build(view, vis)
     nodes, edges, seeds, total, truncation = select(graph, questions=questions, participant=participant_id, since=since,
-                                                    until=until, families=families, limit=limit)
+                                                    until=until, families=families, limit=limit, view=spec)
     positions = layout([n["id"] for n in nodes], edges)
     xs = [p[0] for p in positions.values()] or [0]
     ys = [p[1] for p in positions.values()] or [0]

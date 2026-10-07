@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse
 
 from daw.commons import views
 from daw.commons.api.deps import View
+from daw.commons.api.scoping import Scoped, question_lookup, scoped
 from daw.util import DawError
 
 router = APIRouter(prefix="/api", tags=["read"])
@@ -32,11 +33,11 @@ Reader = Annotated[dict | None, Depends(optional_caller)]
 
 
 @router.get("/posts")
-def posts(view: View, caller: Reader, family: str = "forum", q: str = "", author: str | None = None,
+def posts(view: View, caller: Reader, scope: Scoped, family: str = "forum", q: str = "", author: str | None = None,
           kind: str | None = None, channel: str | None = None, question: str | None = None, sort: str = "recent",
           limit: Annotated[int, Query(ge=1, le=200)] = 50, offset: Annotated[int, Query(ge=0)] = 0, full: bool = False):
     return views.list_posts(view, family=family, q=q, author=author, kind=kind, channel=channel, question=question,
-                            sort=sort, limit=limit, offset=offset, full=full, caller=caller)
+                            sort=sort, limit=limit, offset=offset, full=full, caller=caller, scope=scope)
 
 
 @router.get("/posts/{identity}")
@@ -73,12 +74,22 @@ def activity(identity: str, view: View, caller: Reader, full: bool = False):
 
 
 @router.get("/requests")
-def requests(view: View, caller: Reader, target: str | None = None, state: str | None = None,
+def requests(view: View, caller: Reader, scope: Scoped, target: str | None = None, state: str | None = None,
              task_type: str | None = None, limit: Annotated[int, Query(ge=1, le=500)] = 200, full: bool = False):
-    return views.list_requests(view, target=target, state=state, task_type=task_type, limit=limit, caller=caller,
-                               full=full)
+    if scope is None:
+        return views.list_requests(view, target=target, state=state, task_type=task_type, limit=limit, caller=caller,
+                                   full=full)
+    everything = views.list_requests(view, target=target, state=state, task_type=task_type, limit=1_000_000,
+                                     caller=caller, full=full)
+    questions = question_lookup(view, caller, full)
+    return scoped(everything, scope, lambda r: ({r.get("asker"), r["target"]}, questions(r["post"]), r["created"]),
+                  limit=limit)
 
 
 @router.get("/running")
-def running(view: View, caller: Reader, full: bool = False):
-    return views.running(view, caller=caller, full=full)
+def running(view: View, caller: Reader, scope: Scoped, full: bool = False):
+    result = views.running(view, caller=caller, full=full)
+    if scope is None:
+        return result
+    questions = question_lookup(view, caller, full)
+    return scoped(result, scope, lambda r: ({r["agent"]}, questions(r["post"]), r["started"]))

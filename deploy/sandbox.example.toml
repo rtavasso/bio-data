@@ -12,3 +12,10 @@ pids_limit = 1024
 env = ["ANTHROPIC_API_KEY"]          # names of host variables the harness may receive
 ro_mounts = []
 mount_host_python = false
+# Spec v2 V9 (docs/colloquy/hardening.md): per-agent container uids and a checkout disk quota.
+# agent_uid = "per-agent"            # each agent runs as uid_base + its recorded index (default "dispatcher")
+# uid_base = 200000
+# agent_gid = 1000                   # shared group of agent uids and the board service (default: dispatcher's gid)
+# disk_quota_bytes = 21474836480     # 20 GiB per checkout
+# disk_quota_method = "measure"      # measure (portable, soft) | storage-opt (engine) | xfs-project (hard, Linux)
+# xfs_project_base = 50000

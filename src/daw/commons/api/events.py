@@ -28,6 +28,7 @@ from fastapi.responses import StreamingResponse
 
 from daw.commons import views
 from daw.commons.api.deps import Config, View
+from daw.commons.api.scoping import Scoped
 from daw.commons.archive import Archive
 from daw.util import DawError
 
@@ -141,8 +142,25 @@ async def stream(root, after, *, once=False, named=True, request=None, poll=1.0,
 
 
 @router.get("/events/log")
-def log(view: View, after: Annotated[int, Query(ge=0)] = 0, limit: Annotated[int, Query(ge=1, le=1000)] = 200):
-    return views.event_log(view, after=after, limit=limit)
+def log(view: View, scope: Scoped, after: Annotated[int, Query(ge=0)] = 0,
+        limit: Annotated[int, Query(ge=1, le=1000)] = 200):
+    if scope is None:
+        return views.event_log(view, after=after, limit=limit)
+    # Under a saved view (V4): scan forward until `limit` matching events; `next_after` is the last scanned seq.
+    from daw.commons.savedviews import event_facts
+    items, cursor, sequence = [], after, view.sequence()
+    while len(items) < limit and cursor < sequence:
+        page = views.event_log(view, after=cursor, limit=1000)
+        if not page["items"]:
+            break
+        for event in page["items"]:
+            cursor = event["seq"]
+            participants, questions, created = event_facts(event)
+            if scope.matches(participants=participants, questions=questions, start=created):
+                items.append(event)
+                if len(items) == limit:
+                    break
+    return {"after": after, "items": items, "sequence": sequence, "next_after": cursor, "view": scope.describe()}
 
 
 @router.get("/events")

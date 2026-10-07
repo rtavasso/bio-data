@@ -17,6 +17,7 @@ Operator-tunable limits live in `<commons>/commons.toml`:
     marks_per_hour = 60
     uploads_per_hour = 20
     exports_per_hour = 10   # static snapshots (M6.5), counted from snapshot_exported events
+    views_per_hour = 60     # saved views (V4), counted from saved_view rows
     upload_bytes = 26214400 # 25 MiB per file
 """
 import threading
@@ -27,7 +28,7 @@ from daw.commons.permissions import require
 from daw.util import DawError, now
 
 DEFAULT_LIMITS = {"posts_per_hour": 30, "marks_per_hour": 60, "uploads_per_hour": 20, "exports_per_hour": 10,
-                  "upload_bytes": 25 * 1024 * 1024}
+                  "views_per_hour": 60, "upload_bytes": 25 * 1024 * 1024}
 ACTIONS = {
     "hide": ("post", "hidden", "post_hidden", "hide"),
     "unhide": ("post", "visible", "post_unhidden", "hide"),
@@ -37,7 +38,8 @@ ACTIONS = {
 EVENTS = {event: (kind, state) for kind, state, event, _ in ACTIONS.values()}
 # What each rate limit counts: (table, author column), or ("event", kind, body field naming the participant).
 COUNTED = {"posts_per_hour": ("post", "author"), "marks_per_hour": ("mark", "participant"),
-           "uploads_per_hour": ("upload", "uploader"), "exports_per_hour": ("event", "snapshot_exported", "actor")}
+           "uploads_per_hour": ("upload", "uploader"), "exports_per_hour": ("event", "snapshot_exported", "actor"),
+           "views_per_hour": ("saved_view", "created_by")}
 
 
 def limits(root):

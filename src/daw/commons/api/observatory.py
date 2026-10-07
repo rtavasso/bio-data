@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from daw.commons import evidence_map, questions, timeline
 from daw.commons.api.deps import View
 from daw.commons.api.read import Reader
+from daw.commons.api.scoping import Scoped, collect, question_lookup, scoped
 
 router = APIRouter(prefix="/api", tags=["observatory"])
 
@@ -19,11 +20,12 @@ SAFE_HEADERS = {"X-Content-Type-Options": "nosniff", "Content-Security-Policy": 
 
 
 @router.get("/map")
-def evidence_graph(view: View, caller: Reader, question: str | None = None, participant: str | None = None,
-                   since: str | None = None, until: str | None = None, family: str | None = None,
+def evidence_graph(view: View, caller: Reader, scope: Scoped, question: str | None = None,
+                   participant: str | None = None, since: str | None = None, until: str | None = None,
+                   family: str | None = None,
                    limit: int = Query(evidence_map.DEFAULT_LIMIT, ge=1, le=evidence_map.MAX_LIMIT), full: bool = False):
     return evidence_map.evidence_map(view, question=question, participant=participant, since=since, until=until,
-                                     family=family, limit=limit, caller=caller, full=full)
+                                     family=family, limit=limit, caller=caller, full=full, scope=scope)
 
 
 @router.get("/map/node/{identity}")
@@ -32,8 +34,11 @@ def map_node(identity: str, view: View, caller: Reader, full: bool = False):
 
 
 @router.get("/questions")
-def question_index(view: View, agent: str | None = None, status: str | None = None):
-    return questions.question_list(view, agent=agent, status=status)
+def question_index(view: View, scope: Scoped, agent: str | None = None, status: str | None = None):
+    result = questions.question_list(view, agent=agent, status=status)
+    if scope is None:
+        return result
+    return scoped(result, scope, lambda q: ({q["agent"]}, {q["qid"]}, q.get("created"), q.get("updated")))
 
 
 @router.get("/questions/{qid}")
@@ -59,9 +64,19 @@ def blob(owner: str, sha: str, view: View, name: str | None = None):
 
 
 @router.get("/runs")
-def runs(view: View, caller: Reader, agent: str | None = None, state: str | None = None,
+def runs(view: View, caller: Reader, scope: Scoped, agent: str | None = None, state: str | None = None,
          limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0), full: bool = False):
-    return timeline.run_list(view, agent=agent, state=state, limit=limit, offset=offset, caller=caller, full=full)
+    if scope is None:
+        return timeline.run_list(view, agent=agent, state=state, limit=limit, offset=offset, caller=caller, full=full)
+    items = collect(lambda size, start: timeline.run_list(view, agent=agent, state=state, limit=size, offset=start,
+                                                          caller=caller, full=full), 500)
+    questions_of = question_lookup(view, caller, full)
+    # A run names its agent and, through its request post, the asker (withheld with a hidden request post).
+    askers = {r["id"]: r["author"] for r in view.rows("SELECT id,author FROM post")}
+    return scoped({"items": items, "limit": limit, "offset": offset}, scope,
+                  lambda r: ({r["target"], None if r.get("request_hidden") else askers.get(r["request_post"])},
+                             questions_of(r["request_post"]), r["created"], r.get("finished")),
+                  limit=limit, offset=offset)
 
 
 @router.get("/runs/{run}")

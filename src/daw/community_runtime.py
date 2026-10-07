@@ -428,6 +428,15 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
     executable = executable or adapter.default_executable
     trial = board.trial(agent)
     decision = sandbox.policy(board.root, allow_unsandboxed, request["task_type"])
+    try:
+        # Per-agent uid and checkout disk quota (spec v2 V9), decided before any state changes.
+        decision = sandbox.preflight(decision, board.root, agent["id"], trial)
+    except DawError as refused:
+        if refused.reason == "disk_quota_exceeded":
+            with board.writer(), board.db:
+                board.event("disk_quota_exceeded", {"request": request_id, "agent": agent["id"], "stage": "dispatch",
+                                                    "detail": refused.detail})
+        raise
     if request["task_type"] == "replication":
         # Dispatch-time check (C6): the original's producer, or a fork that inherited it, cannot replicate it.
         from daw.commons.replication import refuse_producer
@@ -521,6 +530,12 @@ def dispatch(board, request_id, executable=None, *, timeout=0, refresh_tools=Fal
                                         on_stall=lambda info: _stalled(board, request_id, run_id, agent, info))
             finally:
                 if sandboxed:
+                    sandboxed, over = sandbox.after_turn(sandboxed, trial)
+                    if over is not None:
+                        with board.writer(), board.db:
+                            board.event("disk_quota_exceeded", {"request": request_id, "run": run_id,
+                                                                "agent": agent["id"], "stage": "after_turn",
+                                                                "usage": over, "quota": sandboxed["disk_quota"]["bytes"]})
                     write_json(folder / "sandbox.json", sandbox.release(board.root, sandboxed))
                 write_json(folder / "harness-config.json", sandbox.check_harness_config(trial, adapter, home_receipt))
                 if budget_receipt:

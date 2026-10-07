@@ -746,6 +746,103 @@ def commission(board, actor, task_type, target, budget, deadline=None, subject_k
                          evidence={"subject": subject, "note": note})
 
 
+# --- comment threads at anchors and review requests (spec v2 V4) -----------------------------------------
+
+def anchor_root(board, comment_post):
+    """(root comment post, its evidence) of an anchored comment thread. A reply under an anchor names the thread's
+    root comment as its parent and the post it answers in `evidence.in_reply_to`."""
+    shown = board.show(comment_post)
+    content = shown["content"]
+    evidence = content.get("evidence") if isinstance(content.get("evidence"), dict) else {}
+    if content.get("kind") != "comment" or not isinstance(evidence.get("target"), dict):
+        raise DawError("not_a_comment", f"{comment_post} is not a comment at an anchor")
+    if evidence.get("in_reply_to"):
+        root = board.show(shown["parent"])
+        return root, root["content"].get("evidence") or {}
+    return shown, evidence
+
+
+def reply_at_anchor(board, actor, comment_post, body):
+    """A person's reply in a comment thread at an anchor. The reply is a comment post with the thread's
+    recorded target and anchor (copied from the root comment's immutable evidence, so it stays anchored to the
+    same bytes), the root comment as parent and `evidence.in_reply_to` naming the post it answers (the root, a
+    reply, or the author's answer). If the replier is the addressee of the root's ask, it answers it."""
+    person = _actor(board, actor, "reply")
+    body = _text(body, "empty_comment")
+    shown = board.show(comment_post)
+    if shown["content"].get("kind") != "comment" and not shown["parent"]:
+        raise DawError("not_a_comment", f"{comment_post} is not in a comment thread at an anchor")
+    root, evidence = anchor_root(board, shown["id"] if shown["content"].get("kind") == "comment" else shown["parent"])
+    if shown["id"] != root["id"] and shown["parent"] != root["id"]:
+        raise DawError("not_in_anchor_thread", f"{comment_post} is not under the anchored comment {root['id']}")
+    for post in {root["id"], shown["id"]}:
+        if hidden(board, post):
+            raise DawError("hidden_by_moderation", f"post {post} is hidden; replies would quote it")
+    target = evidence["target"]
+    reply_evidence = {"target": target, "anchor": evidence.get("anchor"), "in_reply_to": shown["id"],
+                      "anchor_root": root["id"], "ask_author": False}
+    with board.writer(), board.library.writer():
+        check_rate(board, person, "posts_per_hour")
+        identity = board._post(person["id"], f"Reply at anchor on {target.get('kind')} {target.get('id')}", body,
+                               parent=root["id"], evidence=reply_evidence, kind="comment")
+        with board.db:
+            board.event("comment_posted", {"post": identity, "author": person["id"], "target_kind": target.get("kind"),
+                                           "target_id": target.get("id"), "parent": root["id"],
+                                           "anchor": evidence.get("anchor"), "in_reply_to": shown["id"],
+                                           "request": None, "addressee": None})
+        board._settle_request(identity, root["id"])
+    return {"post": identity, "parent": root["id"], "in_reply_to": shown["id"], "anchor": evidence.get("anchor")}
+
+
+def _anchor_note(anchor):
+    where = anchor.get("kind")
+    if anchor.get("offset") is not None:
+        where += f" at offset {anchor['offset']} (+{anchor.get('length')}) of blob {anchor.get('blob')}"
+    elif anchor.get("row_key"):
+        where += f" at row {anchor['row_key']} of blob {anchor.get('blob')}"
+    elif anchor.get("node_id"):
+        where += f" on node {anchor['node_id']}"
+    quote = anchor.get("quote")
+    return where + (f':\n\n> {quote.replace(chr(10), chr(10) + "> ")}' if quote else ".")
+
+
+def request_review(board, actor, claim, target, budget, *, comment_post=None, anchor=None, deadline=None, note=None):
+    """"Request review" on an anchored claim: a commission of task type review with the claim as subject and the
+    anchor in the note (spec v2 V4). The anchor comes from a comment thread at an anchor on the claim or its post
+    (`comment_post`), or is given and validated against the claim's bytes (its post body or claims blob) or as a
+    node anchor on the claim. Allowance, budget, rate limit and producer rules are the commission's."""
+    row = board.one("SELECT * FROM claim WHERE id=?", (claim,))
+    if not row:
+        raise DawError("unknown_claim", claim)
+    if hidden(board, row["post"]):
+        raise DawError("hidden_by_moderation", f"claim {claim} belongs to hidden post {row['post']}")
+    if comment_post:
+        root, evidence = anchor_root(board, comment_post)
+        if hidden(board, root["id"]):
+            raise DawError("hidden_by_moderation", f"comment {root['id']} is hidden")
+        recorded = evidence.get("target") or {}
+        if not ((recorded.get("kind") == "claim" and recorded.get("id") == claim)
+                or (recorded.get("kind") == "post" and recorded.get("id") == row["post"])):
+            raise DawError("anchor_not_on_claim", f"comment {root['id']} is anchored on {recorded.get('kind')} "
+                                                  f"{recorded.get('id')}, not on claim {claim} or its post")
+        locator = evidence.get("anchor") or {"target_kind": recorded.get("kind"), "target_id": recorded.get("id"),
+                                             "kind": "node", "node_id": claim}
+    else:
+        if anchor is None:
+            raise DawError("anchor_required", "request review at an anchor: a comment thread or an anchor on the claim")
+        with Archive(board.root) as view:
+            locator = _anchor("claim", _resolve(board, view, "claim", claim), anchor)
+    note = (note or "").strip()
+    scope = (f"Adversarial review of claim {claim} (post {row['post']}), requested at an anchor: "
+             + _anchor_note(locator)
+             + (f"\n\nAnchor comment thread: {root['id']}." if comment_post else "")
+             + "\n\nTry to break the claim: check its pointers, scope and the cited values, and say what would refute it."
+             + (f"\n\n{note}" if note else ""))
+    request = commission(board, actor, "review", target, budget, deadline=deadline, subject_kind="claim",
+                         subject_id=claim, note=scope)
+    return {**request, "claim": claim, "anchor": locator, "anchor_comment": root["id"] if comment_post else None}
+
+
 def demo_records(board, ctx):
     """Demo extension (daw.commons.demo.EXTENSIONS): a synthetic human reviewer checks the correction, asks its
     author about one anchored sentence, and the author answers through the scripted harness."""
