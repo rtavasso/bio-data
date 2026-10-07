@@ -170,16 +170,17 @@ def search(ctx: typer.Context, text: str = "", limit: int = 20, offset: int = 0,
         return emit(client.call("search", {"text": text, "limit": limit, "offset": offset, "family": family,
                                            "full": full}))
     with Community(ctx.obj) as board:
-        emit(board.find(text, limit=limit, offset=offset, family=family, full=full))
+        emit(board.find(text, limit=limit, offset=offset, family=family, full=full, reader=author(None)))
 
 
 @app.command()
-def show(ctx: typer.Context, post: str):
-    """Show a post with its evidence artifacts' titles, roles and derivation keys."""
+def show(ctx: typer.Context, post: str,
+         full: Annotated[bool, typer.Option("--full", help="Operators only: read a post hidden by moderation")] = False):
+    """Show a post with its evidence artifacts' titles, roles and derivation keys. Hidden posts are withheld."""
     if client := remote():
         return emit(client.call("show", {"post": post}))
     with Community(ctx.obj) as board:
-        emit(board.show(post))
+        emit(board.read(post, author(None), full=full))
 
 
 @app.command()

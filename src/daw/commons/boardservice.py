@@ -319,8 +319,10 @@ def answer(board, author, request_id, body, *, title=None, **publish):
         raise DawError("unknown_request", request_id)
     if request["target"] != agent["id"]:
         raise DawError("permission_denied", "answer only requests addressed to you")
-    question = board.show(request["post"])["content"]
-    return board.publish(agent["id"], title or "Re: " + question["title"], body, parent=request["post"], **publish)
+    question = board.read(request["post"], agent["id"])
+    # A hidden question's title is withheld from its answerer too; the reply still threads under it by id.
+    subject = question["content"]["title"] if "content" in question else "request " + request_id
+    return board.publish(agent["id"], title or "Re: " + subject, body, parent=request["post"], **publish)
 
 
 def execute(root, agent_id, operation, payload):
@@ -369,15 +371,18 @@ def execute(root, agent_id, operation, payload):
                                since=_text(payload, "since"))
         if operation == "agents":
             return agents(board)
-        if operation in {"show", "verify"}:
-            return getattr(board, operation)(_text(payload, "post", True))
+        if operation == "show":
+            return board.read(_text(payload, "post", True), agent["id"])
+        if operation == "verify":
+            return board.verify(_text(payload, "post", True))
         limit = _int(payload, "limit", 20 if operation == "search" else 50)
         offset = _int(payload, "offset", 0)
         if not 1 <= limit <= 200 or offset < 0:
             raise DawError("invalid_search_bounds")
         if operation == "search":
             return board.find(_text(payload, "text") or "", limit=limit, offset=offset,
-                              family=_text(payload, "family") or "forum", full=bool(payload.get("full")))
+                              family=_text(payload, "family") or "forum", full=bool(payload.get("full")),
+                              reader=agent["id"])
         return list_claims(board, _text(payload, "q") or "", status=_text(payload, "status"), post=_text(payload, "post"),
                            author=_text(payload, "author"), limit=limit, offset=offset)
 
