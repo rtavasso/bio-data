@@ -917,9 +917,11 @@ def test_federation_import_verifies_hashes_and_serves_foreign_files_read_only(de
     assert http.get(f"/api/federation/{made['snapshot']}/files/nope.html").status_code == 404
     with Archive(root) as view:  # nothing foreign entered the board's posts, claims or library
         # Spec v2 V7: an import registers the snapshot's ids in the federation index (a projection) and records
-        # one `federation_indexed` event; no other event names the snapshot.
+        # one `federation_indexed` event; spec v3 B9: each import act records one attributed `snapshot_imported`
+        # event. No other event names the snapshot.
         kinds = {r["kind"] for r in view.rows("SELECT kind FROM event WHERE body LIKE ?", (f"%{made['snapshot']}%",))}
-        assert kinds <= {"snapshot_exported", "federation_indexed"}
+        assert kinds <= {"snapshot_exported", "federation_indexed", "snapshot_imported"}
+        assert len(view.rows("SELECT seq FROM event WHERE kind='snapshot_imported'")) == 1
         assert view.one("SELECT count(*) AS n FROM federation_record WHERE snapshot=?", (made["snapshot"],))["n"] > 0
     assert canonical(json.loads((stored / "snapshot.json").read_text())) == (stored / "snapshot.json").read_bytes()
 

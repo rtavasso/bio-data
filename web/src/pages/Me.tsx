@@ -327,6 +327,24 @@ export default function Me() {
         )}
       </Section>
 
+      {data.imports && (
+        <Section title="Imported snapshots" count={data.imports.length}>
+          {data.imports.length === 0 ? <p className="muted">You have not imported a snapshot (<code>bio commons federation import DIR --as you</code>).</p> : (
+            <ul className="me-list">
+              {data.imports.map((i) => (
+                <li key={i.seq}>
+                  <Link to={`/directory/${i.snapshot}`} className="mono">{i.snapshot.slice(0, 12)}…</Link>{" "}
+                  <span className="muted">
+                    {i.already_imported ? "already imported; re-verified" : "imported"} {i.created}
+                    {i.index && <> · {i.index.claims} claims, {i.index.artifacts} artifacts, {i.index.citations} citations indexed</>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      )}
+
       <Section title="Tokens"><Tokens me={data} reload={me.reload} /></Section>
       {data.permissions.includes("participants") && <Section title="Operator: accounts"><OperatorPanel /></Section>}
       {out.feedback}

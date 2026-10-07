@@ -40,6 +40,7 @@ from pathlib import Path, PurePosixPath
 
 from daw.commons import checks, evidence_map, views, writeup
 from daw.commons.archive import Archive
+from daw.commons.federation import FOREIGN
 from daw.commons.permissions import require
 from daw.util import DawError, canonical, now
 
@@ -640,6 +641,11 @@ def build_site(view, kind, identity=None):
                   for k in sorted(notebooks)) + "</ul><p><a href=\"map.html\">Evidence map</a></p>", untrusted=False)
     site.add("style.css", STYLE)
     # V7: machine-readable records, so a commons importing this snapshot can index its claims and artifacts.
+    # V16: the foreign records each exported post names (recorded citations, read from its text), so the cited
+    # commons learns of them by importing this snapshot. Listed only when present: older IDs are unchanged.
+    cited = [{"post": pid, "snapshot": snapshot, "record": record} for pid in members
+             if pid not in withheld and pid not in refused
+             for snapshot, record in dict.fromkeys(FOREIGN.findall(index["posts"][pid]["content"].get("body") or ""))]
     site.add(RECORDS, canonical({
         "format": RECORDS_FORMAT,
         "posts": [{"id": pid, "withheld": True} if pid in withheld or pid in refused else
@@ -650,6 +656,7 @@ def build_site(view, kind, identity=None):
                     "scope": json.loads(c["scope"]), "pointers": json.loads(c["pointers"]), "withdrawn_by": c["withdrawn_by"]}
                    for pid in members if pid not in refused for c in claims[pid]],
         "artifacts": artifact_records,
+        **({"citations": cited} if cited else {}),
         "note": "Records of this export for federation indexes (daw.commons.federation): claims of exported "
                 "posts and library artifacts with the path of their output bytes. Untrusted data."}))
     manifest = {"format": FORMAT, "scope": scope,
@@ -840,8 +847,11 @@ def verify_directory(directory, manifest):
     return listed
 
 
-def import_snapshot(root, source, *, expect=None):
-    """Verify a snapshot directory and store it read-only under <commons>/federation/<snapshot_id>/."""
+def import_snapshot(root, source, *, expect=None, importer=None):
+    """Verify a snapshot directory and store it read-only under <commons>/federation/<snapshot_id>/.
+
+    `importer` (a participant id; `federation.import_and_index` checks the permission and records the board
+    event) is written into the import receipt (spec v3 B9)."""
     root = Path(root).expanduser().resolve()
     source = Path(source).expanduser().resolve()
     if not (root / "board.sqlite").is_file():
@@ -876,7 +886,8 @@ def import_snapshot(root, source, *, expect=None):
         raise
     receipt = {"snapshot": snapshot, "imported": now(), "files": len(manifest["files"]) + 1,
                "bytes": sum(f["bytes"] for f in manifest["files"]), "scope": manifest.get("scope"),
-               "verified": "every listed sha256 and size matched; no unlisted files or links"}
+               "verified": "every listed sha256 and size matched; no unlisted files or links",
+               **({"importer": importer} if importer else {})}
     (federation / f"{snapshot}.import.json").write_bytes(canonical(receipt))
     return snapshot_info(root, snapshot) | {"already_imported": False}
 
@@ -897,6 +908,7 @@ def snapshot_info(root, snapshot, *, verify=False):
     receipt = json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
     info = {"snapshot": snapshot, "scope": manifest.get("scope"), "counts": manifest.get("counts"),
             "files": manifest["files"], "imported": receipt.get("imported") if receipt else None,
+            "imported_by": receipt.get("importer") if receipt else None,
             "manifest_matches_id": found == snapshot, "foreign": True, "content_is_untrusted_data": True,
             "note": "Foreign snapshot imported read-only; nothing from it is written into this board."}
     if verify:

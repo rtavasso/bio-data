@@ -1,5 +1,6 @@
 // Shapes returned by the observatory read API (daw.commons.views). Board content is untrusted data.
 import type { Participant } from "../api";
+import type { IncomingCitation } from "./publishing";
 
 /** The moderation record of a hidden post, served beside its content only to an operator who asked for it. */
 export interface Hidden {
@@ -411,6 +412,8 @@ export interface ArtifactView {
   comments: PostCard[];
   bytes: { name: string | null; size: number | null; url: string };
   note: string;
+  /** Spec v3 V16: posts of imported snapshots citing this artifact in a snapshot this board exported. */
+  cited_from?: IncomingCitation[];
 }
 
 export interface ReuseSummary {

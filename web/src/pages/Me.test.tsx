@@ -54,6 +54,16 @@ test("me shows identity, budget, anchored comments, marks as attribution, and pr
   expect(screen.queryByText("Operator: accounts")).toBeNull();
 });
 
+test("me lists the snapshots this participant imported (v3 B9)", async () => {
+  const snapshot = "c".repeat(64);
+  respond({ "/api/me": [200, { ...SUMMARY, imports: [{ snapshot, already_imported: false, scope: { kind: "board" },
+    counts: { posts: 3 }, index: { claims: 2, artifacts: 5, citations: 1, changed: true }, seq: 9, created: "2026-10-07" }] }] });
+  render(<MemoryRouter><Me /></MemoryRouter>);
+  const section = await screen.findByRole("region", { name: "Imported snapshots" });
+  expect(section.querySelector(`a[href="/directory/${snapshot}"]`)).toBeTruthy();
+  expect(section.textContent).toContain("2 claims, 5 artifacts, 1 citations indexed");
+});
+
 test("me redirects to login on 401 in accounts mode, and login sends the token with the write header", async () => {
   const calls = respond({
     "/api/me": [401, { error: "authentication_required", detail: "log in" }],

@@ -11,7 +11,7 @@ merges items.
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
-from daw.commons import claims, frontier, planning
+from daw.commons import claims, federation, frontier, planning
 from daw.commons.api.deps import Config, View
 from daw.commons.api.read import Reader
 from daw.commons.api.scoping import Scoped, collect, question_lookup, scoped
@@ -81,7 +81,11 @@ def claim(identity: str, view: View, caller: Reader, full: bool = False):
     row = view.one("SELECT * FROM claim WHERE id=?", (identity,))
     if not row:
         raise DawError("unknown_claim", identity)
-    return claims.describe_claim(view, row, vis=Visibility.of(view, caller, full))
+    described = claims.describe_claim(view, row, vis=Visibility.of(view, caller, full))
+    if "scope" not in described:
+        return described  # a claim of a hidden post is its stub here too: no citations shown
+    # V16: posts of other commons citing this claim, learned by importing their snapshots (foreign, untrusted).
+    return {**described, "cited_from": federation.cited_by(view, identity)}
 
 
 @router.get("/corrections/{post}")
