@@ -123,6 +123,9 @@ def resume_work(ws, qid, *, inbox=None):
     except Exception:  # noqa: BLE001 - the frontier index is optional for this record
         open_items = None
 
+    from daw.prior_work import prior_work
+    prior = prior_work(ws, qid)
+
     pending = None
     if inbox is not None:
         try:
@@ -138,6 +141,11 @@ def resume_work(ws, qid, *, inbox=None):
             "scripts": scripts[:MAX_SCRIPTS], "scripts_total": len(scripts),
             "output_files": output_files[:40], "output_files_total": len(output_files),
             "events": kinds, "open_items": open_items, "pending_requests_for_you": pending,
+            "prior_work_used": [{k: (v[:160] if isinstance(v, str) and k == "reason" else v) for k, v in r.items()}
+                                for r in prior[:20]],
+            "prior_work_note": ("work by others this question fetched (reused first): point your claims at the reused "
+                                "artifacts or their posts, and record frontier-evidence or reply where your result bears "
+                                "on theirs") if prior else None,
             "commands": COMMANDS,
             "note": "Read-only. Re-read LABBOOK.md only to edit it; re-read an output only to use a value from it. "
                     "Run inherited scripts before writing new ones (fork rewrites in the cohort: 11 same-name scripts)."}

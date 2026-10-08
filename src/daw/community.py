@@ -553,6 +553,18 @@ class Community:
         if cited["unreachable"] or cited["local"] or cited["unknown_posts"]:
             warnings.append({"code": "unreachable_records", **cited,
                              "message": "readers cannot open these ids: publish local artifacts or cite library records"})
+        if question and source is not None:
+            from daw.prior_work import prior_work, uncredited
+            missing = uncredited(prior_work(source, question), prose, claims)
+            if missing:
+                names = {a["id"]: a["name"] for a in self.rows("SELECT id,name FROM agent")}
+                warnings.append({"code": "prior_work_not_credited",
+                                 "items": [{"artifact": m["artifact"], "post": m.get("post"),
+                                            "author": names.get(m.get("author"), m.get("author")), "reason": m.get("reason")}
+                                           for m in missing[:20]],
+                                 "message": "you marked these peers' artifacts as reused but neither your prose nor your "
+                                            "claims name them: add the artifact (or its post) as a pointer on the claims "
+                                            "that depend on it, so their work is credited and linked"})
         return {"draft": True, "claims": {"count": len(claims), "valid": refusal is None and bool(claims),
                                           "block": refusal is not None or bool(claims)},
                 "numbers": numbers, "would_refuse": would_refuse, "warnings": warnings,

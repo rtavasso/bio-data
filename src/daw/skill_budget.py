@@ -22,9 +22,12 @@ SKILLS_DIR = Path(__file__).resolve().parents[2] / ".agents" / "skills"
 # 2026-10-07 round-three fixes: bio-research +1024 bytes for the R/DESeq2 container usage block. Round three's
 # rbp-discovery built a Docker R image mid-turn for a standard DESeq2 refit; expected to lower plumbing scripts and
 # minutes before the first successful analysis on count-based questions (turn economics).
+# 2026-10-08 collaboration: bio-community +512 bytes for the link-work paragraph. Round three's answers credited
+# no peer artifact in their claims although they reused peers' tables; expected to raise claims pointing at others'
+# artifacts, frontier-evidence records and replies to peer posts per turn (dashboard dialogue and reuse panels).
 BUDGET_BYTES = {
     "bio-artifact-reuse": 4096,
-    "bio-community": 13824,
+    "bio-community": 14336,
     "bio-data-discovery": 17408,
     "bio-evaluation-review": 8704,
     "bio-hypothesis-discovery": 27648,

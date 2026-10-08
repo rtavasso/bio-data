@@ -53,15 +53,21 @@ def test_registry_and_legacy_hermes_prompt_is_byte_identical():
     # Frozen digests of the assignment prompt (question and answer notification). Re-frozen three times, each
     # for a deliberate change: spec v2 V1 (claims first), spec v3 (overview, frontier read, next step as a frontier
     # item) and the 2026-10-07 transcript review (turn-start overview + work resume, prep budget, short-output and
-    # peek rules, eligibility/locus records, --publish-cited, ANSWER.md checkpoint, in-turn answering). The
-    # substitution checks below pin the sentences each change added, so any other drift still fails here.
+    # peek rules, eligibility/locus records, --publish-cited, ANSWER.md checkpoint, in-turn answering), and once more
+    # for the 2026-10-08 link-work sentence (credit and link peers' work). The substitution checks below pin the
+    # sentences each change added, so any other drift still fails here.
     def digest_of(text):
         return hashlib.sha256(text.encode()).hexdigest()
     question, notification = (assignment_prompt("agent_abc", trial, post),
                               assignment_prompt("agent_abc", trial, post, notification=True))
+    assert digest_of(question) == "2ef9b10afce60111ad6871445fb3d67d8299711a971210ec2e427c3aa8b8990e"
+    assert digest_of(notification) == "cf3f73892faaae12f1880e83af30fc22e1130250e05f0ba6f7ec332f99bbda62"
+    from daw import community_runtime
+    link = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Build on others"):
+                                      community_runtime.ANALYSIS.index("Register measurements")]
+    question, notification = question.replace(link, ""), notification.replace(link, "")
     assert digest_of(question) == "6a0ea04ece579cc6b668e404a267187d5da2ad14baeef42699ae375d95a968d9"
     assert digest_of(notification) == "09abadd61224eb5b16a6ddee65e6a2be12a353f4bd08bd09f79e87f05a118f46"
-    from daw import community_runtime
     v3_step = community_runtime.ANALYSIS[community_runtime.ANALYSIS.index("Then name the next computable step"):]
     v2_step = ("Then write the finding, the evidence pointers (posts, artifacts, notebook), its limits, and the next "
                "computable step. Receipt and lint details stay in the LABBOOK.\n")
